@@ -1,37 +1,60 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
+import React from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
 
 const LoginPage: React.FC = () => {
-
   const [darkMode, setDarkMode] = useState(true);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      setDarkMode(document.body.classList.contains('dark-mode'));
+      setDarkMode(document.body.classList.contains("dark-mode"));
     });
 
     observer.observe(document.body, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ["class"],
     });
 
     return () => observer.disconnect();
   }, []);
 
-  const [form, setForm] = useState({ identifier: '', password: '' });
-  
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // console.log(form);
-    // TODO: backend
+  const router = useRouter();
+  const { login } = useAuth();
+  const [form, setForm] = useState({ identifier: "", password: "" });
+  const [message, setMessage] = useState<string | null>(null);
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+
+    try {
+      await axios.post(`/api/login`, form);
+      login();
+      router.push("/pwn");
+    } catch (error: any) {
+      const errMsg =
+        error?.response?.data?.error || "Erreur lors de la connexion";
+      setMessage(errMsg);
+    }
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <form onSubmit={handleLogin} className="w-full max-w-md bg-gray-900 p-8 rounded-xl shadow-lg">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">Connexion</h2>
+      <form
+        onSubmit={handleLogin}
+        className="w-full max-w-md bg-gray-900 p-8 rounded-xl shadow-lg"
+      >
+        <h2 className="text-3xl font-bold text-white mb-6 text-center">
+          Connexion
+        </h2>
+
+        {message && (
+          <div className="mb-4 text-sm text-center p-2 rounded bg-red-600 text-white">
+            {message}
+          </div>
+        )}
 
         <input
           type="text"
@@ -50,7 +73,6 @@ const LoginPage: React.FC = () => {
           className="w-full p-3 mb-6 bg-gray-800 text-white border border-gray-700 rounded"
           required
         />
-
 
         <button
           type="submit"

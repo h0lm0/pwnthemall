@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app';
 import Navbar from '@/components/Navbar';
 import { useState, useEffect } from 'react';
+import { AuthProvider } from '@/context/AuthContext';
 import '../styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -21,9 +22,9 @@ export default function App({ Component, pageProps }: AppProps) {
   };
 
   return (
-    <>
+    <AuthProvider>
       <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       <Component {...pageProps} />
-    </>
+    </AuthProvider>
   );
 }
