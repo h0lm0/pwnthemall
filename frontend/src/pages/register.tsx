@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/router';
 
 const RegisterPage: React.FC = () => {
   const [darkMode, setDarkMode] = useState(true);
+  const router = useRouter();
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -26,9 +28,8 @@ const RegisterPage: React.FC = () => {
     setMessage(null);
 
     try {
-      const response = await axios.post(`/api/users`, form);
-      setMessage({ type: 'success', text: 'Inscription réussie !' });
-      setForm({ username: '', email: '', password: '' });
+      await axios.post(`/api/users`, form);
+      router.push('/login');
     } catch (error: any) {
       const errMsg = error?.response?.data?.error || 'Une erreur est survenue';
       setMessage({ type: 'error', text: errMsg });
