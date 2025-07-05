@@ -7,12 +7,14 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.dark-mode {
+.dark-mode,
+html.dark-mode {
   background-color: #1f2937;
   color: white;
 }
 
-.light-mode {
+.light-mode,
+html.light-mode {
   background-color: #fff8f0;
   color: black;
 }
