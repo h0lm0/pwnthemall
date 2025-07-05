@@ -15,6 +15,38 @@ type LoginInput struct {
 	Password   string `json:"password" binding:"required"`
 }
 
+// Register creates a new user account
+func Register(c *gin.Context) {
+	var input RegisterInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors du hash du mot de passe"})
+		return
+	}
+
+	user := models.User{
+		Username: input.Username,
+		Email:    input.Email,
+		Password: string(hashedPassword),
+	}
+
+	if err := config.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id":       user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+	})
+}
+
 // Login authenticates a user using username or email and sets a session cookie
 func Login(c *gin.Context) {
 	var input LoginInput
