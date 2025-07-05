@@ -24,7 +24,7 @@ const PwnPage = () => {
       <Head>
         <title>pwnthemall - pwn zone</title>
       </Head>
-      <main className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-6 text-center">
+      <main className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
         <h1
           className={`text-3xl font-bold mb-4 ${darkMode ? "text-cyan-400" : "text-cyan-600"}`}
         >
