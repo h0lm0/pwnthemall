@@ -1,11 +1,11 @@
-// src/components/Navbar.tsx
+// src/components/Topbar.tsx
 import Link from "next/link";
 import Switch from "./Switch";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 
-const Navbar = () => {
+const Topbar = () => {
   const { darkMode, toggleDarkMode } = useTheme();
   const router = useRouter();
   const { loggedIn, logout } = useAuth();
@@ -26,12 +26,14 @@ const Navbar = () => {
         pwnthemall
       </Link>
       <div className="flex items-center space-x-4">
-        <Link
-          href="/pwn"
-          className={`${darkMode ? "text-gray-300" : "text-gray-600"} hover:text-cyan-400 transition`}
-        >
-          Pwn
-        </Link>
+        {loggedIn && (
+          <Link
+            href="/pwn"
+            className={`${darkMode ? "text-gray-300" : "text-gray-600"} hover:text-cyan-400 transition`}
+          >
+            Pwn
+          </Link>
+        )}
         {loggedIn ? (
           <button
             onClick={handleLogout}
@@ -61,4 +63,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default Topbar;

@@ -11,7 +11,7 @@ export default function Home() {
       <Head>
         <title>pwnthemall</title>
       </Head>
-      <main className="flex flex-col items-center justify-center text-center min-h-[calc(100vh-4rem)] px-6">
+      <main className="flex flex-col items-center justify-center text-center min-h-screen px-6">
         <Image
           src="/logo.png"
           alt="CTF logo"
