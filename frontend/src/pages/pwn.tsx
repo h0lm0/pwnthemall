@@ -1,23 +1,15 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const PwnPage = () => {
-  const [darkMode, setDarkMode] = useState(true);
+  const { darkMode } = useTheme();
   const router = useRouter();
   const { loggedIn, checkAuth } = useAuth();
 
   useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setDarkMode(document.body.classList.contains("dark-mode"));
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
     const verify = async () => {
       await checkAuth();
       if (!loggedIn) {
@@ -25,8 +17,6 @@ const PwnPage = () => {
       }
     };
     verify();
-
-    return () => observer.disconnect();
   }, [router, loggedIn]);
 
   return (

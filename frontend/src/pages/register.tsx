@@ -1,26 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import { useTheme } from '@/context/ThemeContext';
 
 const RegisterPage: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(true);
+  const { darkMode } = useTheme();
   const router = useRouter();
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setDarkMode(document.body.classList.contains('dark-mode'));
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +17,7 @@ const RegisterPage: React.FC = () => {
     setMessage(null);
 
     try {
-      await axios.post(`/api/users`, form);
+      await axios.post(`/api/register`, form);
       router.push('/login');
     } catch (error: any) {
       const errMsg = error?.response?.data?.error || 'Une erreur est survenue';
@@ -39,9 +28,12 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <form onSubmit={handleRegister} className="w-full max-w-md bg-gray-900 p-8 rounded-xl shadow-lg">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">Créer un compte</h2>
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <form
+        onSubmit={handleRegister}
+        className={`w-full max-w-md p-8 rounded-xl shadow-lg ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}
+      >
+        <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? 'text-white' : 'text-black'}`}>Créer un compte</h2>
 
         {message && (
           <div
@@ -58,7 +50,7 @@ const RegisterPage: React.FC = () => {
           placeholder="Nom d'utilisateur"
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
-          className="w-full p-3 mb-4 bg-gray-800 text-white border border-gray-700 rounded"
+          className={`w-full p-3 mb-4 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
           required
         />
 
@@ -67,7 +59,7 @@ const RegisterPage: React.FC = () => {
           placeholder="Email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          className="w-full p-3 mb-4 bg-gray-800 text-white border border-gray-700 rounded"
+          className={`w-full p-3 mb-4 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
           required
         />
 
@@ -77,7 +69,7 @@ const RegisterPage: React.FC = () => {
           minLength={8}
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="w-full p-3 mb-6 bg-gray-800 text-white border border-gray-700 rounded"
+          className={`w-full p-3 mb-6 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
           required
         />
 

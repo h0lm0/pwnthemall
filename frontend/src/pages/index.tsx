@@ -1,23 +1,10 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import AnimatedText from '../components/AnimatedText';
-import { useEffect, useState } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function Home() {
-  const [darkMode, setDarkMode] = useState(true);
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setDarkMode(document.body.classList.contains('dark-mode'));
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const { darkMode } = useTheme();
 
   return (
     <>

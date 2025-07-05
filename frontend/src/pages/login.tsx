@@ -1,24 +1,13 @@
 import React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const LoginPage: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(true);
+  const { darkMode } = useTheme();
 
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setDarkMode(document.body.classList.contains("dark-mode"));
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   const router = useRouter();
   const { login } = useAuth();
@@ -41,12 +30,13 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <form
         onSubmit={handleLogin}
-        className="w-full max-w-md bg-gray-900 p-8 rounded-xl shadow-lg"
+        className={`w-full max-w-md p-8 rounded-xl shadow-lg ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}
       >
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">
+        <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? 'text-white' : 'text-black'}`}
+        >
           Connexion
         </h2>
 
@@ -61,7 +51,7 @@ const LoginPage: React.FC = () => {
           placeholder="Nom d'utilisateur ou Email"
           value={form.identifier}
           onChange={(e) => setForm({ ...form, identifier: e.target.value })}
-          className="w-full p-3 mb-4 bg-gray-800 text-white border border-gray-700 rounded"
+          className={`w-full p-3 mb-4 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
           required
         />
 
@@ -70,7 +60,7 @@ const LoginPage: React.FC = () => {
           placeholder="Mot de passe"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="w-full p-3 mb-6 bg-gray-800 text-white border border-gray-700 rounded"
+          className={`w-full p-3 mb-6 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
           required
         />
 

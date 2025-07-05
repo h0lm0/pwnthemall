@@ -3,13 +3,10 @@ import Link from "next/link";
 import Switch from "./Switch";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
-interface NavbarProps {
-  darkMode: boolean;
-  toggleDarkMode: () => void;
-}
-
-const Navbar = ({ darkMode, toggleDarkMode }: NavbarProps) => {
+const Navbar = () => {
+  const { darkMode, toggleDarkMode } = useTheme();
   const router = useRouter();
   const { loggedIn, logout } = useAuth();
 
