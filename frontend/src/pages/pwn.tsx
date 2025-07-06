@@ -10,15 +10,17 @@ const PwnPage = () => {
   const { loggedIn, checkAuth } = useAuth();
 
   useEffect(() => {
-    const verify = async () => {
-      await checkAuth();
+    const verify = () => {
+      checkAuth();
       if (!loggedIn) {
         router.replace("/login");
       }
     };
-    verify();
+    verify()
   }, [router, loggedIn]);
-  return <PwnContent darkMode={darkMode} />;
+  if (loggedIn){
+    return <PwnContent darkMode={darkMode} />;
+  }
 };
 
 export default PwnPage;
