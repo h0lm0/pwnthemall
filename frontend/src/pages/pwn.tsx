@@ -18,7 +18,6 @@ const PwnPage = () => {
     };
     verify();
   }, [router, loggedIn]);
-
   return <PwnContent darkMode={darkMode} />;
 };
 
