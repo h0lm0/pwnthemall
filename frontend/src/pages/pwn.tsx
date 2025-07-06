@@ -1,8 +1,8 @@
-import Head from "next/head";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import PwnContent from "../components/PwnContent";
 
 const PwnPage = () => {
   const { darkMode } = useTheme();
@@ -18,22 +18,7 @@ const PwnPage = () => {
     };
     verify();
   }, [router, loggedIn]);
-
-  return (
-    <>
-      <Head>
-        <title>pwnthemall - pwn zone</title>
-      </Head>
-      <main className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
-        <h1
-          className={`text-3xl font-bold mb-4 ${darkMode ? "text-cyan-400" : "text-cyan-600"}`}
-        >
-          Welcome, challenger!
-        </h1>
-        <p className="text-lg">Prepare to pwn the challenges.</p>
-      </main>
-    </>
-  );
+  return <PwnContent darkMode={darkMode} />;
 };
 
 export default PwnPage;
