@@ -3,10 +3,10 @@ import Link from "next/link";
 import Switch from "./Switch";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "next-themes";
 
 const Topbar = () => {
-  const { darkMode, toggleDarkMode } = useTheme();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { loggedIn, logout } = useAuth();
 
@@ -17,11 +17,11 @@ const Topbar = () => {
 
   return (
     <nav
-      className={`border-b px-6 py-4 flex justify-between items-center ${darkMode ? "bg-black border-gray-800" : "bg-white border-gray-200"}`}
+      className="border-b px-6 py-4 flex justify-between items-center bg-white dark:bg-black border-gray-200 dark:border-gray-800"
     >
       <Link
         href="/"
-        className={`${darkMode ? "text-white" : "text-black"} font-bold text-xl tracking-wide`}
+        className="font-bold text-xl tracking-wide text-black dark:text-white"
       >
         pwnthemall
       </Link>
@@ -29,7 +29,7 @@ const Topbar = () => {
         {loggedIn && (
           <Link
             href="/pwn"
-            className={`${darkMode ? "text-gray-300" : "text-gray-600"} hover:text-cyan-400 transition`}
+            className="text-gray-600 dark:text-gray-300 hover:text-cyan-400 transition"
           >
             Pwn
           </Link>
@@ -37,7 +37,7 @@ const Topbar = () => {
         {loggedIn ? (
           <button
             onClick={handleLogout}
-            className={`${darkMode ? "text-gray-300" : "text-gray-600"} hover:text-cyan-400 transition`}
+            className="text-gray-600 dark:text-gray-300 hover:text-cyan-400 transition"
           >
             Logout
           </button>
@@ -45,19 +45,22 @@ const Topbar = () => {
           <>
             <Link
               href="/login"
-              className={`${darkMode ? "text-gray-300" : "text-gray-600"} hover:text-cyan-400 transition`}
+              className="text-gray-600 dark:text-gray-300 hover:text-cyan-400 transition"
             >
               Login
             </Link>
             <Link
               href="/register"
-              className={`${darkMode ? "text-gray-300" : "text-gray-600"} hover:text-cyan-400 transition`}
+              className="text-gray-600 dark:text-gray-300 hover:text-cyan-400 transition"
             >
               Register
             </Link>
           </>
         )}
-        <Switch isOn={darkMode} handleToggle={toggleDarkMode} />
+        <Switch
+          isOn={theme === "dark"}
+          handleToggle={() => setTheme(theme === "dark" ? "light" : "dark")}
+        />
       </div>
     </nav>
   );
