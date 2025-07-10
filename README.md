@@ -1,6 +1,6 @@
-![logo](https://github.com/user-attachments/assets/e9ec230e-0bfc-445c-8225-f3f131a28f39)
+![logo no text](frontend/public/logo-no-text.png)
 
-## kesako
+## Kesako
 
 Open source CTF platform to host challenges
 

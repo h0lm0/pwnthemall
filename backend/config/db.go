@@ -26,6 +26,8 @@ func ConnectDB() *gorm.DB {
 	}
 
 	DB = db
-
+	if os.Getenv("SEED_DATABASE") == "true" {
+		SeedDatabase()
+	}
 	return db
 }
