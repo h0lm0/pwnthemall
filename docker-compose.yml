@@ -24,11 +24,6 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
-      # - DB_HOST=db
-      # - DB_USER=${POSTGRES_USER}
-      # - DB_PASSWORD=${POSTGRES_PASSWORD}
-      # - DB_NAME=${POSTGRES_DB}
-      # - DB_PORT=5432
 
   db:
     container_name: db
@@ -65,6 +60,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
     volumes:
+      - "./minio/challenges:/data/challenges"
       - "minio:/data/minio"
     command: 'minio server /data/minio --console-address ":9001"'
     healthcheck:
@@ -72,8 +68,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    # ports:
-    #   - "127.0.0.1:9001:9001"
+    ports:
+      - "127.0.0.1:9001:9001"
 volumes:
   postgres_data:
   minio:
