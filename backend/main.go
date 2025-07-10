@@ -15,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GenerateRandomString(n int) (string, error) {
+func generateRandomString(n int) (string, error) {
 	bytes := make([]byte, n)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
@@ -31,7 +31,7 @@ func main() {
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
 	if sessionSecret == "" {
-		sessionSecret, _ = GenerateRandomString(25)
+		sessionSecret, _ = generateRandomString(25)
 	}
 	store := cookie.NewStore([]byte(sessionSecret))
 	store.Options(sessions.Options{
