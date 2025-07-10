@@ -13,7 +13,6 @@ import { CheckCircle, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface RegisterContentProps {
-    darkMode: boolean;
     form: {
         username: string;
         email: string;
@@ -26,7 +25,6 @@ interface RegisterContentProps {
 }
 
 const RegisterContent: React.FC<RegisterContentProps> = ({
-    darkMode,
     form,
     loading,
     message,
@@ -66,7 +64,6 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                                     placeholder="Username"
                                     value={form.username}
                                     onChange={onChange}
-                                    // className={`${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
                                     required
                                 />
 
@@ -77,7 +74,6 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                                     placeholder="Email"
                                     value={form.email}
                                     onChange={onChange}
-                                    // className={`${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
                                     required
                                 />
                             </div>
@@ -93,7 +89,6 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                                     minLength={8}
                                     value={form.password}
                                     onChange={onChange}
-                                    // className={`${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
                                     required
                                 />
                             </div>

@@ -1,11 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { useTheme } from "@/context/ThemeContext";
 import RegisterContent from "@/components/RegisterContent";
 
 const RegisterPage = () => {
-  const { darkMode } = useTheme();
   const router = useRouter();
 
   const [form, setForm] = useState({ username: "", email: "", password: "" });
@@ -38,7 +36,6 @@ const RegisterPage = () => {
 
   return (
     <RegisterContent
-      darkMode={darkMode}
       form={form}
       loading={loading}
       message={message}

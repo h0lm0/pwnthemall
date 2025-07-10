@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
 import LoginContent from "@/components/LoginContent";
 
 const LoginPage = () => {
-  const { darkMode } = useTheme();
   const router = useRouter();
   const { login } = useAuth();
 
@@ -48,7 +46,6 @@ const LoginPage = () => {
 
   return (
     <LoginContent
-      darkMode={darkMode}
       form={form}
       message={message}
       messageType={messageType}
