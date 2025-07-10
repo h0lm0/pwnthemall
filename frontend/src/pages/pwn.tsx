@@ -1,11 +1,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
 import PwnContent from "../components/PwnContent";
 
 const PwnPage = () => {
-  const { darkMode } = useTheme();
   const router = useRouter();
   const { loggedIn, checkAuth } = useAuth();
 
@@ -19,7 +17,7 @@ const PwnPage = () => {
     verify()
   }, [router, loggedIn]);
   if (loggedIn){
-    return <PwnContent darkMode={darkMode} />;
+    return <PwnContent />;
   }
 };
 

@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 
 interface LoginContentProps {
-    darkMode: boolean
     form: {
         identifier: string
         password: string
@@ -26,7 +25,6 @@ interface LoginContentProps {
 }
 
 export default function LoginContent({
-    darkMode,
     form,
     message,
     messageType,

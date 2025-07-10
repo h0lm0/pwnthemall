@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
 import { ModeToggle } from "@/components/ModeToggle";
 import {
@@ -15,7 +14,6 @@ import {
 } from "lucide-react";
 
 const Sidebar = () => {
-  const { darkMode } = useTheme();
   const router = useRouter();
   const { loggedIn, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
@@ -51,30 +49,25 @@ const Sidebar = () => {
     router.push("/login");
   };
 
-  const linkClasses = `${darkMode ? "text-gray-300" : "text-gray-600"} hover:text-cyan-400 transition flex items-center space-x-2 h-10 px-2`;
+  const linkClasses =
+    "flex items-center space-x-2 h-10 px-2 text-gray-600 hover:text-cyan-400 transition dark:text-gray-300";
 
   return (
     <div
-      className={`relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out ${
-        darkMode ? "bg-black border-gray-800" : "bg-white border-gray-200"
-      } ${collapsed ? "w-16" : "w-56"}`}
+      className={`relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out ${collapsed ? "w-16" : "w-56"} bg-white border-gray-200 dark:bg-black dark:border-gray-800`}
     >
       <div className="flex items-center justify-between px-4 py-4">
         {!collapsed && (
           <Link
             href="/"
-            className={`${
-              darkMode ? "text-white" : "text-black"
-            } font-bold text-xl tracking-wide`}
+            className="font-bold text-xl tracking-wide text-black dark:text-white"
           >
             pwnthemall
           </Link>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={`${
-            darkMode ? "text-gray-300" : "text-gray-600"
-          } focus:outline-none`}
+          className="text-gray-600 dark:text-gray-300 focus:outline-none"
         >
           {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
         </button>
