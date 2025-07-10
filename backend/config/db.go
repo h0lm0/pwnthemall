@@ -20,11 +20,14 @@ func ConnectDB() *gorm.DB {
 	}
 
 	// Migrations
-	err = db.AutoMigrate(&models.User{})
+	err = db.AutoMigrate(&models.Team{}, &models.Solve{}, &models.User{}, &models.ChallengeType{}, &models.Challenge{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
 	DB = db
+	if os.Getenv("SEED_DATABASE") == "true" {
+		SeedDatabase()
+	}
 	return db
 }
