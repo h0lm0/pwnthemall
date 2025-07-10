@@ -6,7 +6,7 @@ import (
 )
 
 func seedChallengeType() {
-	challengeTypes := []models.ChallengeType{
+	challengeTypes := []models.ChallengeCategory{
 		{Name: "pwn"},
 		{Name: "misc"},
 	}
