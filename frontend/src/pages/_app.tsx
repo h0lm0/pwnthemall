@@ -1,29 +1,20 @@
 import type { AppProps } from 'next/app';
-import Navbar from '@/components/Navbar';
-import { useState, useEffect } from 'react';
+import Sidebar from '@/components/Sidebar'
+import { AuthProvider } from '@/context/AuthContext'
+import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
-  const [darkMode, setDarkMode] = useState(true);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.body.classList.add('dark-mode');
-      document.body.classList.remove('light-mode');
-    } else {
-      document.body.classList.add('light-mode');
-      document.body.classList.remove('dark-mode');
-    }
-  }, [darkMode]);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
   return (
-    <>
-      <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      <Component {...pageProps} />
-    </>
+    <AuthProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <div className="flex">
+          <Sidebar />
+          <div className="flex-1">
+            <Component {...pageProps} />
+          </div>
+        </div>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
