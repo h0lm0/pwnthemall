@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"net/http"
 	"os"
 
@@ -13,14 +15,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GenerateRandomString(n int) (string, error) {
+	bytes := make([]byte, n)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
 func main() {
 	config.ConnectDB()
-
+	config.ConnectMinio()
+	// config.MigrateCasbin()
 	router := gin.Default()
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
 	if sessionSecret == "" {
-		sessionSecret = "change-me" // fallback
+		sessionSecret, _ = GenerateRandomString(25)
 	}
 	store := cookie.NewStore([]byte(sessionSecret))
 	store.Options(sessions.Options{
