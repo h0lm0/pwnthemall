@@ -1,22 +1,29 @@
 import Link from "next/link";
-import Switch from "./Switch";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect } from "react";
+import { ModeToggle } from "@/components/ModeToggle";
+import {
+  Home,
+  Swords,
+  LogIn,
+  LogOut,
+  UserPlus,
+  Menu,
+  ChevronLeft,
+} from "lucide-react";
 
 const Sidebar = () => {
-  const { darkMode, toggleDarkMode } = useTheme();
   const router = useRouter();
   const { loggedIn, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [showSwitch, setShowSwitch] = useState(!collapsed);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebarCollapsed');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sidebarCollapsed");
       if (saved) {
-        setCollapsed(saved === 'true');
+        setCollapsed(saved === "true");
       }
     }
   }, []);
@@ -32,88 +39,71 @@ const Sidebar = () => {
   }, [collapsed]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('sidebarCollapsed', collapsed.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sidebarCollapsed", collapsed.toString());
     }
   }, [collapsed]);
 
   const handleLogout = async () => {
     await logout();
-    router.push('/login');
+    router.push("/login");
   };
+
+  const linkClasses =
+    "flex items-center space-x-2 h-10 px-2 text-gray-600 hover:text-cyan-400 transition dark:text-gray-300";
 
   return (
     <div
-      className={`relative h-screen flex flex-col border-r transition-all ${
-        darkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'
-      } ${collapsed ? 'w-0 overflow-visible' : 'w-56'}`}
+      className={`relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out ${collapsed ? "w-16" : "w-56"} bg-white border-gray-200 dark:bg-black dark:border-gray-800`}
     >
-      {!collapsed && (
-        <>
-          <div className="flex items-center justify-between px-4 py-4">
-            <Link
-              href="/"
-              className={`${darkMode ? 'text-white' : 'text-black'} font-bold text-xl tracking-wide`}
-            >
-              pwnthemall
-            </Link>
-            <button
-              onClick={() => setCollapsed(true)}
-              className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} focus:outline-none`}
-            >
-              {'<'}
-            </button>
-          </div>
-          <nav className="flex flex-col flex-grow space-y-2 px-4">
-            {loggedIn && (
-              <Link
-                href="/pwn"
-                className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} hover:text-cyan-400 transition flex items-center justify-center h-8`}
-              >
-                Pwn
-              </Link>
-            )}
-            {loggedIn ? (
-              <button
-                onClick={handleLogout}
-                className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} hover:text-cyan-400 transition text-left flex items-center justify-center h-8`}
-              >
-                Logout
-              </button>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} hover:text-cyan-400 transition flex items-center justify-center h-8`}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} hover:text-cyan-400 transition flex items-center justify-center h-8`}
-                >
-                  Register
-                </Link>
-              </>
-            )}
-          </nav>
-          <div className="px-4 py-4">
-            {showSwitch && (
-              <Switch isOn={darkMode} handleToggle={toggleDarkMode} />
-            )}
-          </div>
-        </>
-      )}
-      {collapsed && (
+      <div className="flex items-center justify-between px-4 py-4">
+        {!collapsed && (
+          <Link
+            href="/"
+            className="font-bold text-xl tracking-wide text-black dark:text-white"
+          >
+            pwnthemall
+          </Link>
+        )}
         <button
-          onClick={() => setCollapsed(false)}
-          className={`absolute top-4 left-0 px-2 py-1 rounded-r shadow ${
-            darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-600'
-          }`}
+          onClick={() => setCollapsed(!collapsed)}
+          className="text-gray-600 dark:text-gray-300 focus:outline-none"
         >
-          {'>'}
+          {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
         </button>
-      )}
+      </div>
+      <nav className="flex flex-col flex-grow space-y-1 px-2">
+        <Link href="/" className={linkClasses}>
+          <Home size={20} />
+          {!collapsed && <span>Home</span>}
+        </Link>
+        {loggedIn && (
+          <Link href="/pwn" className={linkClasses}>
+            <Swords size={20} />
+            {!collapsed && <span>Pwn</span>}
+          </Link>
+        )}
+        {loggedIn ? (
+          <button onClick={handleLogout} className={linkClasses}>
+            <LogOut size={20} />
+            {!collapsed && <span>Logout</span>}
+          </button>
+        ) : (
+          <>
+            <Link href="/login" className={linkClasses}>
+              <LogIn size={20} />
+              {!collapsed && <span>Login</span>}
+            </Link>
+            <Link href="/register" className={linkClasses}>
+              <UserPlus size={20} />
+              {!collapsed && <span>Register</span>}
+            </Link>
+          </>
+        )}
+      </nav>
+      <div className="px-4 py-4 mt-auto">
+        {showSwitch && <ModeToggle />}
+      </div>
     </div>
   );
 };

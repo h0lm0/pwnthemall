@@ -1,77 +1,57 @@
-import React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
+import LoginContent from "@/components/LoginContent";
 
-const LoginPage: React.FC = () => {
-  const { darkMode } = useTheme();
-
-
+const LoginPage = () => {
   const router = useRouter();
   const { login } = useAuth();
+
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
+
+  useEffect(() => {
+    if (router.query.success === "register") {
+      setMessage("Registration successful. Please verify now your email to login.");
+      setMessageType("success");
+
+      // Optionnel : nettoyer l'URL sans recharger
+      const { success, ...rest } = router.query;
+      const query = new URLSearchParams(rest as Record<string, string>).toString();
+      router.replace(`/login${query ? `?${query}` : ""}`, undefined, { shallow: true });
+    }
+  }, [router.query]);
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
+    setMessageType(null);
 
     try {
       await axios.post(`/api/login`, form);
       login();
       router.push("/pwn");
     } catch (error: any) {
-      const errMsg =
-        error?.response?.data?.error || "Erreur lors de la connexion";
+      const errMsg = error?.response?.data?.error || "Error during login";
       setMessage(errMsg);
+      setMessageType("error");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <form
-        onSubmit={handleLogin}
-        className={`w-full max-w-md p-8 rounded-xl shadow-lg ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}
-      >
-        <h2 className={`text-3xl font-bold mb-6 text-center ${darkMode ? 'text-white' : 'text-black'}`}
-        >
-          Connexion
-        </h2>
-
-        {message && (
-          <div className="mb-4 text-sm text-center p-2 rounded bg-red-600 text-white">
-            {message}
-          </div>
-        )}
-
-        <input
-          type="text"
-          placeholder="Nom d'utilisateur ou Email"
-          value={form.identifier}
-          onChange={(e) => setForm({ ...form, identifier: e.target.value })}
-          className={`w-full p-3 mb-4 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
-          required
-        />
-
-        <input
-          type="password"
-          placeholder="Mot de passe"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className={`w-full p-3 mb-6 border rounded ${darkMode ? 'bg-gray-800 text-white border-gray-700' : 'bg-white text-black border-gray-300'}`}
-          required
-        />
-
-        <button
-          type="submit"
-          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 rounded"
-        >
-          Se connecter
-        </button>
-      </form>
-    </div>
+    <LoginContent
+      form={form}
+      message={message}
+      messageType={messageType}
+      onChange={onChange}
+      onSubmit={handleLogin}
+    />
   );
 };
 
