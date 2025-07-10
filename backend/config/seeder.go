@@ -5,19 +5,19 @@ import (
 	"pwnthemall/models"
 )
 
-func seedChallengeType() {
-	challengeTypes := []models.ChallengeCategory{
+func seedChallengeCategory() {
+	challengeCategories := []models.ChallengeCategory{
 		{Name: "pwn"},
 		{Name: "misc"},
 	}
-	for _, challengeType := range challengeTypes {
-		if err := DB.Create(&challengeType).Error; err != nil {
-			log.Printf("Failed to seed challengeType %s: %v\n", challengeType.Name, err)
+	for _, challengeCategory := range challengeCategories {
+		if err := DB.Create(&challengeCategory).Error; err != nil {
+			log.Printf("Failed to seed challengeCategory %s: %v\n", challengeCategory.Name, err)
 		}
 	}
-	log.Println("challengeTypes seeded")
+	log.Println("challengeCategories seeded")
 }
 
 func SeedDatabase() {
-	seedChallengeType()
+	seedChallengeCategory()
 }
