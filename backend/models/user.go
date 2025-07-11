@@ -11,7 +11,7 @@ type User struct {
 	Password  string `json:"-"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	TeamID    uint
-	Team      Team
+	TeamID    *uint
+	Team      *Team       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Solves    []Challenge `gorm:"many2many:solves"`
 }
