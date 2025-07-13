@@ -13,6 +13,7 @@ func RegisterAuthRoutes(router *gin.Engine) {
 		auth.POST("login", controllers.Login)
 		auth.POST("register", controllers.Register)
 		auth.POST("logout", middleware.AuthRequired(), controllers.Logout)
+		auth.GET("me", middleware.AuthRequired(), controllers.GetCurrentUser)
 		auth.GET("pwn", middleware.AuthRequired(), func(c *gin.Context) {
 			c.JSON(200, gin.H{"success": "true"})
 		})

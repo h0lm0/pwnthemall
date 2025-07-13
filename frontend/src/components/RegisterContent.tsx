@@ -51,8 +51,8 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
 
                 <Card>
                     <CardHeader className="text-center">
-                        <CardTitle className="text-xl">Sign up</CardTitle>
-                        <CardDescription>Create a new account to continue</CardDescription>
+                        <CardTitle className="text-xl">Welcome back</CardTitle>
+                        <CardDescription>Enter your credentials to continue</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={onSubmit} className="grid gap-4">

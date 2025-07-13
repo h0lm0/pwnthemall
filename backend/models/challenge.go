@@ -3,14 +3,12 @@ package models
 import "time"
 
 type Challenge struct {
-	ID                  uint   `gorm:"primaryKey"`
-	Slug                string `gorm:"unique;not null"`
-	Name                string
-	Description         string
-	Difficulty          string
-	ChallengeCategory   ChallengeCategory
-	ChallengeCategoryID uint
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	Solvers             []*User `gorm:"many2many:solves"`
+	ID              uint   `json:"id" gorm:"primaryKey"`
+	Name            string `json:"name" gorm:"not null"`
+	Description     string `json:"description"`
+	Createdat       time.Time
+	UpdatedAt       time.Time
+	ChallengeTypeId int
+	ChallengeType   ChallengeType `gorm:"foreignKey:ChallengeTypeId"`
+	Solvers         []User        `gorm:"many2many:solves"`
 }
