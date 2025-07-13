@@ -57,6 +57,7 @@ func main() {
 
 	routes.RegisterUserRoutes(router)
 	routes.RegisterAuthRoutes(router)
+	routes.RegisterWebhookRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
