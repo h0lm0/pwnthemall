@@ -24,6 +24,7 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
+      SEED_DATABASE: ${SEED_DATABASE}
 
   db:
     container_name: db
@@ -59,10 +60,14 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
+      MINIO_NOTIFY_WEBHOOK_ENABLE_DBSYNC: "on"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_DBSYNC: "http://backend:8080/webhook/minio"
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC: "Bearer ${MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC}"
     volumes:
       - "./minio/challenges:/data/challenges"
+      - "./minio/config:/data/config"
       - "minio:/data/minio"
-    command: 'minio server /data/minio --console-address ":9001"'
+    entrypoint: '/bin/sh /data/config/entrypoint.sh'
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live"]
       interval: 5s
