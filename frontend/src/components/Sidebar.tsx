@@ -1,111 +1,132 @@
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect } from "react";
-import { ModeToggle } from "@/components/ModeToggle";
+import Link from "next/link"
+import { useRouter } from "next/router"
+import { useAuth } from "@/context/AuthContext"
+import { useState, useEffect } from "react"
+import { useTheme } from "next-themes"
 import {
   Home,
   Swords,
   LogIn,
   LogOut,
   UserPlus,
+  User,
   Menu,
   ChevronLeft,
-} from "lucide-react";
+} from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
 
 const Sidebar = () => {
-  const router = useRouter();
-  const { loggedIn, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
-  const [showSwitch, setShowSwitch] = useState(!collapsed);
+  const router = useRouter()
+  const { loggedIn, logout } = useAuth()
+  const { setTheme } = useTheme()
+  const [collapsed, setCollapsed] = useState(false)
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("sidebarCollapsed");
+      const saved = localStorage.getItem("sidebarCollapsed")
       if (saved) {
-        setCollapsed(saved === "true");
+        setCollapsed(saved === "true")
       }
     }
-  }, []);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (!collapsed) {
-      timer = setTimeout(() => setShowSwitch(true), 250);
-    } else {
-      setShowSwitch(false);
-    }
-    return () => clearTimeout(timer);
-  }, [collapsed]);
+  }, [])
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("sidebarCollapsed", collapsed.toString());
+      localStorage.setItem("sidebarCollapsed", collapsed.toString())
     }
-  }, [collapsed]);
+  }, [collapsed])
 
   const handleLogout = async () => {
-    await logout();
-    router.push("/login");
-  };
+    await logout()
+    router.push("/login")
+  }
 
   const linkClasses =
-    "flex items-center space-x-2 h-10 px-2 text-gray-600 hover:text-cyan-400 transition dark:text-gray-300";
+    "flex items-center gap-2 h-10 px-3 rounded-md text-sm hover:bg-accent hover:text-accent-foreground"
 
   return (
     <div
-      className={`relative h-screen flex flex-col border-r transition-all duration-300 ease-in-out ${collapsed ? "w-16" : "w-56"} bg-white border-gray-200 dark:bg-black dark:border-gray-800`}
+      className={`bg-background border-r flex flex-col h-screen transition-all duration-300 ${collapsed ? "w-16" : "w-56"}`}
     >
-      <div className="flex items-center justify-between px-4 py-4">
+      <div className="flex items-center justify-between h-16 px-4">
         {!collapsed && (
-          <Link
-            href="/"
-            className="font-bold text-xl tracking-wide text-black dark:text-white"
-          >
+          <Link href="/" className="font-bold text-xl">
             pwnthemall
           </Link>
         )}
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className="text-gray-600 dark:text-gray-300 focus:outline-none"
         >
-          {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
-        </button>
+          {collapsed ? <Menu className="size-5" /> : <ChevronLeft className="size-5" />}
+        </Button>
       </div>
-      <nav className="flex flex-col flex-grow space-y-1 px-2">
+      <nav className="flex-1 px-2 space-y-1">
         <Link href="/" className={linkClasses}>
-          <Home size={20} />
+          <Home className="size-5" />
           {!collapsed && <span>Home</span>}
         </Link>
         {loggedIn && (
           <Link href="/pwn" className={linkClasses}>
-            <Swords size={20} />
+            <Swords className="size-5" />
             {!collapsed && <span>Pwn</span>}
           </Link>
         )}
-        {loggedIn ? (
-          <button onClick={handleLogout} className={linkClasses}>
-            <LogOut size={20} />
-            {!collapsed && <span>Logout</span>}
-          </button>
-        ) : (
+        {!loggedIn && (
           <>
             <Link href="/login" className={linkClasses}>
-              <LogIn size={20} />
+              <LogIn className="size-5" />
               {!collapsed && <span>Login</span>}
             </Link>
             <Link href="/register" className={linkClasses}>
-              <UserPlus size={20} />
+              <UserPlus className="size-5" />
               {!collapsed && <span>Register</span>}
             </Link>
           </>
         )}
       </nav>
-      <div className="px-4 py-4 mt-auto">
-        {showSwitch && <ModeToggle />}
+      <div className="mt-auto p-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="w-full justify-start">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/logo-no-text.png" alt="avatar" />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+              {!collapsed && <span className="ml-2">Profile</span>}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="w-full">Profile</Link>
+            </DropdownMenuItem>
+            {loggedIn && (
+              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+            )}
+            {!loggedIn && (
+              <DropdownMenuItem asChild>
+                <Link href="/login">Login</Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar

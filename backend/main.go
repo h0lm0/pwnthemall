@@ -44,7 +44,7 @@ func main() {
 	router.Use(sessions.Sessions("pwnthemall", store))
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://pwnthemall.local"},
+		AllowOrigins:     []string{"http://pwnthemall.local:8080"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -57,7 +57,6 @@ func main() {
 
 	routes.RegisterUserRoutes(router)
 	routes.RegisterAuthRoutes(router)
-	routes.RegisterWebhookRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
