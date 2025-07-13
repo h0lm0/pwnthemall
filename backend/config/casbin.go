@@ -7,7 +7,9 @@ import (
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 )
 
-func MigrateCasbin() {
+var CEF *casbin.Enforcer
+
+func InitCasbin() *casbin.Enforcer {
 	adapter, err := gormadapter.NewAdapterByDB(DB)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize casbin adapter: %v", err))
@@ -25,4 +27,6 @@ func MigrateCasbin() {
 		enforcer.AddPolicy("user", "challenge", "read")
 	}
 	enforcer.SavePolicy()
+	CEF = enforcer
+	return enforcer
 }

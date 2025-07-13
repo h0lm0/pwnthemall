@@ -8,12 +8,12 @@ import (
 )
 
 func RegisterUserRoutes(router *gin.Engine) {
-	users := router.Group("/users")
+	users := router.Group("/users", middleware.AuthRequired())
 	{
-		users.GET("", middleware.AuthRequired(), controllers.GetUsers)
-		users.GET("/:id", middleware.AuthRequired(), controllers.GetUser)
-		users.POST("", middleware.AuthRequired(), controllers.CreateUser)
-		users.PUT("/:id", middleware.AuthRequired(), controllers.UpdateUser)
-		users.DELETE("/:id", middleware.AuthRequired(), controllers.DeleteUser)
+		users.GET("", middleware.CheckPolicy("user", "read"), controllers.GetUsers)
+		users.GET("/:id", middleware.CheckPolicy("user", "read"), controllers.GetUser)
+		users.POST("", middleware.CheckPolicy("user", "write"), controllers.CreateUser)
+		users.PUT("/:id", middleware.CheckPolicy("user", "write"), controllers.UpdateUser)
+		users.DELETE("/:id", middleware.CheckPolicy("user", "write"), controllers.DeleteUser)
 	}
 }

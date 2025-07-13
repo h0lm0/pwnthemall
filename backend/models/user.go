@@ -9,6 +9,7 @@ type User struct {
 	Username  string `gorm:"not null"`
 	Email     string `gorm:"unique;not null"`
 	Password  string `json:"-"`
+	Role      string `json:"role" gorm:"-"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	TeamID    *uint
