@@ -31,6 +31,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/context/AuthContext"
 
 export function NavUser({
   user,
@@ -45,6 +46,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const { setTheme } = useTheme()
+  const { loggedIn } = useAuth()
 
   return (
     <SidebarMenu>
@@ -61,7 +63,9 @@ export function NavUser({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                {loggedIn && user.email && (
+                  <span className="truncate text-xs">{user.email}</span>
+                )}
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -80,18 +84,22 @@ export function NavUser({
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  {loggedIn && user.email && (
+                    <span className="truncate text-xs">{user.email}</span>
+                  )}
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/profile" className="flex items-center gap-2">
-                  <BadgeCheck />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
+              {loggedIn && (
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="flex items-center gap-2">
+                    <BadgeCheck />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onSelect={() => setTheme("light")}> <Sun /> Light</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setTheme("dark")}> <Moon /> Dark</DropdownMenuItem>
             </DropdownMenuGroup>
@@ -103,10 +111,18 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={onLogout}>
-              <LogOut />
-              Log out
-            </DropdownMenuItem>
+            {loggedIn && (
+              <DropdownMenuItem
+                onSelect={() => {
+                  if (window.confirm("Are you sure you want to log out?")) {
+                    onLogout()
+                  }
+                }}
+              >
+                <LogOut />
+                Log out
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
