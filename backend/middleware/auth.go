@@ -3,8 +3,8 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"pwnthemall/config"
 
-	"github.com/casbin/casbin/v2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
@@ -23,30 +23,30 @@ func AuthRequired() gin.HandlerFunc {
 	}
 }
 
-func CheckPolicy(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFunc {
+func CheckPolicy(obj string, act string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sub, existed := c.Get("user_id")
-		if !existed {
-			c.AbortWithStatusJSON(401, gin.H{"msg": "User hasn't logged in yet"})
-			return
+		session := sessions.Default(c)
+		sub := session.Get("user_role")
+		if sub == nil {
+			sub = "anonymous"
 		}
 
-		err := enforcer.LoadPolicy()
+		err := config.CEF.LoadPolicy()
 		if err != nil {
-			c.AbortWithStatusJSON(500, gin.H{"msg": "Failed to load policy from DB"})
+			c.AbortWithStatusJSON(500, gin.H{"error": "Internal server error"})
 			return
 		}
 
 		// Casbin enforces policy
-		ok, err := enforcer.Enforce(fmt.Sprint(sub), obj, act)
+		ok, err := config.CEF.Enforce(fmt.Sprint(sub), obj, act)
 
 		if err != nil {
-			c.AbortWithStatusJSON(500, gin.H{"msg": "Error occurred when authorizing user"})
+			c.AbortWithStatusJSON(500, gin.H{"error": "Error occurred when authorizing"})
 			return
 		}
 
 		if !ok {
-			c.AbortWithStatusJSON(403, gin.H{"msg": "You are not authorized"})
+			c.AbortWithStatusJSON(403, gin.H{"error": "Unauthorized"})
 			return
 		}
 		c.Next()

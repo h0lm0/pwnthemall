@@ -39,6 +39,8 @@ func Register(c *gin.Context) {
 		Username: input.Username,
 		Email:    input.Email,
 		Password: string(hashedPassword),
+		Role:     "member",
+		// Uuid:     uuid.NewString(),
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -74,6 +76,8 @@ func Login(c *gin.Context) {
 
 	session := sessions.Default(c)
 	session.Set("user_id", user.ID)
+	session.Set("user_role", user.Role)
+	// session.Set("user_uuid", user.Uuid)
 	session.Save()
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged in"})
