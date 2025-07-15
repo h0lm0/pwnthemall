@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 interface RegisterContentProps {
     form: {
@@ -51,8 +52,8 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
 
                 <Card>
                     <CardHeader className="text-center">
-                        <CardTitle className="text-xl">Welcome back</CardTitle>
-                        <CardDescription>Enter your credentials to continue</CardDescription>
+                        <CardTitle className="text-xl">Sign up</CardTitle>
+                        <CardDescription>Create a new account to continue</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={onSubmit} className="grid gap-4">
@@ -99,6 +100,12 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                             >
                                 {loading ? "Loading..." : "Register"}
                             </Button>
+                            <p className="text-center text-sm text-muted-foreground">
+                                Already have an account?{" "}
+                                <Link href="/login" className="underline underline-offset-4">
+                                    Sign in
+                                </Link>
+                            </p>
                         </form>
                     </CardContent>
                 </Card>

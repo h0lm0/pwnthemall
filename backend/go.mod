@@ -9,13 +9,14 @@ require (
 	github.com/casbin/gorm-adapter/v3 v3.33.0
 	github.com/gin-contrib/sessions v0.0.4
 	github.com/gin-gonic/gin v1.10.1
+	github.com/goccy/go-yaml v1.18.0
 	github.com/minio/minio-go/v7 v7.0.94
 	gorm.io/gorm v1.30.0
 )
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
-	github.com/casbin/govaluate v1.3.0 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.8.1 // indirect
+	github.com/casbin/govaluate v1.7.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.20.3 // indirect
 	github.com/glebarez/sqlite v1.7.0 // indirect
