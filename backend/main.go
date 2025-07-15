@@ -26,7 +26,7 @@ func generateRandomString(n int) (string, error) {
 func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
-	// config.MigrateCasbin()
+	config.InitCasbin()
 	router := gin.Default()
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
@@ -41,6 +41,7 @@ func main() {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	})
+	// router.Use(authz.NewAuthorizer(config.CEF))
 	router.Use(sessions.Sessions("pwnthemall", store))
 
 	router.Use(cors.New(cors.Config{
