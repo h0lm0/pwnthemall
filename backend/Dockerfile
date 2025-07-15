@@ -15,6 +15,7 @@ WORKDIR /app
 
 RUN apk --no-cache add ca-certificates
 
+COPY config/rbac_model.conf /app/
 COPY --from=go_builder /app/pwnthemall /app/pwnthemall
 
 EXPOSE 8080
