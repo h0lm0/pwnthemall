@@ -107,11 +107,21 @@ const Sidebar = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuItem asChild>
-              <Link href="/profile" className="w-full">Profile</Link>
-            </DropdownMenuItem>
             {loggedIn && (
-              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="w-full">Profile</Link>
+              </DropdownMenuItem>
+            )}
+            {loggedIn && (
+              <DropdownMenuItem
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to log out?")) {
+                    handleLogout()
+                  }
+                }}
+              >
+                Logout
+              </DropdownMenuItem>
             )}
             {!loggedIn && (
               <DropdownMenuItem asChild>

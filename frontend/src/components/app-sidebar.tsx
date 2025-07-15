@@ -31,19 +31,22 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
   const [userData, setUserData] = React.useState({
     name: "pwnthemall",
-    email: "guest@example.com",
+    email: "",
     avatar: "/logo-no-text.png",
   });
 
   React.useEffect(() => {
-    if (!loggedIn) return;
-    axios
-      .get("/api/me")
-      .then((res) => {
-        const { username, email } = res.data;
-        setUserData({ name: username, email, avatar: "/logo-no-text.png" });
-      })
-      .catch(() => {});
+    if (loggedIn) {
+      axios
+        .get("/api/me")
+        .then((res) => {
+          const { username, email } = res.data;
+          setUserData({ name: username, email, avatar: "/logo-no-text.png" });
+        })
+        .catch(() => {});
+    } else {
+      setUserData({ name: "pwnthemall", email: "", avatar: "/logo-no-text.png" });
+    }
   }, [loggedIn]);
 
   const navItems = React.useMemo(() => {
