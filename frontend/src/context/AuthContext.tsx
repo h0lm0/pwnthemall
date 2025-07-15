@@ -6,6 +6,7 @@ interface AuthContextType {
   login: () => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  authChecked: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -13,10 +14,12 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: async () => {},
   checkAuth: async () => {},
+  authChecked: false,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loggedIn, setLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const checkAuth = async () => {
     try {
@@ -24,6 +27,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoggedIn(true);
     } catch {
       setLoggedIn(false);
+    } finally {
+      setAuthChecked(true);
     }
   };
 
@@ -42,7 +47,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ loggedIn, login, logout, checkAuth }}>
+    <AuthContext.Provider
+      value={{ loggedIn, login, logout, checkAuth, authChecked }}
+    >
       {children}
     </AuthContext.Provider>
   );
