@@ -7,7 +7,6 @@ import {
   Home,
   Swords,
   LogIn,
-  LogOut,
   UserPlus,
   User,
   Menu,
@@ -22,6 +21,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 import { Separator } from "@/components/ui/separator"
 
 const Sidebar = () => {
@@ -96,32 +106,27 @@ const Sidebar = () => {
         )}
       </nav>
       <div className="mt-auto p-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="/logo-no-text.png" alt="avatar" />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-              {!collapsed && <span className="ml-2">Profile</span>}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
+        <AlertDialog>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/logo-no-text.png" alt="avatar" />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+                {!collapsed && <span className="ml-2">Profile</span>}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
             {loggedIn && (
               <DropdownMenuItem asChild>
                 <Link href="/profile" className="w-full">Profile</Link>
               </DropdownMenuItem>
             )}
             {loggedIn && (
-              <DropdownMenuItem
-                onClick={() => {
-                  if (window.confirm("Are you sure you want to log out?")) {
-                    handleLogout()
-                  }
-                }}
-              >
-                Logout
-              </DropdownMenuItem>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem>Logout</DropdownMenuItem>
+              </AlertDialogTrigger>
             )}
             {!loggedIn && (
               <DropdownMenuItem asChild>
@@ -134,6 +139,21 @@ const Sidebar = () => {
             <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to log out?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You will need to sign in again to continue.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>Log out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )
