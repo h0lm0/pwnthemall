@@ -8,26 +8,26 @@ import (
 	"gorm.io/gorm"
 )
 
-func seedChallengeType() {
-	challengeTypes := []models.ChallengeType{
+func seedChallengeCategory() {
+	challengeCategories := []models.ChallengeCategory{
 		{Name: "pwn"},
 		{Name: "misc"},
 	}
-	for _, challengeType := range challengeTypes {
-		var existing models.ChallengeType
-		err := DB.Where("name = ?", challengeType.Name).First(&existing).Error
+	for _, challengeCategory := range challengeCategories {
+		var existing models.ChallengeCategory
+		err := DB.Where("name = ?", challengeCategory.Name).First(&existing).Error
 		if err != nil && err != gorm.ErrRecordNotFound {
-			log.Printf("Failed to check challengeType %s: %v\n", challengeType.Name, err)
+			log.Printf("Failed to check challengeCategory %s: %v\n", challengeCategory.Name, err)
 			continue
 		}
 		if err == nil {
 			continue
 		}
-		if err := DB.Create(&challengeType).Error; err != nil {
-			log.Printf("Failed to seed challengeType %s: %v\n", challengeType.Name, err)
+		if err := DB.Create(&challengeCategory).Error; err != nil {
+			log.Printf("Failed to seed challengeCategory %s: %v\n", challengeCategory.Name, err)
 		}
 	}
-	log.Println("challengeTypes seeded")
+	log.Println("challengeCategories seeded")
 }
 
 func seedDefaultUsers() {
@@ -62,6 +62,6 @@ func seedDefaultUsers() {
 }
 
 func SeedDatabase() {
-	seedChallengeType()
+	seedChallengeCategory()
 	seedDefaultUsers()
 }
