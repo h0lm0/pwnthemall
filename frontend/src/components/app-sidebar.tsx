@@ -30,12 +30,14 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { isMobile } = useSidebar();
 
   const [userData, setUserData] = React.useState({
-    name: "pwnthemall",
+    name: "",
     email: "",
     avatar: "/logo-no-text.png",
   });
 
   React.useEffect(() => {
+    if (!authChecked) return;
+
     if (loggedIn) {
       axios
         .get("/api/me")
@@ -47,7 +49,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     } else {
       setUserData({ name: "pwnthemall", email: "", avatar: "/logo-no-text.png" });
     }
-  }, [loggedIn]);
+  }, [loggedIn, authChecked]);
 
   const navItems = React.useMemo(() => {
     if (!authChecked) return [];
