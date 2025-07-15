@@ -33,6 +33,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     name: "",
     email: "",
     avatar: "/logo-no-text.png",
+    role: "",
   });
 
   React.useEffect(() => {
@@ -42,12 +43,17 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       axios
         .get("/api/me")
         .then((res) => {
-          const { username, email } = res.data;
-          setUserData({ name: username, email, avatar: "/logo-no-text.png" });
+          const { username, email, role } = res.data;
+          setUserData({
+            name: username,
+            email,
+            avatar: "/logo-no-text.png",
+            role,
+          });
         })
         .catch(() => {});
     } else {
-      setUserData({ name: "pwnthemall", email: "", avatar: "/logo-no-text.png" });
+      setUserData({ name: "pwnthemall", email: "", avatar: "/logo-no-text.png", role: "" });
     }
   }, [loggedIn, authChecked]);
 
@@ -73,6 +79,19 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         icon: List,
         isActive: router.pathname === "/scoreboard",
       });
+      if (userData.role === "admin") {
+        items.push({
+          title: "Administration",
+          url: "/admin",
+          icon: User,
+          items: [
+            { title: "Dashboard", url: "/admin" },
+            { title: "Users", url: "/users" },
+          ],
+          isActive:
+            router.pathname === "/admin" || router.pathname === "/users",
+        });
+      }
     } else {
       items.push({
         title: "Login",
@@ -88,7 +107,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       });
     }
     return items;
-  }, [authChecked, loggedIn, router.pathname]);
+  }, [authChecked, loggedIn, router.pathname, userData.role]);
 
   return (
     <Sidebar
