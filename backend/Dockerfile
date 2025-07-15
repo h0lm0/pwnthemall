@@ -15,6 +15,8 @@ WORKDIR /app
 
 RUN apk --no-cache add ca-certificates
 
+COPY config/casbin_model.conf /app/
+COPY config/casbin_policies.csv /app/
 COPY --from=go_builder /app/pwnthemall /app/pwnthemall
 
 EXPOSE 8080

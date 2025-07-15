@@ -3,7 +3,11 @@ package models
 import "time"
 
 type Solve struct {
+	ID          uint `gorm:"primaryKey"`
 	UserID      uint
 	ChallengeID uint
-	SolvedAt    time.Time
+	CreatedAt   time.Time
+
+	User      User
+	Challenge Challenge
 }

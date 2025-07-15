@@ -2,27 +2,34 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/casbin/casbin/v2"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 )
 
-func MigrateCasbin() {
+var CEF *casbin.Enforcer
+
+func InitCasbin() *casbin.Enforcer {
 	adapter, err := gormadapter.NewAdapterByDB(DB)
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize casbin adapter: %v", err))
 	}
 
-	enforcer, err := casbin.NewEnforcer("rbac_model.conf", adapter)
+	enforcer, err := casbin.NewEnforcer("casbin_model.conf", adapter)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create casbin enforcer: %v", err))
 	}
 	enforcer.LoadPolicy()
-	if hasPolicy, _ := enforcer.HasPolicy("admin", "user", "write"); !hasPolicy {
-		enforcer.AddPolicy("admin", "user", "write")
+	CEF = enforcer
+
+	if os.Getenv("SEED_CASBIN") == "true" {
+		SeedCasbin(CEF)
 	}
-	if hasPolicy, _ := enforcer.HasPolicy("user", "challenge", "read"); !hasPolicy {
-		enforcer.AddPolicy("user", "challenge", "read")
+
+	if os.Getenv("SEED_CASBIN_CSV") == "true" {
+		SeedCasbinFromCsv(CEF)
 	}
-	enforcer.SavePolicy()
+
+	return enforcer
 }

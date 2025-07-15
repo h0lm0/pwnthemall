@@ -97,3 +97,24 @@ func DeleteUser(c *gin.Context) {
 	config.DB.Delete(&user)
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
 }
+
+// GetCurrentUser returns the currently authenticated user based on the session
+func GetCurrentUser(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":       user.ID,
+		"username": user.Username,
+		"email":    user.Email,
+	})
+}
