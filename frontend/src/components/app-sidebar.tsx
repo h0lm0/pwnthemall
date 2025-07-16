@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Home, Swords, LogIn, UserPlus, User, List } from "lucide-react";
+import { Home, Swords, LogIn, UserPlus, User, List, ShieldUser } from "lucide-react";
 import { useRouter } from "next/router";
 
 import { NavMain } from "@/components/nav-main";
@@ -83,7 +83,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         items.push({
           title: "Administration",
           url: "/admin",
-          icon: User,
+          icon: ShieldUser,
           items: [
             { title: "Dashboard", url: "/admin/dashboard" },
             { title: "Users", url: "/admin/users" },
