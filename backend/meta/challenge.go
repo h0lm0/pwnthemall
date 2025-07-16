@@ -5,5 +5,4 @@ type ChallengeMetadata struct {
 	Description string `yaml:"description"`
 	Category    string `yaml:"category"`
 	Difficulty  string `yaml:"difficulty"`
-	Hidden      bool   `yaml:"hidden"`
 }
