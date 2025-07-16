@@ -85,11 +85,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           url: "/admin",
           icon: User,
           items: [
-            { title: "Dashboard", url: "/admin" },
-            { title: "Users", url: "/users" },
+            { title: "Dashboard", url: "/admin/dashboard" },
+            { title: "Users", url: "/admin/users" },
           ],
           isActive:
-            router.pathname === "/admin" || router.pathname === "/users",
+            router.pathname === "/admin/dashboard" || router.pathname === "/admin/users",
         });
       }
     } else {
