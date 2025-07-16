@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -11,70 +10,90 @@ import (
 	"pwnthemall/meta"
 	"pwnthemall/models"
 
-	"github.com/goccy/go-yaml"
 	"github.com/minio/minio-go/v7"
+	"gopkg.in/yaml.v2"
 	"gorm.io/gorm"
 )
 
-func SyncChallengesFromMinIO(ctx context.Context) error {
+func SyncChallengesFromMinIO(ctx context.Context, key string) error {
+	// Extract the bucket name and the object key
 	const bucketName = "challenges"
-	log.Printf("SyncChallengesFromMinIO begin")
-	objCh := config.FS.ListObjects(ctx, bucketName, minio.ListObjectsOptions{
-		Prefix:    "",
-		Recursive: true,
-	})
-	log.Print(objCh)
+	parts := strings.SplitN(key, "/", 2)
+	if len(parts) < 2 {
+		log.Printf("Invalid key format: %s", key)
+		return nil
+	}
 
-	for obj := range objCh {
-		if obj.Err != nil || !strings.HasSuffix(obj.Key, "chall.yml") {
-			continue
-		}
+	objectKey := parts[1]
 
-		parts := strings.Split(obj.Key, "/")
-		if len(parts) < 2 {
-			continue
-		}
-		slug := parts[0]
+	log.Printf("SyncChallengesFromMinIO begin for bucket: %s, key: %s", bucketName, objectKey)
 
-		objReader, err := config.FS.GetObject(ctx, bucketName, obj.Key, minio.GetObjectOptions{})
-		if err != nil {
-			fmt.Printf("Erreur téléchargement %s: %v\n", obj.Key, err)
-			continue
-		}
-		buf := new(bytes.Buffer)
-		_, err = buf.ReadFrom(objReader)
-		if err != nil {
-			fmt.Printf("Erreur lecture %s: %v\n", obj.Key, err)
-			continue
-		}
-
-		var metaData meta.ChallengeMetadata
-		if err := yaml.Unmarshal(buf.Bytes(), &metaData); err != nil {
-			fmt.Printf("YAML invalide pour %s: %v\n", obj.Key, err)
-			continue
-		}
-
-		var category models.ChallengeCategory
-		if err := config.DB.FirstOrCreate(&category, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
+	// Check if the object exists in MinIO
+	obj, err := config.FS.GetObject(ctx, bucketName, objectKey, minio.GetObjectOptions{})
+	if err != nil {
+		log.Printf("Object not found or error retrieving object %s: %v", objectKey, err)
+		// If the object is not found, delete it from the database
+		slug := strings.Split(objectKey, "/")[0]
+		if err := deleteChallengeFromDB(slug); err != nil {
+			log.Printf("Error deleting challenge from DB: %v", err)
 			return err
 		}
+		log.Printf("Deleted challenge with slug %s from DB", slug)
+		return nil
+	}
+	defer obj.Close()
 
-		var challenge models.Challenge
-		if err := config.DB.Where("slug = ?", slug).First(&challenge).Error; err != nil && err != gorm.ErrRecordNotFound {
-			return err
-		}
+	// Read the object content
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(obj); err != nil {
+		log.Printf("Error reading object %s: %v", objectKey, err)
+		return err
+	}
 
-		challenge.Slug = slug
-		challenge.Name = metaData.Name
-		challenge.Description = metaData.Description
-		challenge.Difficulty = metaData.Difficulty
-		challenge.ChallengeCategoryID = category.ID
+	// Unmarshal the YAML content and update the database
+	var metaData meta.ChallengeMetadata
+	if err := yaml.Unmarshal(buf.Bytes(), &metaData); err != nil {
+		log.Printf("Invalid YAML for %s: %v", objectKey, err)
+		return err
+	}
 
-		if err := config.DB.Save(&challenge).Error; err != nil {
-			return err
-		}
+	// Update or create the challenge in the database
+	if err := updateOrCreateChallengeInDB(metaData, strings.Split(objectKey, "/")[0]); err != nil {
+		log.Printf("Error updating or creating challenge in DB: %v", err)
+		return err
+	}
 
-		fmt.Printf("Synchro %s → DB (%s)\n", slug, challenge.Name)
+	log.Printf("Synced %s to DB", objectKey)
+	return nil
+}
+
+func deleteChallengeFromDB(slug string) error {
+	var challenge models.Challenge
+	if err := config.DB.Where("slug = ?", slug).Delete(&challenge).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) error {
+	var category models.ChallengeCategory
+	if err := config.DB.FirstOrCreate(&category, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
+		return err
+	}
+
+	var challenge models.Challenge
+	if err := config.DB.Where("slug = ?", slug).First(&challenge).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+
+	challenge.Slug = slug
+	challenge.Name = metaData.Name
+	challenge.Description = metaData.Description
+	challenge.Difficulty = metaData.Difficulty
+	challenge.ChallengeCategoryID = category.ID
+
+	if err := config.DB.Save(&challenge).Error; err != nil {
+		return err
 	}
 
 	return nil
