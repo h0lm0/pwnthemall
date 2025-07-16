@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import UsersContent from "@/components/admin/UsersContent";
 
-export default function AdminPage() {
+
+
+export default function UsersPage() {
   const router = useRouter();
   const { loggedIn, checkAuth, authChecked } = useAuth();
   const [role, setRole] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -27,6 +31,11 @@ export default function AdminPage() {
       router.replace("/login");
     } else if (role && role !== "admin") {
       router.replace("/pwn");
+    } else if (role === "admin") {
+      axios
+        .get<User[]>("/api/users")
+        .then((res) => setUsers(res.data))
+        .catch(() => setUsers([]));
     }
   }, [authChecked, loggedIn, role, router]);
 
@@ -34,10 +43,8 @@ export default function AdminPage() {
   if (!loggedIn || role !== "admin") return null;
 
   return (
-    <div className="bg-muted flex min-h-screen items-center justify-center">
-      <h1 className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
-        Administration page
-      </h1>
-    </div>
-  );
+    <UsersContent
+      users={users}
+    />
+  )
 }
