@@ -2,3 +2,4 @@ name: pwn me 2
 description: pwn me 2 blabla,
 category: misc
 difficulty: easy
+hidden: true
