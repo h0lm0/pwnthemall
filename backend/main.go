@@ -41,7 +41,6 @@ func main() {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	})
-	// router.Use(authz.NewAuthorizer(config.CEF))
 	router.Use(sessions.Sessions("pwnthemall", store))
 
 	router.Use(cors.New(cors.Config{
@@ -59,6 +58,7 @@ func main() {
 	routes.RegisterUserRoutes(router)
 	routes.RegisterAuthRoutes(router)
 	routes.RegisterWebhookRoutes(router)
+	routes.RegisterChallengeRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -9,8 +9,8 @@ require (
 	github.com/casbin/gorm-adapter/v3 v3.33.0
 	github.com/gin-contrib/sessions v0.0.4
 	github.com/gin-gonic/gin v1.10.1
-	github.com/goccy/go-yaml v1.18.0
 	github.com/minio/minio-go/v7 v7.0.94
+	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/gorm v1.30.0
 )
 
