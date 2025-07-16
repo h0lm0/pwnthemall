@@ -116,5 +116,6 @@ func GetCurrentUser(c *gin.Context) {
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
+		"role":     user.Role,
 	})
 }
