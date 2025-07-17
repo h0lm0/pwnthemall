@@ -9,7 +9,7 @@ import (
 )
 
 type ChallengeCategoryInput struct {
-	Name string `json:"identifier" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 func GetChallengeCategories(c *gin.Context) {
