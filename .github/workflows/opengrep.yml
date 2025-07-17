@@ -1,7 +1,8 @@
 name: OpenGrep Scan
 
-on: [push, workflow_dispatch]
-
+on: 
+  pull_request:
+    branches: [ "main" ]
 jobs:
   opengrep:
     name: OpenGrep
