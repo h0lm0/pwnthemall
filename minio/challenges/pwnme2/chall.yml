@@ -1,4 +1,5 @@
 name: pwn me 2
-description: pwn me 1 blabla,
-category: pwn
+description: pwn me 2 blabla,
+category: misc
 difficulty: easy
+hidden: true

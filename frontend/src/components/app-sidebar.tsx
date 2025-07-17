@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Home, Swords, LogIn, UserPlus, User, List } from "lucide-react";
+import { Home, Swords, LogIn, UserPlus, User, List, ShieldUser } from "lucide-react";
 import { useRouter } from "next/router";
 
 import { NavMain } from "@/components/nav-main";
@@ -33,6 +33,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     name: "",
     email: "",
     avatar: "/logo-no-text.png",
+    role: "",
   });
 
   React.useEffect(() => {
@@ -42,12 +43,17 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       axios
         .get("/api/me")
         .then((res) => {
-          const { username, email } = res.data;
-          setUserData({ name: username, email, avatar: "/logo-no-text.png" });
+          const { username, email, role } = res.data;
+          setUserData({
+            name: username,
+            email,
+            avatar: "/logo-no-text.png",
+            role,
+          });
         })
         .catch(() => {});
     } else {
-      setUserData({ name: "pwnthemall", email: "", avatar: "/logo-no-text.png" });
+      setUserData({ name: "pwnthemall", email: "", avatar: "/logo-no-text.png", role: "" });
     }
   }, [loggedIn, authChecked]);
 
@@ -73,6 +79,21 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         icon: List,
         isActive: router.pathname === "/scoreboard",
       });
+      if (userData.role === "admin") {
+        items.push({
+          title: "Administration",
+          url: "/admin",
+          icon: ShieldUser,
+          items: [
+            { title: "Dashboard", url: "/admin/dashboard" },
+            { title: "Users", url: "/admin/users" },
+            { title: "Challenge categories", url: "/admin/challenge-categories" },
+          ],
+          isActive:
+            router.pathname === "/admin/dashboard" || router.pathname === "/admin/users" ||
+            router.pathname === "/admin/challenge-categories",
+        });
+      }
     } else {
       items.push({
         title: "Login",
@@ -88,7 +109,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       });
     }
     return items;
-  }, [authChecked, loggedIn, router.pathname]);
+  }, [authChecked, loggedIn, router.pathname, userData.role]);
 
   return (
     <Sidebar

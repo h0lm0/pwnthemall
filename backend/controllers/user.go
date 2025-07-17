@@ -80,6 +80,7 @@ func UpdateUser(c *gin.Context) {
 
 	user.Username = input.Username
 	user.Email = input.Email
+	user.Role = input.Role
 	config.DB.Save(&user)
 
 	c.JSON(http.StatusOK, user)
@@ -116,5 +117,6 @@ func GetCurrentUser(c *gin.Context) {
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
+		"role":     user.Role,
 	})
 }
