@@ -1,11 +1,20 @@
 package controllers
 
 import (
+	"archive/zip"
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"log"
 	"net/http"
+	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/minio/minio-go/v7"
 )
 
 func GetChallenges(c *gin.Context) {
@@ -30,69 +39,101 @@ func GetChallenge(c *gin.Context) {
 	c.JSON(http.StatusOK, challenge)
 }
 
-// func CreateChallenge(c *gin.Context) {
-// 	var input RegisterInput
-// 	if err := c.ShouldBindJSON(&input); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
+func CreateChallenge(c *gin.Context) {
+	const maxSizePerFile = 1024 * 1024 * 256 // 256 MB
 
-// 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors du hash du mot de passe"})
-// 		return
-// 	}
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file"})
+		return
+	}
+	defer file.Close()
 
-// 	user := models.User{
-// 		Username: input.Username,
-// 		Email:    input.Email,
-// 		Password: string(hashedPassword),
-// 	}
+	if !strings.HasSuffix(strings.ToLower(header.Filename), ".zip") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only .zip files are allowed"})
+		return
+	}
 
-// 	if err := config.DB.Create(&user).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
+	buf := new(bytes.Buffer)
+	if _, err := io.CopyN(buf, file, maxSizePerFile); err != nil && err != io.EOF {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Zip archive too large"})
+		return
+	}
 
-// 	// Ne retourne jamais le mot de passe dans la réponse
-// 	c.JSON(http.StatusCreated, gin.H{
-// 		"id":       user.ID,
-// 		"username": user.Username,
-// 		"email":    user.Email,
-// 	})
-// }
+	r, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid zip archive"})
+		return
+	}
 
-// func UpdateChallenge(c *gin.Context) {
-// 	var user models.User
-// 	id := c.Param("id")
+	filename := header.Filename
+	slug := strings.TrimSuffix(filename, filepath.Ext(filename))
+	bucketName := "challenges"
+	ctx := context.Background()
 
-// 	if err := config.DB.First(&user, id).Error; err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-// 		return
-// 	}
+	prefix := ""
+	if len(r.File) > 0 {
+		first := r.File[0].Name
+		if idx := strings.Index(first, "/"); idx != -1 {
+			prefix = first[:idx+1]
+		}
+	}
 
-// 	var input models.User
-// 	if err := c.ShouldBindJSON(&input); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
+	foundChallYml := false
+	for _, f := range r.File {
+		normalized := strings.TrimPrefix(f.Name, prefix)
+		if strings.ToLower(normalized) == "chall.yml" {
+			foundChallYml = true
+			break
+		}
+	}
 
-// 	user.Username = input.Username
-// 	user.Email = input.Email
-// 	config.DB.Save(&user)
+	if !foundChallYml {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing chall.yml in archive"})
+		return
+	}
 
-// 	c.JSON(http.StatusOK, user)
-// }
+	for _, f := range r.File {
+		if f.FileInfo().IsDir() {
+			continue
+		}
 
-// func DeleteChallenge(c *gin.Context) {
-// 	var user models.User
-// 	id := c.Param("id")
+		cleanPath := filepath.ToSlash(strings.TrimPrefix(f.Name, prefix))
+		if strings.Contains(cleanPath, "..") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path in archive"})
+			return
+		}
 
-// 	if err := config.DB.First(&user, id).Error; err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-// 		return
-// 	}
+		fc, err := f.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read zip content"})
+			return
+		}
 
-// 	config.DB.Delete(&user)
-// 	c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
-// }
+		var fileBuf bytes.Buffer
+		if _, err := io.CopyN(&fileBuf, fc, maxSizePerFile); err != nil && err != io.EOF {
+			fc.Close()
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("File %s is too large", f.Name)})
+			return
+		}
+		fc.Close()
+
+		if fileBuf.Len() == 0 {
+			continue
+		}
+
+		objectPath := slug + "/" + cleanPath
+
+		_, err = config.FS.PutObject(ctx, bucketName, objectPath, bytes.NewReader(fileBuf.Bytes()), int64(fileBuf.Len()), minio.PutObjectOptions{
+			ContentType: http.DetectContentType(fileBuf.Bytes()),
+		})
+
+		if err != nil {
+			log.Printf("Failed to upload %s: %v", objectPath, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to MinIO"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Challenge uploaded", "slug": slug})
+}
