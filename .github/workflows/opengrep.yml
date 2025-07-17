@@ -10,9 +10,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Install OpenGrep
         run: |
-          wget https://github.com/opengrep/opengrep/releases/download/v1.7.0/opengrep_manylinux_x86 -O opengrep
+          wget https://github.com/opengrep/opengrep/releases/download/v1.7.0/opengrep_manylinux_x86 -q -O opengrep
 
       - name: Run Semgrep with autofix
         run: |
+          ls -la
           git clone https://github.com/opengrep/opengrep-rules.git
           opengrep --autofix --error -f ./opengrep-rules ./ || true
