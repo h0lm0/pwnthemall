@@ -11,10 +11,13 @@ jobs:
       - name: Install OpenGrep
         run: |
           wget https://github.com/opengrep/opengrep/releases/download/v1.7.0/opengrep_manylinux_x86 -q -O opengrep
-
-      - name: Run Semgrep with autofix
-        run: |
           git clone https://github.com/opengrep/opengrep-rules.git
-          ls -la
           chmod +x ./opengrep
-          ./opengrep --autofix --error -f ./opengrep-rules ./ || true
+
+      - name: Run Semgrep Golang rules
+        run: |
+          ./opengrep --autofix --error -f ./opengrep-rules/go ./backend || true
+
+      - name: Run Semgrep TS rules
+        run: |
+          ./opengrep --autofix --error -f ./opengrep-rules/typescript ./frontend || true
