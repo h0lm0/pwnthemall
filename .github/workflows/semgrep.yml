@@ -11,7 +11,7 @@ jobs:
         id: semgrep
         uses: returntocorp/semgrep-action@v1
         with:
-          config: p/ci
+          config: p/r2c-security-audit
       - name: Create Pull Request
         if: steps.semgrep.outputs.has-findings == 'true'
         uses: peter-evans/create-pull-request@v3
