@@ -1,4 +1,5 @@
-import { useState } from "react"
+import React, { useState } from "react"
+import type { JSX } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 interface UserFormProps {
   initialData?: UserFormData
   isEdit?: boolean
@@ -26,13 +28,22 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
     Password: "",
     Role: initialData?.Username || ""
   })
+  const [error, setError] = useState<string>("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
+    if (e.target.name === "Password" && error) {
+      setError("");
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isEdit && (form.Password || "").length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+    setError("");
     onSubmit(form)
   }
 
@@ -51,7 +62,7 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
         <Select
           name="Role"
           defaultValue={form.Role}
-          onValueChange={(value) => setForm({ ...form, Role: value })}
+          onValueChange={(value: string) => setForm({ ...form, Role: value })}
           required
         >
           <SelectTrigger className="w-[180px]">
@@ -70,8 +81,13 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
       {!isEdit && (
         <div className="grid gap-2">
           <Label htmlFor="Password">Password</Label>
-          <Input id="Password" name="Password" type="password" value={form.Password || ""} onChange={handleChange} required />
+          <Input id="Password" name="Password" type="password" value={form.Password || ""} onChange={handleChange} required minLength={8} />
         </div>
+      )}
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
       <Button type="submit" className="w-full">Save</Button>
     </form>
