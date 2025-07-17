@@ -23,11 +23,14 @@ import {
 import axios from "axios";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useChallengeCategories } from "@/hooks/use-challenge-categories";
+import type { NavItem } from "@/models/NavItem";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { loggedIn, logout, authChecked } = useAuth();
   const router = useRouter();
   const { isMobile } = useSidebar();
+  const { categories, loading } = useChallengeCategories();
 
   const [userData, setUserData] = React.useState({
     name: "",
@@ -59,19 +62,25 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
   const navItems = React.useMemo(() => {
     if (!authChecked) return [];
-    const items = [] as {
-      title: string;
-      url: string;
-      icon?: any;
-      items?: { title: string; url: string }[];
-      isActive?: boolean;
-    }[];
+    const items: NavItem[] = [];
+    let pwnSubItems;
+    if (loading) {
+      pwnSubItems = [{ title: "Loading...", url: "#" }];
+    } else if (categories.length === 0) {
+      pwnSubItems = [{ title: "No categories", url: "#" }];
+    } else {
+      pwnSubItems = categories.map((cat) => ({
+        title: cat.Name,
+        url: `/pwn/${cat.Name}`,
+      }));
+    }
     if (loggedIn) {
       items.push({
         title: "Pwn",
         url: "/pwn",
         icon: Swords,
-        isActive: router.pathname === "/pwn",
+        isActive: router.pathname.startsWith("/pwn"),
+        items: pwnSubItems,
       });
       items.push({
         title: "Scoreboard",
@@ -90,7 +99,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             { title: "Challenge categories", url: "/admin/challenge-categories" },
           ],
           isActive:
-            router.pathname === "/admin/dashboard" || router.pathname === "/admin/users" ||
+            router.pathname === "/admin/dashboard" ||
+            router.pathname === "/admin/users" ||
             router.pathname === "/admin/challenge-categories",
         });
       }
@@ -109,7 +119,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       });
     }
     return items;
-  }, [authChecked, loggedIn, router.pathname, userData.role]);
+  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading]);
 
   return (
     <Sidebar
