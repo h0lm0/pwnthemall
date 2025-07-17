@@ -1,13 +1,16 @@
 name: OpenGrep Scan
-on: [push]
+
+on: [push, workflow_dispatch]
 
 jobs:
   opengrep:
     name: OpenGrep
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
       - name: Install OpenGrep
         run: |
           wget https://github.com/opengrep/opengrep/releases/download/v1.7.0/opengrep_manylinux_x86 -q -O opengrep
@@ -21,3 +24,28 @@ jobs:
       - name: Run Semgrep TS rules
         run: |
           ./opengrep --autofix --error -f ./opengrep-rules/typescript ./frontend || true
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if ! git diff --quiet; then
+            echo "changes_detected=true" >> $GITHUB_ENV
+            echo "true" > .changes
+          else
+            echo "false" > .changes
+          fi
+
+      - name: Create PR if changes
+        if: env.changes_detected == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: apply OpenGrep autofix"
+          branch: "autofix/opengrep"
+          title: "chore: apply OpenGrep autofix"
+          body: |
+            Cette PR contient les correctifs générés automatiquement par OpenGrep (`--autofix`) sur le code source.
+
+            Veuillez vérifier que les modifications sont valides avant de merger.
+          labels: |
+            opengrep
+            autofix
