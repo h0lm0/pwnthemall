@@ -1,11 +1,19 @@
 package controllers
 
 import (
+	"archive/zip"
+	"bytes"
+	"context"
+	"io"
+	"log"
 	"net/http"
+	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/minio/minio-go/v7"
 )
 
 func GetChallenges(c *gin.Context) {
@@ -30,69 +38,71 @@ func GetChallenge(c *gin.Context) {
 	c.JSON(http.StatusOK, challenge)
 }
 
-// func CreateChallenge(c *gin.Context) {
-// 	var input RegisterInput
-// 	if err := c.ShouldBindJSON(&input); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
+func CreateChallenge(c *gin.Context) {
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file"})
+		return
+	}
+	defer file.Close()
 
-// 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors du hash du mot de passe"})
-// 		return
-// 	}
+	buf := new(bytes.Buffer)
+	if _, err := io.Copy(buf, file); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read archive"})
+		return
+	}
 
-// 	user := models.User{
-// 		Username: input.Username,
-// 		Email:    input.Email,
-// 		Password: string(hashedPassword),
-// 	}
+	r, err := zip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid zip archive"})
+		return
+	}
 
-// 	if err := config.DB.Create(&user).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
+	filename := header.Filename
+	slug := strings.TrimSuffix(filename, filepath.Ext(filename))
+	bucketName := "challenges"
+	ctx := context.Background()
 
-// 	// Ne retourne jamais le mot de passe dans la réponse
-// 	c.JSON(http.StatusCreated, gin.H{
-// 		"id":       user.ID,
-// 		"username": user.Username,
-// 		"email":    user.Email,
-// 	})
-// }
+	prefix := ""
+	if len(r.File) > 0 {
+		first := r.File[0].Name
+		if idx := strings.Index(first, "/"); idx != -1 {
+			prefix = first[:idx+1]
+		}
+	}
 
-// func UpdateChallenge(c *gin.Context) {
-// 	var user models.User
-// 	id := c.Param("id")
+	for _, f := range r.File {
+		if f.FileInfo().IsDir() {
+			continue // ignorer les dossiers
+		}
 
-// 	if err := config.DB.First(&user, id).Error; err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-// 		return
-// 	}
+		fc, err := f.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read zip content"})
+			return
+		}
 
-// 	var input models.User
-// 	if err := c.ShouldBindJSON(&input); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
+		var fileBuf bytes.Buffer
+		if _, err := io.Copy(&fileBuf, fc); err != nil {
+			fc.Close()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read zip file"})
+			return
+		}
+		fc.Close()
 
-// 	user.Username = input.Username
-// 	user.Email = input.Email
-// 	config.DB.Save(&user)
+		cleanPath := strings.TrimPrefix(f.Name, prefix)
+		objectPath := slug + "/" + cleanPath
 
-// 	c.JSON(http.StatusOK, user)
-// }
+		_, err = config.FS.PutObject(ctx, bucketName, objectPath, bytes.NewReader(fileBuf.Bytes()), int64(fileBuf.Len()), minio.PutObjectOptions{
+			ContentType: "application/octet-stream",
+		})
 
-// func DeleteChallenge(c *gin.Context) {
-// 	var user models.User
-// 	id := c.Param("id")
+		if err != nil {
+			log.Printf("Failed to upload %s: %v", objectPath, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to MinIO"})
+			return
+		}
+	}
 
-// 	if err := config.DB.First(&user, id).Error; err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-// 		return
-// 	}
-
-// 	config.DB.Delete(&user)
-// 	c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
-// }
+	c.JSON(http.StatusOK, gin.H{"message": "Challenge uploaded", "slug": slug})
+}
