@@ -15,4 +15,4 @@ jobs:
       - name: Run Semgrep with autofix
         run: |
           git clone https://github.com/opengrep/opengrep-rules.git
-          opengrep --autofix --error -f ./opengrep-rules ./ || true
+          /home/runner/.opengrep/cli/latest/opengrep --autofix --error -f ./opengrep-rules ./ || true
