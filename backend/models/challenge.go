@@ -13,4 +13,5 @@ type Challenge struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	Solvers             []*User `gorm:"many2many:solves"`
+	Hidden              bool
 }

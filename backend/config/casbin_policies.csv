@@ -2,4 +2,8 @@ p, anonymous, /login, *
 p, anonymous, /register, *
 p, member, /logout, *
 p, member, /pwn, *
+p, member, /challenges, read
+p, member, /challenges/:id, read
+p, member, /challenges-categories, read
+p, member, /challenges-categories/:id, read
 p, admin, /*, *

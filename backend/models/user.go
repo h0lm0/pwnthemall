@@ -9,7 +9,7 @@ type User struct {
 	Username string `gorm:"not null"`
 	Email    string `gorm:"unique;not null"`
 	Password string `json:"-"`
-	Role     string `json:"-" gorm:"not null;default:'member'"`
+	Role     string `gorm:"not null;default:'member'"`
 	// Uuid      string `json:"-"`
 	CreatedAt time.Time
 	UpdatedAt time.Time

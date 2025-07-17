@@ -1,6 +1,6 @@
 package models
 
 type ChallengeCategory struct {
-	ID   uint   `json:"id" gorm:"primaryKey"`
-	Name string `json:"name" gorm:"not null"`
+	ID   uint   `gorm:"primaryKey"`
+	Name string `gorm:"unique;not null"`
 }

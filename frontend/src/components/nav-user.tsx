@@ -24,6 +24,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 import { useTheme } from "next-themes"
 import {
   SidebarMenu,
@@ -51,6 +62,7 @@ export function NavUser({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
+        <AlertDialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
@@ -112,19 +124,30 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             {loggedIn && (
-              <DropdownMenuItem
-                onSelect={() => {
-                  if (window.confirm("Are you sure you want to log out?")) {
-                    onLogout()
-                  }
-                }}
-              >
-                <LogOut />
-                Log out
-              </DropdownMenuItem>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem>
+                  <LogOut />
+                  Log out
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to log out?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You will need to sign in again to continue.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onLogout}>Log out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+        </AlertDialog>
       </SidebarMenuItem>
     </SidebarMenu>
   )

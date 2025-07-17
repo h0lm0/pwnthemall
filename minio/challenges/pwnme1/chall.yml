@@ -2,3 +2,4 @@ name: pwn me 1
 description: pwnaaaaaaa me 1 blabla, changed
 category: pwn
 difficulty: easy
+hidden: false

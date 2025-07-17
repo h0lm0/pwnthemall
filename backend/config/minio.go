@@ -11,7 +11,7 @@ import (
 var FS *minio.Client
 
 func ConnectMinio() *minio.Client {
-	endpoint := "minio"
+	endpoint := "minio:9000"
 	useSSL := false
 
 	minioClient, err := minio.New(endpoint, &minio.Options{
@@ -21,5 +21,6 @@ func ConnectMinio() *minio.Client {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	FS = minioClient
 	return minioClient
 }
