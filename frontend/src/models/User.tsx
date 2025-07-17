@@ -11,4 +11,5 @@ export interface UserFormData {
   Username: string
   Email: string
   Password?: string
+  Role: string
 }
