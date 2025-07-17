@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -39,6 +40,8 @@ func GetChallenge(c *gin.Context) {
 }
 
 func CreateChallenge(c *gin.Context) {
+	const maxSizePerFile = 1024 * 1024 * 256 // 256 MB
+
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file"})
@@ -46,9 +49,14 @@ func CreateChallenge(c *gin.Context) {
 	}
 	defer file.Close()
 
+	if !strings.HasSuffix(strings.ToLower(header.Filename), ".zip") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only .zip files are allowed"})
+		return
+	}
+
 	buf := new(bytes.Buffer)
-	if _, err := io.Copy(buf, file); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read archive"})
+	if _, err := io.CopyN(buf, file, maxSizePerFile); err != nil && err != io.EOF {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Zip archive too large"})
 		return
 	}
 
@@ -71,9 +79,29 @@ func CreateChallenge(c *gin.Context) {
 		}
 	}
 
+	foundChallYml := false
+	for _, f := range r.File {
+		normalized := strings.TrimPrefix(f.Name, prefix)
+		if strings.ToLower(normalized) == "chall.yml" {
+			foundChallYml = true
+			break
+		}
+	}
+
+	if !foundChallYml {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing chall.yml in archive"})
+		return
+	}
+
 	for _, f := range r.File {
 		if f.FileInfo().IsDir() {
-			continue // ignorer les dossiers
+			continue
+		}
+
+		cleanPath := filepath.ToSlash(strings.TrimPrefix(f.Name, prefix))
+		if strings.Contains(cleanPath, "..") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path in archive"})
+			return
 		}
 
 		fc, err := f.Open()
@@ -83,18 +111,21 @@ func CreateChallenge(c *gin.Context) {
 		}
 
 		var fileBuf bytes.Buffer
-		if _, err := io.Copy(&fileBuf, fc); err != nil {
+		if _, err := io.CopyN(&fileBuf, fc, maxSizePerFile); err != nil && err != io.EOF {
 			fc.Close()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read zip file"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("File %s is too large", f.Name)})
 			return
 		}
 		fc.Close()
 
-		cleanPath := strings.TrimPrefix(f.Name, prefix)
+		if fileBuf.Len() == 0 {
+			continue
+		}
+
 		objectPath := slug + "/" + cleanPath
 
 		_, err = config.FS.PutObject(ctx, bucketName, objectPath, bytes.NewReader(fileBuf.Bytes()), int64(fileBuf.Len()), minio.PutObjectOptions{
-			ContentType: "application/octet-stream",
+			ContentType: http.DetectContentType(fileBuf.Bytes()),
 		})
 
 		if err != nil {
