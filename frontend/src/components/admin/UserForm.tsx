@@ -4,6 +4,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { UserFormData } from "@/models/User"
 
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 interface UserFormProps {
   initialData?: UserFormData
   isEdit?: boolean
@@ -15,6 +24,7 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
     Username: initialData?.Username || "",
     Email: initialData?.Email || "",
     Password: "",
+    Role: initialData?.Username || ""
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +46,27 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
         <Label htmlFor="Email">Email</Label>
         <Input id="Email" name="Email" type="email" value={form.Email} onChange={handleChange} required />
       </div>
+      <div className="grid gap-2">
+        <Label htmlFor="Role">Role</Label>
+        <Select
+          name="Role"
+          defaultValue={form.Role}
+          onValueChange={(value) => setForm({ ...form, Role: value })}
+          required
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Role</SelectLabel>
+              <SelectItem value="member">member</SelectItem>
+              <SelectItem value="admin">admin</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
       {!isEdit && (
         <div className="grid gap-2">
           <Label htmlFor="Password">Password</Label>
