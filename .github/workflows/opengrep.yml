@@ -16,4 +16,5 @@ jobs:
         run: |
           git clone https://github.com/opengrep/opengrep-rules.git
           ls -la
+          chmod +x ./opengrep
           ./opengrep --autofix --error -f ./opengrep-rules ./ || true
