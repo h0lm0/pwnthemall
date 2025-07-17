@@ -87,9 +87,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           items: [
             { title: "Dashboard", url: "/admin/dashboard" },
             { title: "Users", url: "/admin/users" },
+            { title: "Challenge categories", url: "/admin/challenge-categories" },
           ],
           isActive:
-            router.pathname === "/admin/dashboard" || router.pathname === "/admin/users",
+            router.pathname === "/admin/dashboard" || router.pathname === "/admin/users" ||
+            router.pathname === "/admin/challenge-categories",
         });
       }
     } else {
