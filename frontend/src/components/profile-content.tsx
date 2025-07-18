@@ -26,6 +26,12 @@ export default function ProfileContent() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwMessage, setPwMessage] = useState<string | null>(null);
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwValidationError, setPwValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -68,6 +74,39 @@ export default function ProfileContent() {
       window.location.href = "/login";
     } catch (err: any) {
       setError(err?.response?.data?.error || "Failed to delete account");
+    }
+  };
+
+  // Password change handlers
+  const handleCurrentPasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setCurrentPassword(e.target.value);
+    setPwMessage(null);
+    setPwError(null);
+  };
+  const handleNewPasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setNewPassword(e.target.value);
+    setPwMessage(null);
+    setPwError(null);
+    if (e.target.value.length > 0 && e.target.value.length < 8) {
+      setPwValidationError("Password must be at least 8 characters long");
+    } else {
+      setPwValidationError(null);
+    }
+  };
+  const handlePasswordChange = async (e: FormEvent) => {
+    e.preventDefault();
+    setPwMessage(null);
+    setPwError(null);
+    setPwLoading(true);
+    try {
+      await axios.put("/api/me/password", { current: currentPassword, new: newPassword });
+      setPwMessage("Password updated successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (err: any) {
+      setPwError(err?.response?.data?.error || "Failed to update password");
+    } finally {
+      setPwLoading(false);
     }
   };
 
@@ -133,17 +172,23 @@ export default function ProfileContent() {
           </form>
         )}
         {activeTab === "Security" && (
-          <form className="space-y-4 max-w-md" onSubmit={e => e.preventDefault()}>
+          <form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="current">Current Password</label>
-              <Input id="current" name="current" type="password" value={""} onChange={() => {}} required autoComplete="current-password" disabled />
+              <Input id="current" name="current" type="password" value={currentPassword} onChange={handleCurrentPasswordChange} required autoComplete="current-password" disabled={pwLoading} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="new">New Password</label>
-              <Input id="new" name="new" type="password" value={""} onChange={() => {}} required autoComplete="new-password" disabled />
+              <Input id="new" name="new" type="password" value={newPassword} onChange={handleNewPasswordChange} required autoComplete="new-password" disabled={pwLoading} />
             </div>
-            <div style={{ minHeight: 24 }} />
-            <Button type="submit" className="w-full" disabled>Change Password</Button>
+            <div style={{ minHeight: 24 }}>
+              {pwValidationError && <div className="text-red-600 mt-2">{pwValidationError}</div>}
+              {pwError && <div className="text-red-600 mt-2">{pwError}</div>}
+              {!pwError && !pwValidationError && pwMessage && <div className="text-green-600 mt-2">{pwMessage}</div>}
+            </div>
+            <Button type="submit" className="w-full" disabled={pwLoading || !currentPassword || !newPassword || newPassword.length < 8}>
+              Change Password
+            </Button>
           </form>
         )}
       </CardContent>
