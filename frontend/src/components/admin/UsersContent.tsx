@@ -41,14 +41,18 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
 
   const columns: ColumnDef<User>[] = [
     { accessorKey: "ID", header: "ID" },
-    { accessorKey: "Username", header: "Username" },
-    { accessorKey: "Email", header: "Email" },
+    { accessorKey: "Username", header: "Username", cell: ({ getValue }) => (
+      <span className="whitespace-nowrap truncate max-w-[120px] block">{getValue() as string}</span>
+    ) },
+    { accessorKey: "Email", header: "Email", cell: ({ getValue }) => (
+      <span className="whitespace-nowrap truncate max-w-[180px] block">{getValue() as string}</span>
+    ) },
     { accessorKey: "Role", header: "Role" },
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 whitespace-nowrap">
           <Button variant="outline" size="sm" onClick={() => setEditingUser(row.original)}>
             Edit
           </Button>
