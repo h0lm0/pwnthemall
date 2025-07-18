@@ -16,7 +16,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
-const TABS = ["Account", "Security"] as const;
+const TABS = ["Account", "Security", "Appearance"] as const;
 type Tab = typeof TABS[number];
 
 export default function ProfileContent() {
@@ -244,6 +244,29 @@ export default function ProfileContent() {
               </AlertDialogContent>
             </AlertDialog>
           </form>
+        )}
+        {activeTab === "Appearance" && (
+          <div className="space-y-6 max-w-md">
+            <h2 className="text-xl font-semibold mb-2">Theme</h2>
+            <div className="flex flex-col gap-4">
+              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-accent">
+                <input type="radio" name="theme" value="choice1" className="accent-primary" disabled />
+                <span className="font-medium">Choice 1</span>
+                <span className="text-xs text-muted-foreground">a</span>
+              </label>
+              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-accent">
+                <input type="radio" name="theme" value="choice2" className="accent-primary" disabled />
+                <span className="font-medium">Choice 2</span>
+                <span className="text-xs text-muted-foreground">b</span>
+              </label>
+              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-accent">
+                <input type="radio" name="theme" value="choice3" className="accent-primary" disabled defaultChecked />
+                <span className="font-medium">Choice 3</span>
+                <span className="text-xs text-muted-foreground">c</span>
+              </label>
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">(marche pas pr le moment)</div>
+          </div>
         )}
       </CardContent>
     </Card>
