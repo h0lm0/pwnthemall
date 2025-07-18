@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { AuthProvider } from '@/context/AuthContext'
 import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
+import { CookieConsent } from "@/components/ui/CookieConsent";
 
 interface MyAppProps extends AppProps {
   sidebarDefaultOpen: boolean
@@ -17,6 +18,7 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
           <AppSidebar />
           <SidebarInset>
             <Component {...pageProps} />
+            <CookieConsent />
           </SidebarInset>
         </SidebarProvider>
       </ThemeProvider>

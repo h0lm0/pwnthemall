@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/models"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,16 @@ func AuthRequired() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
+
+		// Vérifie que l'utilisateur existe encore en BDD
+		var user models.User
+		if err := config.DB.First(&user, userID).Error; err != nil {
+			session.Clear()
+			session.Save()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
 		c.Set("user_id", userID)
 		c.Next()
 	}

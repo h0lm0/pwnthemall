@@ -40,8 +40,8 @@ export function DataTable<TData, TValue>({
   })
 
   return (
-    <div className="rounded-md border bg-background">
-      <table className="w-full table-fixed text-sm">
+    <div className="rounded-md border bg-background overflow-x-auto max-w-full">
+      <table className="w-full min-w-[600px] table-fixed text-sm">
         <thead className="border-b">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>

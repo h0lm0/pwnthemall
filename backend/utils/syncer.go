@@ -5,6 +5,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"pwnthemall/config"
 	"pwnthemall/meta"
@@ -27,12 +28,11 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	objectKey := parts[1]
 
 	log.Printf("SyncChallengesFromMinIO begin for bucket: %s, key: %s", bucketName, objectKey)
-
-	// Check if the object exists in MinIO
+	time.Sleep(500 * time.Millisecond)
 	obj, err := config.FS.GetObject(ctx, bucketName, objectKey, minio.GetObjectOptions{})
-	if err != nil {
+	_, statErr := obj.Stat()
+	if err != nil || statErr != nil {
 		log.Printf("Object not found or error retrieving object %s: %v", objectKey, err)
-		// If the object is not found, delete it from the database
 		slug := strings.Split(objectKey, "/")[0]
 		if err := deleteChallengeFromDB(slug); err != nil {
 			log.Printf("Error deleting challenge from DB: %v", err)
