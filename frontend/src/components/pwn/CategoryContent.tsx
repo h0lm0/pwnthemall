@@ -28,7 +28,7 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
               </CardHeader>
               <CardContent className="text-left space-y-2">
                 <p className="text-muted-foreground text-sm">{challenge.Description}</p>
-                <p className="text-sm">🎯 Difficulté : {challenge.Difficulty}</p>
+                <p className="text-sm">🎯 Difficulty : {challenge.Difficulty}</p>
               </CardContent>
             </Card>
           ))}
