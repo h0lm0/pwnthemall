@@ -30,7 +30,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { loggedIn, logout, authChecked } = useAuth();
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const { categories, loading } = useChallengeCategories();
+  const { categories, loading } = useChallengeCategories(loggedIn);
 
   const [userData, setUserData] = React.useState({
     name: "",
