@@ -1,11 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import CategoryContent from "@/components/pwn/CategoryContent";
+import { Challenge } from "@/models/Challenge";
+import axios from "axios";
 
 export default function CategoryPage() {
   const router = useRouter();
   const { category } = router.query;
   const { loggedIn, checkAuth, authChecked } = useAuth();
+
+  const cat = Array.isArray(category) ? category[0] : category;
+
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -17,17 +24,16 @@ export default function CategoryPage() {
     }
   }, [authChecked, loggedIn, router]);
 
-  if (!authChecked || !loggedIn) return null;
+  useEffect(() => {
+    if (authChecked && loggedIn && cat) {
+      axios
+        .get<Challenge[]>(`/api/challenges/category/${cat}`)
+        .then((res) => setChallenges(res.data))
+        .catch(() => setChallenges([]));
+    }
+  }, [authChecked, loggedIn, cat]);
 
-  const cat = Array.isArray(category) ? category[0] : category;
-  if (!cat) return null;
+  if (!authChecked || !loggedIn || !cat) return null;
 
-  return (
-    <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 text-center">
-      <h1 className="text-3xl font-bold mb-4 text-cyan-600 dark:text-cyan-400">
-        Category: {cat}
-      </h1>
-      {/* Ajoute ici le contenu spécifique à la catégorie si besoin */}
-    </main>
-  );
+  return <CategoryContent cat={cat} challenges={challenges} />;
 }
