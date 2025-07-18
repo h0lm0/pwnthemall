@@ -39,6 +39,22 @@ func GetChallenge(c *gin.Context) {
 	c.JSON(http.StatusOK, challenge)
 }
 
+func GetChallengesByCategoryName(c *gin.Context) {
+	categoryName := c.Param("category")
+
+	var challenges []models.Challenge
+	result := config.DB.Preload("ChallengeCategory").Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
+		Where("challenge_categories.name = ?", categoryName).
+		Find(&challenges)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, challenges)
+}
+
 func CreateChallenge(c *gin.Context) {
 	const maxSizePerFile = 1024 * 1024 * 256 // 256 MB
 
