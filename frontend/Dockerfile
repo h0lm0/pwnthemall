@@ -1,49 +1,55 @@
+# Base image
 FROM node:18-alpine AS base
-
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
+RUN apk add --no-cache libc6-compat
 
+# Dependencies stage
+FROM base AS deps
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
+  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm install --frozen-lockfile; \
+  else echo "No lockfile found." && exit 1; \
   fi
 
-FROM base AS builder
+# Development stage with hot reload
+FROM base AS dev
+ENV NODE_ENV development
+ENV NEXT_TELEMETRY_DISABLED 1
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ENV NEXT_TELEMETRY_DISABLED 1
+EXPOSE 3000
+CMD ["yarn", "dev"]
 
-RUN yarn build
-
-FROM base AS runner
-WORKDIR /app
-
+# Build stage for production
+FROM base AS build
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN yarn build
 
-COPY --from=builder /app/public ./public
+# Production runner
+FROM base AS prod
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV PORT 3000
+ENV HOSTNAME 0.0.0.0
 
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+WORKDIR /app
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
 
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=build /app/public ./public
+COPY --from=build /app/.next/standalone ./
+COPY --from=build /app/.next/static ./.next/static
 
 USER nextjs
-
 EXPOSE 3000
-
-ENV PORT 3000
-# set hostname to localhost
-ENV HOSTNAME "0.0.0.0"
-
 CMD ["node", "server.js"]

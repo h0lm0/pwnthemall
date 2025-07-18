@@ -4,11 +4,18 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: ${ENV} 
     environment:
       - NEXT_PUBLIC_API_URL=https://pwnthemall.local
+      - NODE_ENV=${ENV}
     depends_on:
       - backend
-
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      
   backend:
     container_name: backend
     build:
