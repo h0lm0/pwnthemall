@@ -13,7 +13,41 @@ interface MyAppProps extends AppProps {
 function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   return (
     <AuthProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false}
+        value={{
+          light: "light",
+          dark: "dark",
+          latte: "theme-latte",
+          frappe: "theme-frappe",
+          macchiato: "theme-macchiato",
+          mocha: "theme-mocha",
+          slate: "theme-slate",
+          rose: "theme-rose",
+          emerald: "theme-emerald",
+          cyan: "theme-cyan",
+          violet: "theme-violet",
+          orange: "theme-orange",
+          indigo: "theme-indigo",
+          zinc: "theme-zinc",
+          blue: "theme-blue",
+          green: "theme-green",
+          yellow: "theme-yellow",
+          pink: "theme-pink",
+          teal: "theme-teal",
+          sky: "theme-sky",
+          lavender: "theme-lavender",
+          peach: "theme-peach",
+          flamingo: "theme-flamingo",
+          mauve: "theme-mauve",
+          maroon: "theme-maroon",
+          red: "theme-red",
+          rosewater: "theme-rosewater",
+          sapphire: "theme-sapphire",
+        }}
+      >
         <SidebarProvider defaultOpen={sidebarDefaultOpen}>
           <AppSidebar />
           <SidebarInset>
