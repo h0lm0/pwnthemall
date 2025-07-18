@@ -32,6 +32,8 @@ export default function ProfileContent() {
   const [pwMessage, setPwMessage] = useState<string | null>(null);
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwValidationError, setPwValidationError] = useState<string | null>(null);
+  const [confirmUsername, setConfirmUsername] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -50,8 +52,9 @@ export default function ProfileContent() {
     setError(null);
   };
 
-  const handleUpdate = async (e: FormEvent) => {
-    e.preventDefault();
+  // Username update handler (no change)
+  const handleUpdate = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
     setMessage(null);
     setError(null);
     try {
@@ -64,6 +67,7 @@ export default function ProfileContent() {
     } catch (err: any) {
       setError(err?.response?.data?.error || "Failed to update username");
     }
+    setConfirmUsername(false);
   };
 
   const handleDelete = async () => {
@@ -93,8 +97,9 @@ export default function ProfileContent() {
       setPwValidationError(null);
     }
   };
-  const handlePasswordChange = async (e: FormEvent) => {
-    e.preventDefault();
+  // Password change handler (no change)
+  const handlePasswordChange = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
     setPwMessage(null);
     setPwError(null);
     setPwLoading(true);
@@ -107,6 +112,7 @@ export default function ProfileContent() {
       setPwError(err?.response?.data?.error || "Failed to update password");
     } finally {
       setPwLoading(false);
+      setConfirmPassword(false);
     }
   };
 
@@ -141,9 +147,33 @@ export default function ProfileContent() {
               {error && <div className="text-red-600 mt-2">{error}</div>}
               {!error && message && <div className="text-green-600 mt-2">{message}</div>}
             </div>
-            <Button type="submit" className="w-full" disabled={loading || newUsername === username || !newUsername}>
+            <Button
+              type="button"
+              className="w-full"
+              disabled={loading || newUsername === username || !newUsername}
+              onClick={() => setConfirmUsername(true)}
+            >
               Update Username
             </Button>
+            <AlertDialog open={confirmUsername} onOpenChange={setConfirmUsername}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Change Username</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to change your username to <b>{newUsername}</b>?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleUpdate}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    Confirm
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Separator className="my-6" />
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -186,9 +216,33 @@ export default function ProfileContent() {
               {pwError && <div className="text-red-600 mt-2">{pwError}</div>}
               {!pwError && !pwValidationError && pwMessage && <div className="text-green-600 mt-2">{pwMessage}</div>}
             </div>
-            <Button type="submit" className="w-full" disabled={pwLoading || !currentPassword || !newPassword || newPassword.length < 8}>
+            <Button
+              type="button"
+              className="w-full"
+              disabled={pwLoading || !currentPassword || !newPassword || newPassword.length < 8}
+              onClick={() => setConfirmPassword(true)}
+            >
               Change Password
             </Button>
+            <AlertDialog open={confirmPassword} onOpenChange={setConfirmPassword}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Change Password</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to change your password?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handlePasswordChange}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    Confirm
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </form>
         )}
       </CardContent>
