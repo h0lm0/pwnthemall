@@ -1,0 +1,25 @@
+name: SAST Scan
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Semgrep
+        id: semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/r2c-security-audit
+      - name: Create Pull Request
+        if: steps.semgrep.outputs.has-findings == 'true'
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Fix SAST findings"
+          title: "Automated SAST Fixes"
+          body: "This PR addresses SAST findings identified by Semgrep."
+          branch: "sast-fixes"
