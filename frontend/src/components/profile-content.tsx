@@ -15,11 +15,34 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { useTheme } from "next-themes";
+import { useAuth } from "@/context/AuthContext";
 
 const TABS = ["Account", "Security", "Appearance"] as const;
 type Tab = typeof TABS[number];
 
 export default function ProfileContent() {
+  const { loggedIn, authChecked } = useAuth();
+  const { theme, resolvedTheme } = useTheme();
+  if (!authChecked) return null;
+  if (!loggedIn) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+    return null;
+  }
+  // Theme class logic for palette
+  const themes = [
+    { value: "light", className: "light" },
+    { value: "dark", className: "dark" },
+    { value: "latte", className: "theme-latte" },
+    { value: "frappe", className: "theme-frappe" },
+  ];
+  const currentTheme = themes.find(t => t.value === theme) || themes[0];
+  return <ProfileContentInner paletteThemeClass={currentTheme.className} />;
+}
+
+function ProfileContentInner({ paletteThemeClass }: { paletteThemeClass: string }) {
   const [activeTab, setActiveTab] = useState<Tab>("Account");
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
@@ -246,29 +269,148 @@ export default function ProfileContent() {
           </form>
         )}
         {activeTab === "Appearance" && (
-          <div className="space-y-6 max-w-md">
-            <h2 className="text-xl font-semibold mb-2">Theme</h2>
-            <div className="flex flex-col gap-4">
-              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-accent">
-                <input type="radio" name="theme" value="choice1" className="accent-primary" disabled />
-                <span className="font-medium">Choice 1</span>
-                <span className="text-xs text-muted-foreground">a</span>
-              </label>
-              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-accent">
-                <input type="radio" name="theme" value="choice2" className="accent-primary" disabled />
-                <span className="font-medium">Choice 2</span>
-                <span className="text-xs text-muted-foreground">b</span>
-              </label>
-              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-accent">
-                <input type="radio" name="theme" value="choice3" className="accent-primary" disabled defaultChecked />
-                <span className="font-medium">Choice 3</span>
-                <span className="text-xs text-muted-foreground">c</span>
-              </label>
-            </div>
-            <div className="text-xs text-muted-foreground mt-2">(marche pas pr le moment)</div>
-          </div>
+          <>
+            <ThemeSelector />
+            <PaletteTest themeClass={paletteThemeClass} />
+          </>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function ThemeSelector() {
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const themes = [
+    { value: "light", label: "Light", className: "light" },
+    { value: "dark", label: "Dark", className: "dark" },
+    { value: "latte", label: "Latte", className: "theme-latte" },
+    { value: "frappe", label: "Frappe", className: "theme-frappe" },
+    { value: "macchiato", label: "Macchiato", className: "theme-macchiato" },
+    { value: "mocha", label: "Mocha", className: "theme-mocha" },
+    { value: "slate", label: "Slate", className: "theme-slate" },
+    { value: "rose", label: "Rose", className: "theme-rose" },
+    { value: "emerald", label: "Emerald", className: "theme-emerald" },
+    { value: "cyan", label: "Cyan", className: "theme-cyan" },
+    { value: "violet", label: "Violet", className: "theme-violet" },
+    { value: "orange", label: "Orange", className: "theme-orange" },
+    { value: "indigo", label: "Indigo", className: "theme-indigo" },
+    { value: "zinc", label: "Zinc", className: "theme-zinc" },
+    { value: "blue", label: "Blue", className: "theme-blue" },
+    { value: "green", label: "Green", className: "theme-green" },
+    { value: "yellow", label: "Yellow", className: "theme-yellow" },
+    { value: "pink", label: "Pink", className: "theme-pink" },
+    { value: "teal", label: "Teal", className: "theme-teal" },
+    { value: "sky", label: "Sky", className: "theme-sky" },
+    { value: "lavender", label: "Lavender", className: "theme-lavender" },
+    { value: "peach", label: "Peach", className: "theme-peach" },
+    { value: "flamingo", label: "Flamingo", className: "theme-flamingo" },
+    { value: "mauve", label: "Mauve", className: "theme-mauve" },
+    { value: "maroon", label: "Maroon", className: "theme-maroon" },
+    { value: "red", label: "Red", className: "theme-red" },
+    { value: "rosewater", label: "Rosewater", className: "theme-rosewater" },
+    { value: "sapphire", label: "Sapphire", className: "theme-sapphire" },
+  ];
+  return (
+          <div className="space-y-6 w-full">
+        <h2 className="text-xl font-semibold mb-2">Theme</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+        {themes.map((t) => (
+          <ThemePreviewRadio
+            key={t.value}
+            value={t.value}
+            label={t.label}
+            themeClass={t.className}
+            checked={theme === t.value || (theme === undefined && resolvedTheme === t.value)}
+            onChange={() => setTheme(t.value)}
+          />
+        ))}
+      </div>
+      <div className="text-xs text-muted-foreground mt-2">Your theme preference is saved in your browser and will be used across the site.</div>
+    </div>
+  );
+}
+
+function ThemePreviewRadio({ value, label, themeClass, checked, onChange }: { value: string, label: string, themeClass: string, checked: boolean, onChange: () => void }) {
+  // Debug: show computed values for --background and --muted
+  const ref = React.useRef<HTMLLabelElement>(null);
+  const [debug, setDebug] = React.useState("");
+  React.useEffect(() => {
+    if (ref.current) {
+      const style = getComputedStyle(ref.current);
+      setDebug(`--background: ${style.getPropertyValue('--background')}, --muted: ${style.getPropertyValue('--muted')}`);
+    }
+  }, [themeClass]);
+
+  return (
+    <label
+      ref={ref}
+      className={`theme-preview ${themeClass} flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors relative overflow-hidden w-full ${checked ? "border-primary ring-2 ring-primary" : ""}`}
+      style={{ minHeight: 64 }}
+      title={debug}
+    >
+      <input
+        type="radio"
+        name="theme"
+        value={value}
+        className="accent-primary z-10"
+        checked={checked}
+        onChange={onChange}
+      />
+      <span className="font-semibold z-10 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-white drop-shadow-lg border border-white/20">{label}</span>
+      {checked ? (
+        <span className="ml-auto bg-primary text-primary-foreground text-xs z-10 px-2 py-1 rounded font-medium">Active</span>
+      ) : null}
+      <span className="absolute inset-0 pointer-events-none" />
+    </label>
+  );
+}
+
+// TEMPORARY: PaletteTest for visualizing all color variables in a theme
+function PaletteTest({ themeClass }: { themeClass: string }) {
+  // List of variables to show
+  const variables = [
+    "background",
+    "foreground",
+    "card",
+    "card-foreground",
+    "popover",
+    "popover-foreground",
+    "primary",
+    "primary-foreground",
+    "secondary",
+    "secondary-foreground",
+    "muted",
+    "muted-foreground",
+    "accent",
+    "accent-foreground",
+    "destructive",
+    "destructive-foreground",
+    "border",
+    "input",
+    "ring",
+    "chart-1",
+    "chart-2",
+    "chart-3",
+    "chart-4",
+    "chart-5",
+    "radius",
+    "sidebar-background",
+  ];
+  return (
+    <div className="mt-8">
+      <h3 className="text-lg font-semibold mb-2">DEBUG - Palette</h3>
+      <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4 rounded-lg border ${themeClass}`}>
+        {variables.map((v) => (
+          <div key={v} className="flex flex-col items-center p-2 rounded shadow bg-white/50">
+            <div
+              className="w-16 h-8 rounded mb-1 border"
+              style={{ background: `hsl(var(--${v}))` }}
+            />
+            <span className="text-xs text-center">--{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 } 
