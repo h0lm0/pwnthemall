@@ -40,14 +40,14 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
   const columns: ColumnDef<User>[] = [
-    { accessorKey: "ID", header: "ID" },
-    { accessorKey: "Username", header: "Username", cell: ({ getValue }) => (
+    { accessorKey: "id", header: "ID" },
+    { accessorKey: "username", header: "Username", cell: ({ getValue }) => (
       <span className="whitespace-nowrap truncate max-w-[120px] block">{getValue() as string}</span>
     ) },
-    { accessorKey: "Email", header: "Email", cell: ({ getValue }) => (
+    { accessorKey: "email", header: "Email", cell: ({ getValue }) => (
       <span className="whitespace-nowrap truncate max-w-[180px] block">{getValue() as string}</span>
     ) },
-    { accessorKey: "Role", header: "Role" },
+    { accessorKey: "role", header: "Role" },
     {
       id: "actions",
       header: "Actions",
@@ -75,20 +75,20 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
 
   const handleUpdate = async (data: UserFormData) => {
     if (!editingUser) return
-    await axios.put(`/api/users/${editingUser.ID}`, data)
+    await axios.put(`/api/users/${editingUser.id}`, data)
     setEditingUser(null)
     onRefresh()
   }
 
   const handleDelete = async () => {
     if (!deleting) return
-    await axios.delete(`/api/users/${deleting.ID}`)
+    await axios.delete(`/api/users/${deleting.id}`)
     setDeleting(null)
     onRefresh()
   }
 
   const doDeleteSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)].ID)
+    const ids = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)].id)
     await Promise.all(ids.map((id) => axios.delete(`/api/users/${id}`)))
     setRowSelection({})
     onRefresh()
@@ -167,7 +167,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           {editingUser && (
             <UserForm
               isEdit
-              initialData={{ Username: editingUser.Username, Email: editingUser.Email , Role: editingUser.Role}}
+              initialData={{ username: editingUser.username, email: editingUser.email, role: editingUser.role }}
               onSubmit={handleUpdate}
             />
           )}
@@ -178,7 +178,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete user</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {deleting?.Username}?
+              Are you sure you want to delete {deleting?.username}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -192,7 +192,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Temp ban user</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to temporarily ban {tempBanning?.Username}?
+              Are you sure you want to temporarily ban {tempBanning?.username}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

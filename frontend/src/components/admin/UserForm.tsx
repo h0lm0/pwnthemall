@@ -1,95 +1,48 @@
-import React, { useState } from "react"
-import type { JSX } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { UserFormData } from "@/models/User"
+import React, { useState } from "react";
+import { UserFormData } from "@/models/User";
 
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 interface UserFormProps {
-  initialData?: UserFormData
-  isEdit?: boolean
-  onSubmit: (data: UserFormData) => void
+  initialData?: UserFormData;
+  isEdit?: boolean;
+  onSubmit: (data: UserFormData) => void;
 }
 
 export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProps) {
   const [form, setForm] = useState<UserFormData>({
-    Username: initialData?.Username || "",
-    Email: initialData?.Email || "",
-    Password: "",
-    Role: initialData?.Username || ""
-  })
-  const [error, setError] = useState<string>("");
+    username: initialData?.username || "",
+    email: initialData?.email || "",
+    password: "",
+    role: initialData?.role || ""
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-    if (e.target.name === "Password" && error) {
-      setError("");
-    }
-  }
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isEdit && (form.Password || "").length < 8) {
-      setError("Password must be at least 8 characters long.");
-      return;
-    }
-    setError("");
-    onSubmit(form)
-  }
+    e.preventDefault();
+    onSubmit(form);
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 p-2">
-      <div className="grid gap-2">
-        <Label htmlFor="Username">Username</Label>
-        <Input id="Username" name="Username" value={form.Username} onChange={handleChange} required autoFocus />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="username">Username</label>
+        <input id="username" name="username" value={form.username} onChange={handleChange} required />
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="Email">Email</Label>
-        <Input id="Email" name="Email" type="email" value={form.Email} onChange={handleChange} required />
+      <div>
+        <label htmlFor="email">Email</label>
+        <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required />
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="Role">Role</Label>
-        <Select
-          name="Role"
-          defaultValue={form.Role}
-          onValueChange={(value: string) => setForm({ ...form, Role: value })}
-          required
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Role</SelectLabel>
-              <SelectItem value="member">member</SelectItem>
-              <SelectItem value="admin">admin</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+      <div>
+        <label htmlFor="password">Password</label>
+        <input id="password" name="password" type="password" value={form.password || ""} onChange={handleChange} autoComplete="new-password" />
       </div>
-
-      {!isEdit && (
-        <div className="grid gap-2">
-          <Label htmlFor="Password">Password</Label>
-          <Input id="Password" name="Password" type="password" value={form.Password || ""} onChange={handleChange} required minLength={8} />
-        </div>
-      )}
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      <Button type="submit" className="w-full">Save</Button>
+      <div>
+        <label htmlFor="role">Role</label>
+        <input id="role" name="role" value={form.role || ""} onChange={handleChange} />
+      </div>
+      <button type="submit">{isEdit ? "Update User" : "Create User"}</button>
     </form>
-  )
+  );
 }
