@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/router';
 
 interface AuthContextType {
   loggedIn: boolean;
@@ -10,27 +9,19 @@ interface AuthContextType {
   authChecked: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  loggedIn: false,
-  login: () => {},
-  logout: async () => {},
-  checkAuth: async () => {},
-  authChecked: false,
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const router = useRouter();
 
   const checkAuth = async () => {
     try {
       await axios.get('/api/pwn');
       setLoggedIn(true);
     } catch (err: any) {
-      // Si l'utilisateur n'existe plus ou n'est plus autorisé, on force le logout
       if (err?.response?.status === 401 || err?.response?.status === 404) {
-        await logout();
+        await logout(false);
       } else {
         setLoggedIn(false);
       }
@@ -45,24 +36,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = () => setLoggedIn(true);
 
-  const logout = async () => {
+  const logout = async (redirect = true) => {
     try {
       await axios.post('/api/logout');
+    } catch (_) {
     } finally {
       setLoggedIn(false);
-      if (window.location.pathname !== '/login') {
+      if (redirect && typeof window !== 'undefined' && window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }
   };
 
   return (
-    <AuthContext.Provider
-      value={{ loggedIn, login, logout, checkAuth, authChecked }}
-    >
+    <AuthContext.Provider value={{ loggedIn, login, logout, checkAuth, authChecked }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
