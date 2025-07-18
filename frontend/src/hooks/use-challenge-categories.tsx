@@ -1,13 +1,16 @@
+// hooks/use-challenge-categories.ts
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { ChallengeCategory } from "@/models/ChallengeCategory";
 
-export function useChallengeCategories() {
+export function useChallengeCategories(enabled: boolean) {
   const [categories, setCategories] = useState<ChallengeCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
+
     let isMounted = true;
     let interval: number;
 
@@ -26,13 +29,13 @@ export function useChallengeCategories() {
     };
 
     fetchCategories();
-    interval = window.setInterval(fetchCategories, 5000); // 5 secondes
+    interval = window.setInterval(fetchCategories, 5000);
 
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [enabled]);
 
   return { categories, loading, error };
-} 
+}
