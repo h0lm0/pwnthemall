@@ -279,7 +279,6 @@ function ProfileContentInner() {
         {activeTab === "Appearance" && (
           <>
             <ThemeSelector />
-            <PaletteTest />
           </>
         )}
       </CardContent>
@@ -346,54 +345,5 @@ function ThemePreviewRadio({ value, label, previewLeft, previewRight, checked, o
       ) : null}
       <span className="absolute inset-0 pointer-events-none" />
     </label>
-  );
-}
-
-// TEMPORARY: PaletteTest for visualizing all color variables in a theme
-function PaletteTest() {
-  // List of variables to show
-  const variables = [
-    "background",
-    "foreground",
-    "card",
-    "card-foreground",
-    "popover",
-    "popover-foreground",
-    "primary",
-    "primary-foreground",
-    "secondary",
-    "secondary-foreground",
-    "muted",
-    "muted-foreground",
-    "accent",
-    "accent-foreground",
-    "destructive",
-    "destructive-foreground",
-    "border",
-    "input",
-    "ring",
-    "chart-1",
-    "chart-2",
-    "chart-3",
-    "chart-4",
-    "chart-5",
-    "radius",
-    "sidebar-background",
-  ];
-  return (
-    <div className="mt-8">
-      <h3 className="text-lg font-semibold mb-2">DEBUG - Palette</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4 rounded-lg border">
-        {variables.map((v) => (
-          <div key={v} className="flex flex-col items-center p-2 rounded shadow bg-white/50">
-            <div
-              className="w-16 h-8 rounded mb-1 border"
-              style={{ background: `hsl(var(--${v}))` }}
-            />
-            <span className="text-xs text-center">--{v}</span>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 } 
