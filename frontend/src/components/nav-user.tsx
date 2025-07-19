@@ -112,8 +112,8 @@ export function NavUser({
                   </Link>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onSelect={() => setTheme("light")}> <Sun /> Light</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setTheme("dark")}> <Moon /> Dark</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setTheme("latte")}> <Sun /> Light</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setTheme("slate")}> <Moon /> Dark</DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
