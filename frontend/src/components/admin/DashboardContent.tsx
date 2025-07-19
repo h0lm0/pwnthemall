@@ -16,7 +16,6 @@ export default function DashboardContent({
                     Administration page
                 </h1>
             </div>
-            );
         </>
     );
 };
