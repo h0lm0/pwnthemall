@@ -15,9 +15,8 @@ MINIO_ALIAS="localminio"
 MINIO_ENDPOINT="http://localhost:9000"
 MOUNT_PATH="/data"
 
-
 function minio_alias() {
-    docker compose exec -it "$MINIO_CONTAINER" mc alias set "$MINIO_ALIAS" "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" 2>/dev/null || true
+    docker compose -f docker-compose.prod.yml exec -it "$MINIO_CONTAINER" mc alias set "$MINIO_ALIAS" "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" 2>/dev/null || true
 }
 
 function minio_sync() {
@@ -30,33 +29,118 @@ function minio_sync() {
 
     echo "[+] Sync $folder → MinIO (bucket: $bucket)"
 
-    docker compose exec -it "$MINIO_CONTAINER" mc mb --ignore-existing "$MINIO_ALIAS/$bucket"
+    docker compose -f docker-compose.prod.yml exec -it "$MINIO_CONTAINER" mc mb --ignore-existing "$MINIO_ALIAS/$bucket"
 
-    docker compose exec -it "$MINIO_CONTAINER" mc mirror --overwrite --remove "$container_path" "$MINIO_ALIAS/$bucket"
+    docker compose -f docker-compose.prod.yml exec -it "$MINIO_CONTAINER" mc mirror --overwrite --remove "$container_path" "$MINIO_ALIAS/$bucket"
 
     echo "[✓] Sync successful"
 }
 
-# === DISPATCHER ===
+function compose_up() {
+    local env="prod"
+    local build="false"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -u|up)
+                shift
+                ;;
+            -e|--env)
+                env="$2"
+                shift 2
+                ;;
+            --build)
+                build="true"
+                shift
+                ;;
+            *)
+                echo "[✗] Unknown option: $1"
+                usage
+                ;;
+        esac
+    done
+
+    local compose_file="docker-compose.${env}.yml"
+
+    if [[ ! -f "$compose_file" ]]; then
+        echo "[✗] Compose file not found: $compose_file"
+        exit 1
+    fi
+
+    echo "[+] Running docker compose using $compose_file"
+    cmd=(docker compose -f "$compose_file" up -d)
+    [[ "$build" == "true" ]] && cmd+=(--build)
+
+    "${cmd[@]}"
+    echo "[✓] Compose up completed"
+}
+
+function compose_down() {
+    local env="prod"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -d|down)
+                shift
+                ;;
+            -e|--env)
+                env="$2"
+                shift 2
+                ;;
+            *)
+                echo "[✗] Unknown option: $1"
+                usage
+                ;;
+        esac
+    done
+
+    local compose_file="docker-compose.${env}.yml"
+
+    if [[ ! -f "$compose_file" ]]; then
+        echo "[✗] Compose file not found: $compose_file"
+        exit 1
+    fi
+
+    echo "[+] Stopping and removing containers using $compose_file"
+    docker compose -f "$compose_file" down
+    echo "[✓] Compose down completed"
+}
 
 function usage() {
-    echo "Usage: $0 minio sync <folder>"
+    echo "Usage:"
+    echo "  $0 minio sync <folder>"
+    echo "  $0 compose -u|up [--build] [--env dev|prod]"
+    echo "  $0 compose -d|down [--env dev|prod]"
     exit 1
 }
+
+# === DISPATCHER ===
 
 case "${1:-}" in
     minio)
         shift
-        subcommand="${1:-}"
-        shift || true
-
-        case "$subcommand" in
+        case "${1:-}" in
             sync)
+                shift
                 folder="${1:-}"
                 [ -z "$folder" ] && usage
 
                 minio_alias
                 minio_sync "$folder"
+                ;;
+            *)
+                usage
+                ;;
+        esac
+        ;;
+    compose)
+        shift
+        case "${1:-}" in
+            -u|up)
+                compose_up "$@"
+                ;;
+            -d|down)
+                compose_down "$@"
                 ;;
             *)
                 usage
