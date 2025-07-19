@@ -33,16 +33,24 @@ export default function ProfileContent() {
   }
   // Theme class logic for palette
   const themes = [
-    { value: "light", className: "light" },
-    { value: "dark", className: "dark" },
-    { value: "latte", className: "theme-latte" },
-    { value: "frappe", className: "theme-frappe" },
+    { value: "light",      label: "Light",      previewLeft: "#", previewRight: "#" },
+    { value: "latte",      label: "Latte",      previewLeft: "#", previewRight: "#" },
+    { value: "rose",       label: "Rose",       previewLeft: "#", previewRight: "#" },
+    { value: "emerald",    label: "Emerald",    previewLeft: "#", previewRight: "#" },
+    { value: "violet",     label: "Violet",     previewLeft: "#", previewRight: "#" },
+    { value: "cyan",       label: "Cyan",       previewLeft: "#", previewRight: "#" },
+    { value: "orange",     label: "Orange",     previewLeft: "#", previewRight: "#" },
+    { value: "dark",       label: "Dark",       previewLeft: "#", previewRight: "#" },
+    { value: "frappe",     label: "Frappe",     previewLeft: "#", previewRight: "#" },
+    { value: "macchiato",  label: "Macchiato",  previewLeft: "#", previewRight: "#" },
+    { value: "mocha",      label: "Mocha",      previewLeft: "#", previewRight: "#" },
+    { value: "slate",      label: "Slate",      previewLeft: "#", previewRight: "#" },
   ];
   const currentTheme = themes.find(t => t.value === theme) || themes[0];
-  return <ProfileContentInner paletteThemeClass={currentTheme.className} />;
+  return <ProfileContentInner />;
 }
 
-function ProfileContentInner({ paletteThemeClass }: { paletteThemeClass: string }) {
+function ProfileContentInner() {
   const [activeTab, setActiveTab] = useState<Tab>("Account");
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
@@ -271,7 +279,7 @@ function ProfileContentInner({ paletteThemeClass }: { paletteThemeClass: string 
         {activeTab === "Appearance" && (
           <>
             <ThemeSelector />
-            <PaletteTest themeClass={paletteThemeClass} />
+            <PaletteTest />
           </>
         )}
       </CardContent>
@@ -282,20 +290,18 @@ function ProfileContentInner({ paletteThemeClass }: { paletteThemeClass: string 
 function ThemeSelector() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const themes = [
-    // Light themes
-    { value: "light", label: "Light", className: "theme-light" },
-    { value: "latte", label: "Latte", className: "theme-latte" },
-    { value: "rose", label: "Rose", className: "theme-rose" },
-    { value: "emerald", label: "Emerald", className: "theme-emerald" },
-    { value: "violet", label: "Violet", className: "theme-violet" },
-    { value: "cyan", label: "Cyan", className: "theme-cyan" },
-    { value: "orange", label: "Orange", className: "theme-orange" },
-    // Dark themes
-    { value: "dark", label: "Dark", className: "theme-dark" },
-    { value: "frappe", label: "Frappe", className: "theme-frappe" },
-    { value: "macchiato", label: "Macchiato", className: "theme-macchiato" },
-    { value: "mocha", label: "Mocha", className: "theme-mocha" },
-    { value: "slate", label: "Slate", className: "theme-slate" },
+    { value: "light",      label: "Light",      previewLeft: "#ffffff", previewRight: "#f1f5f9" },
+    { value: "latte",      label: "Latte",      previewLeft: "#eff1f5", previewRight: "#ccd1da" },
+    { value: "rose",       label: "Rose",       previewLeft: "#fffafc", previewRight: "#fee4f1" },
+    { value: "emerald",    label: "Emerald",    previewLeft: "#eefbf5", previewRight: "#d5f5e7" },
+    { value: "violet",     label: "Violet",     previewLeft: "#faf5ff", previewRight: "#f0e1fe" },
+    { value: "cyan",       label: "Cyan",       previewLeft: "#f4ffff", previewRight: "#dfffff" },
+    { value: "orange",     label: "Orange",     previewLeft: "#fffaf5", previewRight: "#ffefe1" },
+    { value: "dark",       label: "Dark",       previewLeft: "#010916", previewRight: "#1c2a3a" },
+    { value: "frappe",     label: "Frappe",     previewLeft: "#2f3445", previewRight: "#60687e" },
+    { value: "macchiato",  label: "Macchiato",  previewLeft: "#222738", previewRight: "#353a4e" },
+    { value: "mocha",      label: "Mocha",      previewLeft: "#1e1f2e", previewRight: "#313343" },
+    { value: "slate",      label: "Slate",      previewLeft: "#0d1728", previewRight: "#475769" },
   ];
   return (
     <div className="space-y-6 w-full">
@@ -306,7 +312,8 @@ function ThemeSelector() {
             key={t.value}
             value={t.value}
             label={t.label}
-            themeClass={t.className}
+            previewLeft={t.previewLeft}
+            previewRight={t.previewRight}
             checked={theme === t.value || (theme === undefined && resolvedTheme === t.value)}
             onChange={() => setTheme(t.value)}
           />
@@ -317,52 +324,33 @@ function ThemeSelector() {
   );
 }
 
-function ThemePreviewRadio({ value, label, themeClass, checked, onChange }: { value: string, label: string, themeClass: string, checked: boolean, onChange: () => void }) {
-  const ref = React.useRef<HTMLLabelElement>(null);
-  const hiddenRef = React.useRef<HTMLDivElement>(null);
-  const [gradient, setGradient] = React.useState<string>("");
-
-  React.useEffect(() => {
-    if (hiddenRef.current) {
-      const style = getComputedStyle(hiddenRef.current);
-      const bg = style.getPropertyValue('--background').trim() || '0 0% 100%';
-      const primary = style.getPropertyValue('--primary').trim() || '222.2 47.4% 11.2%';
-      setGradient(`linear-gradient(135deg, hsl(${bg}) 50%, hsl(${primary}) 50%)`);
-    }
-  }, [themeClass]);
-
+function ThemePreviewRadio({ value, label, previewLeft, previewRight, checked, onChange }: { value: string, label: string, previewLeft: string, previewRight: string, checked: boolean, onChange: () => void }) {
   return (
-    <>
-      {/* Hidden element for reading theme variables */}
-      <div ref={hiddenRef} className={themeClass} style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none', height: 0, width: 0, overflow: 'hidden' }} aria-hidden="true" />
-      <label
-        ref={ref}
-        className={`theme-preview ${themeClass} flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors relative overflow-hidden w-full ${checked ? "border-primary ring-2 ring-primary" : ""}`}
-        style={{ minHeight: 64, background: gradient }}
-        title={gradient}
-      >
-        <input
-          type="radio"
-          name="theme"
-          value={value}
-          className="theme-radio z-10"
-          checked={checked}
-          onChange={onChange}
-          style={{ display: "none" }}
-        />
-        <span className="custom-radio-dot" aria-hidden="true"></span>
-        <span className="font-semibold z-10 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-white drop-shadow-lg border border-white/20">{label}</span>
-        {checked ? (
-          <span className="ml-auto bg-primary text-primary-foreground text-xs z-10 px-2 py-1 rounded font-medium">Active</span>
-        ) : null}
-        <span className="absolute inset-0 pointer-events-none" />
-      </label>
-    </>
+    <label
+      className={`theme-preview flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors relative overflow-hidden w-full ${checked ? "border-primary ring-2 ring-primary" : ""}`}
+      style={{ minHeight: 64, background: `linear-gradient(135deg, ${previewLeft} 50%, ${previewRight} 50%)` }}
+    >
+      <input
+        type="radio"
+        name="theme"
+        value={value}
+        className="theme-radio z-10"
+        checked={checked}
+        onChange={onChange}
+        style={{ display: "none" }}
+      />
+      <span className="custom-radio-dot" aria-hidden="true"></span>
+      <span className="font-semibold z-10 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-white drop-shadow-lg border border-white/20">{label}</span>
+      {checked ? (
+        <span className="ml-auto bg-primary text-primary-foreground text-xs z-10 px-2 py-1 rounded font-medium">Active</span>
+      ) : null}
+      <span className="absolute inset-0 pointer-events-none" />
+    </label>
   );
 }
 
 // TEMPORARY: PaletteTest for visualizing all color variables in a theme
-function PaletteTest({ themeClass }: { themeClass: string }) {
+function PaletteTest() {
   // List of variables to show
   const variables = [
     "background",
@@ -395,7 +383,7 @@ function PaletteTest({ themeClass }: { themeClass: string }) {
   return (
     <div className="mt-8">
       <h3 className="text-lg font-semibold mb-2">DEBUG - Palette</h3>
-      <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4 rounded-lg border ${themeClass}`}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4 rounded-lg border">
         {variables.map((v) => (
           <div key={v} className="flex flex-col items-center p-2 rounded shadow bg-white/50">
             <div
