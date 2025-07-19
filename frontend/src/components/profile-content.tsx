@@ -282,39 +282,25 @@ function ProfileContentInner({ paletteThemeClass }: { paletteThemeClass: string 
 function ThemeSelector() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const themes = [
+    // Light themes
     { value: "light", label: "Light", className: "light" },
-    { value: "dark", label: "Dark", className: "dark" },
     { value: "latte", label: "Latte", className: "theme-latte" },
+    { value: "rose", label: "Rose", className: "theme-rose" },
+    { value: "emerald", label: "Emerald", className: "theme-emerald" },
+    { value: "violet", label: "Violet", className: "theme-violet" },
+    { value: "cyan", label: "Cyan", className: "theme-cyan" },
+    { value: "orange", label: "Orange", className: "theme-orange" },
+    // Dark themes
+    { value: "dark", label: "Dark", className: "dark" },
     { value: "frappe", label: "Frappe", className: "theme-frappe" },
     { value: "macchiato", label: "Macchiato", className: "theme-macchiato" },
     { value: "mocha", label: "Mocha", className: "theme-mocha" },
     { value: "slate", label: "Slate", className: "theme-slate" },
-    { value: "rose", label: "Rose", className: "theme-rose" },
-    { value: "emerald", label: "Emerald", className: "theme-emerald" },
-    { value: "cyan", label: "Cyan", className: "theme-cyan" },
-    { value: "violet", label: "Violet", className: "theme-violet" },
-    { value: "orange", label: "Orange", className: "theme-orange" },
-    { value: "indigo", label: "Indigo", className: "theme-indigo" },
-    { value: "zinc", label: "Zinc", className: "theme-zinc" },
-    { value: "blue", label: "Blue", className: "theme-blue" },
-    { value: "green", label: "Green", className: "theme-green" },
-    { value: "yellow", label: "Yellow", className: "theme-yellow" },
-    { value: "pink", label: "Pink", className: "theme-pink" },
-    { value: "teal", label: "Teal", className: "theme-teal" },
-    { value: "sky", label: "Sky", className: "theme-sky" },
-    { value: "lavender", label: "Lavender", className: "theme-lavender" },
-    { value: "peach", label: "Peach", className: "theme-peach" },
-    { value: "flamingo", label: "Flamingo", className: "theme-flamingo" },
-    { value: "mauve", label: "Mauve", className: "theme-mauve" },
-    { value: "maroon", label: "Maroon", className: "theme-maroon" },
-    { value: "red", label: "Red", className: "theme-red" },
-    { value: "rosewater", label: "Rosewater", className: "theme-rosewater" },
-    { value: "sapphire", label: "Sapphire", className: "theme-sapphire" },
   ];
   return (
-          <div className="space-y-6 w-full">
-        <h2 className="text-xl font-semibold mb-2">Theme</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+    <div className="space-y-6 w-full">
+      <h2 className="text-xl font-semibold mb-2">Theme</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
         {themes.map((t) => (
           <ThemePreviewRadio
             key={t.value}
@@ -353,10 +339,12 @@ function ThemePreviewRadio({ value, label, themeClass, checked, onChange }: { va
         type="radio"
         name="theme"
         value={value}
-        className="accent-primary z-10"
+        className="theme-radio z-10"
         checked={checked}
         onChange={onChange}
+        style={{ display: "none" }}
       />
+      <span className="custom-radio-dot" aria-hidden="true"></span>
       <span className="font-semibold z-10 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-white drop-shadow-lg border border-white/20">{label}</span>
       {checked ? (
         <span className="ml-auto bg-primary text-primary-foreground text-xs z-10 px-2 py-1 rounded font-medium">Active</span>

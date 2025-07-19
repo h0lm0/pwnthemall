@@ -2,9 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  transition: background-color 0.3s ease, color 0.3s ease;
+html, body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 :root {
@@ -857,4 +858,36 @@ body {
   --foreground: 227 70% 87%;
   background: linear-gradient(135deg, hsl(var(--background)) 50%, hsl(var(--primary)) 50%);
   color: hsl(var(--foreground));
+}
+
+/* Fix radio button appearance in dark mode for theme selector */
+.theme-radio:not(:checked) {
+  accent-color: #d1d5db; /* Tailwind zinc-300, light gray */
+}
+.dark .theme-radio:not(:checked) {
+  accent-color: #374151; /* Tailwind gray-700, dark gray */
+}
+
+/* Custom radio dot for theme selector */
+.theme-preview .custom-radio-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 2px solid #a1a1aa; /* zinc-400 */
+  background: transparent;
+  display: inline-block;
+  position: relative;
+  margin-right: 8px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.theme-preview input[type="radio"]:checked + .custom-radio-dot {
+  background: #06b6d4; /* cyan-400 or your primary */
+  border-color: #06b6d4;
+}
+.dark .theme-preview .custom-radio-dot {
+  border-color: #52525b; /* zinc-600 */
+}
+.dark .theme-preview input[type="radio"]:checked + .custom-radio-dot {
+  background: #06b6d4;
+  border-color: #06b6d4;
 }
