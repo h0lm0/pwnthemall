@@ -56,7 +56,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         })
         .catch(() => {});
     } else {
-      setUserData({ name: "pwnthemall", email: "", avatar: "/logo-no-text.png", role: "" });
+      setUserData({ name: "Guest", email: "", avatar: "/logo-no-text.png", role: "" });
     }
   }, [loggedIn, authChecked]);
 
