@@ -25,12 +25,14 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useChallengeCategories } from "@/hooks/use-challenge-categories";
 import type { NavItem } from "@/models/NavItem";
+import { useLanguage } from '@/context/LanguageContext';
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { loggedIn, logout, authChecked } = useAuth();
   const router = useRouter();
   const { isMobile } = useSidebar();
   const { categories, loading } = useChallengeCategories(loggedIn);
+  const { t } = useLanguage();
 
   const [userData, setUserData] = React.useState({
     name: "",
@@ -65,9 +67,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     const items: NavItem[] = [];
     let pwnSubItems;
     if (loading) {
-      pwnSubItems = [{ title: "Loading...", url: "#" }];
+      pwnSubItems = [{ title: t('loading'), url: "#" }];
     } else if (categories.length === 0) {
-      pwnSubItems = [{ title: "No categories", url: "#" }];
+      pwnSubItems = [{ title: t('no_categories'), url: "#" }];
     } else {
       pwnSubItems = categories.map((cat) => ({
         title: cat.Name,
@@ -76,27 +78,27 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     }
     if (loggedIn) {
       items.push({
-        title: "Pwn",
+        title: t('pwn'),
         url: "/pwn",
         icon: Swords,
         isActive: router.pathname.startsWith("/pwn"),
         items: pwnSubItems,
       });
       items.push({
-        title: "Scoreboard",
+        title: t('scoreboard'),
         url: "/scoreboard",
         icon: List,
         isActive: router.pathname === "/scoreboard",
       });
       if (userData.role === "admin") {
         items.push({
-          title: "Administration",
+          title: t('administration'),
           url: "/admin",
           icon: ShieldUser,
           items: [
-            { title: "Dashboard", url: "/admin/dashboard" },
-            { title: "Users", url: "/admin/users" },
-            { title: "Challenge categories", url: "/admin/challenge-categories" },
+            { title: t('dashboard'), url: "/admin/dashboard" },
+            { title: t('users'), url: "/admin/users" },
+            { title: t('challenge_categories'), url: "/admin/challenge-categories" },
           ],
           isActive:
             router.pathname === "/admin/dashboard" ||
@@ -106,20 +108,20 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       }
     } else {
       items.push({
-        title: "Login",
+        title: t('login'),
         url: "/login",
         icon: LogIn,
         isActive: router.pathname === "/login",
       });
       items.push({
-        title: "Register",
+        title: t('register'),
         url: "/register",
         icon: UserPlus,
         isActive: router.pathname === "/register",
       });
     }
     return items;
-  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading]);
+  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, t]);
 
   return (
     <Sidebar

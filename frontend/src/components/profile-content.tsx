@@ -17,13 +17,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 
-const TABS = ["Account", "Security", "Appearance"] as const;
+const TABS = ["account", "security", "appearance"] as const;
 type Tab = typeof TABS[number];
 
 export default function ProfileContent() {
   const { loggedIn, authChecked } = useAuth();
   const { theme, resolvedTheme } = useTheme();
+  const { t } = useLanguage();
+  
   if (!authChecked) return null;
   if (!loggedIn) {
     if (typeof window !== "undefined") {
@@ -33,14 +36,14 @@ export default function ProfileContent() {
   }
   // Theme class logic for palette
   const themes = [
-    { value: "light",      label: "Light",      previewLeft: "#", previewRight: "#" },
+    { value: "light",      label: t('light'),      previewLeft: "#", previewRight: "#" },
     { value: "latte",      label: "Latte",      previewLeft: "#", previewRight: "#" },
     { value: "rose",       label: "Rose",       previewLeft: "#", previewRight: "#" },
     { value: "emerald",    label: "Emerald",    previewLeft: "#", previewRight: "#" },
     { value: "violet",     label: "Violet",     previewLeft: "#", previewRight: "#" },
     { value: "cyan",       label: "Cyan",       previewLeft: "#", previewRight: "#" },
     { value: "orange",     label: "Orange",     previewLeft: "#", previewRight: "#" },
-    { value: "dark",       label: "Dark",       previewLeft: "#", previewRight: "#" },
+    { value: "dark",       label: t('dark'),       previewLeft: "#", previewRight: "#" },
     { value: "frappe",     label: "Frappe",     previewLeft: "#", previewRight: "#" },
     { value: "macchiato",  label: "Macchiato",  previewLeft: "#", previewRight: "#" },
     { value: "mocha",      label: "Mocha",      previewLeft: "#", previewRight: "#" },
@@ -51,7 +54,8 @@ export default function ProfileContent() {
 }
 
 function ProfileContentInner() {
-  const [activeTab, setActiveTab] = useState<Tab>("Account");
+  const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState<Tab>("account");
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [loading, setLoading] = useState(true);
@@ -91,7 +95,7 @@ function ProfileContentInner() {
     try {
       const res: AxiosResponse<any> = await axios.patch("/api/me", { username: newUsername });
       setUsername(res.data.username);
-      setMessage("Username updated successfully!");
+      setMessage(t('username_updated'));
       setTimeout(() => {
         window.location.reload();
       }, 200);
@@ -123,7 +127,7 @@ function ProfileContentInner() {
     setPwMessage(null);
     setPwError(null);
     if (e.target.value.length > 0 && e.target.value.length < 8) {
-      setPwValidationError("Password must be at least 8 characters long");
+      setPwValidationError(t('password_validation_error'));
     } else {
       setPwValidationError(null);
     }
@@ -136,7 +140,7 @@ function ProfileContentInner() {
     setPwLoading(true);
     try {
       await axios.put("/api/me/password", { current: currentPassword, new: newPassword });
-      setPwMessage("Password updated successfully!");
+      setPwMessage(t('password_updated'));
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
@@ -156,15 +160,15 @@ function ProfileContentInner() {
             className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === tab ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}
             onClick={() => setActiveTab(tab)}
           >
-            {tab}
+            {t(tab)}
           </button>
         ))}
       </div>
       <CardContent className="p-6">
-        {activeTab === "Account" && (
+        {activeTab === "account" && (
           <form className="space-y-4 max-w-md" onSubmit={handleUpdate}>
             <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="username">Username</label>
+              <label className="block text-sm font-medium mb-1" htmlFor="username">{t('username')}</label>
               <Input
                 id="username"
                 name="username"
@@ -184,23 +188,23 @@ function ProfileContentInner() {
               disabled={loading || newUsername === username || !newUsername}
               onClick={() => setConfirmUsername(true)}
             >
-              Update Username
+              {t('update_username')}
             </Button>
             <AlertDialog open={confirmUsername} onOpenChange={setConfirmUsername}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Change Username</AlertDialogTitle>
+                  <AlertDialogTitle>{t('change_username')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to change your username to <b>{newUsername}</b>?
+                    {t('change_username_confirm', { username: newUsername })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleUpdate}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    Confirm
+                    {t('confirm')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -209,37 +213,37 @@ function ProfileContentInner() {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button type="button" variant="destructive" className="w-full" disabled={loading}>
-                  Delete Account
+                  {t('delete_account')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                  <AlertDialogTitle>{t('delete_account')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete your account? This action cannot be undone.
+                    {t('delete_account_confirm')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDelete}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    Delete
+                    {t('delete')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </form>
         )}
-        {activeTab === "Security" && (
+        {activeTab === "security" && (
           <form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
             <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="current">Current Password</label>
+              <label className="block text-sm font-medium mb-1" htmlFor="current">{t('current_password')}</label>
               <Input id="current" name="current" type="password" value={currentPassword} onChange={handleCurrentPasswordChange} required autoComplete="current-password" disabled={pwLoading} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="new">New Password</label>
+              <label className="block text-sm font-medium mb-1" htmlFor="new">{t('new_password')}</label>
               <Input id="new" name="new" type="password" value={newPassword} onChange={handleNewPasswordChange} required autoComplete="new-password" disabled={pwLoading} />
             </div>
             <div style={{ minHeight: 24 }}>
@@ -250,36 +254,39 @@ function ProfileContentInner() {
             <Button
               type="button"
               className="w-full"
-              disabled={pwLoading || !currentPassword || !newPassword || newPassword.length < 8}
+              disabled={pwLoading || !currentPassword || !newPassword || !!pwValidationError}
               onClick={() => setConfirmPassword(true)}
             >
-              Change Password
+              {t('update_password')}
             </Button>
             <AlertDialog open={confirmPassword} onOpenChange={setConfirmPassword}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Change Password</AlertDialogTitle>
+                  <AlertDialogTitle>{t('change_password')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to change your password?
+                    {t('change_password_confirm')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handlePasswordChange}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    Confirm
+                    {t('confirm')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </form>
         )}
-        {activeTab === "Appearance" && (
-          <>
-            <ThemeSelector />
-          </>
+        {activeTab === "appearance" && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium mb-4">{t('theme')}</h3>
+              <ThemeSelector />
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -287,63 +294,50 @@ function ProfileContentInner() {
 }
 
 function ThemeSelector() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const { t } = useLanguage();
+  
   const themes = [
-    { value: "light",      label: "Light",      previewLeft: "#ffffff", previewRight: "#f1f5f9" },
-    { value: "latte",      label: "Latte",      previewLeft: "#eff1f5", previewRight: "#ccd1da" },
-    { value: "rose",       label: "Rose",       previewLeft: "#fffafc", previewRight: "#fee4f1" },
-    { value: "emerald",    label: "Emerald",    previewLeft: "#eefbf5", previewRight: "#d5f5e7" },
-    { value: "violet",     label: "Violet",     previewLeft: "#faf5ff", previewRight: "#f0e1fe" },
-    { value: "cyan",       label: "Cyan",       previewLeft: "#f4ffff", previewRight: "#dfffff" },
-    { value: "orange",     label: "Orange",     previewLeft: "#fffaf5", previewRight: "#ffefe1" },
-    { value: "dark",       label: "Dark",       previewLeft: "#010916", previewRight: "#1c2a3a" },
-    { value: "frappe",     label: "Frappe",     previewLeft: "#2f3445", previewRight: "#60687e" },
-    { value: "macchiato",  label: "Macchiato",  previewLeft: "#222738", previewRight: "#353a4e" },
-    { value: "mocha",      label: "Mocha",      previewLeft: "#1e1f2e", previewRight: "#313343" },
-    { value: "slate",      label: "Slate",      previewLeft: "#0d1728", previewRight: "#475769" },
+    { value: "light", label: t('light'), previewLeft: "#ffffff", previewRight: "#f8fafc" },
+    { value: "dark", label: t('dark'), previewLeft: "#0f172a", previewRight: "#1e293b" },
+    { value: "system", label: t('system'), previewLeft: "#ffffff", previewRight: "#0f172a" },
   ];
+
   return (
-    <div className="space-y-6 w-full">
-      <h2 className="text-xl font-semibold mb-2">Theme</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-        {themes.map((t) => (
-          <ThemePreviewRadio
-            key={t.value}
-            value={t.value}
-            label={t.label}
-            previewLeft={t.previewLeft}
-            previewRight={t.previewRight}
-            checked={theme === t.value || (theme === undefined && resolvedTheme === t.value)}
-            onChange={() => setTheme(t.value)}
-          />
-        ))}
-      </div>
-      <div className="text-xs text-muted-foreground mt-2">Your theme preference is saved in your browser and will be used across the site.</div>
+    <div className="grid grid-cols-1 gap-3">
+      {themes.map((themeOption) => (
+        <ThemePreviewRadio
+          key={themeOption.value}
+          value={themeOption.value}
+          label={themeOption.label}
+          previewLeft={themeOption.previewLeft}
+          previewRight={themeOption.previewRight}
+          checked={theme === themeOption.value}
+          onChange={() => setTheme(themeOption.value)}
+        />
+      ))}
     </div>
   );
 }
 
 function ThemePreviewRadio({ value, label, previewLeft, previewRight, checked, onChange }: { value: string, label: string, previewLeft: string, previewRight: string, checked: boolean, onChange: () => void }) {
   return (
-    <label
-      className={`theme-preview flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors relative overflow-hidden w-full ${checked ? "border-primary ring-2 ring-primary" : ""}`}
-      style={{ minHeight: 64, background: `linear-gradient(135deg, ${previewLeft} 50%, ${previewRight} 50%)` }}
-    >
+    <label className="flex items-center space-x-3 cursor-pointer">
       <input
         type="radio"
         name="theme"
         value={value}
-        className="theme-radio z-10"
         checked={checked}
         onChange={onChange}
-        style={{ display: "none" }}
+        className="sr-only"
       />
-      <span className="custom-radio-dot" aria-hidden="true"></span>
-      <span className="font-semibold z-10 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-white drop-shadow-lg border border-white/20">{label}</span>
-      {checked ? (
-        <span className="ml-auto bg-primary text-primary-foreground text-xs z-10 px-2 py-1 rounded font-medium">Active</span>
-      ) : null}
-      <span className="absolute inset-0 pointer-events-none" />
+      <div
+        className={`w-16 h-16 rounded-lg border-2 transition-colors ${
+          checked ? "border-primary" : "border-muted"
+        }`}
+        style={{ minHeight: 64, background: `linear-gradient(135deg, ${previewLeft} 50%, ${previewRight} 50%)` }}
+      />
+      <span className="text-sm font-medium">{label}</span>
     </label>
   );
 } 
