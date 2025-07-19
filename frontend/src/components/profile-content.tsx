@@ -283,7 +283,7 @@ function ThemeSelector() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const themes = [
     // Light themes
-    { value: "light", label: "Light", className: "light" },
+    { value: "light", label: "Light", className: "theme-light" },
     { value: "latte", label: "Latte", className: "theme-latte" },
     { value: "rose", label: "Rose", className: "theme-rose" },
     { value: "emerald", label: "Emerald", className: "theme-emerald" },
@@ -291,7 +291,7 @@ function ThemeSelector() {
     { value: "cyan", label: "Cyan", className: "theme-cyan" },
     { value: "orange", label: "Orange", className: "theme-orange" },
     // Dark themes
-    { value: "dark", label: "Dark", className: "dark" },
+    { value: "dark", label: "Dark", className: "theme-dark" },
     { value: "frappe", label: "Frappe", className: "theme-frappe" },
     { value: "macchiato", label: "Macchiato", className: "theme-macchiato" },
     { value: "mocha", label: "Mocha", className: "theme-mocha" },
@@ -318,39 +318,46 @@ function ThemeSelector() {
 }
 
 function ThemePreviewRadio({ value, label, themeClass, checked, onChange }: { value: string, label: string, themeClass: string, checked: boolean, onChange: () => void }) {
-  // Debug: show computed values for --background and --muted
   const ref = React.useRef<HTMLLabelElement>(null);
-  const [debug, setDebug] = React.useState("");
+  const hiddenRef = React.useRef<HTMLDivElement>(null);
+  const [gradient, setGradient] = React.useState<string>("");
+
   React.useEffect(() => {
-    if (ref.current) {
-      const style = getComputedStyle(ref.current);
-      setDebug(`--background: ${style.getPropertyValue('--background')}, --muted: ${style.getPropertyValue('--muted')}`);
+    if (hiddenRef.current) {
+      const style = getComputedStyle(hiddenRef.current);
+      const bg = style.getPropertyValue('--background').trim() || '0 0% 100%';
+      const primary = style.getPropertyValue('--primary').trim() || '222.2 47.4% 11.2%';
+      setGradient(`linear-gradient(135deg, hsl(${bg}) 50%, hsl(${primary}) 50%)`);
     }
   }, [themeClass]);
 
   return (
-    <label
-      ref={ref}
-      className={`theme-preview ${themeClass} flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors relative overflow-hidden w-full ${checked ? "border-primary ring-2 ring-primary" : ""}`}
-      style={{ minHeight: 64 }}
-      title={debug}
-    >
-      <input
-        type="radio"
-        name="theme"
-        value={value}
-        className="theme-radio z-10"
-        checked={checked}
-        onChange={onChange}
-        style={{ display: "none" }}
-      />
-      <span className="custom-radio-dot" aria-hidden="true"></span>
-      <span className="font-semibold z-10 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-white drop-shadow-lg border border-white/20">{label}</span>
-      {checked ? (
-        <span className="ml-auto bg-primary text-primary-foreground text-xs z-10 px-2 py-1 rounded font-medium">Active</span>
-      ) : null}
-      <span className="absolute inset-0 pointer-events-none" />
-    </label>
+    <>
+      {/* Hidden element for reading theme variables */}
+      <div ref={hiddenRef} className={themeClass} style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none', height: 0, width: 0, overflow: 'hidden' }} aria-hidden="true" />
+      <label
+        ref={ref}
+        className={`theme-preview ${themeClass} flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors relative overflow-hidden w-full ${checked ? "border-primary ring-2 ring-primary" : ""}`}
+        style={{ minHeight: 64, background: gradient }}
+        title={gradient}
+      >
+        <input
+          type="radio"
+          name="theme"
+          value={value}
+          className="theme-radio z-10"
+          checked={checked}
+          onChange={onChange}
+          style={{ display: "none" }}
+        />
+        <span className="custom-radio-dot" aria-hidden="true"></span>
+        <span className="font-semibold z-10 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-white drop-shadow-lg border border-white/20">{label}</span>
+        {checked ? (
+          <span className="ml-auto bg-primary text-primary-foreground text-xs z-10 px-2 py-1 rounded font-medium">Active</span>
+        ) : null}
+        <span className="absolute inset-0 pointer-events-none" />
+      </label>
+    </>
   );
 }
 
