@@ -43,6 +43,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/context/AuthContext"
+import { useLanguage } from '@/context/LanguageContext';
 
 export function NavUser({
   user,
@@ -58,6 +59,7 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const { setTheme } = useTheme()
   const { loggedIn } = useAuth()
+  const { t, language, setLanguage } = useLanguage();
 
   return (
     <SidebarMenu>
@@ -114,6 +116,20 @@ export function NavUser({
               )}
               <DropdownMenuItem onSelect={() => setTheme("latte")}> <Sun /> Light</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setTheme("slate")}> <Moon /> Dark</DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              {/* Language Switcher for testing */}
+              <DropdownMenuItem asChild>
+                <select
+                  value={language}
+                  onChange={e => setLanguage(e.target.value as 'en' | 'fr')}
+                  className="border rounded px-2 py-1 text-sm bg-background text-foreground w-full"
+                >
+                  <option value="en">English</option>
+                  <option value="fr">Français</option>
+                </select>
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>

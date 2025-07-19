@@ -6,12 +6,13 @@ import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { useEffect, useState } from 'react';
+import { LanguageProvider } from '@/context/LanguageContext';
 
 interface MyAppProps extends AppProps {
   sidebarDefaultOpen: boolean
 }
 
-function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
+export default function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   // Custom system theme mapping
   const [systemTheme, setSystemTheme] = useState<'latte' | 'slate'>('latte');
   useEffect(() => {
@@ -25,35 +26,37 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   }, []);
 
   return (
-    <AuthProvider>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme={systemTheme}
-        enableSystem={false}
-        value={{
-          light: "light",
-          dark: "dark",
-          latte: "theme-latte",
-          frappe: "theme-frappe",
-          macchiato: "theme-macchiato",
-          mocha: "theme-mocha",
-          slate: "theme-slate",
-          rose: "theme-rose",
-          emerald: "theme-emerald",
-          cyan: "theme-cyan",
-          violet: "theme-violet",
-          orange: "theme-orange",
-        }}
-      >
-        <SidebarProvider defaultOpen={sidebarDefaultOpen}>
-          <AppSidebar />
-          <SidebarInset>
-            <Component {...pageProps} />
-            <CookieConsent />
-          </SidebarInset>
-        </SidebarProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme={systemTheme}
+          enableSystem={false}
+          value={{
+            light: "light",
+            dark: "dark",
+            latte: "theme-latte",
+            frappe: "theme-frappe",
+            macchiato: "theme-macchiato",
+            mocha: "theme-mocha",
+            slate: "theme-slate",
+            rose: "theme-rose",
+            emerald: "theme-emerald",
+            cyan: "theme-cyan",
+            violet: "theme-violet",
+            orange: "theme-orange",
+          }}
+        >
+          <SidebarProvider defaultOpen={sidebarDefaultOpen}>
+            <AppSidebar />
+            <SidebarInset>
+              <Component {...pageProps} />
+              <CookieConsent />
+            </SidebarInset>
+          </SidebarProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </LanguageProvider>
   )
 }
 
@@ -67,5 +70,3 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
   }
   return { ...appProps, sidebarDefaultOpen }
 }
-
-export default MyApp
