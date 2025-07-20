@@ -57,12 +57,14 @@ function ProfileContentInner() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
   const [pwMessage, setPwMessage] = useState<string | null>(null);
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwValidationError, setPwValidationError] = useState<string | null>(null);
+  const [pwTooLongError, setPwTooLongError] = useState<string | null>(null);
   const [confirmUsername, setConfirmUsername] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState(false);
 
@@ -81,6 +83,11 @@ function ProfileContentInner() {
     setNewUsername(e.target.value);
     setMessage(null);
     setError(null);
+    if (e.target.value.length > 32) {
+      setUsernameError("Username too long (max 32)");
+    } else {
+      setUsernameError(null);
+    }
   };
 
   // Username update handler (no change)
@@ -127,6 +134,11 @@ function ProfileContentInner() {
     } else {
       setPwValidationError(null);
     }
+    if (e.target.value.length > 72) {
+      setPwTooLongError("Password too long (max 72)");
+    } else {
+      setPwTooLongError(null);
+    }
   };
   // Password change handler (no change)
   const handlePasswordChange = async (e?: FormEvent) => {
@@ -172,7 +184,9 @@ function ProfileContentInner() {
                 onChange={handleInputChange}
                 required
                 disabled={loading}
+                maxLength={32}
               />
+              {usernameError && <span className="text-red-500 text-xs">{usernameError}</span>}
             </div>
             <div style={{ minHeight: 24 }}>
               {error && <div className="text-red-600 mt-2">{error}</div>}
@@ -240,10 +254,11 @@ function ProfileContentInner() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="new">New Password</label>
-              <Input id="new" name="new" type="password" value={newPassword} onChange={handleNewPasswordChange} required autoComplete="new-password" disabled={pwLoading} />
+              <Input id="new" name="new" type="password" value={newPassword} onChange={handleNewPasswordChange} required autoComplete="new-password" disabled={pwLoading} maxLength={72} />
             </div>
             <div style={{ minHeight: 24 }}>
               {pwValidationError && <div className="text-red-600 mt-2">{pwValidationError}</div>}
+              {pwTooLongError && <div className="text-red-600 mt-2">{pwTooLongError}</div>}
               {pwError && <div className="text-red-600 mt-2">{pwError}</div>}
               {!pwError && !pwValidationError && pwMessage && <div className="text-green-600 mt-2">{pwMessage}</div>}
             </div>
