@@ -31,6 +31,54 @@ func seedChallengeCategory() {
 	log.Println("Seeding: challengeCategories finished")
 }
 
+func seedChallengeType() {
+	challengeTypes := []models.ChallengeType{
+		{Name: "standard"},
+		{Name: "docker"},
+		{Name: "compose"},
+	}
+	for _, challengeType := range challengeTypes {
+		var existing models.ChallengeType
+		err := DB.Where("name = ?", challengeType.Name).First(&existing).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Printf("Failed to check challengeType %s: %v\n", challengeType.Name, err)
+			continue
+		}
+		if err == nil {
+			continue
+		}
+		if err := DB.Create(&challengeType).Error; err != nil {
+			log.Printf("Failed to seed challengeType %s: %v\n", challengeType.Name, err)
+		}
+	}
+	log.Println("Seeding: challengeTypes finished")
+}
+
+func seedChallengeDifficulty() {
+	challengeDifficulties := []models.ChallengeDifficulty{
+		{Name: "intro"},
+		{Name: "easy"},
+		{Name: "medium"},
+		{Name: "hard"},
+		{Name: "insane"},
+	}
+	for _, challengeDifficulty := range challengeDifficulties {
+		var existing models.ChallengeDifficulty
+		err := DB.Where("name = ?", challengeDifficulty.Name).First(&existing).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Printf("Failed to check challengeDifficulty %s: %v\n", challengeDifficulty.Name, err)
+			continue
+		}
+		if err == nil {
+			continue
+		}
+		if err := DB.Create(&challengeDifficulty).Error; err != nil {
+			log.Printf("Failed to seed challengeDifficulty %s: %v\n", challengeDifficulty.Name, err)
+		}
+	}
+	log.Println("Seeding: challengeTypes finished")
+}
+
 func seedDefaultUsers() {
 	users := []models.User{
 		{Username: "admin", Email: "admin@admin.admin", Password: "admin", Role: "admin"},
@@ -99,6 +147,8 @@ func SeedCasbinFromCsv(enforcer *casbin.Enforcer) {
 
 func SeedDatabase() {
 	log.Println("Seeding: Database..")
+	seedChallengeDifficulty()
 	seedChallengeCategory()
+	seedChallengeType()
 	seedDefaultUsers()
 }

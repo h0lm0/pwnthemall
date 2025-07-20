@@ -42,7 +42,7 @@ function compose_up() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            -u|up)
+            up)
                 shift
                 ;;
             -e|--env)
@@ -80,7 +80,7 @@ function compose_down() {
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            -d|down)
+            down)
                 shift
                 ;;
             -e|--env)
@@ -106,11 +106,21 @@ function compose_down() {
     echo "[✓] Compose down completed"
 }
 
+function generate_key() {
+    ssh-keygen -C '' -t ed25519 -N '' -f ./shared/worker
+}
+
+function remove_key() {
+    rm -rf ./shared/worker*
+}
+
 function usage() {
     echo "Usage:"
     echo "  $0 minio sync <folder>"
-    echo "  $0 compose -u|up [--build] [--env dev|prod]"
-    echo "  $0 compose -d|down [--env dev|prod]"
+    echo "  $0 compose up [--build] [--env dev|prod]"
+    echo "  $0 compose down [--env dev|prod]"
+    echo "  $0 keys -g|gen"
+    echo "  $0 keys -r|remove"
     exit 1
 }
 
@@ -141,6 +151,20 @@ case "${1:-}" in
                 ;;
             -d|down)
                 compose_down "$@"
+                ;;
+            *)
+                usage
+                ;;
+        esac
+        ;;
+    keys)
+        shift
+        case "${1:-}" in
+            -g|gen)
+                generate_key
+                ;;
+            -r|remove)
+                remove_key
                 ;;
             *)
                 usage
