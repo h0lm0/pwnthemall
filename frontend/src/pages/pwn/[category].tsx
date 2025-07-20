@@ -13,27 +13,38 @@ export default function CategoryPage() {
   const cat = Array.isArray(category) ? category[0] : category;
 
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [teamChecked, setTeamChecked] = useState(false);
+  const [hasTeam, setHasTeam] = useState(false);
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
   useEffect(() => {
-    if (authChecked && !loggedIn) {
-      router.replace("/login");
+    if (authChecked && loggedIn) {
+      axios.get("/api/me").then(res => {
+        if (res.data.teamId) {
+          setHasTeam(true);
+        } else {
+          router.replace("/team");
+        }
+        setTeamChecked(true);
+      }).catch(() => {
+        router.replace("/login");
+      });
     }
   }, [authChecked, loggedIn, router]);
 
   useEffect(() => {
-    if (authChecked && loggedIn && cat) {
+    if (authChecked && loggedIn && hasTeam && cat) {
       axios
         .get<Challenge[]>(`/api/challenges/category/${cat}`)
         .then((res) => setChallenges(res.data))
         .catch(() => setChallenges([]));
     }
-  }, [authChecked, loggedIn, cat]);
+  }, [authChecked, loggedIn, hasTeam, cat]);
 
-  if (!authChecked || !loggedIn || !cat) return null;
+  if (!authChecked || !loggedIn || !teamChecked || !hasTeam || !cat) return null;
 
   return <CategoryContent cat={cat} challenges={challenges} />;
 }
