@@ -4,6 +4,14 @@ test.use({
   ignoreHTTPSErrors: true,
 });
 
+// Utilitaire pour cliquer sur le bouton cookie si présent
+async function acceptCookiesIfPresent(page) {
+  const acceptBtn = page.locator('button.bg-primary');
+  if (await acceptBtn.count() > 0) {
+    await acceptBtn.first().click();
+  }
+}
+
 test('register and login', async ({ page }) => {
   const uid = Date.now();
   const username = `user${uid}`;
@@ -243,4 +251,94 @@ test('Member to admin upgrade', async ({ page }) => {
     await page.goto(`https://pwnthemall.local${url}`);
     await expect(page.locator('body')).toContainText(text);
   }
+});
+
+test('Change password and relog using the new password', async ({ page }) => {
+  const uid = Date.now();
+  const username = `user${uid}`;
+  const email = `user${uid}@pwnthemall.com`;
+  const oldPassword = 'TestPassword123!';
+  const newPassword = 'NewPassword456!';
+
+  // Register new user
+  await page.goto('https://pwnthemall.local/');
+  await page.getByRole('button', { name: 'Accept' }).click();
+  await page.getByRole('link', { name: /register/i }).click();
+  await page.getByRole('textbox', { name: /username/i }).fill(username);
+  await page.getByRole('textbox', { name: /email/i }).fill(email);
+  await page.getByRole('textbox', { name: /password/i }).fill(oldPassword);
+  await page.getByRole('button', { name: /register/i }).click();
+  await expect(page.getByRole('heading', { name: /success/i })).toBeVisible();
+
+  // Logout (API)
+  await page.request.post('https://pwnthemall.local/api/logout');
+  await page.goto('https://pwnthemall.local/login');
+
+  // Login as new user
+  await page.getByRole('textbox', { name: /email/i }).fill(email);
+  await page.getByRole('textbox', { name: /password/i }).fill(oldPassword);
+  await page.getByRole('button', { name: /login/i }).click();
+  await expect(page.locator('[id="__next"]')).toContainText(username);
+
+  // Aller dans le profil (navigation directe)
+  await page.goto('https://pwnthemall.local/profile');
+  // Cliquer sur le bouton 'Security'
+  await page.getByRole('button', { name: /security/i }).click();
+  // Remplir le formulaire de changement de mot de passe
+  await page.getByLabel(/current password|current/i).fill(oldPassword);
+  await page.getByLabel(/new password|new/i).fill(newPassword);
+  // Cliquer sur le bouton 'Change Password' avant 'Confirm'
+  await page.getByRole('button', { name: /change password/i }).click();
+  // Cliquer sur le bouton 'Confirm' après avoir changé le mot de passe
+  await page.getByRole('button', { name: /confirm/i }).click();
+  // Vérifier le succès
+  await expect(page.locator('body')).toContainText(/password updated|success/i);
+
+  // Logout (API)
+  await page.request.post('https://pwnthemall.local/api/logout');
+  await page.goto('https://pwnthemall.local/login');
+
+  // Login avec le nouveau mot de passe
+  await page.getByRole('textbox', { name: /email/i }).fill(email);
+  await page.getByRole('textbox', { name: /password/i }).fill(newPassword);
+  await page.getByRole('button', { name: /login/i }).click();
+  await expect(page.locator('[id="__next"]')).toContainText(username);
+});
+
+test('Deleting your own account', async ({ page }) => {
+  const uid = Date.now();
+  const username = `user${uid}`;
+  const email = `user${uid}@pwnthemall.com`;
+  const password = 'TestPassword123!';
+
+  // Register new user
+  await page.goto('https://pwnthemall.local/');
+  await page.getByRole('button', { name: 'Accept' }).click();
+  await page.getByRole('link', { name: /register/i }).click();
+  await page.getByRole('textbox', { name: /username/i }).fill(username);
+  await page.getByRole('textbox', { name: /email/i }).fill(email);
+  await page.getByRole('textbox', { name: /password/i }).fill(password);
+  await page.getByRole('button', { name: /register/i }).click();
+  await expect(page.getByRole('heading', { name: /success/i })).toBeVisible();
+
+  // Login as new user
+  await page.getByRole('textbox', { name: /email/i }).fill(email);
+  await page.getByRole('textbox', { name: /password/i }).fill(password);
+  await page.getByRole('button', { name: /login/i }).click();
+  await expect(page.locator('[id="__next"]')).toContainText(username);
+
+  // Aller dans le profil (navigation directe)
+  await page.goto('https://pwnthemall.local/profile');
+  // Cliquer sur le bouton 'Delete Account'
+  await page.getByRole('button', { name: /delete account/i }).click();
+  // Confirmer la suppression avec le bouton 'Delete'
+  await page.getByRole('button', { name: /^delete$/i }).click();
+  // Vérifier qu'on est redirigé ou qu'un message de succès s'affiche (optionnel)
+  await expect(page).toHaveURL(/login/);
+
+  // Tenter de se reconnecter avec ce compte (doit échouer)
+  await page.getByRole('textbox', { name: /email/i }).fill(email);
+  await page.getByRole('textbox', { name: /password/i }).fill(password);
+  await page.getByRole('button', { name: /login/i }).click();
+  await expect(page.getByText(/invalid credentials/i)).toBeVisible();
 });
