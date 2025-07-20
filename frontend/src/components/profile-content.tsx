@@ -18,7 +18,7 @@ import {
 import { useTheme } from "next-themes";
 import { useAuth } from "@/context/AuthContext";
 
-const TABS = ["Account", "Security", "Appearance"] as const;
+const TABS = ["Account", "Security", "Appearance", "Team"] as const;
 type Tab = typeof TABS[number];
 
 export default function ProfileContent() {
@@ -68,14 +68,46 @@ function ProfileContentInner() {
   const [confirmUsername, setConfirmUsername] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState(false);
 
+  // Team state
+  const [team, setTeam] = useState<any>(null);
+  const [members, setMembers] = useState<any[]>([]);
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [teamError, setTeamError] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState(false);
+  const [leaveMsg, setLeaveMsg] = useState<string | null>(null);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+
   useEffect(() => {
     setLoading(true);
     axios.get("/api/me").then((res: AxiosResponse<any>) => {
       setUsername(res.data.username);
       setNewUsername(res.data.username);
+      // fetch team info
+      if (res.data.teamId) {
+        setTeamLoading(true);
+        axios.get(`/api/teams/${res.data.teamId}`)
+          .then((r) => {
+            setTeam(r.data.team);
+            setMembers(r.data.members);
+            setTeamError(null);
+          })
+          .catch(() => {
+            setTeam(null);
+            setMembers([]);
+            setTeamError("Failed to fetch team info");
+          })
+          .finally(() => setTeamLoading(false));
+      } else {
+        setTeam(null);
+        setMembers([]);
+        setTeamLoading(false);
+      }
     }).catch(() => {
       setUsername("");
       setNewUsername("");
+      setTeam(null);
+      setMembers([]);
+      setTeamLoading(false);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -156,6 +188,21 @@ function ProfileContentInner() {
     } finally {
       setPwLoading(false);
       setConfirmPassword(false);
+    }
+  };
+
+  const handleLeaveTeam = async () => {
+    setLeaving(true);
+    setLeaveMsg(null);
+    setLeaveError(null);
+    try {
+      await axios.post("/api/teams/leave");
+      setLeaveMsg("You have left the team.");
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (err: any) {
+      setLeaveError(err?.response?.data?.error || "Failed to leave team");
+    } finally {
+      setLeaving(false);
     }
   };
 
@@ -295,6 +342,56 @@ function ProfileContentInner() {
           <>
             <ThemeSelector />
           </>
+        )}
+        {activeTab === "Team" && (
+          <div className="space-y-4 max-w-md">
+            {teamLoading ? (
+              <div>Loading team info...</div>
+            ) : team ? (
+              <>
+                <div>
+                  <span className="font-semibold">Team name:</span> {team.name}
+                </div>
+                <div>
+                  <span className="font-semibold">Members:</span>
+                  <ul className="list-disc ml-6">
+                    {members.map((m) => (
+                      <li key={m.id}>{m.username}</li>
+                    ))}
+                  </ul>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" variant="destructive" className="w-full" disabled={leaving}>
+                      Leave Team
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Leave Team</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to leave your team?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleLeaveTeam}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Leave
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                {leaveMsg && <div className="text-green-600 mt-2">{leaveMsg}</div>}
+                {leaveError && <div className="text-red-600 mt-2">{leaveError}</div>}
+              </>
+            ) : (
+              <div className="text-red-600">You are not in a team.</div>
+            )}
+            {teamError && <div className="text-red-600 mt-2">{teamError}</div>}
+          </div>
         )}
       </CardContent>
     </Card>

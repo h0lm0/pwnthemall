@@ -121,7 +121,7 @@ func GetCurrentUser(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := config.DB.First(&user, userID).Error; err != nil {
+	if err := config.DB.Preload("Team.Creator").Preload("Team").First(&user, userID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -131,5 +131,7 @@ func GetCurrentUser(c *gin.Context) {
 		"username": user.Username,
 		"email":    user.Email,
 		"role":     user.Role,
+		"teamId":   user.TeamID,
+		"team":     user.Team,
 	})
 }
