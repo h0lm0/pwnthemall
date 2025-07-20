@@ -92,5 +92,8 @@
   "sign_in": "Se connecter",
   "logout_confirm_title": "Êtes-vous sûr de vouloir vous déconnecter ?",
   "logout_confirm_message": "Vous devrez vous reconnecter pour continuer.",
-  "author": "Auteur"
+  "author": "Auteur",
+  "username_too_long": "Nom d'utilisateur trop long (32 caractères max)",
+  "email_too_long": "Email trop long (254 caractères max)",
+  "password_too_long": "Mot de passe trop long (72 caractères max)"
 } 

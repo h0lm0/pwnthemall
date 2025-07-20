@@ -11,9 +11,9 @@ import (
 )
 
 type RegisterInput struct {
-	Username string `json:"username" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	Username string `json:"username" binding:"required,max=32"`
+	Email    string `json:"email" binding:"required,email,max=254"`
+	Password string `json:"password" binding:"required,min=8,max=72"`
 	Role     string `json:"role"`
 }
 
@@ -108,10 +108,10 @@ func UpdateCurrentUser(c *gin.Context) {
 	}
 
 	var input struct {
-		Username string `json:"username"`
+		Username string `json:"username" binding:"max=32"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username too long (max 32 chars) or invalid input"})
 		return
 	}
 
@@ -138,10 +138,10 @@ func UpdateCurrentUserPassword(c *gin.Context) {
 
 	var input struct {
 		Current string `json:"current"`
-		New     string `json:"new"`
+		New     string `json:"new" binding:"min=8,max=72"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password must be 8-72 characters."})
 		return
 	}
 
