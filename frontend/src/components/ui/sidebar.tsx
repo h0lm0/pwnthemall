@@ -54,7 +54,7 @@ function useSidebar() {
 }
 
 // Ajout utilitaire pour la largeur resizable
-function useResizableSidebar(defaultWidth = 256, min = 56, max = 480) {
+function useResizableSidebar(defaultWidth = 250, min = 56, max = 480) {
   const [width, setWidth] = React.useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('sidebarWidth');
@@ -330,7 +330,7 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={sidebarRef}
-        className="group peer hidden text-sidebar-foreground md:block"
+        className="group peer hidden text-sidebar-foreground md:block h-screen flex flex-col"
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
@@ -339,7 +339,7 @@ const Sidebar = React.forwardRef<
       >
         <div
           className={cn(
-            "relative w-full h-full bg-sidebar transition-[width] duration-200 ease-linear",
+            "relative w-full h-full bg-sidebar transition-[width] duration-200 ease-linear flex flex-col",
             // S'assurer qu'aucun border-r ou border-l n'est appliqué ici
             "group-data-[collapsible=offcanvas]:w-0"
           )}
@@ -494,7 +494,7 @@ const SidebarFooter = React.forwardRef<
       ref={ref as any}
       data-sidebar="footer"
       className={cn(
-        "flex flex-col gap-2 p-2 overflow-hidden shrink-0",
+        "flex flex-col gap-2 p-2 overflow-hidden shrink-0 mt-auto",
         className
       )}
       {...props}

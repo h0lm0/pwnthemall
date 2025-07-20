@@ -128,21 +128,23 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       className={cn(!authChecked && "invisible pointer-events-none")}
       {...props}
     >
-      <SidebarHeader>
-        <TeamSwitcher
-          teams={[{ name: "pwnthemall", logo: Home, plan: "CTF" }]}
-        />
-      </SidebarHeader>
-      {authChecked && (
-        <>
-          <SidebarContent>
-            <NavMain items={navItems} />
-          </SidebarContent>
-          <SidebarFooter>
-            <NavUser user={userData} onLogout={logout} />
-          </SidebarFooter>
-        </>
-      )}
+      <div className="flex flex-col h-full">
+        <SidebarHeader>
+          <TeamSwitcher
+            teams={[{ name: "pwnthemall", logo: Home, plan: "CTF" }]}
+          />
+        </SidebarHeader>
+        {authChecked && (
+          <>
+            <SidebarContent className="flex flex-col flex-1 min-h-0">
+              <NavMain items={navItems} />
+            </SidebarContent>
+            <SidebarFooter className="mt-auto">
+              <NavUser user={userData} onLogout={logout} />
+            </SidebarFooter>
+          </>
+        )}
+      </div>
     </Sidebar>
   );
 }
