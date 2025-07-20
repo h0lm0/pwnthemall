@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import ChallengeCategoriesForm from "./ChallengeCategoriesForm"
 import { ChallengeCategory, ChallengeCategoryFormData } from "@/models/ChallengeCategory"
+import { useLanguage } from "@/context/LanguageContext"
 
 interface ChallengeCategoriesContentProps {
   challengeCategories: ChallengeCategory[]
@@ -31,6 +32,7 @@ interface ChallengeCategoriesContentProps {
 }
 
 export default function ChallengeCategoriesContent({ challengeCategories, onRefresh }: ChallengeCategoriesContentProps) {
+  const { t } = useLanguage();
   const [editingChallengeCategory, setEditingChallengeCategory] = useState<ChallengeCategory | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<ChallengeCategory | null>(null)
@@ -38,18 +40,18 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
   const columns: ColumnDef<ChallengeCategory>[] = [
-    { accessorKey: "ID", header: "ID" },
-    { accessorKey: "Name", header: "Name" },
+    { accessorKey: "ID", header: t('id') },
+    { accessorKey: "Name", header: t('name') },
     {
       id: "actions",
-      header: "Actions",
+      header: t('actions'),
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditingChallengeCategory(row.original)}>
-            Edit
+            {t('edit')}
           </Button>
           <Button variant="destructive" size="sm" onClick={() => setDeleting(row.original)}>
-            Delete
+            {t('delete')}
           </Button>
         </div>
       ),
@@ -91,7 +93,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
       </Head>
       <div className="bg-muted min-h-screen p-4">
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Challenge categories</h1>
+          <h1 className="text-3xl font-bold">{t('challenge_categories')}</h1>
           <div className="flex items-center gap-2">
             <div
               className={cn(
@@ -104,16 +106,16 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
                 size="sm"
                 onClick={() => setConfirmMassDelete(true)}
               >
-                Delete selected
+                {t('delete_selected')}
               </Button>
             </div>
             <Sheet open={creating} onOpenChange={setCreating}>
               <SheetTrigger asChild>
-                <Button size="sm">New challenge category</Button>
+                <Button size="sm">{t('new_challenge_category')}</Button>
               </SheetTrigger>
               <SheetContent side="right" onOpenAutoFocus={(e) => e.preventDefault()}>
                 <SheetHeader>
-                  <SheetTitle>Create challenge category</SheetTitle>
+                  <SheetTitle>{t('create_challenge_category')}</SheetTitle>
                 </SheetHeader>
                 <ChallengeCategoriesForm onSubmit={handleCreate} />
               </SheetContent>
@@ -131,7 +133,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
       <Sheet open={!!editingChallengeCategory} onOpenChange={(o) => !o && setEditingChallengeCategory(null)}>
         <SheetContent side="right" onOpenAutoFocus={(e) => e.preventDefault()}>
           <SheetHeader>
-            <SheetTitle>Edit challenge category</SheetTitle>
+            <SheetTitle>{t('edit_challenge_category')}</SheetTitle>
           </SheetHeader>
           {editingChallengeCategory && (
             <ChallengeCategoriesForm
@@ -145,28 +147,28 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete challenge category</AlertDialogTitle>
+            <AlertDialogTitle>{t('delete_challenge_category')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {deleting?.Name}?
+              {t('delete_challenge_category_confirm', { name: deleting?.Name || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t('delete')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       <AlertDialog open={confirmMassDelete} onOpenChange={setConfirmMassDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete challenge categories</AlertDialogTitle>
+            <AlertDialogTitle>{t('delete_challenge_categories')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the selected challenge categories?
+              {t('delete_challenge_categories_confirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={doDeleteSelected}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={doDeleteSelected}>{t('delete')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

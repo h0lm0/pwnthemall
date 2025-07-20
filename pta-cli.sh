@@ -49,7 +49,7 @@ function compose_up() {
                 env="$2"
                 shift 2
                 ;;
-            --build)
+            -b|--build)
                 build="true"
                 shift
                 ;;

@@ -1,8 +1,11 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import AnimatedText from './AnimatedText';
+import { useLanguage } from '@/context/LanguageContext';
 
 const IndexContent = () => {
+  const { t } = useLanguage();
+  
   return (
     <>
       <Head>
@@ -18,7 +21,7 @@ const IndexContent = () => {
           priority
         />
         <p className="text-xl md:text-2xl font-medium mb-8 text-cyan-600 dark:text-cyan-400">
-          <AnimatedText text="will you pwn it ?" delay={150} />
+          <AnimatedText text={t('will_you_pwn_it')} delay={150} />
         </p>
       </main>
     </>
