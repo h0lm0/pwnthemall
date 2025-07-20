@@ -43,7 +43,11 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	categoryName := c.Param("category")
 
 	var challenges []models.Challenge
-	result := config.DB.Preload("ChallengeCategory").Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
+	result := config.DB.
+		Preload("ChallengeCategory").
+		Preload("ChallengeType").
+		Preload("ChallengeDifficulty").
+		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ?", categoryName).
 		Find(&challenges)
 
