@@ -102,6 +102,7 @@ func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) e
 	challenge.ChallengeDifficultyID = cDifficulty.ID
 	challenge.ChallengeCategoryID = cCategory.ID
 	challenge.ChallengeTypeID = cType.ID
+	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 
 	if err := config.DB.Save(&challenge).Error; err != nil {

@@ -17,6 +17,7 @@ export interface Challenge {
   createdAt?: string
   updatedAt?: string
   solvers?: User[]
+  author: string
   hidden?: boolean
 }
 

@@ -1,5 +1,5 @@
 {
-  "pwn": "Pwn",
+  "pwn": "pwn",
   "logout": "Déconnexion",
   "login": "Connexion",
   "register": "Inscription",
@@ -91,5 +91,6 @@
   "already_have_account": "Vous avez déjà un compte ?",
   "sign_in": "Se connecter",
   "logout_confirm_title": "Êtes-vous sûr de vouloir vous déconnecter ?",
-  "logout_confirm_message": "Vous devrez vous reconnecter pour continuer."
+  "logout_confirm_message": "Vous devrez vous reconnecter pour continuer.",
+  "author": "Auteur"
 } 

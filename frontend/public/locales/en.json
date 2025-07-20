@@ -1,4 +1,5 @@
 {
+  "pwn": "pwn",
   "logout": "Logout",
   "login": "Login",
   "register": "Register",
@@ -88,5 +89,6 @@
   "already_have_account": "Already have an account?",
   "sign_in": "Sign in",
   "logout_confirm_title": "Are you sure you want to log out?",
-  "logout_confirm_message": "You will need to sign in again to continue."
+  "logout_confirm_message": "You will need to sign in again to continue.",
+  "author": "Author"
 } 

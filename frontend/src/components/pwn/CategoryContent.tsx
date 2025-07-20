@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import axios from "axios";
+import { useLanguage } from "@/context/LanguageContext"
 
 interface CategoryContentProps {
   cat: string;
@@ -48,7 +49,7 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
       setFlag("");
     }
   };
-
+  const { t } = useLanguage();
   return (
     <>
       <Head>
@@ -57,7 +58,7 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
 
       <main className="bg-muted flex flex-col items-center justify-start min-h-screen px-6 py-10 text-center">
         <h1 className="text-3xl font-bold mb-6 text-cyan-600 dark:text-cyan-400">
-          Category: {cat}
+          {cat}
         </h1>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-7xl">
@@ -93,7 +94,7 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
                     {selectedChallenge?.name}
                   </DialogTitle>
                   <DialogDescription className="text-sm text-muted-foreground">
-                    Type: {selectedChallenge?.type.name} — Difficulty: {selectedChallenge?.difficulty.name}
+                    {t('difficulty')}: {selectedChallenge?.difficulty.name} - {t('author')}: {selectedChallenge?.author}
                   </DialogDescription>
                 </DialogHeader>
 
