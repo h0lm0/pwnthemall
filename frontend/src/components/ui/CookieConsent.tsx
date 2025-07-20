@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { LucideCookie } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export interface CookieConsentProps {
   variant?: "default" | "compact";
@@ -34,6 +35,7 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
   className,
 }) => {
   const [visible, setVisible] = React.useState(false);
+  const { t } = useLanguage();
 
   React.useEffect(() => {
     if (typeof document !== "undefined" && !getCookie(COOKIE_NAME)) {
@@ -65,26 +67,26 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <LucideCookie className="w-5 h-5" />
-            We use cookies
+            {t('cookie_title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground">
-            We use cookies to ensure you get the best experience on our website. For more information on how we use cookies, please see our cookie policy.
+            {t('cookie_message')}
             <br />
             <span className="block mt-2 text-xs">
-              By clicking <b>Accept</b>, you agree to our use of cookies.
+              {t('cookie_accept_message')}
             </span>
             <Link href="/learn-more" className="underline text-xs mt-1 inline-block">
-              Learn more.
+              {t('learn_more')}
             </Link>
           </div>
           <div className="flex gap-2 pt-2">
             <Button className="flex-1" onClick={handleAccept} variant={"default" as any}>
-              Accept
+              {t('accept')}
             </Button>
             <Button className="flex-1" onClick={handleDecline} variant={"secondary" as any}>
-              Decline
+              {t('decline')}
             </Button>
           </div>
         </CardContent>
