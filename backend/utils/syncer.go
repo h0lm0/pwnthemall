@@ -76,8 +76,18 @@ func deleteChallengeFromDB(slug string) error {
 }
 
 func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) error {
-	var category models.ChallengeCategory
-	if err := config.DB.FirstOrCreate(&category, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
+	var cCategory models.ChallengeCategory
+	if err := config.DB.FirstOrCreate(&cCategory, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
+		return err
+	}
+
+	var cDifficulty models.ChallengeDifficulty
+	if err := config.DB.FirstOrCreate(&cDifficulty, models.ChallengeDifficulty{Name: metaData.Difficulty}).Error; err != nil {
+		return err
+	}
+
+	var cType models.ChallengeType
+	if err := config.DB.FirstOrCreate(&cType, models.ChallengeType{Name: metaData.Type}).Error; err != nil {
 		return err
 	}
 
@@ -89,8 +99,10 @@ func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) e
 	challenge.Slug = slug
 	challenge.Name = metaData.Name
 	challenge.Description = metaData.Description
-	challenge.Difficulty = metaData.Difficulty
-	challenge.ChallengeCategoryID = category.ID
+	challenge.ChallengeDifficultyID = cDifficulty.ID
+	challenge.ChallengeCategoryID = cCategory.ID
+	challenge.ChallengeTypeID = cType.ID
+	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 
 	if err := config.DB.Save(&challenge).Error; err != nil {

@@ -7,14 +7,15 @@ import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { useEffect, useState } from 'react';
+import { Toaster } from "sonner"; // ✅ Import du Toaster
 
 interface MyAppProps extends AppProps {
   sidebarDefaultOpen: boolean
 }
 
 function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
-  // Custom system theme mapping
   const [systemTheme, setSystemTheme] = useState<'latte' | 'slate'>('latte');
+
   useEffect(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -54,6 +55,13 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
               <CookieConsent />
             </SidebarInset>
           </SidebarProvider>
+
+          <Toaster
+            richColors
+            position="top-right"
+            closeButton
+            expand
+          />
         </ThemeProvider>
       </AuthProvider>
     </LanguageProvider>
