@@ -90,5 +90,8 @@
   "sign_in": "Sign in",
   "logout_confirm_title": "Are you sure you want to log out?",
   "logout_confirm_message": "You will need to sign in again to continue.",
-  "author": "Author"
+  "author": "Author",
+  "username_too_long": "Username too long (max 32 characters)",
+  "email_too_long": "Email too long (max 254 characters)",
+  "password_too_long": "Password too long (max 72 characters)"
 } 
