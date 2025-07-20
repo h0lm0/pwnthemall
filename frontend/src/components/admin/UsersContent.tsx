@@ -42,27 +42,64 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
   const columns: ColumnDef<User>[] = [
-    { accessorKey: "id", header: t('id') },
-    { accessorKey: "username", header: t('username'), cell: ({ getValue }) => (
-      <span className="whitespace-nowrap truncate max-w-[120px] block">{getValue() as string}</span>
-    ) },
-    { accessorKey: "email", header: t('email'), cell: ({ getValue }) => (
-      <span className="whitespace-nowrap truncate max-w-[180px] block">{getValue() as string}</span>
-    ) },
-    { accessorKey: "role", header: t('role') },
+    {
+      accessorKey: "id",
+      header: t("id"),
+      cell: ({ getValue }) => (
+        <span className="block text-center w-10 min-w-[40px] max-w-[40px]">
+          {getValue() as string}
+        </span>
+      ),
+      size: 40,
+      minSize: 40,
+      maxSize: 40,
+    },
+    {
+      accessorKey: "username",
+      header: t("username"),
+      cell: ({ getValue }) => (
+        <span className="block min-w-[150px] max-w-[250px] truncate">
+          {getValue() as string}
+        </span>
+      ),
+      size: 200,
+    },
+    {
+      accessorKey: "email",
+      header: t("email"),
+      cell: ({ getValue }) => (
+        <span className="block min-w-[200px] max-w-[300px] truncate">
+          {getValue() as string}
+        </span>
+      ),
+      size: 250,
+    },
+    { accessorKey: "role", header: t("role") },
     {
       id: "actions",
-      header: t('actions'),
+      header: t("actions"),
       cell: ({ row }) => (
         <div className="flex gap-2 whitespace-nowrap">
-          <Button variant="outline" size="sm" onClick={() => setEditingUser(row.original)}>
-            {t('edit')}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditingUser(row.original)}
+          >
+            {t("edit")}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setTempBanning(row.original)}>
-            {t('temp_ban')}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTempBanning(row.original)}
+          >
+            {t("temp_ban")}
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => setDeleting(row.original)}>
-            {t('delete')}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setDeleting(row.original)}
+          >
+            {t("delete")}
           </Button>
         </div>
       ),
@@ -114,9 +151,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       <Head>
         <title>pwnthemall - admin zone</title>
       </Head>
-      <div className="bg-muted min-h-screen p-4">
+      <div className="bg-muted min-h-screen p-4 overflow-x-auto">
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{t('users')}</h1>
+          <h1 className="text-3xl font-bold">{t("users")}</h1>
           <div className="flex items-center gap-2">
             <div
               className={cn(
@@ -129,7 +166,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 size="sm"
                 onClick={() => setConfirmMassDelete(true)}
               >
-                {t('delete_selected')}
+                {t("delete_selected")}
               </Button>
               <Button
                 variant="outline"
@@ -137,16 +174,19 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 onClick={() => setConfirmMassBan(true)}
                 disabled
               >
-                {t('temp_ban')}
+                {t("temp_ban")}
               </Button>
             </div>
             <Sheet open={creating} onOpenChange={setCreating}>
               <SheetTrigger asChild>
-                <Button size="sm">{t('new_user')}</Button>
+                <Button size="sm">{t("new_user")}</Button>
               </SheetTrigger>
-              <SheetContent side="right" onOpenAutoFocus={(e) => e.preventDefault()}>
+              <SheetContent
+                side="right"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
                 <SheetHeader>
-                  <SheetTitle>{t('create_user')}</SheetTitle>
+                  <SheetTitle>{t("create_user")}</SheetTitle>
                 </SheetHeader>
                 <UserForm onSubmit={handleCreate} />
               </SheetContent>
@@ -164,12 +204,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       <Sheet open={!!editingUser} onOpenChange={(o) => !o && setEditingUser(null)}>
         <SheetContent side="right" onOpenAutoFocus={(e) => e.preventDefault()}>
           <SheetHeader>
-            <SheetTitle>{t('edit_user')}</SheetTitle>
+            <SheetTitle>{t("edit_user")}</SheetTitle>
           </SheetHeader>
           {editingUser && (
             <UserForm
               isEdit
-              initialData={{ username: editingUser.username, email: editingUser.email, role: editingUser.role }}
+              initialData={{
+                username: editingUser.username,
+                email: editingUser.email,
+                role: editingUser.role,
+              }}
               onSubmit={handleUpdate}
             />
           )}
@@ -178,60 +222,67 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('delete_user')}</AlertDialogTitle>
+            <AlertDialogTitle>{t("delete_user")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('delete_user_confirm', { username: deleting?.username || '' })}
+              {t("delete_user_confirm", { username: deleting?.username || "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>{t('delete')}</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              {t("delete")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       <AlertDialog open={!!tempBanning} onOpenChange={(o) => !o && setTempBanning(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('temp_ban_user')}</AlertDialogTitle>
+            <AlertDialogTitle>{t("temp_ban_user")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('temp_ban_user_confirm', { username: tempBanning?.username || '' })}
+              {t("temp_ban_user_confirm", { username: tempBanning?.username || "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={doTempBanUser}>{t('temp_ban')}</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={doTempBanUser}>
+              {t("temp_ban")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       <AlertDialog open={confirmMassDelete} onOpenChange={setConfirmMassDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('delete_users')}</AlertDialogTitle>
+            <AlertDialogTitle>{t("delete_users")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('delete_users_confirm')}
+              {t("delete_users_confirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={doDeleteSelected}>{t('delete')}</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={doDeleteSelected}>
+              {t("delete")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       <AlertDialog open={confirmMassBan} onOpenChange={setConfirmMassBan}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('temp_ban_users')}</AlertDialogTitle>
+            <AlertDialogTitle>{t("temp_ban_users")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('temp_ban_users_confirm')}
+              {t("temp_ban_users_confirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={doTempBanSelected}>{t('temp_ban')}</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={doTempBanSelected}>
+              {t("temp_ban")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
   )
 }
-
