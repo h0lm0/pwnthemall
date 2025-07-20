@@ -49,7 +49,7 @@ func CreateUser(c *gin.Context) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors du hash du mot de passe"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -126,12 +126,38 @@ func GetCurrentUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	var safeMembers []models.SafeUser
+	if user.TeamID != nil {
+		var members []models.User
+		if err := config.DB.Where("team_id = ?", user.TeamID).Find(&members).Error; err == nil {
+			safeMembers = make([]models.SafeUser, len(members))
+			for i, member := range members {
+				safeMembers[i] = models.SafeUser{
+					ID:       member.ID,
+					Username: member.Username,
+					Role:     member.Role,
+				}
+			}
+		}
+	}
+
+	response := gin.H{
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
 		"role":     user.Role,
 		"teamId":   user.TeamID,
-		"team":     user.Team,
-	})
+		"team":     gin.H{},
+	}
+
+	if user.Team != nil {
+		response["team"] = gin.H{
+			"id":      user.Team.ID,
+			"name":    user.Team.Name,
+			"members": safeMembers,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
+

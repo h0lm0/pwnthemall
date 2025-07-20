@@ -85,18 +85,10 @@ function ProfileContentInner() {
       // fetch team info
       if (res.data.teamId) {
         setTeamLoading(true);
-        axios.get(`/api/teams/${res.data.teamId}`)
-          .then((r) => {
-            setTeam(r.data.team);
-            setMembers(r.data.members);
-            setTeamError(null);
-          })
-          .catch(() => {
-            setTeam(null);
-            setMembers([]);
-            setTeamError("Failed to fetch team info");
-          })
-          .finally(() => setTeamLoading(false));
+        setTeam(res.data.team)
+        setMembers(res.data.team.members)
+        setTeamError(null)
+        setTeamLoading(false);
       } else {
         setTeam(null);
         setMembers([]);

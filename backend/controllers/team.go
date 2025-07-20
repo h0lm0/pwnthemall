@@ -6,6 +6,7 @@ import (
 	"pwnthemall/models"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // GetTeams : liste toutes les équipes
@@ -34,6 +35,8 @@ func GetTeam(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"team": team, "members": members})
 }
 
+
+
 // CreateTeam : crée une équipe et assigne l'utilisateur courant
 func CreateTeam(c *gin.Context) {
 	var input struct {
@@ -58,9 +61,14 @@ func CreateTeam(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User already in a team"})
 		return
 	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
 	team := models.Team{
 		Name:      input.Name,
-		Password:  input.Password, // TODO: hash if besoin
+		Password:  string(hashedPassword),
 		Creator:   user,
 		CreatorId: user.ID,
 	}
@@ -116,7 +124,7 @@ func JoinTeam(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "TeamId or Name required"})
 		return
 	}
-	if team.Password != input.Password {
+	if err := bcrypt.CompareHashAndPassword([]byte(team.Password), []byte(input.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
 		return
 	}
