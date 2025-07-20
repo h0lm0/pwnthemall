@@ -1,13 +1,15 @@
 services:
   frontend:
-    container_name: frontend-prod
+    container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: prod
     environment:
-      - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=https://pwnthemall.local
+      - NODE_ENV=production
+    depends_on:
+      - backend
     ports:
       - "3000:3000"
 
