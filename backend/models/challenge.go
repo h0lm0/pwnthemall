@@ -16,5 +16,6 @@ type Challenge struct {
 	CreatedAt             time.Time           `json:"createdAt"`
 	UpdatedAt             time.Time           `json:"updatedAt"`
 	Solvers               []*User             `gorm:"many2many:solves" json:"solvers"`
+	Author                string              `json:"author"`
 	Hidden                bool                `json:"hidden"`
 }
