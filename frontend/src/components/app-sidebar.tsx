@@ -72,8 +72,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       pwnSubItems = [{ title: t('no_categories'), url: "#" }];
     } else {
       pwnSubItems = categories.map((cat) => ({
-        title: cat.Name,
-        url: `/pwn/${cat.Name}`,
+        title: cat.name,
+        url: `/pwn/${cat.name}`,
       }));
     }
     if (loggedIn) {

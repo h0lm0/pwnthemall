@@ -40,8 +40,8 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
   const columns: ColumnDef<ChallengeCategory>[] = [
-    { accessorKey: "ID", header: t('id') },
-    { accessorKey: "Name", header: t('name') },
+    { accessorKey: "id", header: t('id') },
+    { accessorKey: "name", header: t('name') },
     {
       id: "actions",
       header: t('actions'),
@@ -66,20 +66,20 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
 
   const handleUpdate = async (data: ChallengeCategoryFormData) => {
     if (!editingChallengeCategory) return
-    await axios.put(`/api/challenge-categories/${editingChallengeCategory.ID}`, data)
+    await axios.put(`/api/challenge-categories/${editingChallengeCategory.id}`, data)
     setEditingChallengeCategory(null)
     onRefresh()
   }
 
   const handleDelete = async () => {
     if (!deleting) return
-    await axios.delete(`/api/challenge-categories/${deleting.ID}`)
+    await axios.delete(`/api/challenge-categories/${deleting.id}`)
     setDeleting(null)
     onRefresh()
   }
 
   const doDeleteSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => challengeCategories[parseInt(key, 10)].ID)
+    const ids = Object.keys(rowSelection).map((key) => challengeCategories[parseInt(key, 10)].id)
     await Promise.all(ids.map((id) => axios.delete(`/api/challenge-categories/${id}`)))
     setRowSelection({})
     onRefresh()
@@ -138,7 +138,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
           {editingChallengeCategory && (
             <ChallengeCategoriesForm
               isEdit
-              initialData={{ Name: editingChallengeCategory.Name}}
+              initialData={{ name: editingChallengeCategory.name }}
               onSubmit={handleUpdate}
             />
           )}
@@ -149,7 +149,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
           <AlertDialogHeader>
             <AlertDialogTitle>{t('delete_challenge_category')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('delete_challenge_category_confirm', { name: deleting?.Name || '' })}
+              {t('delete_challenge_category_confirm', { name: deleting?.name || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

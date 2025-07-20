@@ -1,8 +1,11 @@
+import { Challenge } from "./Challenge"
+
 export interface ChallengeCategory {
-  ID: number
-  Name: string
+  id: number
+  name: string
+  challenges?: Challenge[]
 }
 
 export interface ChallengeCategoryFormData {
-  Name: string
+  name: string
 }
