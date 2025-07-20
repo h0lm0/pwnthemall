@@ -346,14 +346,7 @@ const Sidebar = React.forwardRef<
         >
           {/* Bouton collapse/expand explicite */}
           {open ? (
-            <button
-              onClick={handleCollapse}
-              className="absolute top-2 right-2 z-50 rounded p-1 bg-sidebar-border hover:bg-sidebar-accent"
-              title="Collapse sidebar"
-            >
-              <span className="sr-only">Collapse</span>
-              &lt;
-            </button>
+            null
           ) : (
             <button
               onClick={handleExpand}
