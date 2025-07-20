@@ -13,6 +13,7 @@ import { CheckCircle, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useLanguage } from "@/context/LanguageContext"
+import React from "react"
 
 interface RegisterContentProps {
     form: {
@@ -34,6 +35,17 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
     onSubmit,
 }) => {
     const { t } = useLanguage();
+    const [errors, setErrors] = React.useState<{username?: string, email?: string, password?: string}>({});
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        let error = "";
+        if (name === "username" && value.length > 32) error = t('username_too_long') || "Username too long (max 32)";
+        if (name === "email" && value.length > 254) error = t('email_too_long') || "Email too long (max 254)";
+        if (name === "password" && value.length > 72) error = t('password_too_long') || "Password too long (max 72)";
+        setErrors({ ...errors, [name]: error });
+        onChange(e);
+    };
 
     return (
         <div className="bg-muted flex min-h-screen flex-col items-center justify-center px-4 py-8">
@@ -67,9 +79,11 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                                     name="username"
                                     placeholder={t('username')}
                                     value={form.username}
-                                    onChange={onChange}
+                                    onChange={handleChange}
                                     required
+                                    maxLength={32}
                                 />
+                                {errors.username && <span className="text-red-500 text-xs">{errors.username}</span>}
 
                                 <Label htmlFor="email">{t('email')}</Label>
                                 <Input
@@ -77,9 +91,11 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                                     name="email"
                                     placeholder={t('email')}
                                     value={form.email}
-                                    onChange={onChange}
+                                    onChange={handleChange}
                                     required
+                                    maxLength={254}
                                 />
+                                {errors.email && <span className="text-red-500 text-xs">{errors.email}</span>}
                             </div>
                             <div className="grid gap-2">
                                 <div className="flex items-center">
@@ -92,9 +108,11 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                                     placeholder={t('password_min_8')}
                                     minLength={8}
                                     value={form.password}
-                                    onChange={onChange}
+                                    onChange={handleChange}
                                     required
+                                    maxLength={72}
                                 />
+                                {errors.password && <span className="text-red-500 text-xs">{errors.password}</span>}
                             </div>
                             <Button
                                 type="submit"

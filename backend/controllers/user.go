@@ -9,6 +9,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Add this struct for input validation
+
+type UserInput struct {
+	Username string `json:"username" binding:"required,max=32"`
+	Email    string `json:"email" binding:"required,email,max=254"`
+	Password string `json:"password,omitempty" binding:"omitempty,min=8,max=72"`
+	Role     string `json:"role"`
+}
+
 func GetUsers(c *gin.Context) {
 	var users []models.User
 	result := config.DB.Find(&users)
@@ -32,9 +41,9 @@ func GetUser(c *gin.Context) {
 }
 
 func CreateUser(c *gin.Context) {
-	var input RegisterInput
+	var input UserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username (max 32), email (max 254), password (8-72) invalid: " + err.Error()})
 		return
 	}
 
@@ -76,9 +85,9 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var input models.User
+	var input UserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username (max 32), email (max 254) or password invalid: " + err.Error()})
 		return
 	}
 
