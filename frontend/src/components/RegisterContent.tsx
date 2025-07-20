@@ -50,21 +50,6 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
     return (
         <div className="bg-muted flex min-h-screen flex-col items-center justify-center px-4 py-8">
             <div className="w-full max-w-sm">
-                {message && (
-                    <Alert
-                        variant={message.type === "error" ? "destructive" : "default"}
-                        className="mb-6"
-                    >
-                        {message.type === "error" ? (
-                            <AlertTriangle className="h-4 w-4" />
-                        ) : (
-                            <CheckCircle className="h-4 w-4" />
-                        )}
-                        <AlertTitle>{message.type === "error" ? t('error') : t('success')}</AlertTitle>
-                        <AlertDescription>{message.text}</AlertDescription>
-                    </Alert>
-                )}
-
                 <Card>
                     <CardHeader className="text-center">
                         <CardTitle className="text-xl">{t('sign_up')}</CardTitle>

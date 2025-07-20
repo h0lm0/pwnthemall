@@ -93,5 +93,6 @@
   "author": "Author",
   "username_too_long": "Username too long (max 32 characters)",
   "email_too_long": "Email too long (max 254 characters)",
-  "password_too_long": "Password too long (max 72 characters)"
+  "password_too_long": "Password too long (max 72 characters)",
+  "registration_successful": "Registration successful. Please login."
 } 
