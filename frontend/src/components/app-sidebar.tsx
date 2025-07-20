@@ -12,7 +12,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
@@ -144,7 +143,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           </SidebarFooter>
         </>
       )}
-      {!isMobile && <SidebarRail />}
     </Sidebar>
   );
 }
