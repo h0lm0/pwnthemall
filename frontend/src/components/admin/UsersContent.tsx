@@ -40,6 +40,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [confirmMassDelete, setConfirmMassDelete] = useState(false)
   const [confirmMassBan, setConfirmMassBan] = useState(false)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const columns: ColumnDef<User>[] = [
     {
@@ -107,9 +108,14 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   ]
 
   const handleCreate = async (data: UserFormData) => {
-    await axios.post("/api/users", data)
-    setCreating(false)
-    onRefresh()
+    setCreateError(null);
+    try {
+      await axios.post("/api/users", data)
+      setCreating(false)
+      onRefresh()
+    } catch (err: any) {
+      setCreateError(err?.response?.data?.error || "Failed to create user");
+    }
   }
 
   const handleUpdate = async (data: UserFormData) => {
