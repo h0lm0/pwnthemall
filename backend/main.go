@@ -60,6 +60,7 @@ func main() {
 	routes.RegisterWebhookRoutes(router)
 	routes.RegisterChallengeRoutes(router)
 	routes.RegisterChallengeCategoryRoutes(router)
+	routes.RegisterTeamRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {

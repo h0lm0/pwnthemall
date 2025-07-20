@@ -19,8 +19,14 @@ func ConnectDB() *gorm.DB {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Migrations
-	err = db.AutoMigrate(&models.Team{}, &models.Solve{}, &models.User{}, &models.ChallengeCategory{}, &models.Challenge{})
+	err = db.AutoMigrate(
+		&models.Team{}, &models.Solve{},
+
+		&models.User{}, &models.ChallengeCategory{},
+		&models.ChallengeType{}, &models.ChallengeDifficulty{},
+		&models.Challenge{}, &models.Flag{},
+		&models.Submission{}, &models.Instance{},
+	)
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}

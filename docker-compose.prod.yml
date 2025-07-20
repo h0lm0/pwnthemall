@@ -1,15 +1,19 @@
 services:
   frontend:
-    container_name: frontend-prod
+    container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: prod
     environment:
-      - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=https://pwnthemall.local
+      - NODE_ENV=production
+    depends_on:
+      - backend
     ports:
       - "3000:3000"
+    networks:
+      public:
 
   backend:
     container_name: backend
@@ -29,6 +33,27 @@ services:
       SEED_DATABASE: ${SEED_DATABASE}
       SEED_CASBIN_CSV: ${SEED_CASBIN_CSV}
       SEED_CASBIN: ${SEED_CASBIN}
+    volumes:
+      - ./shared/worker:/home/app/.ssh/worker
+    networks:
+      public:
+      private:
+
+  worker:
+    container_name: worker
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./shared/worker.pub:/home/docker/.ssh/authorized_keys
+    networks:
+      private:
 
   db:
     container_name: db
@@ -46,6 +71,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      private:
 
   caddy:
     container_name: caddy
@@ -56,6 +83,8 @@ services:
     ports:
       - "8080:80"
       - "127.0.0.1:443:443"
+    networks:
+      public:
 
   minio:
     image: 'minio/minio:latest'
@@ -79,6 +108,14 @@ services:
       retries: 5
     ports:
       - "127.0.0.1:9001:9001"
+    networks:
+      public:
+      private:
+
 volumes:
   postgres_data:
   minio:
+
+networks:
+  public:
+  private:

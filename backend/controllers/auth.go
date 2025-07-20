@@ -8,12 +8,14 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/go-playground/validator/v10"
 )
 
 type RegisterInput struct {
-	Username string `json:"username" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
+	Username string `json:"username" binding:"required,max=32"`
+	Email    string `json:"email" binding:"required,email,max=254"`
+	Password string `json:"password" binding:"required,min=8,max=72"`
+	Role     string `json:"role"`
 }
 
 type LoginInput struct {
@@ -25,6 +27,22 @@ type LoginInput struct {
 func Register(c *gin.Context) {
 	var input RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
+		// Custom error handling for validation errors
+		if ve, ok := err.(validator.ValidationErrors); ok {
+			for _, fe := range ve {
+				switch fe.Field() {
+				case "Username":
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Username too long (max 32 characters)"})
+					return
+				case "Email":
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Email too long (max 254 characters) or invalid email"})
+					return
+				case "Password":
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Password must be 8-72 characters"})
+					return
+				}
+			}
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -107,10 +125,10 @@ func UpdateCurrentUser(c *gin.Context) {
 	}
 
 	var input struct {
-		Username string `json:"username"`
+		Username string `json:"username" binding:"max=32"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username too long (max 32 chars) or invalid input"})
 		return
 	}
 
@@ -137,10 +155,10 @@ func UpdateCurrentUserPassword(c *gin.Context) {
 
 	var input struct {
 		Current string `json:"current"`
-		New     string `json:"new"`
+		New     string `json:"new" binding:"min=8,max=72"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password must be 8-72 characters."})
 		return
 	}
 

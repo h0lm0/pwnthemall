@@ -9,6 +9,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Add this struct for input validation
+
+type UserInput struct {
+	Username string `json:"username" binding:"required,max=32"`
+	Email    string `json:"email" binding:"required,email,max=254"`
+	Password string `json:"password,omitempty" binding:"omitempty,min=8,max=72"`
+	Role     string `json:"role"`
+}
+
 func GetUsers(c *gin.Context) {
 	var users []models.User
 	result := config.DB.Find(&users)
@@ -32,15 +41,15 @@ func GetUser(c *gin.Context) {
 }
 
 func CreateUser(c *gin.Context) {
-	var input RegisterInput
+	var input UserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username (max 32), email (max 254), password (8-72) invalid: " + err.Error()})
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors du hash du mot de passe"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -48,6 +57,10 @@ func CreateUser(c *gin.Context) {
 		Username: input.Username,
 		Email:    input.Email,
 		Password: string(hashedPassword),
+		Role:     input.Role,
+	}
+	if user.Role == "" {
+		user.Role = "member"
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -72,9 +85,9 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var input models.User
+	var input UserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username (max 32), email (max 254) or password invalid: " + err.Error()})
 		return
 	}
 
@@ -108,15 +121,43 @@ func GetCurrentUser(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := config.DB.First(&user, userID).Error; err != nil {
+	if err := config.DB.Preload("Team.Creator").Preload("Team").First(&user, userID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	var safeMembers []models.SafeUser
+	if user.TeamID != nil {
+		var members []models.User
+		if err := config.DB.Where("team_id = ?", user.TeamID).Find(&members).Error; err == nil {
+			safeMembers = make([]models.SafeUser, len(members))
+			for i, member := range members {
+				safeMembers[i] = models.SafeUser{
+					ID:       member.ID,
+					Username: member.Username,
+					Role:     member.Role,
+				}
+			}
+		}
+	}
+
+	response := gin.H{
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
 		"role":     user.Role,
-	})
+		"teamId":   user.TeamID,
+		"team":     gin.H{},
+	}
+
+	if user.Team != nil {
+		response["team"] = gin.H{
+			"id":      user.Team.ID,
+			"name":    user.Team.Name,
+			"members": safeMembers,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }
+

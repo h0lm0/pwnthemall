@@ -1,5 +1,12 @@
 name: pwn me 1
-description: pwnaaaaaaa me 1 blabla, changed
+description: |
+  aaa
+  aaaa
+  aaaaa
+  aaaaaa
+  aaaaaabcpdea
 category: pwn
-difficulty: easy
+difficulty: intro
+type: standard
+author: h0lm
 hidden: false

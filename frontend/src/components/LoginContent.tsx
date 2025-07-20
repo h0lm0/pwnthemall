@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { useLanguage } from "@/context/LanguageContext"
 
 interface LoginContentProps {
     form: {
@@ -31,6 +32,8 @@ export default function LoginContent({
     onChange,
     onSubmit,
 }: LoginContentProps) {
+    const { t } = useLanguage();
+
     return (
         <div className="bg-muted flex min-h-screen flex-col items-center justify-center px-4 py-8">
             <div className="w-full max-w-sm">
@@ -44,20 +47,20 @@ export default function LoginContent({
                         ) : (
                             <CheckCircle className="h-4 w-4" />
                         )}
-                        <AlertTitle>{messageType === "error" ? "Error" : "Success"}</AlertTitle>
+                        <AlertTitle>{messageType === "error" ? t('error') : t('success')}</AlertTitle>
                         <AlertDescription>{message}</AlertDescription>
                     </Alert>
                 )}
 
                 <Card>
                     <CardHeader className="text-center">
-                        <CardTitle className="text-xl">Welcome back</CardTitle>
-                        <CardDescription>Enter your credentials to continue</CardDescription>
+                        <CardTitle className="text-xl">{t('welcome_back')}</CardTitle>
+                        <CardDescription>{t('enter_credentials')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={onSubmit} className="grid gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="identifier">Username or Email</Label>
+                                <Label htmlFor="identifier">{t('username_or_email')}</Label>
                                 <Input
                                     id="identifier"
                                     name="identifier"
@@ -69,12 +72,12 @@ export default function LoginContent({
                             </div>
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password" >Password</Label>
+                                    <Label htmlFor="password" >{t('password')}</Label>
                                     <a
                                         href="#"
                                         className="ml-auto text-sm underline-offset-4 hover:underline"
                                     >
-                                        Forgot password?
+                                        {t('forgot_password')}
                                     </a>
                                 </div>
                                 <Input
@@ -88,12 +91,12 @@ export default function LoginContent({
                                 />
                             </div>
                             <Button type="submit" className="w-full">
-                                Login
+                                {t('login')}
                             </Button>
                             <p className="text-center text-sm text-muted-foreground">
-                                Don&apos;t have an account?{" "}
+                                {t('dont_have_account')}{" "}
                                 <Link href="/register" className="underline underline-offset-4">
-                                    Sign up
+                                    {t('sign_up')}
                                 </Link>
                             </p>
                         </form>
