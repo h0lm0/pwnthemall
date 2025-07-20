@@ -32,7 +32,7 @@ func GetUser(c *gin.Context) {
 }
 
 func CreateUser(c *gin.Context) {
-	var input models.RegisterInput
+	var input RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -44,16 +44,10 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	role := input.Role
-	if role == "" {
-		role = "member"
-	}
-
 	user := models.User{
 		Username: input.Username,
 		Email:    input.Email,
 		Password: string(hashedPassword),
-		Role:     role,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {

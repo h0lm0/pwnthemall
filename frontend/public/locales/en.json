@@ -77,5 +77,19 @@
   "dark": "Dark",
   "system": "System",
   "theme": "Theme",
-  "select_theme": "Select a theme"
+  "select_theme": "Select a theme",
+  "error": "Error",
+  "success": "Success",
+  "welcome_back": "Welcome back",
+  "enter_credentials": "Enter your credentials to continue",
+  "username_or_email": "Username or Email",
+  "forgot_password": "Forgot password?",
+  "dont_have_account": "Don't have an account?",
+  "sign_up": "Sign up",
+  "create_account": "Create a new account to continue",
+  "password_min_8": "Password (min. 8 chars)",
+  "already_have_account": "Already have an account?",
+  "sign_in": "Sign in",
+  "logout_confirm_title": "Are you sure you want to log out?",
+  "logout_confirm_message": "You will need to sign in again to continue."
 } 

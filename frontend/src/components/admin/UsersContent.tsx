@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import UserForm from "./UserForm"
 import { User, UserFormData } from "@/models/User"
-import { useLanguage } from '@/context/LanguageContext';
+import { useLanguage } from "@/context/LanguageContext"
 
 interface UsersContentProps {
   users: User[]
@@ -32,6 +32,7 @@ interface UsersContentProps {
 }
 
 export default function UsersContent({ users, onRefresh }: UsersContentProps) {
+  const { t } = useLanguage();
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<User | null>(null)
@@ -39,10 +40,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [confirmMassDelete, setConfirmMassDelete] = useState(false)
   const [confirmMassBan, setConfirmMassBan] = useState(false)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-  const { t } = useLanguage();
 
   const columns: ColumnDef<User>[] = [
-    { accessorKey: "id", header: "ID" },
+    { accessorKey: "id", header: t('id') },
     { accessorKey: "username", header: t('username'), cell: ({ getValue }) => (
       <span className="whitespace-nowrap truncate max-w-[120px] block">{getValue() as string}</span>
     ) },
@@ -180,7 +180,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>{t('delete_user')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('delete_user_confirm', { username: deleting?.username ?? '' })}
+              {t('delete_user_confirm', { username: deleting?.username || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -194,7 +194,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>{t('temp_ban_user')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('temp_ban_user_confirm', { username: tempBanning?.username ?? '' })}
+              {t('temp_ban_user_confirm', { username: tempBanning?.username || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

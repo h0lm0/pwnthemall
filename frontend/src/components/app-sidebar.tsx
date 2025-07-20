@@ -23,16 +23,16 @@ import {
 import axios from "axios";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useChallengeCategories } from "@/hooks/use-challenge-categories";
 import type { NavItem } from "@/models/NavItem";
-import { useLanguage } from '@/context/LanguageContext';
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { loggedIn, logout, authChecked } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const { isMobile } = useSidebar();
   const { categories, loading } = useChallengeCategories(loggedIn);
-  const { t } = useLanguage();
 
   const [userData, setUserData] = React.useState({
     name: "",

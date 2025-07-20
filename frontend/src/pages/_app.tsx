@@ -2,17 +2,17 @@ import App, { AppProps, AppContext } from 'next/app'
 import { SidebarProvider, SidebarInset, SIDEBAR_COOKIE_NAME } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
 import { AuthProvider } from '@/context/AuthContext'
+import { LanguageProvider } from '@/context/LanguageContext'
 import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { useEffect, useState } from 'react';
-import { LanguageProvider } from '@/context/LanguageContext';
 
 interface MyAppProps extends AppProps {
   sidebarDefaultOpen: boolean
 }
 
-export default function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
+function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   // Custom system theme mapping
   const [systemTheme, setSystemTheme] = useState<'latte' | 'slate'>('latte');
   useEffect(() => {
@@ -70,3 +70,5 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
   }
   return { ...appProps, sidebarDefaultOpen }
 }
+
+export default MyApp

@@ -149,7 +149,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
           <AlertDialogHeader>
             <AlertDialogTitle>{t('delete_challenge_category')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('delete_challenge_category_confirm', { name: deleting?.Name ?? '' })}
+              {t('delete_challenge_category_confirm', { name: deleting?.Name || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
