@@ -53,7 +53,7 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="admin">{t('admin')}</SelectItem>
-            <SelectItem value="user">{t('user')}</SelectItem>
+            <SelectItem value="member">{t('user')}</SelectItem>
           </SelectContent>
         </Select>
       </div>

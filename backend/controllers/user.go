@@ -48,6 +48,10 @@ func CreateUser(c *gin.Context) {
 		Username: input.Username,
 		Email:    input.Email,
 		Password: string(hashedPassword),
+		Role:     input.Role,
+	}
+	if user.Role == "" {
+		user.Role = "member"
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {

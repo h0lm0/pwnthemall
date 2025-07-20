@@ -14,7 +14,7 @@ interface ChallengeCategoryFormProps {
 export default function ChallengeCategoryForm({ initialData, isEdit, onSubmit }: ChallengeCategoryFormProps) {
   const { t } = useLanguage();
   const [form, setForm] = useState<ChallengeCategoryFormData>({
-    Name: initialData?.Name || "",
+    name: initialData?.name || "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,8 +29,8 @@ export default function ChallengeCategoryForm({ initialData, isEdit, onSubmit }:
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 p-2">
       <div className="grid gap-2">
-        <Label htmlFor="Name">{t('name')}</Label>
-        <Input id="Name" name="Name" value={form.Name} onChange={handleChange} required autoFocus />
+        <Label htmlFor="name">{t('name')}</Label>
+        <Input id="name" name="name" value={form.name} onChange={handleChange} required autoFocus />
       </div>
 
       <Button type="submit" className="w-full">{t('save')}</Button>
