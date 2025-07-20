@@ -10,9 +10,9 @@ type User struct {
 	Email     string      `gorm:"unique;not null;size:254" json:"email"`
 	Password  string      `json:"-"`
 	Role      string      `gorm:"not null;default:'member'" json:"role"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
-	TeamID    *uint       `json:"teamId,omitempty"`
-	Team      *Team       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"team,omitempty"`
-	Solves    []Challenge `gorm:"many2many:solves" json:"solves,omitempty"`
+	CreatedAt   time.Time    `json:"createdAt"`
+	UpdatedAt   time.Time    `json:"updatedAt"`
+	TeamID      *uint        `json:"teamId,omitempty"`
+	Team        *Team        `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"team,omitempty"`
+	Submissions []Submission `gorm:"many2many:submissions" json:"submissions,omitempty"`
 }
