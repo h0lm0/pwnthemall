@@ -1,6 +1,6 @@
 import { Challenge } from "@/models/Challenge";
 import Head from "next/head";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 
 interface CategoryContentProps {
   cat: string;
@@ -20,15 +20,19 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-7xl">
           {challenges.map((challenge) => (
-            <Card key={challenge.ID} className="hover:shadow-lg transition-shadow duration-200">
+            <Card key={challenge.id} className="hover:shadow-lg transition-shadow duration-200">
               <CardHeader>
                 <CardTitle className="text-cyan-700 dark:text-cyan-300">
-                  {challenge.Name}
+                  {challenge.name}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-left space-y-2">
-                <p className="text-muted-foreground text-sm">{challenge.Description}</p>
-                <p className="text-sm">🎯 Difficulty : {challenge.Difficulty}</p>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  {challenge.description}
+                </CardDescription>
+                <div className="text-xs text-gray-500 mt-2">
+                  {challenge.difficulty}
+                </div>
               </CardContent>
             </Card>
           ))}
