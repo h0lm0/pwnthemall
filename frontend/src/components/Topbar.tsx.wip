@@ -1,0 +1,69 @@
+// src/components/Topbar.tsx
+import Link from "next/link";
+import Switch from "./Switch";
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "next-themes";
+
+const Topbar = () => {
+  const { theme, setTheme } = useTheme();
+  const router = useRouter();
+  const { loggedIn, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
+
+  return (
+    <nav
+      className="border-b px-6 py-4 flex justify-between items-center bg-white dark:bg-black border-gray-200 dark:border-gray-800"
+    >
+      <Link
+        href="/"
+        className="font-bold text-xl tracking-wide text-black dark:text-white"
+      >
+        pwnthemall
+      </Link>
+      <div className="flex items-center space-x-4">
+        {loggedIn && (
+          <Link
+            href="/pwn"
+            className="text-gray-600 dark:text-gray-300 hover:text-cyan-400 transition"
+          >
+            Pwn
+          </Link>
+        )}
+        {loggedIn ? (
+          <button
+            onClick={handleLogout}
+            className="text-gray-600 dark:text-gray-300 hover:text-cyan-400 transition"
+          >
+            Logout
+          </button>
+        ) : (
+          <>
+            <Link
+              href="/login"
+              className="text-gray-600 dark:text-gray-300 hover:text-cyan-400 transition"
+            >
+              Login
+            </Link>
+            <Link
+              href="/register"
+              className="text-gray-600 dark:text-gray-300 hover:text-cyan-400 transition"
+            >
+              Register
+            </Link>
+          </>
+        )}
+        <Switch
+          isOn={theme === "dark"}
+          handleToggle={() => setTheme(theme === "dark" ? "light" : "dark")}
+        />
+      </div>
+    </nav>
+  );
+};
+
+export default Topbar;

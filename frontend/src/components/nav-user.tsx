@@ -8,6 +8,7 @@ import {
   LogOut,
   Sun,
   Moon,
+  Globe,
 } from "lucide-react"
 
 import {
@@ -43,7 +44,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/context/AuthContext"
-import { useLanguage } from '@/context/LanguageContext';
+import { useLanguage } from '@/context/LanguageContext'
 
 export function NavUser({
   user,
@@ -119,16 +120,16 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              {/* Language Switcher for testing */}
-              <DropdownMenuItem asChild>
-                <select
-                  value={language}
-                  onChange={e => setLanguage(e.target.value as 'en' | 'fr')}
-                  className="border rounded px-2 py-1 text-sm bg-background text-foreground w-full"
-                >
-                  <option value="en">English</option>
-                  <option value="fr">Français</option>
-                </select>
+              {/* Language Switcher */}
+              <DropdownMenuItem onSelect={() => setLanguage("en")} className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                <span>English</span>
+                {language === "en" && <span className="ml-auto text-xs">✓</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLanguage("fr")} className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                <span>Français</span>
+                {language === "fr" && <span className="ml-auto text-xs">✓</span>}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -143,7 +144,7 @@ export function NavUser({
               <AlertDialogTrigger asChild>
                 <DropdownMenuItem>
                   <LogOut />
-                  Log out
+                  {t('logout')}
                 </DropdownMenuItem>
               </AlertDialogTrigger>
             )}
@@ -152,15 +153,15 @@ export function NavUser({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Are you sure you want to log out?
+              {t('logout_confirm_title')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You will need to sign in again to continue.
+              {t('logout_confirm_message')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onLogout}>Log out</AlertDialogAction>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={onLogout}>{t('logout')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
         </AlertDialog>

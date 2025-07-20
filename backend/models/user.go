@@ -16,12 +16,3 @@ type User struct {
 	Team      *Team       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"team,omitempty"`
 	Solves    []Challenge `gorm:"many2many:solves" json:"solves,omitempty"`
 }
-
-// RegisterInput is used for user registration and creation
-// (moved from controllers/auth.go)
-type RegisterInput struct {
-	Username string `json:"username" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
-	Role     string `json:"role"`
-}

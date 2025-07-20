@@ -2,9 +2,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ChallengeCategoryFormData } from "@/models/ChallengeCategory"
 import { useLanguage } from "@/context/LanguageContext"
 
+import { ChallengeCategoryFormData } from "@/models/ChallengeCategory"
 interface ChallengeCategoryFormProps {
   initialData?: ChallengeCategoryFormData
   isEdit?: boolean
@@ -32,6 +32,7 @@ export default function ChallengeCategoryForm({ initialData, isEdit, onSubmit }:
         <Label htmlFor="Name">{t('name')}</Label>
         <Input id="Name" name="Name" value={form.Name} onChange={handleChange} required autoFocus />
       </div>
+
       <Button type="submit" className="w-full">{t('save')}</Button>
     </form>
   )

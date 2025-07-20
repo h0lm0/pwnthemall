@@ -77,5 +77,19 @@
   "dark": "Sombre",
   "system": "Système",
   "theme": "Thème",
-  "select_theme": "Sélectionner un thème"
+  "select_theme": "Sélectionner un thème",
+  "error": "Erreur",
+  "success": "Succès",
+  "welcome_back": "Bon retour",
+  "enter_credentials": "Entrez vos identifiants pour continuer",
+  "username_or_email": "Nom d'utilisateur ou E-mail",
+  "forgot_password": "Mot de passe oublié ?",
+  "dont_have_account": "Vous n'avez pas de compte ?",
+  "sign_up": "S'inscrire",
+  "create_account": "Créez un nouveau compte pour continuer",
+  "password_min_8": "Mot de passe (min. 8 caractères)",
+  "already_have_account": "Vous avez déjà un compte ?",
+  "sign_in": "Se connecter",
+  "logout_confirm_title": "Êtes-vous sûr de vouloir vous déconnecter ?",
+  "logout_confirm_message": "Vous devrez vous reconnecter pour continuer."
 } 
