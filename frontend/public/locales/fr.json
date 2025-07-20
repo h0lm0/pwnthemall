@@ -95,5 +95,6 @@
   "author": "Auteur",
   "username_too_long": "Nom d'utilisateur trop long (32 caractères max)",
   "email_too_long": "Email trop long (254 caractères max)",
-  "password_too_long": "Mot de passe trop long (72 caractères max)"
+  "password_too_long": "Mot de passe trop long (72 caractères max)",
+  "registration_successful": "Inscription réussie. Veuillez maintenant vous connecter."
 } 
