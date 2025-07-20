@@ -3,10 +3,12 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import LoginContent from "@/components/LoginContent";
+import { useLanguage } from "@/context/LanguageContext";
 
 const LoginPage = () => {
   const router = useRouter();
   const { login } = useAuth();
+  const { t } = useLanguage();
 
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [message, setMessage] = useState<string | null>(null);
@@ -14,7 +16,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (router.query.success === "register") {
-      setMessage("Registration successful. Please verify now your email to login.");
+      setMessage(t('registration_successful'));
       setMessageType("success");
 
       // Optionnel : nettoyer l'URL sans recharger
