@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 const TABS = ["Account", "Security", "Appearance", "Team"] as const;
 type Tab = typeof TABS[number];
@@ -379,9 +380,16 @@ function ProfileContentInner() {
                 {leaveMsg && <div className="text-green-600 mt-2">{leaveMsg}</div>}
                 {leaveError && <div className="text-red-600 mt-2">{leaveError}</div>}
               </>
-            ) : (
-              <div className="text-red-600">You are not in a team.</div>
-            )}
+            ) :
+              <div className="flex flex-col items-start gap-4">
+                <div className="text-red-600">You are not in a team.</div>
+                <Link href="/team" passHref legacyBehavior>
+                  <Button type="button" variant="default">
+                    Join or Create a Team
+                  </Button>
+                </Link>
+              </div>
+            }
             {teamError && <div className="text-red-600 mt-2">{teamError}</div>}
           </div>
         )}
