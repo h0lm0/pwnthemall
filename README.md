@@ -7,6 +7,19 @@ The final goal is to have only one plateform where you can securely host all cha
 
 ## Installation
 
+cp .env.example .env
+
+### Modifie /etc/hosts to add entry :
+127.0.0.1 pwnthemall.local 
+
+### yes
+bash pta-cli.sh compose up -b -e prod
+bash pta-cli.sh compose up -b -e dev
+
+### Yes too
+https://pwnthemall.local/ 
+
+
 ## Troubleshoot
 
 ## License
