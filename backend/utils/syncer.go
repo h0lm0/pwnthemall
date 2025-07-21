@@ -96,6 +96,7 @@ func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) e
 		return err
 	}
 
+	// Remplir les champs du challenge
 	challenge.Slug = slug
 	challenge.Name = metaData.Name
 	challenge.Description = metaData.Description
@@ -104,9 +105,25 @@ func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) e
 	challenge.ChallengeTypeID = cType.ID
 	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
+	challenge.Points = metaData.Points
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		return err
+	}
+
+	if err := config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.Flag{}).Error; err != nil {
+		return err
+	}
+
+	for _, flagValue := range metaData.Flags {
+		hashed := HashFlag(flagValue)
+		newFlag := models.Flag{
+			Value:       hashed,
+			ChallengeID: challenge.ID,
+		}
+		if err := config.DB.Create(&newFlag).Error; err != nil {
+			return err
+		}
 	}
 
 	return nil

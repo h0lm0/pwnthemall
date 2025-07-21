@@ -35,8 +35,6 @@ func GetTeam(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"team": team, "members": members})
 }
 
-
-
 // CreateTeam : crée une équipe et assigne l'utilisateur courant
 func CreateTeam(c *gin.Context) {
 	var input struct {
@@ -70,7 +68,7 @@ func CreateTeam(c *gin.Context) {
 		Name:      input.Name,
 		Password:  string(hashedPassword),
 		Creator:   user,
-		CreatorId: user.ID,
+		CreatorID: user.ID,
 	}
 	if err := config.DB.Create(&team).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

@@ -20,6 +20,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: prod
     depends_on:
       db:
         condition: service_healthy
@@ -33,6 +34,8 @@ services:
       SEED_DATABASE: ${SEED_DATABASE}
       SEED_CASBIN_CSV: ${SEED_CASBIN_CSV}
       SEED_CASBIN: ${SEED_CASBIN}
+      PTA_SITE_NAME: ${PTA_SITE_NAME}
+      PTA_FLAG_PREFIX: ${PTA_FLAG_PREFIX}
     volumes:
       - ./shared/worker:/home/app/.ssh/worker
     networks:

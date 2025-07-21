@@ -35,7 +35,7 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
     if (!selectedChallenge) return;
     setLoading(true);
     try {
-      const res = await axios.post(`/api/challenge/${selectedChallenge.id}/submit`, { flag });
+      const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, { flag });
 
       toast.success("Flag correct!", {
         description: res.data.message || "Well done!",
