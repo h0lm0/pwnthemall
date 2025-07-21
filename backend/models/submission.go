@@ -3,11 +3,11 @@ package models
 import "time"
 
 type Submission struct {
-	ID          uint      `gorm:"primaryKey" json:"id"`
-	Value       string    `json:"value"`
-	User        User      `json:"user"`
-	UserID      uint      `json:"userId"`
-	Challenge   Challenge `json:"challenge"`
-	ChallengeID uint      `json:"challengeId"`
-	CreatedAt   time.Time `json:"createdAt"`
+	ID          uint       `gorm:"primaryKey" json:"id"`
+	Value       string     `json:"value"`
+	UserID      uint       `json:"userId"`
+	User        *User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user,omitempty"`
+	ChallengeID uint       `json:"challengeId"`
+	Challenge   *Challenge `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"challenge,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt"`
 }

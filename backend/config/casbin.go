@@ -16,7 +16,7 @@ func InitCasbin() *casbin.Enforcer {
 		panic(fmt.Sprintf("failed to initialize casbin adapter: %v", err))
 	}
 
-	enforcer, err := casbin.NewEnforcer("casbin_model.conf", adapter)
+	enforcer, err := casbin.NewEnforcer("config/casbin_model.conf", adapter)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create casbin enforcer: %v", err))
 	}

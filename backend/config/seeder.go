@@ -2,12 +2,34 @@ package config
 
 import (
 	"log"
+	"os"
 	"pwnthemall/models"
 
 	"github.com/casbin/casbin/v2"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
+
+func seedConfig() {
+	config := []models.Config{
+		{Key: "site_name", Value: os.Getenv("PTA_SITE_NAME")},
+		{Key: "flag_prefix", Value: os.Getenv("PTA_FLAG_PREFIX")},
+	}
+	for _, item := range config {
+		var existing models.Config
+		err := DB.Where("key = ?", item.Key).First(&existing).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			continue
+		}
+		if err == nil {
+			continue
+		}
+		if err := DB.Create(&item).Error; err != nil {
+			log.Printf("Failed to seed config %s: %v\n", item.Key, err)
+		}
+	}
+	log.Println("Seeding: config finished")
+}
 
 func seedChallengeCategory() {
 	challengeCategories := []models.ChallengeCategory{
@@ -135,7 +157,7 @@ func SeedCasbin(enforcer *casbin.Enforcer) {
 
 func SeedCasbinFromCsv(enforcer *casbin.Enforcer) {
 	log.Println("Seeding: Casbin rules from CSV..")
-	e, err := casbin.NewEnforcer("casbin_model.conf", "casbin_policies.csv")
+	e, err := casbin.NewEnforcer("config/casbin_model.conf", "config/casbin_policies.csv")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -147,6 +169,7 @@ func SeedCasbinFromCsv(enforcer *casbin.Enforcer) {
 
 func SeedDatabase() {
 	log.Println("Seeding: Database..")
+	seedConfig()
 	seedChallengeDifficulty()
 	seedChallengeCategory()
 	seedChallengeType()

@@ -20,8 +20,8 @@ func ConnectDB() *gorm.DB {
 	}
 
 	err = db.AutoMigrate(
+		&models.Config{},
 		&models.Team{}, &models.Solve{},
-
 		&models.User{}, &models.ChallengeCategory{},
 		&models.ChallengeType{}, &models.ChallengeDifficulty{},
 		&models.Challenge{}, &models.Flag{},
