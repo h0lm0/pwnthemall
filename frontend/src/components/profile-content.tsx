@@ -18,6 +18,7 @@ import {
 import { useTheme } from "next-themes";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 const TABS = ["Account", "Security", "Appearance", "Team"] as const;
 type Tab = typeof TABS[number];
@@ -52,6 +53,7 @@ export default function ProfileContent() {
 }
 
 function ProfileContentInner() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>("Account");
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
@@ -208,7 +210,7 @@ function ProfileContentInner() {
             className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === tab ? "border-b-2 border-primary text-primary" : "text-muted-foreground"}`}
             onClick={() => setActiveTab(tab)}
           >
-            {tab}
+            {t(tab.toLowerCase())}
           </button>
         ))}
       </div>
@@ -216,7 +218,7 @@ function ProfileContentInner() {
         {activeTab === "Account" && (
           <form className="space-y-4 max-w-md" onSubmit={handleUpdate}>
             <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="username">Username</label>
+              <label className="block text-sm font-medium mb-1" htmlFor="username">{t('username')}</label>
               <Input
                 id="username"
                 name="username"
@@ -226,11 +228,11 @@ function ProfileContentInner() {
                 disabled={loading}
                 maxLength={32}
               />
-              {usernameError && <span className="text-red-500 text-xs">{usernameError}</span>}
+              {usernameError && <span className="text-red-500 text-xs">{t('username_too_long')}</span>}
             </div>
             <div style={{ minHeight: 24 }}>
-              {error && <div className="text-red-600 mt-2">{error}</div>}
-              {!error && message && <div className="text-green-600 mt-2">{message}</div>}
+              {error && <div className="text-red-600 mt-2">{t(error)}</div>}
+              {!error && message && <div className="text-green-600 mt-2">{t(message)}</div>}
             </div>
             <Button
               type="button"
@@ -238,23 +240,23 @@ function ProfileContentInner() {
               disabled={loading || newUsername === username || !newUsername}
               onClick={() => setConfirmUsername(true)}
             >
-              Update Username
+              {t('update_username')}
             </Button>
             <AlertDialog open={confirmUsername} onOpenChange={setConfirmUsername}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Change Username</AlertDialogTitle>
+                  <AlertDialogTitle>{t('change_username')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to change your username to <b>{newUsername}</b>?
+                    {t('change_username_confirm', { username: newUsername })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleUpdate}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    Confirm
+                    {t('confirm')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -263,23 +265,23 @@ function ProfileContentInner() {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button type="button" variant="destructive" className="w-full" disabled={loading}>
-                  Delete Account
+                  {t('delete_account')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                  <AlertDialogTitle>{t('delete_account')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete your account? This action cannot be undone.
+                    {t('delete_account_confirm')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDelete}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    Delete
+                    {t('delete')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -289,18 +291,18 @@ function ProfileContentInner() {
         {activeTab === "Security" && (
           <form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
             <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="current">Current Password</label>
+              <label className="block text-sm font-medium mb-1" htmlFor="current">{t('current_password')}</label>
               <Input id="current" name="current" type="password" value={currentPassword} onChange={handleCurrentPasswordChange} required autoComplete="current-password" disabled={pwLoading} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1" htmlFor="new">New Password</label>
+              <label className="block text-sm font-medium mb-1" htmlFor="new">{t('new_password')}</label>
               <Input id="new" name="new" type="password" value={newPassword} onChange={handleNewPasswordChange} required autoComplete="new-password" disabled={pwLoading} maxLength={72} />
             </div>
             <div style={{ minHeight: 24 }}>
-              {pwValidationError && <div className="text-red-600 mt-2">{pwValidationError}</div>}
-              {pwTooLongError && <div className="text-red-600 mt-2">{pwTooLongError}</div>}
-              {pwError && <div className="text-red-600 mt-2">{pwError}</div>}
-              {!pwError && !pwValidationError && pwMessage && <div className="text-green-600 mt-2">{pwMessage}</div>}
+              {pwValidationError && <div className="text-red-600 mt-2">{t('password_too_short')}</div>}
+              {pwTooLongError && <div className="text-red-600 mt-2">{t('password_too_long')}</div>}
+              {pwError && <div className="text-red-600 mt-2">{t(pwError)}</div>}
+              {!pwError && !pwValidationError && pwMessage && <div className="text-green-600 mt-2">{t(pwMessage)}</div>}
             </div>
             <Button
               type="button"
@@ -308,23 +310,23 @@ function ProfileContentInner() {
               disabled={pwLoading || !currentPassword || !newPassword || newPassword.length < 8}
               onClick={() => setConfirmPassword(true)}
             >
-              Change Password
+              {t('change_password')}
             </Button>
             <AlertDialog open={confirmPassword} onOpenChange={setConfirmPassword}>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Change Password</AlertDialogTitle>
+                  <AlertDialogTitle>{t('change_password')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to change your password?
+                    {t('change_password_confirm')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handlePasswordChange}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    Confirm
+                    {t('confirm')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -339,14 +341,14 @@ function ProfileContentInner() {
         {activeTab === "Team" && (
           <div className="space-y-4 max-w-md">
             {teamLoading ? (
-              <div>Loading team info...</div>
+              <div>{t('loading_team_info')}</div>
             ) : team ? (
               <>
                 <div>
-                  <span className="font-semibold">Team name:</span> {team.name}
+                  <span className="font-semibold">{t('team_name')}:</span> {team.name}
                 </div>
                 <div>
-                  <span className="font-semibold">Members:</span>
+                  <span className="font-semibold">{t('members')}:</span>
                   <ul className="list-disc ml-6">
                     {members.map((m) => (
                       <li key={m.id}>{m.username}</li>
@@ -356,41 +358,41 @@ function ProfileContentInner() {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button type="button" variant="destructive" className="w-full" disabled={leaving}>
-                      Leave Team
+                      {t('leave_team')}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Leave Team</AlertDialogTitle>
+                      <AlertDialogTitle>{t('leave_team')}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to leave your team?
+                        {t('leave_team_confirm')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleLeaveTeam}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        Leave
+                        {t('leave')}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                {leaveMsg && <div className="text-green-600 mt-2">{leaveMsg}</div>}
-                {leaveError && <div className="text-red-600 mt-2">{leaveError}</div>}
+                {leaveMsg && <div className="text-green-600 mt-2">{t(leaveMsg)}</div>}
+                {leaveError && <div className="text-red-600 mt-2">{t(leaveError)}</div>}
               </>
             ) :
               <div className="flex flex-col items-start gap-4">
-                <div className="text-red-600">You are not in a team.</div>
+                <div className="text-red-600">{t('not_in_team')}</div>
                 <Link href="/team" passHref legacyBehavior>
                   <Button type="button" variant="default">
-                    Join or Create a Team
+                    {t('join_or_create_team')}
                   </Button>
                 </Link>
               </div>
             }
-            {teamError && <div className="text-red-600 mt-2">{teamError}</div>}
+            {teamError && <div className="text-red-600 mt-2">{t(teamError)}</div>}
           </div>
         )}
       </CardContent>
