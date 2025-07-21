@@ -114,5 +114,12 @@
   "members": "Membres",
   "leave_team": "Quitter l'équipe",
   "leave_team_confirm": "Êtes-vous sûr de vouloir quitter votre équipe ?",
-  "leave": "Quitter"
+  "leave": "Quitter",
+  "enter_your_flag": "Entrez votre flag",
+  "submitting": "Envoi...",
+  "submit": "Valider",
+  "flag_correct": "Flag correct !",
+  "well_done": "Bien joué !",
+  "incorrect_flag": "Flag incorrect",
+  "try_again": "Réessayez."
 } 
