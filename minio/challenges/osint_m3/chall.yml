@@ -1,0 +1,10 @@
+name: osint_m3
+description: |
+  Trouver le flag sur internet !
+category: osint
+difficulty: intro
+type: standard
+author: h0lm
+flags: ["_osintm3_internet!"]
+hidden: false
+points: 10
