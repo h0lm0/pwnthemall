@@ -3,12 +3,13 @@ package models
 import "time"
 
 type Team struct {
-	ID        uint        `json:"id" gorm:"primaryKey"`
-	Name      string      `json:"name" gorm:"not null;unique"`
-	Password  string      `json:"-"`
-	Creator   User        `json:"creator" gorm:"not null"`
-	CreatorId uint        `json:"creatorId"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
-	Solves    []Challenge `gorm:"many2many:solves" json:"solves,omitempty"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Name      string    `gorm:"not null;unique" json:"name"`
+	Password  string    `json:"-"`
+	CreatorID uint      `json:"creatorId"`
+	Creator   User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"creator,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Solves    []Solve   `json:"solves,omitempty"`
+	Users     []User    `gorm:"foreignKey:TeamID" json:"users,omitempty"`
 }

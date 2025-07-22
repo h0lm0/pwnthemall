@@ -11,7 +11,7 @@ import (
 )
 
 // AuthRequired ensures a user is logged in
-func AuthRequired() gin.HandlerFunc {
+func AuthRequired(needTeam bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		userID := session.Get("user_id")
@@ -22,14 +22,22 @@ func AuthRequired() gin.HandlerFunc {
 
 		// Vérifie que l'utilisateur existe encore en BDD
 		var user models.User
-		if err := config.DB.First(&user, userID).Error; err != nil {
+		if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
 			session.Clear()
 			session.Save()
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			return
 		}
 
+		if needTeam {
+			if user.TeamID == nil || user.Team == nil {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team required"})
+				return
+			}
+		}
+
 		c.Set("user_id", userID)
+		c.Set("user", &user)
 		c.Next()
 	}
 }

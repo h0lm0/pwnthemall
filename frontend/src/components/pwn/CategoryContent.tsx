@@ -35,14 +35,14 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
     if (!selectedChallenge) return;
     setLoading(true);
     try {
-      const res = await axios.post(`/api/challenge/${selectedChallenge.id}/submit`, { flag });
+      const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, { flag });
 
-      toast.success("Flag correct!", {
-        description: res.data.message || "Well done!",
+      toast.success(t('flag_correct'), {
+        description: t(res.data.message) || t('well_done'),
       });
     } catch (err: any) {
-      toast.error("Incorrect flag", {
-        description: err.response?.data?.message || "Try again.",
+      toast.error(t('incorrect_flag'), {
+        description: t(err.response?.data?.error || err.response?.data?.result) || t('try_again'),
       });
     } finally {
       setLoading(false);
@@ -104,7 +104,7 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
 
                 <div className="mt-6 flex flex-col sm:flex-row items-center gap-4">
                   <Input
-                    placeholder="Enter your flag"
+                    placeholder={t('enter_your_flag')}
                     value={flag}
                     onChange={(e) => setFlag(e.target.value)}
                     onKeyDown={(e) => {
@@ -119,7 +119,7 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
                     onClick={handleSubmit}
                     disabled={loading || !flag.trim()}
                   >
-                    {loading ? "Submitting..." : "Submit"}
+                    {loading ? t('submitting') : t('submit')}
                   </Button>
                 </div>
               </DialogContent>

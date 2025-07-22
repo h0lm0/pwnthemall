@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -156,4 +157,65 @@ func CreateChallenge(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Challenge uploaded", "slug": slug})
+}
+
+type FlagInput struct {
+	Flag string `json:"flag" binding:"required"`
+}
+
+func SubmitChallenge(c *gin.Context) {
+	var challenge models.Challenge
+
+	challengeId := c.Param("id")
+	if err := config.DB.Preload("Flags").Where("id = ?", challengeId).First(&challenge).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
+		return
+	}
+
+	var input FlagInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_input"})
+		return
+	}
+
+	userI, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user, ok := userI.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
+	var submission models.Submission
+	if err := config.DB.FirstOrCreate(&submission, models.Submission{Value: input.Flag, UserID: user.ID, ChallengeID: challenge.ID}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "submission_create_failed"})
+	}
+
+	found := false
+	for _, flag := range challenge.Flags {
+		if flag.Value == utils.HashFlag(input.Flag) {
+			found = true
+			break
+		}
+	}
+	if found {
+		var solve models.Solve
+		if err := config.DB.FirstOrCreate(&solve,
+			models.Solve{
+				TeamID:      user.Team.ID,
+				ChallengeID: challenge.ID,
+				Points:      challenge.Points,
+			}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
+			return
+		} else {
+			c.JSON(http.StatusOK, gin.H{"message": "challenge_solved"})
+			return
+		}
+	} else {
+		c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
+	}
 }

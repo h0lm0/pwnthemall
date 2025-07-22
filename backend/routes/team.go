@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterTeamRoutes(router *gin.Engine) {
-	teams := router.Group("/teams", middleware.AuthRequired())
+	teams := router.Group("/teams", middleware.AuthRequired(false))
 	{
 		teams.GET("", middleware.CheckPolicy("/teams", "read"), controllers.GetTeams)
 		teams.GET("/:id", middleware.CheckPolicy("/teams/:id", "read"), controllers.GetTeam)

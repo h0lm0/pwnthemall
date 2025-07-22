@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterUserRoutes(router *gin.Engine) {
-	users := router.Group("/users", middleware.AuthRequired())
+	users := router.Group("/users", middleware.AuthRequired(false))
 	{
 		users.GET("", middleware.CheckPolicy("/users", "read"), controllers.GetUsers)
 		users.GET("/:id", middleware.CheckPolicy("/users/:id", "read"), controllers.GetUser)

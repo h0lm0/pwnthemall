@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -35,8 +36,6 @@ func GetTeam(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"team": team, "members": members})
 }
 
-
-
 // CreateTeam : crée une équipe et assigne l'utilisateur courant
 func CreateTeam(c *gin.Context) {
 	var input struct {
@@ -44,7 +43,7 @@ func CreateTeam(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_input"})
 		return
 	}
 	userID, exists := c.Get("user_id")
@@ -54,31 +53,34 @@ func CreateTeam(c *gin.Context) {
 	}
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
 	if user.TeamID != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User already in a team"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_already_in_team"})
 		return
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal_server_error"})
 		return
 	}
 	team := models.Team{
-		Name:      input.Name,
-		Password:  string(hashedPassword),
-		Creator:   user,
-		CreatorId: user.ID,
+		Name:     input.Name,
+		Password: string(hashedPassword),
 	}
 	if err := config.DB.Create(&team).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Check if it's a unique constraint violation for team name
+		if strings.Contains(err.Error(), "duplicate key") && strings.Contains(err.Error(), "uni_teams_name") {
+			c.JSON(http.StatusConflict, gin.H{"error": "team_name_already_exists"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_creation_failed"})
 		return
 	}
 	user.TeamID = &team.ID
 	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_update_failed"})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"team": team})
@@ -92,7 +94,7 @@ func JoinTeam(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_input"})
 		return
 	}
 	userID, exists := c.Get("user_id")
@@ -102,35 +104,35 @@ func JoinTeam(c *gin.Context) {
 	}
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
 	if user.TeamID != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User already in a team"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_already_in_team"})
 		return
 	}
 	var team models.Team
 	if input.TeamID != nil {
 		if err := config.DB.First(&team, *input.TeamID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "team_not_found"})
 			return
 		}
 	} else if input.Name != "" {
 		if err := config.DB.Where("name = ?", input.Name).First(&team).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Team not found"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "team_not_found"})
 			return
 		}
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "TeamId or Name required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "team_id_or_name_required"})
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(team.Password), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_password"})
 		return
 	}
 	user.TeamID = &team.ID
 	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_join_failed"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Joined team", "team": team})
@@ -145,16 +147,16 @@ func LeaveTeam(c *gin.Context) {
 	}
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
 	if user.TeamID == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User not in a team"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_not_in_team"})
 		return
 	}
 	user.TeamID = nil
 	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_leave_failed"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Left team"})

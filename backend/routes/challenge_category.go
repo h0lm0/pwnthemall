@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterChallengeCategoryRoutes(router *gin.Engine) {
-	challenges := router.Group("/challenge-categories", middleware.AuthRequired())
+	challenges := router.Group("/challenge-categories", middleware.AuthRequired(false))
 	{
 		challenges.GET("", middleware.CheckPolicy("/challenges-categories", "read"), controllers.GetChallengeCategories)
 		challenges.GET("/:id", middleware.CheckPolicy("/challenges-categories/:id", "read"), controllers.GetChallengeCategory)
