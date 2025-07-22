@@ -139,7 +139,12 @@
   "team_not_found": "Team not found",
   "team_id_or_name_required": "Team ID or name required",
   "invalid_password": "Invalid password",
-  "user_not_in_team": "User not in a team",
+  "user_not_in_team": "User is not in a team",
   "team_leave_failed": "Failed to leave team",
-  "team_left_successfully": "You have left the team."
+  "team_left_successfully": "You have left the team successfully.",
+  "challenge_already_solved": "Challenge already solved by your team",
+  "solved": "Solved",
+  "unsolved": "Unsolved",
+  "already_solved": "Already solved",
+  "no_challenges_available": "No challenges available"
 } 
