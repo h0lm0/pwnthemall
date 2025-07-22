@@ -5,21 +5,22 @@
 Open source CTF platform to host challenges & boxes.
 The final goal is to have only one plateform on which you can securely host all challenges you made.
 
-We try to make as many features as possible customisable and easy to use.
-
 ## Installation
 
 cp .env.example .env
 
-### Modifie /etc/hosts to add entry :
+### Edit /etc/hosts to add entry
+
 127.0.0.1 pwnthemall.local 
 
-### yes
+### Start environment
+
 bash pta-cli.sh compose up -b -e prod
 bash pta-cli.sh compose up -b -e dev
 
-### Yes too
-https://pwnthemall.local/ 
+### Navigate to the platform
+
+Open https://pwnthemall.local/ & accept the certificate
 
 
 ## Troubleshoot
