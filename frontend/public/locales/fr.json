@@ -113,7 +113,7 @@
   "team_name_colon": "Nom de l'équipe :",
   "members": "Membres",
   "member": "Membre",
-  "leave_team": "Quitter l'équipe",
+  "leave_team": "Quititer l'équpe",
   "leave_team_confirm": "Êtes-vous sûr de vouloir quitter votre équipe ?",
   "leave": "Quitter",
   "enter_your_flag": "Entrez votre flag",
@@ -143,5 +143,16 @@
   "invalid_password": "Mot de passe invalide",
   "user_not_in_team": "L'utilisateur n'est pas dans une équipe",
   "team_leave_failed": "Échec de la sortie de l'équipe",
-  "team_left_successfully": "Vous avez quitté l'équipe."
+  "team_left_successfully": "Vous avez quitté l'équipe.",
+  "disband_team": "Dissoudre l'équipe",
+  "disband_team_confirm": "Es-tu sûr de vouloir dissoudre l'équipe ? Cela supprimera tous les membres et effacera l'équipe.",
+  "disband": "Dissoudre",
+  "team_disband_failed": "Échec de la dissolution de l'équipe.",
+  "transfer_ownership": "Transférer la propriété",
+  "choose_new_owner": "Choisis un nouveau propriétaire pour l'équipe :",
+  "team_transfer_failed": "Échec du transfert de la propriété de l'équipe.",
+  "no_other_members": "Aucun autre membre pour transférer la propriété.",
+  "creator": "Créateur",
+  "leave_team_solo_confirm": "Tu es le seul membre. Quitter dissoudra l'équipe.",
+  "choose_new_owner_before_leaving": "Choisis qui deviendra le nouveau propriétaire de l'équipe avant de partir :"
 } 

@@ -19,6 +19,9 @@ import { useTheme } from "next-themes";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { Team } from "@/models/Team";
+import { User } from "@/models/User";
+import { TeamManagementSection } from "@/components/TeamManagementSection";
 
 const TABS = ["Account", "Security", "Appearance", "Team"] as const;
 type Tab = typeof TABS[number];
@@ -72,25 +75,32 @@ function ProfileContentInner() {
   const [confirmPassword, setConfirmPassword] = useState(false);
 
   // Team state
-  const [team, setTeam] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
+  const [team, setTeam] = useState<Team | null>(null);
+  const [members, setMembers] = useState<User[]>([]);
   const [teamLoading, setTeamLoading] = useState(true);
   const [teamError, setTeamError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [leaveMsg, setLeaveMsg] = useState<string | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     setLoading(true);
     axios.get("/api/me").then((res: AxiosResponse<any>) => {
       setUsername(res.data.username);
       setNewUsername(res.data.username);
+      setCurrentUser({
+        id: res.data.id,
+        username: res.data.username,
+        email: res.data.email,
+        role: res.data.role,
+      });
       // fetch team info
       if (res.data.teamId) {
         setTeamLoading(true);
-        setTeam(res.data.team)
-        setMembers(res.data.team.members)
-        setTeamError(null)
+        setTeam(res.data.team as Team);
+        setMembers(res.data.team.members as User[]);
+        setTeamError(null);
         setTeamLoading(false);
       } else {
         setTeam(null);
@@ -100,6 +110,7 @@ function ProfileContentInner() {
     }).catch(() => {
       setUsername("");
       setNewUsername("");
+      setCurrentUser(null);
       setTeam(null);
       setMembers([]);
       setTeamLoading(false);
@@ -342,47 +353,9 @@ function ProfileContentInner() {
           <div className="space-y-4 max-w-md">
             {teamLoading ? (
               <div>{t('loading_team_info')}</div>
-            ) : team ? (
-              <>
-                <div>
-                  <span className="font-semibold">{t('team_name')}:</span> {team.name}
-                </div>
-                <div>
-                  <span className="font-semibold">{t('members')}:</span>
-                  <ul className="list-disc ml-6">
-                    {members.map((m) => (
-                      <li key={m.id}>{m.username}</li>
-                    ))}
-                  </ul>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button type="button" variant="destructive" className="w-full" disabled={leaving}>
-                      {t('leave_team')}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t('leave_team')}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {t('leave_team_confirm')}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleLeaveTeam}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        {t('leave')}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                {leaveMsg && <div className="text-green-600 mt-2">{t(leaveMsg)}</div>}
-                {leaveError && <div className="text-red-600 mt-2">{t(leaveError)}</div>}
-              </>
-            ) :
+            ) : team && currentUser ? (
+              <TeamManagementSection team={team} members={members} currentUser={currentUser} onTeamChange={() => {}} />
+            ) : (
               <div className="flex flex-col items-start gap-4">
                 <div className="text-red-600">{t('not_in_team')}</div>
                 <Link href="/team" passHref legacyBehavior>
@@ -391,7 +364,7 @@ function ProfileContentInner() {
                   </Button>
                 </Link>
               </div>
-            }
+            )}
             {teamError && <div className="text-red-600 mt-2">{t(teamError)}</div>}
           </div>
         )}

@@ -66,8 +66,9 @@ func CreateTeam(c *gin.Context) {
 		return
 	}
 	team := models.Team{
-		Name:     input.Name,
-		Password: string(hashedPassword),
+		Name:      input.Name,
+		Password:  string(hashedPassword),
+		CreatorID: userID.(uint),
 	}
 	if err := config.DB.Create(&team).Error; err != nil {
 		// Check if it's a unique constraint violation for team name
@@ -170,4 +171,75 @@ func UpdateTeam(c *gin.Context) {
 // DeleteTeam : non implémenté
 func DeleteTeam(c *gin.Context) {
 	c.JSON(501, gin.H{"error": "Not implemented"})
+}
+
+// TransferTeamOwnership : transfert la propriété d'une équipe à un autre membre
+func TransferTeamOwnership(c *gin.Context) {
+	var input struct {
+		TeamID     uint `json:"teamId" binding:"required"`
+		NewOwnerID uint `json:"newOwnerId" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(400, gin.H{"error": "invalid_input"})
+		return
+	}
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+	var team models.Team
+	if err := config.DB.First(&team, input.TeamID).Error; err != nil {
+		c.JSON(404, gin.H{"error": "team_not_found"})
+		return
+	}
+	if team.CreatorID != userID.(uint) {
+		c.JSON(403, gin.H{"error": "not_team_creator"})
+		return
+	}
+	var newOwner models.User
+	if err := config.DB.First(&newOwner, input.NewOwnerID).Error; err != nil || newOwner.TeamID == nil || *newOwner.TeamID != team.ID {
+		c.JSON(400, gin.H{"error": "new_owner_not_in_team"})
+		return
+	}
+	team.CreatorID = input.NewOwnerID
+	if err := config.DB.Save(&team).Error; err != nil {
+		c.JSON(500, gin.H{"error": "db_error"})
+		return
+	}
+	c.JSON(200, gin.H{"message": "ownership_transferred"})
+}
+
+// DisbandTeam : supprime l'équipe et retire tous les membres
+func DisbandTeam(c *gin.Context) {
+	var input struct {
+		TeamID uint `json:"teamId" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(400, gin.H{"error": "invalid_input"})
+		return
+	}
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "unauthorized"})
+		return
+	}
+	var team models.Team
+	if err := config.DB.First(&team, input.TeamID).Error; err != nil {
+		c.JSON(404, gin.H{"error": "team_not_found"})
+		return
+	}
+	if team.CreatorID != userID.(uint) {
+		c.JSON(403, gin.H{"error": "not_team_creator"})
+		return
+	}
+	if err := config.DB.Model(&models.User{}).Where("team_id = ?", team.ID).Update("team_id", nil).Error; err != nil {
+		c.JSON(500, gin.H{"error": "db_error"})
+		return
+	}
+	if err := config.DB.Delete(&team).Error; err != nil {
+		c.JSON(500, gin.H{"error": "db_error"})
+		return
+	}
+	c.JSON(200, gin.H{"message": "team_disbanded"})
 }
