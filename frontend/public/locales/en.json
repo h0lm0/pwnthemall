@@ -126,5 +126,19 @@
   "invalid_input": "Invalid input",
   "user_wrong_type": "User has wrong type",
   "submission_create_failed": "Can't create submission",
-  "solve_create_failed": "Can't create solve"
+  "solve_create_failed": "Can't create solve",
+  "team_name_already_exists": "Team name already exists",
+  "user_already_in_team": "User already in a team",
+  "team_creation_failed": "Team creation failed",
+  "user_update_failed": "User update failed",
+  "internal_server_error": "Internal server error",
+  "user_not_found": "User not found",
+  "team_join_failed": "Failed to join team",
+  "invalid_server_response": "Invalid server response. Please try again.",
+  "team_not_found": "Team not found",
+  "team_id_or_name_required": "Team ID or name required",
+  "invalid_password": "Invalid password",
+  "user_not_in_team": "User not in a team",
+  "team_leave_failed": "Failed to leave team",
+  "team_left_successfully": "You have left the team."
 } 

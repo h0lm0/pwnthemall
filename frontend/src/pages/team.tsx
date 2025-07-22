@@ -48,6 +48,7 @@ export default function TeamPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!createName || !createPassword) return;
     setLoading(true);
     setError("");
     try {
@@ -60,9 +61,9 @@ export default function TeamPage() {
       try {
         data = await res.json();
       } catch (err) {
-        throw new Error("Invalid server response. Please try again.");
+        throw new Error(t("invalid_server_response"));
       }
-      if (!res.ok) throw new Error(data.error || "Failed to create team");
+      if (!res.ok) throw new Error(t(data.error) || t("team_creation_failed"));
       router.push("/");
     } catch (err: any) {
       setError(err.message);
@@ -73,6 +74,7 @@ export default function TeamPage() {
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!joinName || !joinPassword) return;
     setLoading(true);
     setError("");
     try {
@@ -85,9 +87,9 @@ export default function TeamPage() {
       try {
         data = await res.json();
       } catch (err) {
-        throw new Error("Invalid server response. Please try again.");
+        throw new Error(t("invalid_server_response"));
       }
-      if (!res.ok) throw new Error(data.error || "Failed to join team");
+      if (!res.ok) throw new Error(t(data.error) || t("team_join_failed"));
       router.push("/");
     } catch (err: any) {
       setError(err.message);
@@ -104,7 +106,6 @@ export default function TeamPage() {
           <p className="text-center text-muted-foreground mb-8">
             {t('team_access_required')}
           </p>
-          {error && <div className="text-red-600 mb-4 text-center">{t(error)}</div>}
           <div className="flex flex-col md:flex-row gap-8 justify-center">
             <form onSubmit={handleCreate} className="flex-1 min-w-[220px] space-y-3">
               <h2 className="text-xl font-semibold mb-2 text-center">{t('create_team')}</h2>
@@ -151,6 +152,7 @@ export default function TeamPage() {
               </Button>
             </form>
           </div>
+          {error && <div className="text-red-600 mt-6 text-center">{error}</div>}
         </CardContent>
       </Card>
     </div>

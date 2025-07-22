@@ -192,10 +192,10 @@ function ProfileContentInner() {
     setLeaveError(null);
     try {
       await axios.post("/api/teams/leave");
-      setLeaveMsg("You have left the team.");
+      setLeaveMsg("team_left_successfully");
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
-      setLeaveError(err?.response?.data?.error || "Failed to leave team");
+      setLeaveError(t(err?.response?.data?.error) || t("team_leave_failed"));
     } finally {
       setLeaving(false);
     }
