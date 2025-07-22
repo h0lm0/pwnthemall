@@ -139,9 +139,8 @@
   "team_not_found": "Team not found",
   "team_id_or_name_required": "Team ID or name required",
   "invalid_password": "Invalid password",
-  "user_not_in_team": "User not in a team",
+  "user_not_in_team": "User is not in a team",
   "team_leave_failed": "Failed to leave team",
-  "team_left_successfully": "You have left the team.",
   "disband_team": "Disband team",
   "disband_team_confirm": "Are you sure you want to disband the team? This will remove all members and delete the team.",
   "disband": "Disband",
@@ -152,5 +151,11 @@
   "no_other_members": "No other members to transfer ownership.",
   "creator": "Creator",
   "leave_team_solo_confirm": "You are the only member. Leaving will disband the team.",
-  "choose_new_owner_before_leaving": "Choose who will become the new team owner before you leave:"
+  "choose_new_owner_before_leaving": "Choose who will become the new team owner before you leave:",
+  "team_left_successfully": "You have left the team successfully.",
+  "challenge_already_solved": "Challenge already solved by your team",
+  "solved": "Solved",
+  "unsolved": "Unsolved",
+  "already_solved": "Already solved",
+  "no_challenges_available": "No challenges available"
 } 

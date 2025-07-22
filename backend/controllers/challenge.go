@@ -43,6 +43,17 @@ func GetChallenge(c *gin.Context) {
 func GetChallengesByCategoryName(c *gin.Context) {
 	categoryName := c.Param("category")
 
+	userI, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user, ok := userI.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
 	var challenges []models.Challenge
 	result := config.DB.
 		Preload("ChallengeCategory").
@@ -57,7 +68,39 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, challenges)
+	// Get solved challenges for the user's team
+	var solvedChallengeIds []uint
+	if user.Team != nil {
+		var solves []models.Solve
+		if err := config.DB.Where("team_id = ?", user.Team.ID).Find(&solves).Error; err == nil {
+			for _, solve := range solves {
+				solvedChallengeIds = append(solvedChallengeIds, solve.ChallengeID)
+			}
+		}
+	}
+
+	// Create response with solved status
+	type ChallengeWithSolved struct {
+		models.Challenge
+		Solved bool `json:"solved"`
+	}
+
+	var challengesWithSolved []ChallengeWithSolved
+	for _, challenge := range challenges {
+		solved := false
+		for _, solvedId := range solvedChallengeIds {
+			if challenge.ID == solvedId {
+				solved = true
+				break
+			}
+		}
+		challengesWithSolved = append(challengesWithSolved, ChallengeWithSolved{
+			Challenge: challenge,
+			Solved:    solved,
+		})
+	}
+
+	c.JSON(http.StatusOK, challengesWithSolved)
 }
 
 func CreateChallenge(c *gin.Context) {
@@ -186,6 +229,13 @@ func SubmitChallenge(c *gin.Context) {
 	user, ok := userI.(*models.User)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
+	// Check if team has already solved this challenge
+	var existingSolve models.Solve
+	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).First(&existingSolve).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "challenge_already_solved"})
 		return
 	}
 
