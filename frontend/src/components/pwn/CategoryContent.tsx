@@ -41,14 +41,14 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
     try {
       const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, { flag });
 
-      toast.success(res.data.message || 'Challenge solved!');
+      toast.success(t(res.data.message) || 'Challenge solved!');
       // Refresh challenges after successful submission
       if (onChallengeUpdate) {
         onChallengeUpdate();
       }
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;
-      toast.error('Incorrect flag: ' + (errorKey || 'Try again'));
+      toast.error(t(errorKey) || 'Try again');
     } finally {
       setLoading(false);
       setFlag("");
