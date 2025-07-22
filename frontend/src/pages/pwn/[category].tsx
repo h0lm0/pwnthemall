@@ -23,6 +23,12 @@ export default function CategoryPage() {
   }, [checkAuth]);
 
   useEffect(() => {
+    if (authChecked && !loggedIn) {
+      router.replace("/login");
+    }
+  }, [authChecked, loggedIn, router]);
+
+  useEffect(() => {
     if (authChecked && loggedIn) {
       axios.get("/api/me").then(res => {
         if (res.data.teamId) {
@@ -59,23 +65,16 @@ export default function CategoryPage() {
     fetchChallenges();
   }, [fetchChallenges]);
 
-  if (!authChecked || !loggedIn || !teamChecked) {
-    return <div>Loading...</div>;
-  }
-  
+  if (!authChecked || !loggedIn || !teamChecked) return null;
   if (!hasTeam) return null;
-  
   if (!cat) {
     return <div>Invalid category</div>;
   }
-
   if (loading) {
     return <div>Loading challenges...</div>;
   }
-
   if (error) {
     return <div>Error: {error}</div>;
   }
-
   return <CategoryContent cat={cat} challenges={challenges} onChallengeUpdate={fetchChallenges} />;
 }

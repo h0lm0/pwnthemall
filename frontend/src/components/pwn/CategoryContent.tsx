@@ -33,6 +33,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [flag, setFlag] = useState("");
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleSubmit = async () => {
     if (!selectedChallenge) return;
@@ -86,12 +87,13 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-7xl">
           {(challenges || []).map((challenge) => (
-            <Dialog key={challenge.id}>
+            <Dialog key={challenge.id} open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Card
                   onClick={() => {
                     setSelectedChallenge(challenge);
                     setFlag("");
+                    setOpen(true);
                   }}
                   className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer relative ${
                     challenge.solved 

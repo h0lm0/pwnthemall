@@ -145,5 +145,6 @@
   "challenge_already_solved": "Challenge already solved by your team",
   "solved": "Solved",
   "unsolved": "Unsolved",
-  "already_solved": "Already solved"
+  "already_solved": "Already solved",
+  "no_challenges_available": "No challenges available"
 } 

@@ -147,5 +147,6 @@
   "challenge_already_solved": "Défi déjà résolu par votre équipe",
   "solved": "Résolu",
   "unsolved": "Non résolu",
-  "already_solved": "Déjà résolu"
+  "already_solved": "Déjà résolu",
+  "no_challenges_available": "Aucun défi disponible"
 } 
