@@ -121,5 +121,12 @@
   "flag_correct": "Flag correct !",
   "well_done": "Bien joué !",
   "incorrect_flag": "Flag incorrect",
-  "try_again": "Réessayez."
+  "try_again": "Réessayez.",
+  "challenge_solved": "Défi résolu !",
+  "wrong_flag": "Mauvais flag",
+  "challenge_not_found": "Défi introuvable",
+  "invalid_input": "Entrée invalide",
+  "user_wrong_type": "Type d'utilisateur incorrect",
+  "submission_create_failed": "Impossible de créer la soumission",
+  "solve_create_failed": "Impossible de créer la résolution"
 } 

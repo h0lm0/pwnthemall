@@ -119,5 +119,12 @@
   "flag_correct": "Flag correct!",
   "well_done": "Well done!",
   "incorrect_flag": "Incorrect flag",
-  "try_again": "Try again."
+  "try_again": "Try again.",
+  "challenge_solved": "Challenge solved!",
+  "wrong_flag": "Wrong flag",
+  "challenge_not_found": "Challenge not found",
+  "invalid_input": "Invalid input",
+  "user_wrong_type": "User has wrong type",
+  "submission_create_failed": "Can't create submission",
+  "solve_create_failed": "Can't create solve"
 } 

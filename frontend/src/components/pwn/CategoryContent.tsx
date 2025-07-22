@@ -38,11 +38,11 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
       const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, { flag });
 
       toast.success(t('flag_correct'), {
-        description: res.data.message || t('well_done'),
+        description: t(res.data.message) || t('well_done'),
       });
     } catch (err: any) {
       toast.error(t('incorrect_flag'), {
-        description: err.response?.data?.message || t('try_again'),
+        description: t(err.response?.data?.error || err.response?.data?.result) || t('try_again'),
       });
     } finally {
       setLoading(false);
