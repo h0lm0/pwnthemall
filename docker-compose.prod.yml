@@ -26,6 +26,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      worker:
+        condition: service_healthy
     environment:
       DATABASE_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable'
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -36,6 +38,8 @@ services:
       SEED_CASBIN: ${SEED_CASBIN}
       PTA_SITE_NAME: ${PTA_SITE_NAME}
       PTA_FLAG_PREFIX: ${PTA_FLAG_PREFIX}
+      PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
+      PTA_DOCKER_TLS_VERIFY: ${PTA_DOCKER_TLS_VERIFY}
     volumes:
       - ./shared/worker:/home/app/.ssh/worker
     networks:
@@ -47,6 +51,9 @@ services:
     build:
       context: ./worker
       dockerfile: Dockerfile
+      args:
+        DOCKER_GID: ${DOCKER_GID}
+        WORKER_PASSWORD: ${WORKER_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
@@ -57,6 +64,11 @@ services:
       - ./shared/worker.pub:/home/docker/.ssh/authorized_keys
     networks:
       private:
+    healthcheck:
+      test: ["CMD", "nc", "127.0.0.1", "22"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   db:
     container_name: db

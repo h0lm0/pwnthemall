@@ -12,9 +12,12 @@ import (
 
 func seedConfig() {
 	config := []models.Config{
-		{Key: "site_name", Value: os.Getenv("PTA_SITE_NAME")},
-		{Key: "flag_prefix", Value: os.Getenv("PTA_FLAG_PREFIX")},
+		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: false},
+		{Key: "FLAG_PREFIX", Value: os.Getenv("PTA_FLAG_PREFIX"), Public: false},
+		{Key: "DOCKER_HOST", Value: os.Getenv("PTA_DOCKER_HOST"), Public: true},
+		{Key: "DOCKER_TLS_VERIFY", Value: os.Getenv("PTA_DOCKER_TLS_VERIFY"), Public: true},
 	}
+
 	for _, item := range config {
 		var existing models.Config
 		err := DB.Where("key = ?", item.Key).First(&existing).Error

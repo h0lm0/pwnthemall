@@ -27,6 +27,7 @@ func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
 	config.InitCasbin()
+	config.ConnectDocker()
 	router := gin.Default()
 
 	sessionSecret := os.Getenv("SESSION_SECRET")

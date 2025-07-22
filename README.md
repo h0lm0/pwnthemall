@@ -33,3 +33,8 @@ Some works that inspired this project:
 
 - https://github.com/FrancescoXX/go-fullstack-app
 - https://github.com/CTFd/CTFd
+
+|Username|Password|Role|
+|:----------:|:---------:|:------:|
+|user|user|member|
+|admin|admin|admin|
