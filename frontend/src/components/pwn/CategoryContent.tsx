@@ -121,12 +121,12 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                       {challenge.difficulty?.name || 'Unknown Difficulty'}
                     </div>
                     {challenge.solved && (
-                      <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400">
+                      <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
                         {t('solved')}
                       </Badge>
                     )}
                     {!challenge.solved && (
-                      <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500">
+                      <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
                         {t('unsolved')}
                       </Badge>
                     )}

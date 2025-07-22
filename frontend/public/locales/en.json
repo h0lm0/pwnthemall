@@ -144,5 +144,6 @@
   "team_left_successfully": "You have left the team successfully.",
   "challenge_already_solved": "Challenge already solved by your team",
   "solved": "Solved",
+  "unsolved": "Unsolved",
   "already_solved": "Already solved"
 } 
