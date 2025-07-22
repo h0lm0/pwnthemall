@@ -3,7 +3,7 @@
 ## Kesako
 
 Open source CTF platform to host challenges & boxes.
-The final goal is to have only one plateform where you can securely host all challenges you made.
+The final goal is to have only one plateform on which you can securely host all challenges you made.
 
 ## Installation
 
