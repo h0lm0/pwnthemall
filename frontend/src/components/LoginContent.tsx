@@ -75,6 +75,7 @@ export default function LoginContent({
                                     <Label htmlFor="password" >{t('password')}</Label>
                                     <a
                                         href="#"
+                                        tabIndex={-1}
                                         className="ml-auto text-sm underline-offset-4 hover:underline"
                                     >
                                         {t('forgot_password')}
