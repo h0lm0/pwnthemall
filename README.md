@@ -15,7 +15,7 @@ cp .env.example .env
 
 ### Start environment
 
-bash pta-cli.sh compose up -b -e prod
+bash pta-cli.sh compose up -b -e prod 
 bash pta-cli.sh compose up -b -e dev
 
 ### Navigate to the platform
