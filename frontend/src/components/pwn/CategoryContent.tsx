@@ -17,16 +17,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 import { useLanguage } from "@/context/LanguageContext"
+import { CheckCircle, BadgeCheck } from "lucide-react";
+import { toast } from "sonner";
 
 interface CategoryContentProps {
   cat: string;
   challenges: Challenge[];
+  onChallengeUpdate?: () => void;
 }
 
-const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
+const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryContentProps) => {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [flag, setFlag] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,19 +40,39 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
     try {
       const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, { flag });
 
-      toast.success(t('flag_correct'), {
-        description: t(res.data.message) || t('well_done'),
-      });
+      toast.success(res.data.message || 'Challenge solved!');
+      // Refresh challenges after successful submission
+      if (onChallengeUpdate) {
+        onChallengeUpdate();
+      }
     } catch (err: any) {
-      toast.error(t('incorrect_flag'), {
-        description: t(err.response?.data?.error || err.response?.data?.result) || t('try_again'),
-      });
+      const errorKey = err.response?.data?.error || err.response?.data?.result;
+      toast.error('Incorrect flag: ' + (errorKey || 'Try again'));
     } finally {
       setLoading(false);
       setFlag("");
     }
   };
+  
   const { t } = useLanguage();
+  
+  // Safety check for challenges
+  if (!challenges || challenges.length === 0) {
+    return (
+      <>
+        <Head>
+          <title>pwnthemall - {cat}</title>
+        </Head>
+        <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 py-10 text-center">
+          <h1 className="text-3xl font-bold mb-6 text-cyan-600 dark:text-cyan-400">
+            {cat}
+          </h1>
+          <p className="text-muted-foreground">{t('no_challenges_available') || 'No challenges available'}</p>
+        </main>
+      </>
+    );
+  }
+  
   return (
     <>
       <Head>
@@ -62,7 +85,7 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
         </h1>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-7xl">
-          {challenges.map((challenge) => (
+          {(challenges || []).map((challenge) => (
             <Dialog key={challenge.id}>
               <DialogTrigger asChild>
                 <Card
@@ -70,58 +93,95 @@ const CategoryContent = ({ cat, challenges }: CategoryContentProps) => {
                     setSelectedChallenge(challenge);
                     setFlag("");
                   }}
-                  className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+                  className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer relative ${
+                    challenge.solved 
+                      ? 'bg-green-100 dark:bg-green-900 border-green-200 dark:border-green-700' 
+                      : ''
+                  }`}
                 >
+                  {challenge.solved && (
+                    <div className="absolute top-2 right-2">
+                      <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
+                    </div>
+                  )}
                   <CardHeader>
-                    <CardTitle className="text-cyan-700 dark:text-cyan-300">
-                      {challenge.name}
+                    <CardTitle className={`${
+                      challenge.solved 
+                        ? 'text-green-700 dark:text-green-200' 
+                        : 'text-cyan-700 dark:text-cyan-300'
+                    }`}>
+                      {challenge.name || 'Unnamed Challenge'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-left space-y-2">
                     <div className="text-xs text-gray-500 mt-2">
-                      {challenge.type.name}
+                      {challenge.type?.name || 'Unknown Type'}
                     </div>
                     <div className="text-xs text-gray-500 mt-2">
-                      {challenge.difficulty.name}
+                      {challenge.difficulty?.name || 'Unknown Difficulty'}
                     </div>
+                    {challenge.solved && (
+                      <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400">
+                        {t('solved')}
+                      </Badge>
+                    )}
                   </CardContent>
                 </Card>
               </DialogTrigger>
 
               <DialogContent className="max-w-4xl">
                 <DialogHeader>
-                  <DialogTitle className="text-cyan-600 dark:text-cyan-300">
-                    {selectedChallenge?.name}
+                  <DialogTitle className={`${
+                    selectedChallenge?.solved 
+                      ? 'text-green-600 dark:text-green-300' 
+                      : 'text-cyan-600 dark:text-cyan-300'
+                  }`}>
+                    {selectedChallenge?.name || 'Unnamed Challenge'}
+                    {selectedChallenge?.solved && (
+                      <BadgeCheck className="inline-block w-6 h-6 ml-2 text-green-600 dark:text-green-400" />
+                    )}
                   </DialogTitle>
                   <DialogDescription className="text-sm text-muted-foreground">
-                    {t('difficulty')}: {selectedChallenge?.difficulty.name} - {t('author')}: {selectedChallenge?.author}
+                    {t('difficulty')}: {selectedChallenge?.difficulty?.name || 'Unknown'} - {t('author')}: {selectedChallenge?.author || 'Unknown'}
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className="mt-4 text-left whitespace-pre-wrap">
-                  {selectedChallenge?.description}
+                  {selectedChallenge?.description || 'No description available'}
                 </div>
 
-                <div className="mt-6 flex flex-col sm:flex-row items-center gap-4">
-                  <Input
-                    placeholder={t('enter_your_flag')}
-                    value={flag}
-                    onChange={(e) => setFlag(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && flag.trim()) {
-                        handleSubmit();
-                      }
-                    }}
-                    className="w-full"
-                    disabled={loading}
-                  />
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={loading || !flag.trim()}
-                  >
-                    {loading ? t('submitting') : t('submit')}
-                  </Button>
-                </div>
+                {selectedChallenge?.solved ? (
+                  <div className="mt-6 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                      <BadgeCheck className="w-5 h-5" />
+                      <span className="font-medium">{t('already_solved')}</span>
+                    </div>
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                      {t('challenge_already_solved')}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-6 flex flex-col sm:flex-row items-center gap-4">
+                    <Input
+                      placeholder={t('enter_your_flag')}
+                      value={flag}
+                      onChange={(e) => setFlag(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && flag.trim()) {
+                          handleSubmit();
+                        }
+                      }}
+                      className="w-full"
+                      disabled={loading}
+                    />
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={loading || !flag.trim()}
+                    >
+                      {loading ? t('submitting') : t('submit')}
+                    </Button>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           ))}

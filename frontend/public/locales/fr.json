@@ -143,5 +143,8 @@
   "invalid_password": "Mot de passe invalide",
   "user_not_in_team": "L'utilisateur n'est pas dans une équipe",
   "team_leave_failed": "Échec de la sortie de l'équipe",
-  "team_left_successfully": "Vous avez quitté l'équipe."
+  "team_left_successfully": "Vous avez quitté l'équipe.",
+  "challenge_already_solved": "Défi déjà résolu par votre équipe",
+  "solved": "Résolu",
+  "already_solved": "Déjà résolu"
 } 
