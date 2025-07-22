@@ -127,7 +127,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                     )}
                     {!challenge.solved && (
                       <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500">
-                        {t('unsolved', 'Unsolved')}
+                        {t('unsolved')}
                       </Badge>
                     )}
                   </CardContent>
