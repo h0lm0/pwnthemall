@@ -269,3 +269,22 @@ func SubmitChallenge(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
 	}
 }
+
+func BuildChallengeImage(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+
+	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		return
+	}
+	err := utils.BuildDockerImage(challenge.Slug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("Successfully built image for challenge %s", challenge.Slug),
+	})
+}

@@ -1,6 +1,5 @@
 FROM alpine:latest
 
-# test update minio
-# test 2
+RUN touch test.txt
 
 CMD [ "tail", "-f", "/dev/null" ]
