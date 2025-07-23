@@ -14,6 +14,8 @@ const LoginPage = () => {
   const [form, setForm] = useState({ identifier: "", password: "" });
 
   useEffect(() => {
+    // Always clear any previous toast on mount
+    localStorage.removeItem("showToast");
     // Show toast if flag is set in localStorage
     const toastData = localStorage.getItem("showToast");
     if (toastData) {
@@ -50,8 +52,7 @@ const LoginPage = () => {
       router.push("/pwn");
     } catch (error: any) {
       const errorKey = error?.response?.data?.error || "Error during login";
-      // Always store the translation key, not the translated string
-      localStorage.setItem("showToast", JSON.stringify({ type: "error", key: errorKey, lang: language }));
+      // Show error toast immediately, don't store in localStorage since user stays on login page
       toast.error(t(errorKey), { className: "bg-red-600 text-white" });
     }
   };
