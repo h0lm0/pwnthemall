@@ -29,6 +29,13 @@ func AuthRequired(needTeam bool) gin.HandlerFunc {
 			return
 		}
 
+		if user.Banned {
+			session.Clear()
+			session.Save()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "banned"})
+			return
+		}
+
 		if needTeam {
 			if user.TeamID == nil || user.Team == nil {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team required"})

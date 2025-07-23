@@ -32,7 +32,7 @@ interface UsersContentProps {
 }
 
 export default function UsersContent({ users, onRefresh }: UsersContentProps) {
-  const { t } = useLanguage();
+  const { t } = useLanguage()
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<User | null>(null)
@@ -40,7 +40,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [confirmMassDelete, setConfirmMassDelete] = useState(false)
   const [confirmMassBan, setConfirmMassBan] = useState(false)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null)
 
   const columns: ColumnDef<User>[] = [
     {
@@ -52,8 +52,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         </span>
       ),
       size: 40,
-      minSize: 40,
-      maxSize: 40,
     },
     {
       accessorKey: "username",
@@ -63,7 +61,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           {getValue() as string}
         </span>
       ),
-      size: 200,
     },
     {
       accessorKey: "email",
@@ -73,9 +70,23 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           {getValue() as string}
         </span>
       ),
-      size: 250,
     },
-    { accessorKey: "role", header: t("role") },
+    {
+      accessorKey: "role",
+      header: t("role"),
+    },
+    {
+      accessorKey: "banned",
+      header: t("banned"),
+      cell: ({ getValue }) => {
+        const isBanned = getValue() as boolean
+        return (
+          <span className={cn("font-semibold", isBanned ? "text-red-600" : "text-green-600")}>
+            {isBanned ? t("yes") : t("no")}
+          </span>
+        )
+      },
+    },
     {
       id: "actions",
       header: t("actions"),
@@ -108,13 +119,13 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   ]
 
   const handleCreate = async (data: UserFormData) => {
-    setCreateError(null);
+    setCreateError(null)
     try {
       await axios.post("/api/users", data)
       setCreating(false)
       onRefresh()
     } catch (err: any) {
-      setCreateError(err?.response?.data?.error || "Failed to create user");
+      setCreateError(err?.response?.data?.error || "Failed to create user")
     }
   }
 
@@ -141,15 +152,29 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doTempBanSelected = async () => {
-    // TODO: implement temporary ban endpoint
-    setRowSelection({})
-    setConfirmMassBan(false)
+    const ids = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)].id)
+    try {
+      await Promise.all(ids.map((id) => axios.post(`/api/users/${id}/ban`)))
+      setRowSelection({})
+      setConfirmMassBan(false)
+      onRefresh()
+    } catch (err: any) {
+      console.error("Failed to mass ban/unban users:", err)
+      setRowSelection({})
+      setConfirmMassBan(false)
+    }
   }
 
   const doTempBanUser = async () => {
     if (!tempBanning) return
-    // TODO: implement temporary ban endpoint
-    setTempBanning(null)
+    try {
+      await axios.post(`/api/users/${tempBanning.id}/ban`)
+      setTempBanning(null)
+      onRefresh()
+    } catch (err: any) {
+      console.error("Failed to ban/unban user:", err)
+      setTempBanning(null)
+    }
   }
 
   return (
@@ -178,7 +203,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => setConfirmMassBan(true)}
-                disabled
               >
                 {t("temp_ban")}
               </Button>
@@ -207,6 +231,8 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           onRowSelectionChange={setRowSelection}
         />
       </div>
+
+      {/* Edit Sheet */}
       <Sheet open={!!editingUser} onOpenChange={(o) => !o && setEditingUser(null)}>
         <SheetContent side="right" onOpenAutoFocus={(e) => e.preventDefault()}>
           <SheetHeader>
@@ -225,6 +251,8 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Delete Dialog */}
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -241,6 +269,8 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Temp Ban Dialog */}
       <AlertDialog open={!!tempBanning} onOpenChange={(o) => !o && setTempBanning(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -257,6 +287,8 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Confirm Mass Delete */}
       <AlertDialog open={confirmMassDelete} onOpenChange={setConfirmMassDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -273,6 +305,8 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Confirm Mass Temp Ban */}
       <AlertDialog open={confirmMassBan} onOpenChange={setConfirmMassBan}>
         <AlertDialogContent>
           <AlertDialogHeader>
