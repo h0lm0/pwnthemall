@@ -48,8 +48,9 @@ USER app
 COPY config/casbin_model.conf /app/config/
 COPY config/casbin_policies.csv /app/config/
 COPY --from=go_builder /app/pwnthemall /app/pwnthemall
+COPY entrypoint.sh /entrypoint.sh
 
 EXPOSE 8080
 
-CMD ["/app/pwnthemall"]
+CMD ["sh", "/entrypoint.sh"]
 #endregion

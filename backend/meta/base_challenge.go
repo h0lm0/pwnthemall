@@ -1,6 +1,6 @@
 package meta
 
-type ChallengeMetadata struct {
+type BaseChallengeMetadata struct {
 	Name        string   `yaml:"name"`
 	Description string   `yaml:"description"`
 	Category    string   `yaml:"category"`
