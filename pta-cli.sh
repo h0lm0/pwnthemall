@@ -109,7 +109,7 @@ function compose_down() {
     fi
 
     echo "[+] Stopping and removing containers using $compose_file"
-    docker compose -f "$compose_file" down
+    docker compose -f "$compose_file" down -v
     echo "[✓] Compose down completed"
 }
 
