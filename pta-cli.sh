@@ -15,6 +15,10 @@ MINIO_ALIAS="localminio"
 MINIO_ENDPOINT="http://localhost:9000"
 MOUNT_PATH="/data"
 
+# Worker  system needs: automatically retrieve docker gid 
+DOCKER_GID=$(getent group docker | cut -d: -f3)
+export DOCKER_GID
+
 function minio_alias() {
     docker compose -f docker-compose.prod.yml exec -it "$MINIO_CONTAINER" mc alias set "$MINIO_ALIAS" "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" 2>/dev/null || true
 }
@@ -39,7 +43,10 @@ function minio_sync() {
 function compose_up() {
     local env="prod"
     local build="false"
-
+    if [ ! -f ./shared/worker ]; then
+        echo "WARN: Private key file shared/worker not found, generating new one..."
+        generate_key
+    fi
     while [[ $# -gt 0 ]]; do
         case "$1" in
             up)
@@ -108,6 +115,7 @@ function compose_down() {
 
 function generate_key() {
     ssh-keygen -C '' -t ed25519 -N '' -f ./shared/worker
+    chmod 400 ./shared/worker
 }
 
 function remove_key() {

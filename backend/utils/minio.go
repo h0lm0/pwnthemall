@@ -51,7 +51,7 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	}
 
 	// Unmarshal the YAML content and update the database
-	var metaData meta.ChallengeMetadata
+	var metaData meta.BaseChallengeMetadata
 	if err := yaml.Unmarshal(buf.Bytes(), &metaData); err != nil {
 		log.Printf("Invalid YAML for %s: %v", objectKey, err)
 		return err
@@ -75,7 +75,7 @@ func deleteChallengeFromDB(slug string) error {
 	return nil
 }
 
-func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) error {
+func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string) error {
 	var cCategory models.ChallengeCategory
 	if err := config.DB.FirstOrCreate(&cCategory, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
 		return err
