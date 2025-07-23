@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"errors"
+	"log"
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
@@ -8,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // GetTeams : liste toutes les équipes
@@ -139,6 +142,57 @@ func JoinTeam(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Joined team", "team": team})
 }
 
+// deleteTeamCompletely removes a team and all its related records
+func deleteTeamCompletely(teamID uint) error {
+	// Use a transaction to ensure all operations succeed or fail together
+	return config.DB.Transaction(func(tx *gorm.DB) error {
+		// Get all users in this team for submissions cleanup
+		var userIds []uint
+		tx.Model(&models.User{}).Where("team_id = ?", teamID).Pluck("id", &userIds)
+
+		// Delete Submission records for all team members
+		if len(userIds) > 0 {
+			if err := tx.Where("user_id IN ?", userIds).Delete(&models.Submission{}).Error; err != nil {
+				log.Printf("Failed to delete submissions for team %d: %v", teamID, err)
+				return err
+			}
+		}
+
+		// Delete Instance records
+		if err := tx.Where("team_id = ?", teamID).Delete(&models.Instance{}).Error; err != nil {
+			log.Printf("Failed to delete instances for team %d: %v", teamID, err)
+			return err
+		}
+
+		// Delete DynamicFlag records
+		if err := tx.Where("team_id = ?", teamID).Delete(&models.DynamicFlag{}).Error; err != nil {
+			log.Printf("Failed to delete dynamic flags for team %d: %v", teamID, err)
+			return err
+		}
+
+		// Delete Solve records (these should cascade but let's be explicit)
+		if err := tx.Where("team_id = ?", teamID).Delete(&models.Solve{}).Error; err != nil {
+			log.Printf("Failed to delete solves for team %d: %v", teamID, err)
+			return err
+		}
+
+		// Finally delete the team
+		result := tx.Delete(&models.Team{}, teamID)
+		if result.Error != nil {
+			log.Printf("Failed to delete team %d: %v", teamID, result.Error)
+			return result.Error
+		}
+
+		if result.RowsAffected == 0 {
+			log.Printf("Team %d not found during deletion", teamID)
+			return errors.New("team not found")
+		}
+
+		log.Printf("Successfully deleted team %d and all related records", teamID)
+		return nil
+	})
+}
+
 // LeaveTeam : quitter son équipe
 func LeaveTeam(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -155,11 +209,32 @@ func LeaveTeam(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "user_not_in_team"})
 		return
 	}
+
+	// Store the team ID before removing the user
+	teamID := *user.TeamID
+
+	// Remove user from team
 	user.TeamID = nil
 	if err := config.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_leave_failed"})
 		return
 	}
+
+	// Check if there are any remaining members in the team
+	var remainingMembers int64
+	if err := config.DB.Model(&models.User{}).Where("team_id = ?", teamID).Count(&remainingMembers).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_leave_failed"})
+		return
+	}
+
+	// If no members remain, delete the team and all related records
+	if remainingMembers == 0 {
+		if err := deleteTeamCompletely(teamID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "team_leave_failed"})
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Left team"})
 }
 
@@ -237,7 +312,7 @@ func DisbandTeam(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "db_error"})
 		return
 	}
-	if err := config.DB.Delete(&team).Error; err != nil {
+	if err := deleteTeamCompletely(team.ID); err != nil {
 		c.JSON(500, gin.H{"error": "db_error"})
 		return
 	}
