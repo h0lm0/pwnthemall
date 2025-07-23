@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"github.com/go-playground/validator/v10"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterInput struct {
@@ -60,7 +60,7 @@ func Register(c *gin.Context) {
 		Role:     "member",
 		// Uuid:     uuid.NewString(),
 	}
-
+	
 	if err := config.DB.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -89,6 +89,11 @@ func Login(c *gin.Context) {
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		return
+	}
+
+	if user.Banned {
+		c.JSON(http.StatusTeapot, gin.H{"error": "banned"})
 		return
 	}
 

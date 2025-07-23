@@ -146,5 +146,8 @@
   "solved": "Solved",
   "unsolved": "Unsolved",
   "already_solved": "Already solved",
-  "no_challenges_available": "No challenges available"
+  "no_challenges_available": "No challenges available",
+  "banned": "Banned",
+  "yes": "yes",
+  "no": "no"
 } 

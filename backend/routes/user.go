@@ -15,5 +15,6 @@ func RegisterUserRoutes(router *gin.Engine) {
 		users.POST("", middleware.CheckPolicy("/users", "write"), controllers.CreateUser)
 		users.PUT("/:id", middleware.CheckPolicy("/users/:id", "write"), controllers.UpdateUser)
 		users.DELETE("/:id", middleware.CheckPolicy("/users/:id", "write"), controllers.DeleteUser)
+		users.POST("/:id/ban", middleware.CheckPolicy("/users/:id/ban", "write"), controllers.BanOrUnbanUser)
 	}
 }

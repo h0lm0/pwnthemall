@@ -161,3 +161,17 @@ func GetCurrentUser(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func BanOrUnbanUser(c *gin.Context) {
+	var user models.User
+	id := c.Param("id")
+
+	if err := config.DB.First(&user, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	user.Banned = !user.Banned
+	config.DB.Save(&user)
+
+	c.JSON(http.StatusOK, gin.H{"banned": user.Banned})
+}

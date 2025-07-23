@@ -48,7 +48,7 @@ export default function LoginContent({
                             <CheckCircle className="h-4 w-4" />
                         )}
                         <AlertTitle>{messageType === "error" ? t('error') : t('success')}</AlertTitle>
-                        <AlertDescription>{message}</AlertDescription>
+                        <AlertDescription>{t(message)}</AlertDescription>
                     </Alert>
                 )}
 

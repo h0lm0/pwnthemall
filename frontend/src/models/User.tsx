@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email: string;
   role: string;
+  banned: boolean;
 }
 
 export interface UserFormData {
