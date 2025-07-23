@@ -94,6 +94,7 @@ function ProfileContentInner() {
         username: res.data.username,
         email: res.data.email,
         role: res.data.role,
+        banned: res.data.banned || false,
       });
       // fetch team info
       if (res.data.teamId) {

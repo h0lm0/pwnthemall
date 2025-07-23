@@ -146,6 +146,7 @@ func GetCurrentUser(c *gin.Context) {
 		"username": user.Username,
 		"email":    user.Email,
 		"role":     user.Role,
+		"banned":   user.Banned,
 		"teamId":   user.TeamID,
 		"team":     gin.H{},
 	}
