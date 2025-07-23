@@ -405,7 +405,6 @@ function ThemeSelector() {
           />
         ))}
       </div>
-      <div className="text-xs text-muted-foreground mt-2">Your theme preference is saved in your browser and will be used across the site.</div>
     </div>
   );
 }
