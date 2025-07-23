@@ -53,7 +53,6 @@ export default function CategoryPage() {
       const response = await axios.get<Challenge[]>(`/api/challenges/category/${cat}`);
       setChallenges(response.data || []);
     } catch (err: any) {
-      console.error('Error fetching challenges:', err);
       setError(err.response?.data?.error || 'Failed to load challenges');
       setChallenges([]);
     } finally {

@@ -39,9 +39,6 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const otherMembers = members.filter(m => m.id !== currentUser.id);
   const isAlone = otherMembers.length === 0;
 
-  // Debug log
-  console.log('TeamManagementSection:', { team, currentUser, isCreator, otherMembers });
-
   const handleSimpleLeave = async () => {
     setLeaving(true);
     setLeaveError(null);
