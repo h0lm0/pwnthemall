@@ -160,5 +160,9 @@
   "no_challenges_available": "No challenges available",
   "banned": "Banned",
   "yes": "yes",
-  "no": "no"
+  "no": "no",
+  "Username already exists": "Username already exists",
+  "Email already exists": "Email already exists",
+  "User already exists": "User already exists",
+  "Failed to create user": "Failed to create user"
 } 

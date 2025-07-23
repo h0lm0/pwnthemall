@@ -162,5 +162,9 @@
   "no_challenges_available": "Aucun challenge disponible",
   "banned": "Banni",
   "yes": "oui",
-  "no": "non"
+  "no": "non",
+  "Username already exists": "Ce nom d'utilisateur existe déjà",
+  "Email already exists": "Cette adresse email existe déjà",
+  "User already exists": "Cet utilisateur existe déjà",
+  "Failed to create user": "Échec de la création de l'utilisateur"
 } 
