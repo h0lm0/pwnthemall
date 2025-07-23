@@ -56,17 +56,6 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                         <CardDescription>{t('create_account')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {message && (
-                            <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className="mb-4">
-                                {message.type === 'error' ? (
-                                    <AlertTriangle className="h-5 w-5 text-red-500" />
-                                ) : (
-                                    <CheckCircle className="h-5 w-5 text-green-500" />
-                                )}
-                                <AlertTitle>{message.type === 'error' ? t('error') : t('success')}</AlertTitle>
-                                <AlertDescription>{t(message.text) || message.text}</AlertDescription>
-                            </Alert>
-                        )}
                         <form onSubmit={onSubmit} className="grid gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="identifier">{t('username')}</Label>

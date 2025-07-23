@@ -2,13 +2,15 @@ import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import RegisterContent from "@/components/RegisterContent";
+import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 const RegisterPage = () => {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -17,18 +19,17 @@ const RegisterPage = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
     try {
       await axios.post(`/api/register`, form);
-
+      toast.success(t("registration_successful"));
       router.push({
         pathname: "/login",
         query: { success: "register" },
       });
     } catch (error: any) {
       const errMsg = error?.response?.data?.error || "An error has occurred";
-      setMessage({ type: "error", text: errMsg });
+      toast.error(t(errMsg) || errMsg, { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }
@@ -38,7 +39,7 @@ const RegisterPage = () => {
     <RegisterContent
       form={form}
       loading={loading}
-      message={message}
+      message={null}
       onChange={onChange}
       onSubmit={handleRegister}
     />
