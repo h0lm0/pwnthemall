@@ -19,16 +19,12 @@ interface LoginContentProps {
         identifier: string
         password: string
     }
-    message: string | null
-    messageType: "success" | "error" | null
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     onSubmit: (e: React.FormEvent) => void
 }
 
 export default function LoginContent({
     form,
-    message,
-    messageType,
     onChange,
     onSubmit,
 }: LoginContentProps) {
@@ -37,20 +33,6 @@ export default function LoginContent({
     return (
         <div className="bg-muted flex min-h-screen flex-col items-center justify-center px-4 py-8">
             <div className="w-full max-w-sm">
-                {message && (
-                    <Alert
-                        variant={messageType === "error" ? "destructive" : "default"}
-                        className="mb-6"
-                    >
-                        {messageType === "error" ? (
-                            <AlertTriangle className="h-4 w-4" />
-                        ) : (
-                            <CheckCircle className="h-4 w-4" />
-                        )}
-                        <AlertTitle>{messageType === "error" ? t('error') : t('success')}</AlertTitle>
-                        <AlertDescription>{t(message)}</AlertDescription>
-                    </Alert>
-                )}
 
                 <Card>
                     <CardHeader className="text-center">

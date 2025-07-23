@@ -166,5 +166,13 @@
   "Username already exists": "Ce nom d'utilisateur existe déjà",
   "Email already exists": "Cette adresse email existe déjà",
   "User already exists": "Cet utilisateur existe déjà",
-  "Failed to create user": "Échec de la création de l'utilisateur"
+  "Failed to create user": "Échec de la création de l'utilisateur",
+  "login_success": "Connexion réussie !",
+  "invalid_credentials": "Nom d'utilisateur ou mot de passe invalide.",
+  "team_left_successfully": "Vous avez quitté l'équipe.",
+  "team_disbanded_successfully": "Équipe dissoute avec succès.",
+  "ownership_transferred": "Propriété transférée à {username}.",
+  "team_leave_failed": "Échec de la sortie de l'équipe.",
+  "team_disband_failed": "Échec de la dissolution de l'équipe.",
+  "ownership_transfer_failed": "Échec du transfert de propriété."
 } 

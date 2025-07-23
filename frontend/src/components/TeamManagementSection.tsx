@@ -14,6 +14,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/context/LanguageContext";
+import { toast } from "sonner";
 
 interface TeamManagementSectionProps {
   team: Team;
@@ -44,11 +45,12 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setLeaveError(null);
     try {
       await fetch("/api/teams/leave", { method: "POST" });
-      setLeaveMsg("team_left_successfully");
+      // Set toast flag before reload
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", key: "team_left_successfully", lang: t("lang") }));
       onTeamChange?.();
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
-      setLeaveError(t("team_leave_failed"));
+      toast.error(t("team_leave_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setLeaving(false);
     }
@@ -64,19 +66,18 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ teamId: team.id, newOwnerId }),
       });
-      
       if (!transferRes.ok) {
         throw new Error("Transfer failed");
       }
-
       // Then leave the team
       await fetch("/api/teams/leave", { method: "POST" });
-      
-      setShowTransferForLeave(false);
+      // Set toast flag before reload
+      const newOwner = otherMembers.find(m => m.id === newOwnerId);
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", key: "ownership_transferred", username: newOwner?.username, lang: t("lang") }));
       onTeamChange?.();
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
-      setTransferError(t("team_transfer_failed"));
+      toast.error(t("ownership_transfer_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setTransferring(false);
     }
@@ -91,16 +92,16 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ teamId: team.id, newOwnerId }),
       });
-      
       if (!res.ok) {
         throw new Error("Transfer failed");
       }
-      
-      setShowTransferOnly(false);
+      // Set toast flag before reload
+      const newOwner = otherMembers.find(m => m.id === newOwnerId);
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", key: "ownership_transferred", username: newOwner?.username, lang: t("lang") }));
       onTeamChange?.();
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
-      setTransferError(t("team_transfer_failed"));
+      toast.error(t("ownership_transfer_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setTransferring(false);
     }
@@ -115,11 +116,12 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ teamId: team.id }),
       });
-      setShowDisband(false);
+      // Set toast flag before reload
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", key: "team_disbanded_successfully", lang: t("lang") }));
       onTeamChange?.();
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
-      setDisbandError(t("team_disband_failed"));
+      toast.error(t("team_disband_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setDisbanding(false);
     }
@@ -129,6 +131,25 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const handleCreatorSoloLeave = async () => {
     await handleDisband();
   };
+
+  React.useEffect(() => {
+    const toastData = localStorage.getItem("showToast");
+    if (toastData) {
+      const { type, key, username, lang } = JSON.parse(toastData);
+      if (!lang || lang === t("lang")) {
+        if (type === "success") {
+          if (key === "ownership_transferred" && username) {
+            toast.success(t(key, { username }));
+          } else {
+            toast.success(t(key));
+          }
+        } else {
+          toast.error(t(key), { className: "bg-red-600 text-white" });
+        }
+        localStorage.removeItem("showToast");
+      }
+    }
+  }, [t]);
 
   return (
     <div className="space-y-4">
@@ -320,8 +341,8 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
         </>
       )}
       
-      {leaveMsg && <div className="text-green-600 mt-2">{t(leaveMsg)}</div>}
-      {leaveError && <div className="text-red-600 mt-2">{leaveError}</div>}
+      {/* Remove all inline error/success message rendering in JSX */}
+      {/* Add useEffect to show toast if flag is set in localStorage */}
     </div>
   );
 }; 

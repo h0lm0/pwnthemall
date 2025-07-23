@@ -4,7 +4,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
-
+  
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
   
   try {
@@ -16,11 +16,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       credentials: "include",
     });
-
+    
     let data;
-    try {
+      try {
       data = await response.json();
-    } catch (parseError) {
+      } catch (parseError) {
       return res.status(500).json({ 
         error: "Invalid response from backend" 
       });
@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         error: data?.error || "Backend error" 
       });
     }
-
+      
     res.status(response.status).json(data);
   } catch (fetchError) {
     return res.status(500).json({ 
