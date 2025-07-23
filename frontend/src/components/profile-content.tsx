@@ -90,10 +90,12 @@ function ProfileContentInner() {
     const toastData = localStorage.getItem("showToast");
     if (toastData) {
       const { type, message } = JSON.parse(toastData);
-      if (type === "success") {
-        toast.success(t(message));
-      } else {
-        toast.error(t(message), { className: "bg-red-600 text-white" });
+      if (message && typeof message === "string" && message.trim() !== "") {
+        if (type === "success") {
+          toast.success(t(message));
+        } else {
+          toast.error(t(message), { className: "bg-red-600 text-white" });
+        }
       }
       localStorage.removeItem("showToast");
     }
