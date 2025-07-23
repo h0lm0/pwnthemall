@@ -154,6 +154,7 @@ func GetCurrentUser(c *gin.Context) {
 		response["team"] = gin.H{
 			"id":      user.Team.ID,
 			"name":    user.Team.Name,
+			"creatorId": user.Team.CreatorID,
 			"members": safeMembers,
 		}
 	}
