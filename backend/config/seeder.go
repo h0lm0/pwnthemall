@@ -174,7 +174,4 @@ func SeedDatabase() {
 	seedChallengeCategory()
 	seedChallengeType()
 	seedDefaultUsers()
-	
-	// Fix existing teams without proper CreatorID
-	FixTeamCreators()
 }
