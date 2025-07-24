@@ -9,11 +9,15 @@ ENV DOCKER_GID $DOCKER_GID
 ARG WORKER_PASSWORD
 ENV WORKER_PASSWORD $WORKER_PASSWORD
 
-# Create docker group with dynamic GID
-RUN addgroup -g ${DOCKER_GID} dockerhost
-
-# Create non-root user 'docker' with same GID, add to both dockerhost and docker groups
-RUN adduser -D -u 1000 -s /bin/bash -G dockerhost docker && \
+# Create docker group with dynamic GID or use existing group with that GID
+RUN EXISTING_GROUP=$(getent group ${DOCKER_GID} | cut -d: -f1) && \
+    if [ -z "$EXISTING_GROUP" ]; then \
+      addgroup -g ${DOCKER_GID} dockerhost; \
+      GROUP_TO_USE=dockerhost; \
+    else \
+      GROUP_TO_USE=$EXISTING_GROUP; \
+    fi && \
+    adduser -D -u 1000 -s /bin/bash -G $GROUP_TO_USE docker && \
     mkdir -p /home/docker/.ssh && \
     chown -R docker:docker /home/docker/.ssh && \
     chmod 700 /home/docker/.ssh
