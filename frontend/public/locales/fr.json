@@ -143,7 +143,7 @@
   "invalid_password": "Mot de passe invalide",
   "user_not_in_team": "L'utilisateur n'est pas dans une équipe",
   "disband_team": "Dissoudre l'équipe",
-  "disband_team_confirm": "Es-tu sûr de vouloir dissoudre l'équipe ? Cela supprimera tous les membres et effacera l'équipe.",
+  "disband_team_confirm": "Êtes-vous sûr de vouloir dissoudre l'équipe ? Cela supprimera tous les membres et effacera l'équipe.",
   "disband": "Dissoudre",
   "transfer_ownership": "Transférer la propriété",
   "choose_new_owner": "Choisis un nouveau propriétaire pour l'équipe :",
@@ -185,5 +185,6 @@
   "team_joined_success": "Équipe rejointe avec succès !",
   "team_kick_confirm": "Êtes-vous sûr de vouloir exclure {username} de l'équipe ?",
   "team_kick_success": "Membre exclu de l'équipe !",
-  "team_kick_failed": "Échec de l'exclusion du membre de l'équipe."
+  "team_kick_failed": "Échec de l'exclusion du membre de l'équipe.",
+  "team_disband_confirm": "Are you sure you want to disband the team? This will remove all members and delete the team."
 } 

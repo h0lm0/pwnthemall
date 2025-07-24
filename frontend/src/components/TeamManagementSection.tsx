@@ -49,6 +49,7 @@ interface TeamStyleViewProps {
   onConfirmKick: () => void;
   onCancelKick: () => void;
   transferTarget: User | null;
+  setTransferTarget: (user: User | null) => void;
   showTransferDialog: boolean;
   setShowTransferDialog: (open: boolean) => void;
   onConfirmTransfer: () => void;
@@ -71,12 +72,24 @@ interface TeamStyleViewProps {
 // --- TEAM STYLE COMPONENTS ---
 
 // Classic: Table style
-function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
+function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, setTransferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
   showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband
 }: TeamStyleViewProps) {
   return (
     <div className="overflow-x-auto rounded-lg border bg-background p-4">
       <div className="font-bold mb-2">{team.name}</div>
+      {/* Global Disband Button for Leader */}
+      {isCreator && (
+        <div className="mb-4">
+          <Button
+            variant="destructive"
+            onClick={handleDisbandClick}
+            disabled={disbanding}
+          >
+            {t('disband_team')}
+          </Button>
+        </div>
+      )}
       <table className="min-w-full text-sm">
         <thead>
           <tr className="border-b">
@@ -120,9 +133,15 @@ function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, 
                 )}
                 {/* Leave or Disband actions */}
                 {m.id === currentUser.id && (
-                  isCreator && otherMembers.length === 0 ? (
-                    <Button size="sm" variant="destructive" onClick={handleDisbandClick} disabled={disbanding}>
-                      {t('disband')}
+                  isCreator ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-white border border-gray-300 text-red-600 opacity-50 cursor-not-allowed"
+                      disabled
+                      title={t('leader_cannot_leave')}
+                    >
+                      {t('leave')}
                     </Button>
                   ) : (
                     <Button
@@ -249,12 +268,19 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const [activeStyle, setActiveStyle] = useState("classic");
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDisbandDialog, setShowDisbandDialog] = useState(false);
+  const [showCreatorLeaveChoice, setShowCreatorLeaveChoice] = useState(false);
 
   const isCreator = team.creatorId === currentUser.id;
   const otherMembers = members.filter(m => m.id !== currentUser.id);
   const isAlone = otherMembers.length === 0;
 
-  const handleLeaveClick = () => setShowLeaveDialog(true);
+  const handleLeaveClick = () => {
+    if (isCreator && otherMembers.length > 0) {
+      setShowCreatorLeaveChoice(true);
+    } else {
+      setShowLeaveDialog(true);
+    }
+  };
   const handleDisbandClick = () => setShowDisbandDialog(true);
   const onConfirmLeave = async () => {
     setLeaving(true);
@@ -437,6 +463,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
         onConfirmKick={onConfirmKick}
         onCancelKick={onCancelKick}
         transferTarget={transferTarget}
+        setTransferTarget={setTransferTarget}
         showTransferDialog={showTransferOnly}
         setShowTransferDialog={setShowTransferOnly}
         onConfirmTransfer={onConfirmTransfer}
@@ -455,6 +482,38 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
         onConfirmLeave={onConfirmLeave}
         onConfirmDisband={onConfirmDisband}
       />
+      {/* Creator leave choice dialog */}
+      <AlertDialog open={showCreatorLeaveChoice} onOpenChange={setShowCreatorLeaveChoice}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('leave_team')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('as_creator_leave_choice')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setShowCreatorLeaveChoice(false);
+                setShowDisbandDialog(true);
+              }}
+            >
+              {t('disband_team')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreatorLeaveChoice(false);
+                setShowTransferOnly(true);
+              }}
+            >
+              {t('transfer_ownership_and_leave')}
+            </Button>
+            <AlertDialogCancel onClick={() => setShowCreatorLeaveChoice(false)}>{t('cancel')}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }; 
