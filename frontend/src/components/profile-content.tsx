@@ -22,6 +22,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Team } from "@/models/Team";
 import { User } from "@/models/User";
 import { TeamManagementSection } from "@/components/TeamManagementSection";
+import { toast } from "sonner";
 
 const TABS = ["Account", "Security", "Appearance", "Team"] as const;
 type Tab = typeof TABS[number];
@@ -85,6 +86,19 @@ function ProfileContentInner() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // Show toast if flag is set in localStorage
+    const toastData = localStorage.getItem("showToast");
+    if (toastData) {
+      const { type, message } = JSON.parse(toastData);
+      if (message && typeof message === "string" && message.trim() !== "") {
+        if (type === "success") {
+          toast.success(t(message));
+        } else {
+          toast.error(t(message), { className: "bg-red-600 text-white" });
+        }
+      }
+      localStorage.removeItem("showToast");
+    }
     setLoading(true);
     axios.get("/api/me").then((res: AxiosResponse<any>) => {
       setUsername(res.data.username);
@@ -116,7 +130,7 @@ function ProfileContentInner() {
       setMembers([]);
       setTeamLoading(false);
     }).finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setNewUsername(e.target.value);
@@ -137,12 +151,13 @@ function ProfileContentInner() {
     try {
       const res: AxiosResponse<any> = await axios.patch("/api/me", { username: newUsername });
       setUsername(res.data.username);
-      setMessage("Username updated successfully!");
+      // Set toast flag before reload
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("username_updated") }));
       setTimeout(() => {
         window.location.reload();
       }, 200);
     } catch (err: any) {
-      setError(err?.response?.data?.error || "Failed to update username");
+      toast.error(t(err?.response?.data?.error || "Failed to update username"), { className: "bg-red-600 text-white" });
     }
     setConfirmUsername(false);
   };
@@ -152,9 +167,10 @@ function ProfileContentInner() {
     setError(null);
     try {
       await axios.delete("/api/me");
+      toast.success(t("delete_account_confirm"));
       window.location.href = "/login";
     } catch (err: any) {
-      setError(err?.response?.data?.error || "Failed to delete account");
+      toast.error(t(err?.response?.data?.error || "Failed to delete account"), { className: "bg-red-600 text-white" });
     }
   };
 
@@ -187,11 +203,11 @@ function ProfileContentInner() {
     setPwLoading(true);
     try {
       await axios.put("/api/me/password", { current: currentPassword, new: newPassword });
-      setPwMessage("Password updated successfully!");
+      toast.success(t("password_updated"));
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
-      setPwError(err?.response?.data?.error || "Failed to update password");
+      toast.error(t(err?.response?.data?.error || "Failed to update password"), { className: "bg-red-600 text-white" });
     } finally {
       setPwLoading(false);
       setConfirmPassword(false);
@@ -241,10 +257,6 @@ function ProfileContentInner() {
                 maxLength={32}
               />
               {usernameError && <span className="text-red-500 text-xs">{t('username_too_long')}</span>}
-            </div>
-            <div style={{ minHeight: 24 }}>
-              {error && <div className="text-red-600 mt-2">{t(error)}</div>}
-              {!error && message && <div className="text-green-600 mt-2">{t(message)}</div>}
             </div>
             <Button
               type="button"
@@ -309,12 +321,6 @@ function ProfileContentInner() {
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="new">{t('new_password')}</label>
               <Input id="new" name="new" type="password" value={newPassword} onChange={handleNewPasswordChange} required autoComplete="new-password" disabled={pwLoading} maxLength={72} />
-            </div>
-            <div style={{ minHeight: 24 }}>
-              {pwValidationError && <div className="text-red-600 mt-2">{t('password_too_short')}</div>}
-              {pwTooLongError && <div className="text-red-600 mt-2">{t('password_too_long')}</div>}
-              {pwError && <div className="text-red-600 mt-2">{t(pwError)}</div>}
-              {!pwError && !pwValidationError && pwMessage && <div className="text-green-600 mt-2">{t(pwMessage)}</div>}
             </div>
             <Button
               type="button"

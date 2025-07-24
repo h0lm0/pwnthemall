@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
-
+	"strings"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -62,7 +62,22 @@ func Register(c *gin.Context) {
 	}
 	
 	if err := config.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Check if it's a unique constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			if strings.Contains(err.Error(), "users_username_key") || strings.Contains(err.Error(), "username") {
+				c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+				return
+			}
+			if strings.Contains(err.Error(), "users_email_key") || strings.Contains(err.Error(), "email") {
+				c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+				return
+			}
+			// Generic duplicate error
+			c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
+			return
+		}
+		// Other database errors
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
@@ -83,12 +98,12 @@ func Login(c *gin.Context) {
 
 	var user models.User
 	if err := config.DB.Where("username = ? OR email = ?", input.Identifier, input.Identifier).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
 		return
 	}
 

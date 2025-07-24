@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Team } from "@/models/Team";
 import { User } from "@/models/User";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/context/LanguageContext";
+import { toast } from "sonner";
 
 interface TeamManagementSectionProps {
   team: Team;
@@ -39,16 +40,34 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const otherMembers = members.filter(m => m.id !== currentUser.id);
   const isAlone = otherMembers.length === 0;
 
+  useEffect(() => {
+    // Show toast if flag is set in localStorage (for post-reload popups)
+    const toastData = localStorage.getItem("showToast");
+    if (toastData) {
+      const { type, message } = JSON.parse(toastData);
+      if (message && typeof message === "string" && message.trim() !== "") {
+        if (type === "success") {
+          toast.success(t(message));
+        } else {
+          toast.error(t(message), { className: "bg-red-600 text-white" });
+        }
+      }
+      localStorage.removeItem("showToast");
+    }
+  }, [t]);
+
   const handleSimpleLeave = async () => {
     setLeaving(true);
     setLeaveError(null);
     try {
       await fetch("/api/teams/leave", { method: "POST" });
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_left_successfully") }));
       setLeaveMsg("team_left_successfully");
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => window.location.reload(), 200);
     } catch (err: any) {
       setLeaveError(t("team_leave_failed"));
+      toast.error(t("team_leave_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setLeaving(false);
     }
@@ -71,12 +90,13 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
 
       // Then leave the team
       await fetch("/api/teams/leave", { method: "POST" });
-      
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_transfer_and_leave_success") }));
       setShowTransferForLeave(false);
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => window.location.reload(), 200);
     } catch (err: any) {
       setTransferError(t("team_transfer_failed"));
+      toast.error(t("team_transfer_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setTransferring(false);
     }
@@ -95,12 +115,13 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       if (!res.ok) {
         throw new Error("Transfer failed");
       }
-      
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_transfer_success") }));
       setShowTransferOnly(false);
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => window.location.reload(), 200);
     } catch (err: any) {
       setTransferError(t("team_transfer_failed"));
+      toast.error(t("team_transfer_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setTransferring(false);
     }
@@ -115,11 +136,13 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ teamId: team.id }),
       });
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_disband_success") }));
       setShowDisband(false);
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => window.location.reload(), 200);
     } catch (err: any) {
       setDisbandError(t("team_disband_failed"));
+      toast.error(t("team_disband_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setDisbanding(false);
     }
