@@ -172,5 +172,11 @@
   "ownership_transfer_failed": "Failed to transfer ownership.",
   "team_transfer_success": "Team ownership transferred successfully!",
   "team_transfer_and_leave_success": "Ownership transferred and you have left the team.",
-  "team_disband_success": "Team disbanded successfully!"
+  "team_disband_success": "Team disbanded successfully!",
+  "user_created_success": "User created successfully!",
+  "user_updated_success": "User updated successfully!",
+  "user_deleted_success": "User deleted successfully!",
+  "users_deleted_success": "Selected users deleted successfully!",
+  "user_banned_success": "User banned successfully!",
+  "users_banned_success": "Selected users banned successfully!"
 } 

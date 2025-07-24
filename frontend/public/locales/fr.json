@@ -174,5 +174,11 @@
   "ownership_transfer_failed": "Échec du transfert de propriété.",
   "team_transfer_success": "Propriété de l'équipe transférée avec succès !",
   "team_transfer_and_leave_success": "Propriété transférée et vous avez quitté l'équipe.",
-  "team_disband_success": "Équipe dissoute avec succès !"
+  "team_disband_success": "Équipe dissoute avec succès !",
+  "user_created_success": "Utilisateur créé avec succès !",
+  "user_updated_success": "Utilisateur mis à jour avec succès !",
+  "user_deleted_success": "Utilisateur supprimé avec succès !",
+  "users_deleted_success": "Utilisateurs sélectionnés supprimés avec succès !",
+  "user_banned_success": "Utilisateur banni avec succès !",
+  "users_banned_success": "Utilisateurs sélectionnés bannis avec succès !"
 } 

@@ -1,5 +1,5 @@
 import Head from "next/head"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import axios from "axios"
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
@@ -25,6 +25,7 @@ import {
 import UserForm from "./UserForm"
 import { User, UserFormData } from "@/models/User"
 import { useLanguage } from "@/context/LanguageContext"
+import { toast } from "sonner"
 
 interface UsersContentProps {
   users: User[]
@@ -123,6 +124,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     try {
       await axios.post("/api/users", data)
       setCreating(false)
+      toast.success(t("user_created_success"))
       onRefresh()
     } catch (err: any) {
       setCreateError(err?.response?.data?.error || "Failed to create user")
@@ -133,6 +135,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     if (!editingUser) return
     await axios.put(`/api/users/${editingUser.id}`, data)
     setEditingUser(null)
+    toast.success(t("user_updated_success"))
     onRefresh()
   }
 
@@ -140,6 +143,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     if (!deleting) return
     await axios.delete(`/api/users/${deleting.id}`)
     setDeleting(null)
+    toast.success(t("user_deleted_success"))
     onRefresh()
   }
 
@@ -147,8 +151,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     const ids = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)].id)
     await Promise.all(ids.map((id) => axios.delete(`/api/users/${id}`)))
     setRowSelection({})
-    onRefresh()
     setConfirmMassDelete(false)
+    toast.success(t("users_deleted_success"))
+    onRefresh()
   }
 
   const doTempBanSelected = async () => {
@@ -157,6 +162,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       await Promise.all(ids.map((id) => axios.post(`/api/users/${id}/ban`)))
       setRowSelection({})
       setConfirmMassBan(false)
+      toast.success(t("users_banned_success"))
       onRefresh()
     } catch (err: any) {
       console.error("Failed to mass ban/unban users:", err)
@@ -170,6 +176,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     try {
       await axios.post(`/api/users/${tempBanning.id}/ban`)
       setTempBanning(null)
+      toast.success(t("user_banned_success"))
       onRefresh()
     } catch (err: any) {
       console.error("Failed to ban/unban user:", err)
