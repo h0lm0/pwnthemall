@@ -180,5 +180,7 @@
   "user_deleted_success": "Utilisateur supprimé avec succès !",
   "users_deleted_success": "Utilisateurs sélectionnés supprimés avec succès !",
   "user_banned_success": "Utilisateur banni avec succès !",
-  "users_banned_success": "Utilisateurs sélectionnés bannis avec succès !"
+  "users_banned_success": "Utilisateurs sélectionnés bannis avec succès !",
+  "team_created_success": "Équipe créée avec succès !",
+  "team_joined_success": "Équipe rejointe avec succès !"
 } 
