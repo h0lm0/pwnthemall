@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await axios.post("/api/logout");
     } catch (error) {
-      console.error("Logout failed:", error);
+      // console.error("Logout failed:", error);
     }
     setAccessToken(null);
     setAxiosToken(null);
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await axios.get("/api/pwn");
       setLoggedIn(true);
     } catch (err: any) {
-      console.error("checkAuth failed:", err);
+      // console.error("checkAuth failed:", err);
       await logout(false);
     } finally {
       setAuthChecked(true);
