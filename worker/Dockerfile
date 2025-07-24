@@ -10,7 +10,14 @@ ARG WORKER_PASSWORD
 ENV WORKER_PASSWORD $WORKER_PASSWORD
 
 # Create docker group with dynamic GID
-RUN addgroup -g ${DOCKER_GID} dockerhost
+RUN if ! getent group ${DOCKER_GID}; then \
+      addgroup -g ${DOCKER_GID} dockerhost; \
+    else \
+      EXISTING_GROUP=$(getent group ${DOCKER_GID} | cut -d: -f1); \
+      echo "Group with GID ${DOCKER_GID} already exists: $EXISTING_GROUP"; \
+      addgroup dockerhost || true; \
+    fi
+
 
 # Create non-root user 'docker' with same GID, add to both dockerhost and docker groups
 RUN adduser -D -u 1000 -s /bin/bash -G dockerhost docker && \
