@@ -169,5 +169,8 @@
   "ownership_transferred": "Ownership transferred to {username}.",
   "team_leave_failed": "Failed to leave team.",
   "team_disband_failed": "Failed to disband team.",
-  "ownership_transfer_failed": "Failed to transfer ownership."
+  "ownership_transfer_failed": "Failed to transfer ownership.",
+  "team_transfer_success": "Team ownership transferred successfully!",
+  "team_transfer_and_leave_success": "Ownership transferred and you have left the team.",
+  "team_disband_success": "Team disbanded successfully!"
 } 

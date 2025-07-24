@@ -171,5 +171,8 @@
   "ownership_transferred": "Propriété transférée à {username}.",
   "team_leave_failed": "Échec de la sortie de l'équipe.",
   "team_disband_failed": "Échec de la dissolution de l'équipe.",
-  "ownership_transfer_failed": "Échec du transfert de propriété."
+  "ownership_transfer_failed": "Échec du transfert de propriété.",
+  "team_transfer_success": "Propriété de l'équipe transférée avec succès !",
+  "team_transfer_and_leave_success": "Propriété transférée et vous avez quitté l'équipe.",
+  "team_disband_success": "Équipe dissoute avec succès !"
 } 
