@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { useLanguage } from "@/context/LanguageContext";
+import { toast } from "sonner";
 
 export default function TeamPage() {
   const { t } = useLanguage();
@@ -50,7 +51,6 @@ export default function TeamPage() {
     e.preventDefault();
     if (!createName || !createPassword) return;
     setLoading(true);
-    setError("");
     try {
       const res = await fetch("/api/teams", {
         method: "POST",
@@ -64,9 +64,10 @@ export default function TeamPage() {
         throw new Error(t("invalid_server_response"));
       }
       if (!res.ok) throw new Error(t(data.error) || t("team_creation_failed"));
+      toast.success(t("team_created_success"));
       router.push("/");
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message, { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }
@@ -76,7 +77,6 @@ export default function TeamPage() {
     e.preventDefault();
     if (!joinName || !joinPassword) return;
     setLoading(true);
-    setError("");
     try {
       const res = await fetch("/api/teams/join", {
         method: "POST",
@@ -90,9 +90,10 @@ export default function TeamPage() {
         throw new Error(t("invalid_server_response"));
       }
       if (!res.ok) throw new Error(t(data.error) || t("team_join_failed"));
+      toast.success(t("team_joined_success"));
       router.push("/");
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message, { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }
@@ -152,7 +153,6 @@ export default function TeamPage() {
               </Button>
             </form>
           </div>
-          {error && <div className="text-red-600 mt-6 text-center">{error}</div>}
         </CardContent>
       </Card>
     </div>
