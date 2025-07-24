@@ -19,5 +19,6 @@ export interface Challenge {
   solvers?: User[]
   author: string
   hidden?: boolean
+  solved?: boolean
 }
 

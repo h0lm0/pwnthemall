@@ -11,4 +11,6 @@ p, member, /challenges-categories/:id, read
 p, member, /teams, write
 p, member, /teams/join, write
 p, member, /teams/leave, write
+p, member, /teams/transfer-owner, write
+p, member, /teams/disband, write
 p, admin, /*, *

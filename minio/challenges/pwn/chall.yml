@@ -1,0 +1,9 @@
+name: pwn me 7
+description: pwn me 3 blabla,
+category: misc
+difficulty: easy
+type: standard
+author: swinowz
+flags: ["leflagachanGe"]
+hidden: true
+points: 50
