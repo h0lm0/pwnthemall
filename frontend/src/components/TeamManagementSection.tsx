@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
+import axios from "@/lib/axios"; // Import axios
 
 interface TeamManagementSectionProps {
   team: Team;
@@ -35,13 +36,11 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const [disbanding, setDisbanding] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [disbandError, setDisbandError] = useState<string | null>(null);
-
   const isCreator = team.creatorId === currentUser.id;
   const otherMembers = members.filter(m => m.id !== currentUser.id);
   const isAlone = otherMembers.length === 0;
 
   useEffect(() => {
-    // Show toast if flag is set in localStorage (for post-reload popups)
     const toastData = localStorage.getItem("showToast");
     if (toastData) {
       const { type, message } = JSON.parse(toastData);
@@ -60,7 +59,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setLeaving(true);
     setLeaveError(null);
     try {
-      await fetch("/api/teams/leave", { method: "POST" });
+      await axios.post("/api/teams/leave");
       localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_left_successfully") }));
       setLeaveMsg("team_left_successfully");
       onTeamChange?.();
@@ -77,19 +76,8 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setTransferring(true);
     setTransferError(null);
     try {
-      // First transfer ownership
-      const transferRes = await fetch("/api/teams/transfer-owner", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId: team.id, newOwnerId }),
-      });
-      
-      if (!transferRes.ok) {
-        throw new Error("Transfer failed");
-      }
-
-      // Then leave the team
-      await fetch("/api/teams/leave", { method: "POST" });
+      await axios.post("/api/teams/transfer-owner", { teamId: team.id, newOwnerId });
+      await axios.post("/api/teams/leave");
       localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_transfer_and_leave_success") }));
       setShowTransferForLeave(false);
       onTeamChange?.();
@@ -106,15 +94,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setTransferring(true);
     setTransferError(null);
     try {
-      const res = await fetch("/api/teams/transfer-owner", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId: team.id, newOwnerId }),
-      });
-      
-      if (!res.ok) {
-        throw new Error("Transfer failed");
-      }
+      await axios.post("/api/teams/transfer-owner", { teamId: team.id, newOwnerId });
       localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_transfer_success") }));
       setShowTransferOnly(false);
       onTeamChange?.();
@@ -131,11 +111,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setDisbanding(true);
     setDisbandError(null);
     try {
-      await fetch("/api/teams/disband", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId: team.id }),
-      });
+      await axios.post("/api/teams/disband", { teamId: team.id });
       localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_disband_success") }));
       setShowDisband(false);
       onTeamChange?.();
@@ -148,7 +124,6 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     }
   };
 
-  // Handle creator solo case - leave team actually disbands
   const handleCreatorSoloLeave = async () => {
     await handleDisband();
   };

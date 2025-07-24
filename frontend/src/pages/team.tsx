@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 
@@ -29,17 +29,20 @@ export default function TeamPage() {
     if (authChecked && !loggedIn) {
       router.replace("/login");
     } else if (authChecked && loggedIn) {
-      axios.get("/api/me").then(res => {
-        if (res.data.teamId) {
-          setHasTeam(true);
-          router.replace("/");
-        } else {
-          setHasTeam(false);
-        }
-        setTeamChecked(true);
-      }).catch(() => {
-        setTeamChecked(true);
-      });
+      axios
+        .get("/api/me")
+        .then((res) => {
+          if (res.data.teamId) {
+            setHasTeam(true);
+            router.replace("/");
+          } else {
+            setHasTeam(false);
+          }
+          setTeamChecked(true);
+        })
+        .catch(() => {
+          setTeamChecked(true);
+        });
     }
   }, [authChecked, loggedIn, router]);
 
@@ -52,22 +55,19 @@ export default function TeamPage() {
     if (!createName || !createPassword) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/teams", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: createName, password: createPassword }),
+      const res = await axios.post("/api/teams", {
+        name: createName,
+        password: createPassword,
       });
-      let data;
-      try {
-        data = await res.json();
-      } catch (err) {
-        throw new Error(t("invalid_server_response"));
-      }
-      if (!res.ok) throw new Error(t(data.error) || t("team_creation_failed"));
+
+      if (!res || !res.data) throw new Error(t("invalid_server_response"));
+
+      if (res.data.error) throw new Error(t(res.data.error) || t("team_creation_failed"));
+
       toast.success(t("team_created_success"));
       router.push("/");
     } catch (err: any) {
-      toast.error(err.message, { className: "bg-red-600 text-white" });
+      toast.error(err.message || t("team_creation_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }
@@ -78,22 +78,18 @@ export default function TeamPage() {
     if (!joinName || !joinPassword) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/teams/join", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: joinName, password: joinPassword }),
+      const res = await axios.post("/api/teams/join", {
+        name: joinName,
+        password: joinPassword,
       });
-      let data;
-      try {
-        data = await res.json();
-      } catch (err) {
-        throw new Error(t("invalid_server_response"));
-      }
-      if (!res.ok) throw new Error(t(data.error) || t("team_join_failed"));
+
+      if (!res || !res.data) throw new Error(t("invalid_server_response"));
+      if (res.data.error) throw new Error(t(res.data.error) || t("team_join_failed"));
+
       toast.success(t("team_joined_success"));
       router.push("/");
     } catch (err: any) {
-      toast.error(err.message, { className: "bg-red-600 text-white" });
+      toast.error(err.message || t("team_join_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }
@@ -103,53 +99,51 @@ export default function TeamPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted px-2 py-8">
       <Card className="w-full max-w-2xl mx-auto">
         <CardContent className="py-8">
-          <CardTitle className="text-center text-3xl font-bold mb-2">{t('team')}</CardTitle>
-          <p className="text-center text-muted-foreground mb-8">
-            {t('team_access_required')}
-          </p>
+          <CardTitle className="text-center text-3xl font-bold mb-2">{t("team")}</CardTitle>
+          <p className="text-center text-muted-foreground mb-8">{t("team_access_required")}</p>
           <div className="flex flex-col md:flex-row gap-8 justify-center">
             <form onSubmit={handleCreate} className="flex-1 min-w-[220px] space-y-3">
-              <h2 className="text-xl font-semibold mb-2 text-center">{t('create_team')}</h2>
+              <h2 className="text-xl font-semibold mb-2 text-center">{t("create_team")}</h2>
               <Input
                 type="text"
-                placeholder={t('team_name')}
+                placeholder={t("team_name")}
                 value={createName}
-                onChange={e => setCreateName(e.target.value)}
+                onChange={(e) => setCreateName(e.target.value)}
                 required
                 maxLength={32}
               />
               <Input
                 type="password"
-                placeholder={t('password')}
+                placeholder={t("password")}
                 value={createPassword}
-                onChange={e => setCreatePassword(e.target.value)}
+                onChange={(e) => setCreatePassword(e.target.value)}
                 required
                 maxLength={72}
               />
               <Button type="submit" disabled={loading} className="w-full">
-                {loading ? t('creating') : t('create')}
+                {loading ? t("creating") : t("create")}
               </Button>
             </form>
             <form onSubmit={handleJoin} className="flex-1 min-w-[220px] space-y-3">
-              <h2 className="text-xl font-semibold mb-2 text-center">{t('join_team')}</h2>
+              <h2 className="text-xl font-semibold mb-2 text-center">{t("join_team")}</h2>
               <Input
                 type="text"
-                placeholder={t('team_name_or_id')}
+                placeholder={t("team_name_or_id")}
                 value={joinName}
-                onChange={e => setJoinName(e.target.value)}
+                onChange={(e) => setJoinName(e.target.value)}
                 required
                 maxLength={32}
               />
               <Input
                 type="password"
-                placeholder={t('password')}
+                placeholder={t("password")}
                 value={joinPassword}
-                onChange={e => setJoinPassword(e.target.value)}
+                onChange={(e) => setJoinPassword(e.target.value)}
                 required
                 maxLength={72}
               />
               <Button type="submit" disabled={loading} className="w-full">
-                {loading ? t('joining') : t('join')}
+                {loading ? t("joining") : t("join")}
               </Button>
             </form>
           </div>
@@ -157,4 +151,4 @@ export default function TeamPage() {
       </Card>
     </div>
   );
-} 
+}

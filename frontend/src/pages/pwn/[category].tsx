@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import CategoryContent from "@/components/pwn/CategoryContent";
 import { Challenge } from "@/models/Challenge";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 export default function CategoryPage() {
   const router = useRouter();

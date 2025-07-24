@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import ProfileHeader from "../components/profile-header";
 import ProfileContent from "../components/profile-content";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 export default function ProfilePage() {
   const router = useRouter();
