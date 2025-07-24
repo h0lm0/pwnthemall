@@ -144,7 +144,7 @@
   "disband_team_confirm": "Are you sure you want to disband the team? This will remove all members and delete the team.",
   "disband": "Disband",
   "transfer_ownership": "Transfer ownership",
-  "choose_new_owner": "Choose a new owner for the team:",
+  "choose_new_owner": "Are you sure you want to transfer the team ownership to {username}?",
   "team_transfer_failed": "Failed to transfer team ownership.",
   "no_other_members": "No other members to transfer ownership.",
   "creator": "Creator",
