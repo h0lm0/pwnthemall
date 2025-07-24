@@ -144,7 +144,7 @@
   "disband_team_confirm": "Are you sure you want to disband the team? This will remove all members and delete the team.",
   "disband": "Disband",
   "transfer_ownership": "Transfer ownership",
-  "choose_new_owner": "Choose a new owner for the team:",
+  "choose_new_owner": "Are you sure you want to transfer the team ownership to {username}?",
   "team_transfer_failed": "Failed to transfer team ownership.",
   "no_other_members": "No other members to transfer ownership.",
   "creator": "Creator",
@@ -158,6 +158,7 @@
   "banned": "Banned",
   "yes": "yes",
   "no": "no",
+  "team_disband_confirm": "Are you sure you want to disband the team? This will remove all members and delete the team.",
   "Username already exists": "Username already exists",
   "Email already exists": "Email already exists",
   "User already exists": "User already exists",
@@ -180,5 +181,13 @@
   "user_banned_success": "User banned successfully!",
   "users_banned_success": "Selected users banned successfully!",
   "team_created_success": "Team created successfully!",
-  "team_joined_success": "Joined team successfully!"
+  "team_joined_success": "Joined team successfully!",
+  "team_kick_confirm": "Are you sure you want to kick {username} from the team?",
+  "team_kick_success": "Member kicked from the team!",
+  "team_kick_failed": "Failed to kick member from the team.",
+  "as_creator_leave_choice": "As the team creator, you can either disband the team or transfer ownership and leave.",
+  "transfer_ownership_and_leave": "Transfer ownership and leave",
+  "choose_new_owner_list": "Select a new owner for the team:",
+  "confirm_transfer_to": "Transfer ownership to {username}",
+  "leader_cannot_leave": "The team leader cannot leave. Please transfer ownership or disband the team."
 } 
