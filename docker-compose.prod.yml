@@ -77,24 +77,6 @@ services:
     networks:
       private:
 
-  pgadmin:
-    container_name: pgadmin
-    restart: unless-stopped
-    image: dpage/pgadmin4:latest
-    ports:
-      - "8081:80"
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@mail.com
-      - PGADMIN_DEFAULT_PASSWORD=${POSTGRES_PASSWORD}
-      - PGADMIN_CONFIG_SERVER_MODE=False
-      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
-    depends_on:
-      - db
-    volumes:
-      - ./pgadmin:/var/lib/pgadmin
-      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
-    networks:
-      private:
 
 
   caddy:

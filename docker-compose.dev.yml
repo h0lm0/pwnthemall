@@ -82,6 +82,16 @@ services:
     networks:
       private:
 
+  dbeaver:
+    container_name: dbeaver
+    restart: unless-stopped
+    image: dbeaver/cloudbeaver:latest
+    ports:
+      - "8081:8978"
+    depends_on:
+      - db
+    networks:
+      private:
 
   caddy:
     container_name: caddy
