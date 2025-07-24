@@ -85,9 +85,8 @@ func CheckPolicy(obj string, act string) gin.HandlerFunc {
 		err := config.CEF.LoadPolicy()
 
 		if err != nil {
-
+			log.Fatalf("Casbin error: %v", err)
 			c.AbortWithStatusJSON(500, gin.H{"error": "Internal server error"})
-
 			return
 
 		}
@@ -99,7 +98,7 @@ func CheckPolicy(obj string, act string) gin.HandlerFunc {
 		}
 
 		if !ok {
-			log.Printf("Unauthorized action: sub:%s act:%s obj:%s", sub, act, obj)
+			// log.Printf("Unauthorized action: sub:%s act:%s obj:%s", sub, act, obj)
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "unauthorized: wrong permissions"})
 			return
 		}

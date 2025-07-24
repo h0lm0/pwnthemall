@@ -39,21 +39,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = async () => {
     try {
-      const refreshRes = await axios.post("/api/refresh");
-      const newToken = refreshRes.data.access_token;
-      setAccessToken(newToken);
-      setAxiosToken(newToken);
-
-      await axios.get("/api/pwn");
-      setLoggedIn(true);
+      if (accessToken) {
+        await axios.get("/api/pwn");
+        setLoggedIn(true);
+        return;
+      }
     } catch (err: any) {
-      // console.error("checkAuth failed:", err);
-      await logout(false);
+      if (err?.response?.status === 401) {
+        try {
+          const refreshRes = await axios.post("/api/refresh");
+          const newToken = refreshRes.data.access_token;
+          setAccessToken(newToken);
+          setAxiosToken(newToken);
+          setLoggedIn(true);
+        } catch (error) {
+          console.error("Failed to refresh token:", error);
+          await logout(false);
+        }
+      } else {
+        setLoggedIn(false);
+      }
     } finally {
       setAuthChecked(true);
     }
   };
-
 
   useEffect(() => {
     checkAuth();
