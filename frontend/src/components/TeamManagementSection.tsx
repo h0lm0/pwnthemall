@@ -35,6 +35,10 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const [disbanding, setDisbanding] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [disbandError, setDisbandError] = useState<string | null>(null);
+  const [kicking, setKicking] = useState<number | null>(null);
+  const [kickLoading, setKickLoading] = useState(false);
+  const [showKickDialog, setShowKickDialog] = useState(false);
+  const [kickTarget, setKickTarget] = useState<User | null>(null);
 
   const isCreator = team.creatorId === currentUser.id;
   const otherMembers = members.filter(m => m.id !== currentUser.id);
@@ -153,6 +157,29 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     await handleDisband();
   };
 
+  const handleKick = async (userId: number, username: string) => {
+    setKickLoading(true);
+    try {
+      const res = await fetch("/api/teams/kick", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId: team.id, userId }),
+      });
+      if (!res.ok) throw new Error();
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_kick_success") }));
+      setShowKickDialog(false);
+      setKickTarget(null);
+      onTeamChange?.();
+      setTimeout(() => window.location.reload(), 200);
+    } catch (err) {
+      toast.error(t("team_kick_failed"), { className: "bg-red-600 text-white" });
+      setShowKickDialog(false);
+      setKickTarget(null);
+    } finally {
+      setKickLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -162,7 +189,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
         <span className="font-semibold">{t('members')}:</span>
         <ul className="list-disc ml-6">
           {members.map((m) => (
-            <li key={m.id}>
+            <li key={m.id} className="flex items-center gap-2">
               {m.username}
               {m.id === team.creatorId && <span className="text-muted-foreground ml-2">({t('creator')})</span>}
             </li>
@@ -239,6 +266,63 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
           >
             {t('disband_team')}
           </Button>
+          {/* Kick Member Button */}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowKickDialog(true)}
+            disabled={kickLoading}
+          >
+            {t('delete')}
+          </Button>
+          {/* Kick Member Dialog */}
+          <AlertDialog open={showKickDialog} onOpenChange={setShowKickDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('delete')}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('team_kick_confirm', { username: '' })}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2 my-4">
+                {otherMembers.filter(m => m.id !== team.creatorId).map((m) => (
+                  <Button
+                    key={m.id}
+                    onClick={() => setKickTarget(m)}
+                    disabled={kickLoading}
+                    variant="outline"
+                  >
+                    {m.username}
+                  </Button>
+                ))}
+              </div>
+              {kickTarget && (
+                <div className="mt-4">
+                  <div className="mb-2 text-center">{t('team_kick_confirm', { username: kickTarget.username })}</div>
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleKick(kickTarget.id, kickTarget.username)}
+                      disabled={kickLoading}
+                    >
+                      {t('delete')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setKickTarget(null)}
+                      disabled={kickLoading}
+                    >
+                      {t('cancel')}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setKickTarget(null)}>{t('cancel')}</AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           
           {/* Leave Team Button */}
           <Button 

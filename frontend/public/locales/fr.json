@@ -182,5 +182,8 @@
   "user_banned_success": "Utilisateur banni avec succès !",
   "users_banned_success": "Utilisateurs sélectionnés bannis avec succès !",
   "team_created_success": "Équipe créée avec succès !",
-  "team_joined_success": "Équipe rejointe avec succès !"
+  "team_joined_success": "Équipe rejointe avec succès !",
+  "team_kick_confirm": "Êtes-vous sûr de vouloir exclure {username} de l'équipe ?",
+  "team_kick_success": "Membre exclu de l'équipe !",
+  "team_kick_failed": "Échec de l'exclusion du membre de l'équipe."
 } 

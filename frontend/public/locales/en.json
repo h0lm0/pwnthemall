@@ -180,5 +180,8 @@
   "user_banned_success": "User banned successfully!",
   "users_banned_success": "Selected users banned successfully!",
   "team_created_success": "Team created successfully!",
-  "team_joined_success": "Joined team successfully!"
+  "team_joined_success": "Joined team successfully!",
+  "team_kick_confirm": "Are you sure you want to kick {username} from the team?",
+  "team_kick_success": "Member kicked from the team!",
+  "team_kick_failed": "Failed to kick member from the team."
 } 
