@@ -167,12 +167,10 @@ function ProfileContentInner() {
       const res: AxiosResponse<any> = await axios.patch("/api/me", { username: newUsername });
       setUsername(res.data.username);
       setNewUsername(res.data.username);
-      toast.success(t("username_updated"));
-      // Update the auth context with new user info
-      if (typeof window !== 'undefined') {
-        // Trigger a re-check of auth to get updated user info
-        window.dispatchEvent(new CustomEvent('auth:refresh'));
-      }
+      // Refresh the page first, then show toast
+      window.location.reload();
+      // Note: Toast won't show after reload, so we'll use localStorage to show it after reload
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("username_updated") }));
     } catch (err: any) {
       toast.error(t(err?.response?.data?.error || "Failed to update username"), { className: "bg-red-600 text-white" });
     }

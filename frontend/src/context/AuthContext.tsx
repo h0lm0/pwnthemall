@@ -1,14 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import axios, { setToken as setAxiosToken } from "@/lib/axios";
+import axios from "@/lib/axios";
 import { clearTranslationCache } from "@/context/LanguageContext";
 
 interface AuthContextType {
   loggedIn: boolean;
-  login: (token: string) => void;
+  login: () => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   authChecked: boolean;
-  accessToken: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,27 +15,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(() => {
-    // Initialize from localStorage if available
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        // Also set the token in axios
-        setAxiosToken(token);
-      }
-      return token;
-    }
-    return null;
-  });
 
-  const login = (token: string) => {
-    setAccessToken(token);
-    setAxiosToken(token);
+  const login = () => {
     setLoggedIn(true);
-    // Persist token to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', token);
-    }
   };
 
   const logout = async (redirect = true) => {
@@ -45,13 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       // console.error("Logout failed:", error);
     }
-    setAccessToken(null);
-    setAxiosToken(null);
     setLoggedIn(false);
-    // Clear token from localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-    }
     // Clear any cached data
     clearTranslationCache();
     if (redirect && typeof window !== "undefined" && window.location.pathname !== "/login") {
@@ -61,40 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = async () => {
     try {
-      if (accessToken) {
-        await axios.get("/api/pwn");
-        setLoggedIn(true);
-        return;
-      } else {
-        // No access token, try to refresh from cookies
-        try {
-          const refreshRes = await axios.post("/api/refresh");
-          const newToken = refreshRes.data.access_token;
-          setAccessToken(newToken);
-          setAxiosToken(newToken);
-          setLoggedIn(true);
-          // Persist new token to localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('access_token', newToken);
-          }
-          return;
-        } catch (error) {
-          // No valid refresh token, user is not logged in
-          setLoggedIn(false);
-        }
-      }
+      await axios.get("/api/pwn");
+      setLoggedIn(true);
     } catch (err: any) {
       if (err?.response?.status === 401) {
         try {
-          const refreshRes = await axios.post("/api/refresh");
-          const newToken = refreshRes.data.access_token;
-          setAccessToken(newToken);
-          setAxiosToken(newToken);
+          await axios.post("/api/refresh");
           setLoggedIn(true);
-          // Persist new token to localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('access_token', newToken);
-          }
         } catch (error) {
           console.error("Failed to refresh token:", error);
           await logout(false);
@@ -127,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ loggedIn, login, logout, checkAuth, authChecked, accessToken }}
+      value={{ loggedIn, login, logout, checkAuth, authChecked }}
     >
       {children}
     </AuthContext.Provider>

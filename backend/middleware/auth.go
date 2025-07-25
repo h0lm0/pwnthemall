@@ -68,9 +68,25 @@ func getClaimsFromHeader(authHeader string) (*utils.TokenClaims, string) {
 	return token.Claims.(*utils.TokenClaims), ""
 }
 
+func getClaimsFromCookie(c *gin.Context) (*utils.TokenClaims, string) {
+	tokenStr, err := c.Cookie("access_token")
+	if err != nil {
+		return nil, "missing access token cookie"
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &utils.TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return utils.AccessSecret, nil
+	})
+	if err != nil || !token.Valid {
+		return nil, "invalid access token"
+	}
+
+	return token.Claims.(*utils.TokenClaims), ""
+}
+
 func CheckPolicy(obj string, act string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, errMsg := getClaimsFromHeader(c.GetHeader("Authorization"))
+		claims, errMsg := getClaimsFromCookie(c)
 		if claims == nil {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": errMsg})
 			return
@@ -109,7 +125,7 @@ func CheckPolicy(obj string, act string) gin.HandlerFunc {
 
 func AuthRequired(needTeam bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := getClaimsFromHeader(c.GetHeader("Authorization"))
+		claims, err := getClaimsFromCookie(c)
 		if claims == nil {
 			c.AbortWithStatusJSON(403, gin.H{"error": err})
 			return
