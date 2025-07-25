@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
-import axios from "@/lib/axios"; // Import axios
+import axios from "@/lib/axios";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TrashIcon, UserCircleIcon, StarIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from "@/components/ui/tooltip";
@@ -393,12 +393,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const handleKick = async (userId: number, username: string) => {
     setKickLoading(true);
     try {
-      const res = await fetch("/api/teams/kick", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId: team.id, userId }),
-      });
-      if (!res.ok) throw new Error();
+      await axios.post("/api/teams/kick", { teamId: team.id, userId });
       localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_kick_success") }));
       setShowKickDialog(false);
       setKickTarget(null);
