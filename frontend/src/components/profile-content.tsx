@@ -166,11 +166,11 @@ function ProfileContentInner() {
     try {
       const res: AxiosResponse<any> = await axios.patch("/api/me", { username: newUsername });
       setUsername(res.data.username);
-      // Set toast flag before reload
+      setNewUsername(res.data.username);
+      // Refresh the page first, then show toast
+      window.location.reload();
+      // Note: Toast won't show after reload, so we'll use localStorage to show it after reload
       localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("username_updated") }));
-      setTimeout(() => {
-        window.location.reload();
-      }, 200);
     } catch (err: any) {
       toast.error(t(err?.response?.data?.error || "Failed to update username"), { className: "bg-red-600 text-white" });
     }
@@ -236,7 +236,11 @@ function ProfileContentInner() {
     try {
       await axios.post("/api/teams/leave");
       setLeaveMsg("team_left_successfully");
-      setTimeout(() => window.location.reload(), 1000);
+      toast.success(t("team_left_successfully"));
+      // Update local state instead of reloading
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:refresh'));
+      }
     } catch (err: any) {
       setLeaveError(t(err?.response?.data?.error) || t("team_leave_failed"));
     } finally {

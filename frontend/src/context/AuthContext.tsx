@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import axios, { setToken as setAxiosToken } from "@/lib/axios";
+import axios from "@/lib/axios";
+import { clearTranslationCache } from "@/context/LanguageContext";
 
 interface AuthContextType {
   loggedIn: boolean;
-  login: (token: string) => void;
+  login: () => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   authChecked: boolean;
-  accessToken: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,11 +15,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const login = (token: string) => {
-    setAccessToken(token);
-    setAxiosToken(token);
+  const login = () => {
     setLoggedIn(true);
   };
 
@@ -29,9 +26,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       // console.error("Logout failed:", error);
     }
-    setAccessToken(null);
-    setAxiosToken(null);
     setLoggedIn(false);
+    // Clear any cached data
+    clearTranslationCache();
     if (redirect && typeof window !== "undefined" && window.location.pathname !== "/login") {
       window.location.href = "/login";
     }
@@ -39,18 +36,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = async () => {
     try {
-      if (accessToken) {
-        await axios.get("/api/pwn");
-        setLoggedIn(true);
-        return;
-      }
+      await axios.get("/api/pwn");
+      setLoggedIn(true);
     } catch (err: any) {
       if (err?.response?.status === 401) {
         try {
-          const refreshRes = await axios.post("/api/refresh");
-          const newToken = refreshRes.data.access_token;
-          setAccessToken(newToken);
-          setAxiosToken(newToken);
+          await axios.post("/api/refresh");
           setLoggedIn(true);
         } catch (error) {
           console.error("Failed to refresh token:", error);
@@ -68,9 +59,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
+  // Listen for auth refresh events (e.g., after username update, team changes)
+  useEffect(() => {
+    const handleAuthRefresh = () => {
+      checkAuth();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:refresh', handleAuthRefresh);
+      return () => {
+        window.removeEventListener('auth:refresh', handleAuthRefresh);
+      };
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ loggedIn, login, logout, checkAuth, authChecked, accessToken }}
+      value={{ loggedIn, login, logout, checkAuth, authChecked }}
     >
       {children}
     </AuthContext.Provider>

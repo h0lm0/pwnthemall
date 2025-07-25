@@ -29,7 +29,7 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const res = await axios.post("/api/login", form);
-      login(res.data.access_token);
+      login();
       localStorage.setItem("showToast", JSON.stringify({ type: "success", key: "login_success", lang: language }));
       router.push("/pwn");
     } catch (error: any) {

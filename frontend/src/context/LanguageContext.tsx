@@ -137,7 +137,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // If translation not found, log it and return key
     if (!str) {
-      console.warn(`Translation missing for key: "${key}" in language: ${language}`);
+      //console.warn(`Translation missing for key: "${key}" in language: ${language}`);
       return key;
     }
     

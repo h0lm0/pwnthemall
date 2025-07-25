@@ -127,10 +127,12 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create refresh token"})
 		return
 	}
-	// pas de secure mais httponly
-	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", false, true)
+	
+	// Set both tokens as secure HTTP-only cookies
+	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true) // 1 hour, secure, httpOnly
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", true, true) // 7 days, secure, httpOnly
 
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken})
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
 
 func Refresh(c *gin.Context) {
@@ -167,7 +169,10 @@ func Refresh(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken})
+	// Set the new access token as a secure HTTP-only cookie
+	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true) // 1 hour, secure, httpOnly
+
+	c.JSON(http.StatusOK, gin.H{"message": "Token refreshed"})
 }
 
 // Logout clears the user session
@@ -178,8 +183,9 @@ func Logout(c *gin.Context) {
 	session.Options(sessions.Options{Path: "/", MaxAge: -1})
 	session.Save()
 
-	// Clear the refresh token cookie
-	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+	// Clear both JWT cookies
+	c.SetCookie("access_token", "", -1, "/", "", true, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", true, true)
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
@@ -216,7 +222,10 @@ func UpdateCurrentUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Username updated"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Username updated",
+		"username": user.Username,
+	})
 }
 
 // Update current user's password
