@@ -38,45 +38,33 @@ const LanguageContext = createContext<LanguageContextProps>({
 const TRANSLATION_VERSION = '1.0.0';
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
+  const [language, setLanguageState] = useState<Language>('en');
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // On mount, load language and translations from localStorage if available
+  useEffect(() => {
+    let initialLang: Language = 'en';
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('language') as Language) || 'en';
+      initialLang = (localStorage.getItem('language') as Language) || 'en';
     }
-    return 'en';
-  });
-  const [translations, setTranslations] = useState<Record<string, string>>(() => {
-    // Try to load from localStorage first
+    setLanguageState(initialLang);
+    // Try to load cached translations
     if (typeof window !== 'undefined') {
-      const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
+      const cacheKey = `translations_${initialLang}_v${TRANSLATION_VERSION}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try {
-          return JSON.parse(cached);
+          setTranslations(JSON.parse(cached));
+          setIsLoaded(true);
+          setIsInitialLoad(false);
         } catch (e) {
-          // If parsing fails, remove corrupted cache
           localStorage.removeItem(cacheKey);
         }
       }
-      
-      // Clean up old version caches
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith(`translations_${language}_v`) && key !== cacheKey) {
-          localStorage.removeItem(key);
-        }
-      });
     }
-    return {};
-  });
-  const [isLoaded, setIsLoaded] = useState(() => {
-    // If we have cached translations, we can start as loaded
-    if (typeof window !== 'undefined') {
-      const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
-      const cached = localStorage.getItem(cacheKey);
-      return !!cached;
-    }
-    return false;
-  });
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  }, []);
 
   useEffect(() => {
     const loadTranslations = async () => {
@@ -96,7 +84,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             localStorage.removeItem(cacheKey);
           }
         }
-        
         // Clean up old version caches
         Object.keys(localStorage).forEach(key => {
           if (key.startsWith(`translations_${language}_v`) && key !== cacheKey) {
@@ -104,9 +91,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         });
       }
-
       setIsLoaded(false);
-      
       try {
         const res = await fetch(`/locales/${language}.json`);
         if (!res.ok) {
@@ -114,34 +99,31 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
         const data = await res.json();
         setTranslations(data);
-        
         // Cache translations in localStorage with version
         if (typeof window !== 'undefined') {
           const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
           localStorage.setItem(cacheKey, JSON.stringify(data));
         }
-        
         // Add minimum loading time to prevent flickering only on initial load
         if (isInitialLoad) {
           await new Promise(resolve => setTimeout(resolve, 150));
           setIsInitialLoad(false);
         }
-        
         setIsLoaded(true);
       } catch (error) {
         console.error('Failed to load translations:', error);
         setTranslations({});
-        
         if (isInitialLoad) {
           await new Promise(resolve => setTimeout(resolve, 150));
           setIsInitialLoad(false);
         }
-        
         setIsLoaded(true);
       }
     };
-
-    loadTranslations();
+    // Only load if not already loaded from cache
+    if (!isLoaded) {
+      loadTranslations();
+    }
   }, [language, isInitialLoad]);
 
   const setLanguage = (lang: Language) => {
