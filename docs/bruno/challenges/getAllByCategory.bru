@@ -1,0 +1,15 @@
+meta {
+  name: getAllByCategory
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{URL}}/api/challenges/category/:category
+  body: none
+  auth: inherit
+}
+
+params:path {
+  category: 
+}
