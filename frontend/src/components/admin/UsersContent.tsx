@@ -1,6 +1,7 @@
 import Head from "next/head"
 import { useEffect, useState } from "react"
-import axios from "axios"
+import axios from "@/lib/axios";
+
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"

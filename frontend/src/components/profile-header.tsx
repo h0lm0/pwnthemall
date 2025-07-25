@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios, { AxiosResponse } from "axios";
+import axios from "@/lib/axios";
+import { AxiosResponse } from "axios";
 import { User } from "@/models/User";
 import { Card, CardContent } from "@/components/ui/card";
 

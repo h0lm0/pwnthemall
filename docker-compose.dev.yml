@@ -39,8 +39,13 @@ services:
       MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
       SEED_DATABASE: ${SEED_DATABASE}
       SEED_CASBIN_CSV: ${SEED_CASBIN_CSV}
+      SEED_CASBIN: ${SEED_CASBIN}
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
       PTA_SITE_NAME: ${PTA_SITE_NAME}
       PTA_FLAG_PREFIX: ${PTA_FLAG_PREFIX}
+      PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
+      PTA_DOCKER_TLS_VERIFY: ${PTA_DOCKER_TLS_VERIFY}
     volumes:
       - ./backend:/app
       - ./shared/worker:/home/app/.ssh/worker

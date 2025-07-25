@@ -4,10 +4,14 @@ import (
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"pwnthemall/utils"
+	"strconv"
 	"strings"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -60,7 +64,7 @@ func Register(c *gin.Context) {
 		Role:     "member",
 		// Uuid:     uuid.NewString(),
 	}
-	
+
 	if err := config.DB.Create(&user).Error; err != nil {
 		// Check if it's a unique constraint violation
 		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint failed") {
@@ -112,21 +116,71 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	session := sessions.Default(c)
-	session.Set("user_id", user.ID)
-	session.Set("user_role", user.Role)
-	// session.Set("user_uuid", user.Uuid)
-	session.Save()
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create access token"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "logged in"})
+	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create refresh token"})
+		return
+	}
+	// pas de secure mais httponly
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"access_token": accessToken})
+}
+
+func Refresh(c *gin.Context) {
+	tokenStr, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing refresh token"})
+		return
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return utils.RefreshSecret, nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		return
+	}
+
+	claims := token.Claims.(*jwt.RegisteredClaims)
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "can't read subject"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		return
+	}
+
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate access token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"access_token": accessToken})
 }
 
 // Logout clears the user session
 func Logout(c *gin.Context) {
+	// Clear the session
 	session := sessions.Default(c)
 	session.Clear()
 	session.Options(sessions.Options{Path: "/", MaxAge: -1})
 	session.Save()
+
+	// Clear the refresh token cookie
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
 
