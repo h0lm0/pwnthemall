@@ -2,6 +2,11 @@ import axios from "axios";
 
 let accessToken: string | null = null;
 
+// Initialize token from localStorage if available
+if (typeof window !== 'undefined') {
+  accessToken = localStorage.getItem('access_token');
+}
+
 export const setToken = (token: string | null) => {
   accessToken = token;
 };

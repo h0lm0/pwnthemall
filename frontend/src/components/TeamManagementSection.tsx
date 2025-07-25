@@ -286,8 +286,16 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const onConfirmLeave = async () => {
     setLeaving(true);
     try {
-      await handleSimpleLeave();
+      await axios.post("/api/teams/leave");
+      toast.success(t("team_left_successfully"));
       setShowLeaveDialog(false);
+      onTeamChange?.();
+      // Trigger auth refresh to update user info
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:refresh'));
+      }
+    } catch (err: any) {
+      toast.error(t("team_leave_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setLeaving(false);
     }
@@ -334,35 +342,39 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     }
   };
 
-  const handleTransferAndLeave = async (newOwnerId: number) => {
+  const handleTransferOnly = async (newOwnerId: number) => {
     setTransferring(true);
-    setTransferError(null);
     try {
       await axios.post("/api/teams/transfer-owner", { teamId: team.id, newOwnerId });
-      await axios.post("/api/teams/leave");
-      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_transfer_and_leave_success") }));
-      setShowTransferForLeave(false);
+      toast.success(t("team_transfer_success"));
+      setShowTransferOnly(false);
+      setTransferTarget(null);
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 200);
+      // Trigger auth refresh to update user info
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:refresh'));
+      }
     } catch (err: any) {
-      setTransferError(t("team_transfer_failed"));
       toast.error(t("team_transfer_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setTransferring(false);
     }
   };
 
-  const handleTransferOnly = async (newOwnerId: number) => {
+  const handleTransferAndLeave = async (newOwnerId: number) => {
     setTransferring(true);
-    setTransferError(null);
     try {
       await axios.post("/api/teams/transfer-owner", { teamId: team.id, newOwnerId });
-      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_transfer_success") }));
-      setShowTransferOnly(false);
+      await axios.post("/api/teams/leave");
+      toast.success(t("team_transfer_and_leave_success"));
+      setShowTransferForLeave(false);
+      setTransferTarget(null);
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 200);
+      // Trigger auth refresh to update user info
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:refresh'));
+      }
     } catch (err: any) {
-      setTransferError(t("team_transfer_failed"));
       toast.error(t("team_transfer_failed"), { className: "bg-red-600 text-white" });
     } finally {
       setTransferring(false);
@@ -374,10 +386,14 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setDisbandError(null);
     try {
       await axios.post("/api/teams/disband", { teamId: team.id });
-      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_disband_success") }));
+      toast.success(t("team_disband_success"));
       setShowDisband(false);
+      // Update local state instead of reloading
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 200);
+      // Trigger auth refresh to update user info
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:refresh'));
+      }
     } catch (err: any) {
       setDisbandError(t("team_disband_failed"));
       toast.error(t("team_disband_failed"), { className: "bg-red-600 text-white" });
@@ -394,11 +410,14 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setKickLoading(true);
     try {
       await axios.post("/api/teams/kick", { teamId: team.id, userId });
-      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_kick_success") }));
+      toast.success(t("team_kick_success"));
       setShowKickDialog(false);
       setKickTarget(null);
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 200);
+      // Trigger auth refresh to update user info
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:refresh'));
+      }
     } catch (err) {
       toast.error(t("team_kick_failed"), { className: "bg-red-600 text-white" });
       setShowKickDialog(false);
