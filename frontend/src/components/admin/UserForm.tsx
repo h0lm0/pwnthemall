@@ -11,9 +11,10 @@ interface UserFormProps {
   initialData?: UserFormData;
   isEdit?: boolean;
   onSubmit: (data: UserFormData) => void;
+  apiError?: string | null;
 }
 
-export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProps) {
+export default function UserForm({ initialData, isEdit, onSubmit, apiError }: UserFormProps) {
   const { t } = useLanguage();
   const [form, setForm] = useState<UserFormData>({
     username: initialData?.username || "",
@@ -21,7 +22,7 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
     password: "",
     role: initialData?.role || ""
   });
-  const [errors, setErrors] = useState<{username?: string, email?: string, password?: string}>({});
+  const [errors, setErrors] = useState<{username?: string, email?: string, password?: string, role?: string}>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,15 +34,31 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
     setForm({ ...form, [name]: value });
   };
 
+  const handleRoleChange = (role: string) => {
+    let error = "";
+    if (!role) error = t('role_required');
+    setErrors({ ...errors, role: error });
+    setForm((f: UserFormData) => ({ ...f, role }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.username.length > 32 || (form.email?.length ?? 0) > 254) return;
-    if (form.password && form.password.length > 72) return;
+    let hasError = false;
+    const newErrors = { ...errors };
+    if (!form.role) {
+      newErrors.role = t('role_required');
+      hasError = true;
+    }
+    if (form.username.length > 32 || (form.email?.length ?? 0) > 254) hasError = true;
+    if (form.password && form.password.length > 72) hasError = true;
+    setErrors(newErrors);
+    if (hasError) return;
     onSubmit(form);
   };
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 p-2">
+      {apiError && <div className="text-red-500 text-sm mb-2">{apiError}</div>}
       <div className="grid gap-2">
         <Label htmlFor="username">{t('username')}</Label>
         <Input id="username" name="username" value={form.username} onChange={handleChange} required autoFocus maxLength={32} />
@@ -59,7 +76,7 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
       </div>
       <div className="grid gap-2">
         <Label htmlFor="role">{t('role')}</Label>
-        <Select value={form.role} onValueChange={(role: string) => setForm((f: UserFormData) => ({ ...f, role }))}>
+        <Select value={form.role} onValueChange={handleRoleChange} required>
           <SelectTrigger id="role" name="role">
             <SelectValue placeholder={t('select_role')} />
           </SelectTrigger>
@@ -68,6 +85,7 @@ export default function UserForm({ initialData, isEdit, onSubmit }: UserFormProp
             <SelectItem value="member">{t('member')}</SelectItem>
           </SelectContent>
         </Select>
+        {errors.role && <span className="text-red-500 text-xs">{errors.role}</span>}
       </div>
       <Button type="submit" className="w-full">{isEdit ? t('update_user') : t('create_user_button')}</Button>
     </form>
