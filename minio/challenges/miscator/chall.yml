@@ -1,8 +1,9 @@
 name: miscator
-description: miscatorrr blabla,
+description: |
+  El famoso miscator
 category: misc
 difficulty: easy
-type: standard
+type: docker
 author: swinowz
 flags: ["leflagachanGe"]
 hidden: true

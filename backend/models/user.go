@@ -12,5 +12,6 @@ type User struct {
 	UpdatedAt   time.Time    `json:"updatedAt"`
 	TeamID      *uint        `json:"teamId,omitempty"`
 	Team        *Team        `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"team,omitempty"`
-	Submissions []Submission `gorm:"foreignKey:UserID" json:"submissions,omitempty"`
+	Submissions []Submission `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"submissions,omitempty"`
+	Banned      bool         `json:"banned"`
 }

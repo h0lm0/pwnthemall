@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import axios, { AxiosResponse } from "axios";
+import axios from "@/lib/axios";
+import { AxiosResponse } from "axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,10 @@ import { useTheme } from "next-themes";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { Team } from "@/models/Team";
+import { User } from "@/models/User";
+import { TeamManagementSection } from "@/components/TeamManagementSection";
+import { toast } from "sonner";
 
 const TABS = ["Account", "Security", "Appearance", "Team"] as const;
 type Tab = typeof TABS[number];
@@ -54,7 +59,15 @@ export default function ProfileContent() {
 
 function ProfileContentInner() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<Tab>("Account");
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('profileActiveTab');
+      if (saved && ["Account", "Security", "Appearance", "Team"].includes(saved)) {
+        return saved as Tab;
+      }
+    }
+    return "Account";
+  });
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [loading, setLoading] = useState(true);
@@ -72,25 +85,46 @@ function ProfileContentInner() {
   const [confirmPassword, setConfirmPassword] = useState(false);
 
   // Team state
-  const [team, setTeam] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
+  const [team, setTeam] = useState<Team | null>(null);
+  const [members, setMembers] = useState<User[]>([]);
   const [teamLoading, setTeamLoading] = useState(true);
   const [teamError, setTeamError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [leaveMsg, setLeaveMsg] = useState<string | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // Show toast if flag is set in localStorage
+    const toastData = localStorage.getItem("showToast");
+    if (toastData) {
+      const { type, message } = JSON.parse(toastData);
+      if (message && typeof message === "string" && message.trim() !== "") {
+        if (type === "success") {
+          toast.success(t(message));
+        } else {
+          toast.error(t(message), { className: "bg-red-600 text-white" });
+        }
+      }
+      localStorage.removeItem("showToast");
+    }
     setLoading(true);
     axios.get("/api/me").then((res: AxiosResponse<any>) => {
       setUsername(res.data.username);
       setNewUsername(res.data.username);
+      setCurrentUser({
+        id: res.data.id,
+        username: res.data.username,
+        email: res.data.email,
+        role: res.data.role,
+        banned: res.data.banned || false,
+      });
       // fetch team info
       if (res.data.teamId) {
         setTeamLoading(true);
-        setTeam(res.data.team)
-        setMembers(res.data.team.members)
-        setTeamError(null)
+        setTeam(res.data.team as Team);
+        setMembers(res.data.team.members as User[]);
+        setTeamError(null);
         setTeamLoading(false);
       } else {
         setTeam(null);
@@ -100,11 +134,18 @@ function ProfileContentInner() {
     }).catch(() => {
       setUsername("");
       setNewUsername("");
+      setCurrentUser(null);
       setTeam(null);
       setMembers([]);
       setTeamLoading(false);
     }).finally(() => setLoading(false));
-  }, []);
+  }, [t]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('profileActiveTab', activeTab);
+    }
+  }, [activeTab]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setNewUsername(e.target.value);
@@ -125,12 +166,13 @@ function ProfileContentInner() {
     try {
       const res: AxiosResponse<any> = await axios.patch("/api/me", { username: newUsername });
       setUsername(res.data.username);
-      setMessage("Username updated successfully!");
-      setTimeout(() => {
-        window.location.reload();
-      }, 200);
+      setNewUsername(res.data.username);
+      // Refresh the page first, then show toast
+      window.location.reload();
+      // Note: Toast won't show after reload, so we'll use localStorage to show it after reload
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("username_updated") }));
     } catch (err: any) {
-      setError(err?.response?.data?.error || "Failed to update username");
+      toast.error(t(err?.response?.data?.error || "Failed to update username"), { className: "bg-red-600 text-white" });
     }
     setConfirmUsername(false);
   };
@@ -140,9 +182,10 @@ function ProfileContentInner() {
     setError(null);
     try {
       await axios.delete("/api/me");
+      toast.success(t("delete_account_confirm"));
       window.location.href = "/login";
     } catch (err: any) {
-      setError(err?.response?.data?.error || "Failed to delete account");
+      toast.error(t(err?.response?.data?.error || "Failed to delete account"), { className: "bg-red-600 text-white" });
     }
   };
 
@@ -175,11 +218,11 @@ function ProfileContentInner() {
     setPwLoading(true);
     try {
       await axios.put("/api/me/password", { current: currentPassword, new: newPassword });
-      setPwMessage("Password updated successfully!");
+      toast.success(t("password_updated"));
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
-      setPwError(err?.response?.data?.error || "Failed to update password");
+      toast.error(t(err?.response?.data?.error || "Failed to update password"), { className: "bg-red-600 text-white" });
     } finally {
       setPwLoading(false);
       setConfirmPassword(false);
@@ -193,7 +236,11 @@ function ProfileContentInner() {
     try {
       await axios.post("/api/teams/leave");
       setLeaveMsg("team_left_successfully");
-      setTimeout(() => window.location.reload(), 1000);
+      toast.success(t("team_left_successfully"));
+      // Update local state instead of reloading
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:refresh'));
+      }
     } catch (err: any) {
       setLeaveError(t(err?.response?.data?.error) || t("team_leave_failed"));
     } finally {
@@ -229,10 +276,6 @@ function ProfileContentInner() {
                 maxLength={32}
               />
               {usernameError && <span className="text-red-500 text-xs">{t('username_too_long')}</span>}
-            </div>
-            <div style={{ minHeight: 24 }}>
-              {error && <div className="text-red-600 mt-2">{t(error)}</div>}
-              {!error && message && <div className="text-green-600 mt-2">{t(message)}</div>}
             </div>
             <Button
               type="button"
@@ -298,12 +341,6 @@ function ProfileContentInner() {
               <label className="block text-sm font-medium mb-1" htmlFor="new">{t('new_password')}</label>
               <Input id="new" name="new" type="password" value={newPassword} onChange={handleNewPasswordChange} required autoComplete="new-password" disabled={pwLoading} maxLength={72} />
             </div>
-            <div style={{ minHeight: 24 }}>
-              {pwValidationError && <div className="text-red-600 mt-2">{t('password_too_short')}</div>}
-              {pwTooLongError && <div className="text-red-600 mt-2">{t('password_too_long')}</div>}
-              {pwError && <div className="text-red-600 mt-2">{t(pwError)}</div>}
-              {!pwError && !pwValidationError && pwMessage && <div className="text-green-600 mt-2">{t(pwMessage)}</div>}
-            </div>
             <Button
               type="button"
               className="w-full"
@@ -341,48 +378,10 @@ function ProfileContentInner() {
         {activeTab === "Team" && (
           <div className="space-y-4 max-w-md">
             {teamLoading ? (
-              <div>{t('loading_team_info')}</div>
-            ) : team ? (
-              <>
-                <div>
-                  <span className="font-semibold">{t('team_name')}:</span> {team.name}
-                </div>
-                <div>
-                  <span className="font-semibold">{t('members')}:</span>
-                  <ul className="list-disc ml-6">
-                    {members.map((m) => (
-                      <li key={m.id}>{m.username}</li>
-                    ))}
-                  </ul>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button type="button" variant="destructive" className="w-full" disabled={leaving}>
-                      {t('leave_team')}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t('leave_team')}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {t('leave_team_confirm')}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleLeaveTeam}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        {t('leave')}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                {leaveMsg && <div className="text-green-600 mt-2">{t(leaveMsg)}</div>}
-                {leaveError && <div className="text-red-600 mt-2">{t(leaveError)}</div>}
-              </>
-            ) :
+              <div></div>
+            ) : team && currentUser ? (
+              <TeamManagementSection team={team} members={members} currentUser={currentUser} onTeamChange={() => {}} />
+            ) : (
               <div className="flex flex-col items-start gap-4">
                 <div className="text-red-600">{t('not_in_team')}</div>
                 <Link href="/team" passHref legacyBehavior>
@@ -391,7 +390,7 @@ function ProfileContentInner() {
                   </Button>
                 </Link>
               </div>
-            }
+            )}
             {teamError && <div className="text-red-600 mt-2">{t(teamError)}</div>}
           </div>
         )}
@@ -432,7 +431,6 @@ function ThemeSelector() {
           />
         ))}
       </div>
-      <div className="text-xs text-muted-foreground mt-2">Your theme preference is saved in your browser and will be used across the site.</div>
     </div>
   );
 }

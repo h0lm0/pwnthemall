@@ -4,11 +4,15 @@ import (
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"pwnthemall/utils"
+	"strconv"
+	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type RegisterInput struct {
@@ -62,7 +66,22 @@ func Register(c *gin.Context) {
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Check if it's a unique constraint violation
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			if strings.Contains(err.Error(), "users_username_key") || strings.Contains(err.Error(), "username") {
+				c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
+				return
+			}
+			if strings.Contains(err.Error(), "users_email_key") || strings.Contains(err.Error(), "email") {
+				c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+				return
+			}
+			// Generic duplicate error
+			c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
+			return
+		}
+		// Other database errors
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
@@ -83,30 +102,91 @@ func Login(c *gin.Context) {
 
 	var user models.User
 	if err := config.DB.Where("username = ? OR email = ?", input.Identifier, input.Identifier).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
 		return
 	}
 
-	session := sessions.Default(c)
-	session.Set("user_id", user.ID)
-	session.Set("user_role", user.Role)
-	// session.Set("user_uuid", user.Uuid)
-	session.Save()
+	if user.Banned {
+		c.JSON(http.StatusTeapot, gin.H{"error": "banned"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "logged in"})
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create access token"})
+		return
+	}
+
+	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create refresh token"})
+		return
+	}
+	
+	// Set both tokens as secure HTTP-only cookies
+	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true) // 1 hour, secure, httpOnly
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", true, true) // 7 days, secure, httpOnly
+
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+}
+
+func Refresh(c *gin.Context) {
+	tokenStr, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "missing refresh token"})
+		return
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return utils.RefreshSecret, nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		return
+	}
+
+	claims := token.Claims.(*jwt.RegisteredClaims)
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "can't read subject"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		return
+	}
+
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate access token"})
+		return
+	}
+
+	// Set the new access token as a secure HTTP-only cookie
+	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true) // 1 hour, secure, httpOnly
+
+	c.JSON(http.StatusOK, gin.H{"message": "Token refreshed"})
 }
 
 // Logout clears the user session
 func Logout(c *gin.Context) {
+	// Clear the session
 	session := sessions.Default(c)
 	session.Clear()
 	session.Options(sessions.Options{Path: "/", MaxAge: -1})
 	session.Save()
+
+	// Clear both JWT cookies
+	c.SetCookie("access_token", "", -1, "/", "", true, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", true, true)
+
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
 
@@ -142,7 +222,10 @@ func UpdateCurrentUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Username updated"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Username updated",
+		"username": user.Username,
+	})
 }
 
 // Update current user's password

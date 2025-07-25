@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"io"
 	"log"
 	"strings"
 	"time"
@@ -51,7 +52,7 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	}
 
 	// Unmarshal the YAML content and update the database
-	var metaData meta.ChallengeMetadata
+	var metaData meta.BaseChallengeMetadata
 	if err := yaml.Unmarshal(buf.Bytes(), &metaData); err != nil {
 		log.Printf("Invalid YAML for %s: %v", objectKey, err)
 		return err
@@ -75,7 +76,7 @@ func deleteChallengeFromDB(slug string) error {
 	return nil
 }
 
-func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) error {
+func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string) error {
 	var cCategory models.ChallengeCategory
 	if err := config.DB.FirstOrCreate(&cCategory, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
 		return err
@@ -127,4 +128,23 @@ func updateOrCreateChallengeInDB(metaData meta.ChallengeMetadata, slug string) e
 	}
 
 	return nil
+}
+
+func RetrieveFileContentFromMinio(path string) ([]byte, error) {
+	const bucketName = "challenges"
+	object, err := config.FS.GetObject(context.Background(), bucketName, path, minio.GetObjectOptions{})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer object.Close()
+
+	content, err := io.ReadAll(object)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	log.Printf("File %s retrieved on MinIO", path)
+	return content, nil
 }

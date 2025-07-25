@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from '@/context/LanguageContext'
+import React from "react"
 
 export function NavUser({
   user,

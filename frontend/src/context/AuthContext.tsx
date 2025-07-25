@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import axios from "@/lib/axios";
+import { clearTranslationCache } from "@/context/LanguageContext";
 
 interface AuthContextType {
   loggedIn: boolean;
@@ -15,13 +16,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
+  const login = () => {
+    setLoggedIn(true);
+  };
+
+  const logout = async (redirect = true) => {
+    try {
+      await axios.post("/api/logout");
+    } catch (error) {
+      // console.error("Logout failed:", error);
+    }
+    setLoggedIn(false);
+    // Clear any cached data
+    clearTranslationCache();
+    if (redirect && typeof window !== "undefined" && window.location.pathname !== "/login") {
+      window.location.href = "/login";
+    }
+  };
+
   const checkAuth = async () => {
     try {
-      await axios.get('/api/pwn');
+      await axios.get("/api/pwn");
       setLoggedIn(true);
     } catch (err: any) {
-      if (err?.response?.status === 401 || err?.response?.status === 404) {
-        await logout(false);
+      if (err?.response?.status === 401) {
+        try {
+          await axios.post("/api/refresh");
+          setLoggedIn(true);
+        } catch (error) {
+          console.error("Failed to refresh token:", error);
+          await logout(false);
+        }
       } else {
         setLoggedIn(false);
       }
@@ -34,22 +59,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
-  const login = () => setLoggedIn(true);
+  // Listen for auth refresh events (e.g., after username update, team changes)
+  useEffect(() => {
+    const handleAuthRefresh = () => {
+      checkAuth();
+    };
 
-  const logout = async (redirect = true) => {
-    try {
-      await axios.post('/api/logout');
-    } catch (_) {
-    } finally {
-      setLoggedIn(false);
-      if (redirect && typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:refresh', handleAuthRefresh);
+      return () => {
+        window.removeEventListener('auth:refresh', handleAuthRefresh);
+      };
     }
-  };
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ loggedIn, login, logout, checkAuth, authChecked }}>
+    <AuthContext.Provider
+      value={{ loggedIn, login, logout, checkAuth, authChecked }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -58,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

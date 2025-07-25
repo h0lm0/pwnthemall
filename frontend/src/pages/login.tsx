@@ -1,30 +1,25 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import LoginContent from "@/components/LoginContent";
 import { useLanguage } from "@/context/LanguageContext";
+import { toast } from "sonner";
+import axios from "@/lib/axios";
 
 const LoginPage = () => {
   const router = useRouter();
   const { login } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [form, setForm] = useState({ identifier: "", password: "" });
-  const [message, setMessage] = useState<string | null>(null);
-  const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
 
   useEffect(() => {
     if (router.query.success === "register") {
-      setMessage(t('registration_successful'));
-      setMessageType("success");
-
-      // Optionnel : nettoyer l'URL sans recharger
       const { success, ...rest } = router.query;
       const query = new URLSearchParams(rest as Record<string, string>).toString();
       router.replace(`/login${query ? `?${query}` : ""}`, undefined, { shallow: true });
     }
-  }, [router.query]);
+  }, [router.query, t, router, language]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,28 +27,20 @@ const LoginPage = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage(null);
-    setMessageType(null);
-
     try {
-      await axios.post(`/api/login`, form);
+      const res = await axios.post("/api/login", form);
       login();
+      localStorage.setItem("showToast", JSON.stringify({ type: "success", key: "login_success", lang: language }));
       router.push("/pwn");
     } catch (error: any) {
-      const errMsg = error?.response?.data?.error || "Error during login";
-      setMessage(errMsg);
-      setMessageType("error");
+      const errorKey = error?.response?.data?.error || "Error during login";
+      // Show error toast immediately, don't store in localStorage since user stays on login page
+      toast.error(t(errorKey), { className: "bg-red-600 text-white" });
     }
   };
 
   return (
-    <LoginContent
-      form={form}
-      message={message}
-      messageType={messageType}
-      onChange={onChange}
-      onSubmit={handleLogin}
-    />
+    <LoginContent form={form} onChange={onChange} onSubmit={handleLogin} />
   );
 };
 
