@@ -59,7 +59,15 @@ export default function ProfileContent() {
 
 function ProfileContentInner() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<Tab>("Account");
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('profileActiveTab');
+      if (saved && ["Account", "Security", "Appearance", "Team"].includes(saved)) {
+        return saved as Tab;
+      }
+    }
+    return "Account";
+  });
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [loading, setLoading] = useState(true);
@@ -132,6 +140,12 @@ function ProfileContentInner() {
       setTeamLoading(false);
     }).finally(() => setLoading(false));
   }, [t]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('profileActiveTab', activeTab);
+    }
+  }, [activeTab]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setNewUsername(e.target.value);
@@ -360,7 +374,7 @@ function ProfileContentInner() {
         {activeTab === "Team" && (
           <div className="space-y-4 max-w-md">
             {teamLoading ? (
-              <div>{t('loading_team_info')}</div>
+              <div></div>
             ) : team && currentUser ? (
               <TeamManagementSection team={team} members={members} currentUser={currentUser} onTeamChange={() => {}} />
             ) : (
