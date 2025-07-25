@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"io"
 	"log"
 	"strings"
 	"time"
@@ -127,4 +128,23 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	}
 
 	return nil
+}
+
+func RetrieveFileContentFromMinio(path string) ([]byte, error) {
+	const bucketName = "challenges"
+	object, err := config.FS.GetObject(context.Background(), bucketName, path, minio.GetObjectOptions{})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer object.Close()
+
+	content, err := io.ReadAll(object)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	log.Printf("File %s retrieved on MinIO", path)
+	return content, nil
 }

@@ -48,8 +48,7 @@ func ConnectDocker() {
 		log.Println("Unable to create docker client")
 		panic(err)
 	} else {
-		log.Printf("Connected to %s", os.Getenv("DOCKER_HOST"))
-		log.Println(cl.ClientVersion())
+		log.Printf("Connected to %s with version %s", os.Getenv("DOCKER_HOST"), cl.ClientVersion())
 	}
 	DockerClient = cl
 }
