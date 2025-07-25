@@ -294,6 +294,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:refresh'));
       }
+      window.location.reload();
     } catch (err: any) {
       toast.error(t("team_leave_failed"), { className: "bg-red-600 text-white" });
     } finally {
@@ -354,6 +355,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:refresh'));
       }
+      window.location.reload();
     } catch (err: any) {
       toast.error(t("team_transfer_failed"), { className: "bg-red-600 text-white" });
     } finally {
@@ -374,6 +376,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:refresh'));
       }
+      window.location.reload();
     } catch (err: any) {
       toast.error(t("team_transfer_failed"), { className: "bg-red-600 text-white" });
     } finally {
@@ -419,6 +422,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:refresh'));
       }
+      window.location.reload();
     } catch (err) {
       toast.error(t("team_kick_failed"), { className: "bg-red-600 text-white" });
       setShowKickDialog(false);
