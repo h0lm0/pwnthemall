@@ -36,7 +36,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return res.json();
       })
       .then((data) => {
-        console.log(`Loaded ${Object.keys(data).length} translations for ${language}`);
+        //console.log(`Loaded ${Object.keys(data).length} translations for ${language}`);
         setTranslations(data);
         setIsLoaded(true);
       })

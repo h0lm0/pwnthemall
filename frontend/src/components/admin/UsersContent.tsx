@@ -105,7 +105,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             size="sm"
             onClick={() => setTempBanning(row.original)}
           >
-            {t("temp_ban")}
+            {row.original.banned ? t("unban") : t("temp_ban")}
           </Button>
           <Button
             variant="destructive"
@@ -193,12 +193,17 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doTempBanSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)].id)
+    const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+    const ids = selectedUsers.map(user => user.id)
+    const bannedCount = selectedUsers.filter(user => user.banned).length
+    const unbannedCount = selectedUsers.length - bannedCount
+    const isMostlyUnbanning = bannedCount > unbannedCount
+    
     try {
       await Promise.all(ids.map((id) => axios.post(`/api/users/${id}/ban`)))
       setRowSelection({})
       setConfirmMassBan(false)
-      toast.success(t("users_banned_success"))
+      toast.success(isMostlyUnbanning ? t("users_unbanned_success") : t("users_banned_success"))
       onRefresh()
     } catch (err: any) {
       console.error("Failed to mass ban/unban users:", err)
@@ -211,8 +216,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     if (!tempBanning) return
     try {
       await axios.post(`/api/users/${tempBanning.id}/ban`)
+      const successMessage = tempBanning.banned ? t("user_unbanned_success") : t("user_banned_success")
       setTempBanning(null)
-      toast.success(t("user_banned_success"))
+      toast.success(successMessage)
       onRefresh()
     } catch (err: any) {
       console.error("Failed to ban/unban user:", err)
@@ -252,7 +258,12 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 size="sm"
                 onClick={() => setConfirmMassBan(true)}
               >
-                {t("temp_ban")}
+                {(() => {
+                  const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                  const bannedCount = selectedUsers.filter(user => user.banned).length
+                  const unbannedCount = selectedUsers.length - bannedCount
+                  return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
+                })()}
               </Button>
             </div>
             <Sheet open={creating} onOpenChange={setCreating}>
@@ -318,19 +329,24 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Temp Ban Dialog */}
+      {/* Temp Ban/Unban Dialog */}
       <AlertDialog open={!!tempBanning} onOpenChange={(o) => !o && setTempBanning(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("temp_ban_user")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {tempBanning?.banned ? t("unban_user") : t("temp_ban_user")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("temp_ban_user_confirm", { username: tempBanning?.username || "" })}
+              {tempBanning?.banned 
+                ? t("unban_user_confirm", { username: tempBanning?.username || "" })
+                : t("temp_ban_user_confirm", { username: tempBanning?.username || "" })
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={doTempBanUser}>
-              {t("temp_ban")}
+              {tempBanning?.banned ? t("unban") : t("temp_ban")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -354,19 +370,36 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Confirm Mass Temp Ban */}
+      {/* Confirm Mass Temp Ban/Unban */}
       <AlertDialog open={confirmMassBan} onOpenChange={setConfirmMassBan}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("temp_ban_users")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {(() => {
+                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const bannedCount = selectedUsers.filter(user => user.banned).length
+                const unbannedCount = selectedUsers.length - bannedCount
+                return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
+              })()}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("temp_ban_users_confirm")}
+              {(() => {
+                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const bannedCount = selectedUsers.filter(user => user.banned).length
+                const unbannedCount = selectedUsers.length - bannedCount
+                return bannedCount > unbannedCount ? t("unban_users_confirm") : t("temp_ban_users_confirm")
+              })()}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={doTempBanSelected}>
-              {t("temp_ban")}
+              {(() => {
+                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const bannedCount = selectedUsers.filter(user => user.banned).length
+                const unbannedCount = selectedUsers.length - bannedCount
+                return bannedCount > unbannedCount ? t("unban") : t("temp_ban")
+              })()}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
