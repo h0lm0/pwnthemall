@@ -1,6 +1,6 @@
 // hooks/use-challenge-categories.ts
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { ChallengeCategory } from "@/models/ChallengeCategory";
 
 export function useChallengeCategories(enabled: boolean) {

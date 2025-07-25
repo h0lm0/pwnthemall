@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useRouter } from "next/router";
 import RegisterContent from "@/components/RegisterContent";
 import { toast } from "sonner";

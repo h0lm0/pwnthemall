@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 const PwnPage = () => {
   const router = useRouter();

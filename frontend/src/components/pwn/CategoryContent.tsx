@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { useLanguage } from "@/context/LanguageContext"
 import { CheckCircle, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
