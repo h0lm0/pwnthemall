@@ -159,10 +159,6 @@
   "yes": "yes",
   "no": "no",
   "team_disband_confirm": "Are you sure you want to disband the team? This will remove all members and delete the team.",
-  "Username already exists": "Username already exists",
-  "Email already exists": "Email already exists",
-  "User already exists": "User already exists",
-  "Failed to create user": "Failed to create user",
   "login_success": "Login successful!",
   "invalid_credentials": "Invalid username or password.",
   "team_left_successfully": "You have left the team.",
@@ -189,5 +185,15 @@
   "transfer_ownership_and_leave": "Transfer ownership and leave",
   "choose_new_owner_list": "Select a new owner for the team:",
   "confirm_transfer_to": "Transfer ownership to {username}",
-  "leader_cannot_leave": "The team leader cannot leave. Please transfer ownership or disband the team."
+  "leader_cannot_leave": "The team leader cannot leave. Please transfer ownership or disband the team.",
+  "password_too_short": "Password must be at least 8 characters.",
+  "username_exists": "Username already exists.",
+  "email_exists": "Email already exists.",
+  "user_already_exists": "User already exists.",
+  "invalid_email": "Invalid email address.",
+  "password_length": "Password must be between 8 and 72 characters.",
+  "username_length": "Username must be at most 32 characters.",
+  "email_length": "Email must be at most 254 characters.",
+  "role_required": "Role is required.",
+  "user_create_failed": "Failed to create user."
 } 
