@@ -29,17 +29,10 @@ Open https://pwnthemall.local/ & accept the certificate
    - Windows Subsystem for Linux
    - Git Bash
 
-Use the provided `pta-cli.cmd` wrapper which will automatically detect and use WSL or Git Bash:
+Use the provided `pta-cli.cmd` wrapper which will automatically detect and use WSL or Git (Can run the same way as linux if executed directly in the wsl terminal)
    ```shell
    pta-cli.cmd compose up -b -e prod
    pta-cli.cmd compose up -b -e dev
-   ```
-nb: The default WSL must be compatible
-
-Alternatively, you can run commands directly through WSL or Git Bash:
-   ```bash
-   bash pta-cli.sh compose up -b -e prod
-   bash pta-cli.sh compose up -b -e dev
    ```
 
 ## Troubleshoot
