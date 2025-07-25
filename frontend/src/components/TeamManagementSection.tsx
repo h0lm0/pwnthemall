@@ -394,6 +394,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:refresh'));
       }
+      window.location.reload();
     } catch (err: any) {
       setDisbandError(t("team_disband_failed"));
       toast.error(t("team_disband_failed"), { className: "bg-red-600 text-white" });
