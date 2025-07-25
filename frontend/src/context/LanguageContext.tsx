@@ -40,21 +40,32 @@ const LanguageContext = createContext<LanguageContextProps>({
 const TRANSLATION_VERSION = '1.0.1';
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>('en');
+  // Initialize language state from localStorage if available
+  const getInitialLanguage = (): Language => {
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('language') as Language;
+      return savedLang || 'en';
+    }
+    return 'en';
+  };
+
+  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // On mount, load language and translations from localStorage if available
+  // On mount, clear other language caches and load cached translations if available
   useEffect(() => {
-    let initialLang: Language = 'en';
     if (typeof window !== 'undefined') {
-      initialLang = (localStorage.getItem('language') as Language) || 'en';
-    }
-    setLanguageState(initialLang);
-    // Try to load cached translations
-    if (typeof window !== 'undefined') {
-      const cacheKey = `translations_${initialLang}_v${TRANSLATION_VERSION}`;
+      // Clear other language caches on app load (when user logs in)
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('translations_') && !key.includes(`_${language}_v`)) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Try to load cached translations
+      const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -66,7 +77,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     const loadTranslations = async () => {
@@ -131,6 +142,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLanguageState(lang);
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', lang);
+      // Clear other language caches when switching languages
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('translations_') && !key.includes(`_${lang}_v`)) {
+          localStorage.removeItem(key);
+        }
+      });
     }
   };
 
