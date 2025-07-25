@@ -34,6 +34,7 @@ Use the provided `pta-cli.cmd` wrapper which will automatically detect and use W
    pta-cli.cmd compose up -b -e prod
    pta-cli.cmd compose up -b -e dev
    ```
+nb: The default WSL must be compatible
 
 Alternatively, you can run commands directly through WSL or Git Bash:
    ```bash
