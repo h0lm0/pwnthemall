@@ -120,10 +120,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setIsLoaded(true);
       }
     };
-    // Only load if not already loaded from cache
-    if (!isLoaded) {
-      loadTranslations();
-    }
+    
+    // Always attempt to load translations when language changes
+    loadTranslations();
   }, [language, isInitialLoad]);
 
   const setLanguage = (lang: Language) => {
