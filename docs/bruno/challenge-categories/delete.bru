@@ -1,0 +1,15 @@
+meta {
+  name: delete
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{URL}}/api/challenge-categories/:id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}
