@@ -1,0 +1,18 @@
+meta {
+  name: loginAdmin
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{URL}}/api/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "identifier": "admin",
+    "password": "admin"
+  }
+}

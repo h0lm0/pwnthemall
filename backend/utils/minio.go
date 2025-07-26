@@ -5,6 +5,8 @@ import (
 	"context"
 	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -147,4 +149,39 @@ func RetrieveFileContentFromMinio(path string) ([]byte, error) {
 
 	log.Printf("File %s retrieved on MinIO", path)
 	return content, nil
+}
+
+func DownloadChallengeContext(slug string, localDir string) error {
+	const bucketName = "challenges"
+	ctx := context.Background()
+
+	opts := minio.ListObjectsOptions{
+		Prefix:    slug + "/",
+		Recursive: true,
+	}
+
+	for obj := range config.FS.ListObjects(ctx, bucketName, opts) {
+		if obj.Err != nil {
+			return obj.Err
+		}
+		localPath := filepath.Join(localDir, obj.Key[len(slug)+1:]) 
+		if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
+			return err
+		}
+		reader, err := config.FS.GetObject(ctx, bucketName, obj.Key, minio.GetObjectOptions{})
+		if err != nil {
+			return err
+		}
+		defer reader.Close()
+
+		outFile, err := os.Create(localPath)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(outFile, reader); err != nil {
+			return err
+		}
+		outFile.Close()
+	}
+	return nil
 }

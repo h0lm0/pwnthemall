@@ -46,10 +46,10 @@ services:
       PTA_FLAG_PREFIX: ${PTA_FLAG_PREFIX}
       PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
       PTA_DOCKER_TLS_VERIFY: ${PTA_DOCKER_TLS_VERIFY}
+      PTA_DOCKER_IMAGE_PREFIX: ${PTA_DOCKER_IMAGE_PREFIX}
     volumes:
       - ./backend:/app
       - ./shared/worker:/home/app/.ssh/worker
-    command: air
     networks:
       public:
       private:
