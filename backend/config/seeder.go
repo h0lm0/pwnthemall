@@ -16,6 +16,7 @@ func seedConfig() {
 		{Key: "FLAG_PREFIX", Value: os.Getenv("PTA_FLAG_PREFIX"), Public: false},
 		{Key: "DOCKER_HOST", Value: os.Getenv("PTA_DOCKER_HOST"), Public: true},
 		{Key: "DOCKER_TLS_VERIFY", Value: os.Getenv("PTA_DOCKER_TLS_VERIFY"), Public: true},
+		{Key: "DOCKER_IMAGE_PREFIX", Value: os.Getenv("PTA_DOCKER_IMAGE_PREFIX"), Public: false},
 	}
 
 	for _, item := range config {

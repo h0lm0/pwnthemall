@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"log"
 	"net/http"
 	"os"
 
@@ -27,7 +28,9 @@ func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
 	config.InitCasbin()
-	config.ConnectDocker()
+	if err := config.ConnectDocker(); err != nil {
+		log.Fatalf("Failed to connect to docker host: %s", err.Error())
+	}
 	router := gin.Default()
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
