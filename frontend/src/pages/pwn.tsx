@@ -8,6 +8,7 @@ const PwnPage = () => {
   const { loggedIn, checkAuth, authChecked } = useAuth();
   const [teamChecked, setTeamChecked] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -16,10 +17,14 @@ const PwnPage = () => {
   useEffect(() => {
     if (authChecked && loggedIn) {
       axios.get("/api/me").then(res => {
+        setRole(res.data.role);
         if (res.data.teamId) {
           setHasTeam(true);
         } else {
-          router.replace("/team");
+          setHasTeam(false);
+          if (res.data.role !== "admin") {
+            router.replace("/team");
+          }
         }
         setTeamChecked(true);
       }).catch(() => {
@@ -29,7 +34,7 @@ const PwnPage = () => {
   }, [authChecked, loggedIn, router]);
 
   if (!authChecked || !loggedIn || !teamChecked) return null;
-  if (!hasTeam) return null;
+  if (!hasTeam && role !== "admin") return null;
 
   return (
     <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 text-center">

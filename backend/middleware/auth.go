@@ -142,7 +142,36 @@ func AuthRequired(needTeam bool) gin.HandlerFunc {
 		}
 
 		if needTeam && (user.TeamID == nil || user.Team == nil) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team required"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team_required"})
+			return
+		}
+
+		c.Set("user_id", user.ID)
+		c.Set("user", &user)
+		c.Next()
+	}
+}
+
+func AuthRequiredTeamOrAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, err := getClaimsFromCookie(c)
+		if claims == nil {
+			c.AbortWithStatusJSON(403, gin.H{"error": err})
+			return
+		}
+		var user models.User
+		if err := config.DB.Preload("Team").First(&user, claims.UserID).Error; err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			return
+		}
+
+		if user.Banned {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "banned"})
+			return
+		}
+
+		if user.Role != "admin" && (user.TeamID == nil || user.Team == nil) {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team_required"})
 			return
 		}
 

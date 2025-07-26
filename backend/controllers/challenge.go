@@ -232,6 +232,12 @@ func SubmitChallenge(c *gin.Context) {
 		return
 	}
 
+	// Block all users (including admins) from submitting if not in a team
+	if user.Team == nil || user.TeamID == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required_to_submit"})
+		return
+	}
+
 	// Check if team has already solved this challenge
 	var existingSolve models.Solve
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).First(&existingSolve).Error; err == nil {

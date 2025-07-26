@@ -203,5 +203,7 @@
   "username_length": "Username must be at most 32 characters.",
   "email_length": "Email must be at most 254 characters.",
   "role_required": "Role is required.",
-  "user_create_failed": "Failed to create user."
+  "user_create_failed": "Failed to create user.",
+  "team_required_to_submit": "You must be in a team to submit flags.",
+  "team_required": "Team membership required."
 } 
