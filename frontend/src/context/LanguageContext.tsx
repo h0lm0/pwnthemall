@@ -77,7 +77,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
     }
-  }, []); // Only run on mount, not when language changes
+  }, [language]); // Re-run when language changes to handle cache invalidation
 
   useEffect(() => {
     const loadTranslations = async () => {
