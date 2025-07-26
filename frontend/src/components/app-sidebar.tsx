@@ -40,9 +40,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     role: "",
   });
 
-  React.useEffect(() => {
-    if (!authChecked) return;
-
+  // Refactored user data fetcher
+  const fetchUserData = React.useCallback(() => {
     if (loggedIn) {
       axios
         .get("/api/me")
@@ -55,11 +54,29 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             role,
           });
         })
-        .catch(() => {});
+        .catch(() => {
+          setUserData({ name: "Guest", email: "", avatar: "/logo-no-text.png", role: "" });
+        });
     } else {
       setUserData({ name: "Guest", email: "", avatar: "/logo-no-text.png", role: "" });
     }
-  }, [loggedIn, authChecked]);
+  }, [loggedIn]);
+
+  React.useEffect(() => {
+    if (!authChecked) return;
+    fetchUserData();
+  }, [loggedIn, authChecked, fetchUserData]);
+
+  // Listen for auth:refresh events to update sidebar user info
+  React.useEffect(() => {
+    const handleAuthRefresh = () => {
+      fetchUserData();
+    };
+    window.addEventListener('auth:refresh', handleAuthRefresh);
+    return () => {
+      window.removeEventListener('auth:refresh', handleAuthRefresh);
+    };
+  }, [fetchUserData]);
 
   const navItems = React.useMemo(() => {
     if (!authChecked) return [];

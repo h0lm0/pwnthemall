@@ -14,7 +14,6 @@ export default function TeamPage() {
   const [createPassword, setCreatePassword] = useState("");
   const [joinName, setJoinName] = useState("");
   const [joinPassword, setJoinPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { loggedIn, checkAuth, authChecked } = useAuth();
