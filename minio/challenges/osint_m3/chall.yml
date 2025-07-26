@@ -5,6 +5,6 @@ category: osint
 difficulty: intro
 type: standard
 author: h0lm
-flags: ["_osintm3_internet!"]
+flags: ["flag"]
 hidden: false
 points: 10

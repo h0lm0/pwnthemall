@@ -37,7 +37,7 @@ const LanguageContext = createContext<LanguageContextProps>({
 });
 
 // Translation cache version - increment this when you update translations
-const TRANSLATION_VERSION = '1.0.1';
+const TRANSLATION_VERSION = '1.0.2';
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize language state from localStorage if available
@@ -77,7 +77,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
     }
-  }, [language]);
+  }, [language]); // Re-run when language changes to handle cache invalidation
 
   useEffect(() => {
     const loadTranslations = async () => {
@@ -170,16 +170,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return str;
   };
 
-  const clearTranslationCache = () => {
-    if (typeof window !== 'undefined') {
-      // Clear all translation caches
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('translations_')) {
-          localStorage.removeItem(key);
-        }
-      });
-    }
-  };
+
 
   // Show loading screen while translations are loading (only on initial load or language change)
   if (!isLoaded && (isInitialLoad || Object.keys(translations).length === 0)) {
@@ -187,7 +178,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, isLoaded, clearTranslationCache }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, isLoaded, clearTranslationCache: clearTranslationCache }}>
       <div className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {children}
         {/* Subtle loading indicator for language changes */}

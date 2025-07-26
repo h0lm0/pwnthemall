@@ -334,7 +334,11 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       localStorage.setItem("showToast", JSON.stringify({ type: "success", message: t("team_left_successfully") }));
       setLeaveMsg("team_left_successfully");
       onTeamChange?.();
-      setTimeout(() => window.location.reload(), 200);
+      // Trigger auth refresh to update user info
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:refresh'));
+      }
+      window.location.reload();
     } catch (err: any) {
       setLeaveError(t("team_leave_failed"));
       toast.error(t("team_leave_failed"), { className: "bg-red-600 text-white" });
@@ -422,7 +426,6 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:refresh'));
       }
-      window.location.reload();
     } catch (err) {
       toast.error(t("team_kick_failed"), { className: "bg-red-600 text-white" });
       setShowKickDialog(false);
