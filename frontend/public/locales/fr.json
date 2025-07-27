@@ -223,11 +223,11 @@
   "config_updated_success": "Configuration mise à jour avec succès !",
   "config_deleted_success": "Configuration supprimée avec succès !",
   "configs_deleted_success": "Configurations sélectionnées supprimées avec succès !",
+  "config_create_failed": "Erreur lors de la création de la configuration",
   "key_required": "La clé est requise",
   "value_required": "La valeur est requise",
   "enter_key": "Entrez la clé de configuration",
   "enter_value": "Entrez la valeur de configuration",
   "select_value": "Sélectionnez une valeur",
-  "loading": "Chargement...",
   "update": "Mettre à jour"
 } 

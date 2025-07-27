@@ -224,6 +224,7 @@
   "config_updated_success": "Configuration updated successfully!",
   "config_deleted_success": "Configuration deleted successfully!",
   "configs_deleted_success": "Selected configurations deleted successfully!",
+  "config_create_failed": "Failed to create configuration",
   "key_required": "Key is required",
   "value_required": "Value is required",
   "enter_key": "Enter configuration key",
