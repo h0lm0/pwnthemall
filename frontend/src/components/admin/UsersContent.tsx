@@ -36,7 +36,7 @@ interface UsersContentProps {
 
 export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const { t, isLoaded, language } = useLanguage()
-  const { siteConfig } = useSiteConfig()
+  const { getSiteName } = useSiteConfig()
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<User | null>(null)
@@ -232,7 +232,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   return (
     <>
       <Head>
-        <title>{siteConfig.SITE_NAME || 'pwnthemall'} - admin zone</title>
+        <title>{getSiteName()}</title>
       </Head>
       <div className="bg-muted min-h-screen p-4 overflow-x-auto">
         {/* {/* Debug info - remove after testing 

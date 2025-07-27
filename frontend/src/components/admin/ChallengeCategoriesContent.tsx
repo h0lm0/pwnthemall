@@ -34,7 +34,7 @@ interface ChallengeCategoriesContentProps {
 
 export default function ChallengeCategoriesContent({ challengeCategories, onRefresh }: ChallengeCategoriesContentProps) {
   const { t } = useLanguage();
-  const { siteConfig } = useSiteConfig();
+  const { getSiteName } = useSiteConfig();
   const [editingChallengeCategory, setEditingChallengeCategory] = useState<ChallengeCategory | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<ChallengeCategory | null>(null)
@@ -91,7 +91,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
   return (
     <>
       <Head>
-        <title>{siteConfig.SITE_NAME || 'pwnthemall'} - admin zone</title>
+        <title>{getSiteName()}</title>
       </Head>
       <div className="bg-muted min-h-screen p-4">
         <div className="mb-4 flex items-center justify-between">

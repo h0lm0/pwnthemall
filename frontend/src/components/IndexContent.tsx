@@ -6,12 +6,12 @@ import { useSiteConfig } from '@/context/SiteConfigContext';
 
 const IndexContent = () => {
   const { t } = useLanguage();
-  const { siteConfig } = useSiteConfig();
+  const { getSiteName, loading } = useSiteConfig();
   
   return (
     <>
       <Head>
-        <title>{siteConfig.SITE_NAME || 'pwnthemall'}</title>
+        <title>{getSiteName()}</title>
       </Head>
       <main className="bg-muted flex flex-col items-center justify-center text-center min-h-screen px-6">
         <Image

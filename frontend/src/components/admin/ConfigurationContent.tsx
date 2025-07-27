@@ -36,7 +36,7 @@ interface ConfigurationContentProps {
 
 export default function ConfigurationContent({ configs, onRefresh }: ConfigurationContentProps) {
   const { t, isLoaded } = useLanguage();
-  const { siteConfig, refreshConfig } = useSiteConfig();
+  const { getSiteName, refreshConfig } = useSiteConfig();
   const [editingConfig, setEditingConfig] = useState<Config | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<Config | null>(null);
@@ -159,7 +159,7 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
   return (
     <>
       <Head>
-        <title>{siteConfig.SITE_NAME || 'pwnthemall'} - admin zone</title>
+        <title>{getSiteName()}</title>
       </Head>
       <div className="bg-muted min-h-screen p-4 overflow-x-auto">
         <div className="mb-4 flex items-center justify-between">

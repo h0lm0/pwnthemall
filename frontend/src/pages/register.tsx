@@ -1,13 +1,16 @@
 import { useState } from "react";
 import axios from "@/lib/axios";
 import { useRouter } from "next/router";
+import { useSiteConfig } from "@/context/SiteConfigContext";
 import RegisterContent from "@/components/RegisterContent";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import Head from "next/head";
 
 const RegisterPage = () => {
   const router = useRouter();
   const { t } = useLanguage();
+  const { getSiteName } = useSiteConfig();
 
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -36,13 +39,18 @@ const RegisterPage = () => {
   };
 
   return (
-    <RegisterContent
-      form={form}
-      loading={loading}
-      message={null}
-      onChange={onChange}
-      onSubmit={handleRegister}
-    />
+    <>
+      <Head>
+        <title>{getSiteName()}</title>
+      </Head>
+      <RegisterContent
+        form={form}
+        loading={loading}
+        message={null}
+        onChange={onChange}
+        onSubmit={handleRegister}
+      />
+    </>
   );
 };
 

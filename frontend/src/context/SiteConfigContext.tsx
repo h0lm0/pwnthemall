@@ -5,7 +5,9 @@ import { Config } from '@/models/Config';
 interface SiteConfigContextType {
   siteConfig: Record<string, string>;
   loading: boolean;
+  error: boolean;
   refreshConfig: () => void;
+  getSiteName: () => string;
 }
 
 const SiteConfigContext = createContext<SiteConfigContextType | undefined>(undefined);
@@ -13,22 +15,30 @@ const SiteConfigContext = createContext<SiteConfigContextType | undefined>(undef
 export function SiteConfigProvider({ children }: { children: React.ReactNode }) {
   const [siteConfig, setSiteConfig] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  // Clear title on mount to prevent flash
+  useEffect(() => {
+    document.title = '';
+  }, []);
 
   const fetchConfig = async () => {
     try {
+      setError(false);
       const response = await axios.get<Config[]>('/api/public-configs');
       const configMap: Record<string, string> = {};
       response.data.forEach(config => {
         configMap[config.key] = config.value;
       });
       setSiteConfig(configMap);
+      // Immediately update document title if we have a site name
+      if (configMap.SITE_NAME) {
+        document.title = configMap.SITE_NAME;
+      }
     } catch (error) {
       console.error('Failed to fetch site configuration:', error);
-      // Set default values if config fetch fails
-      setSiteConfig({
-        SITE_NAME: 'pwnthemall',
-        FLAG_PREFIX: 'PTA{',
-      });
+      setError(true);
+      // Don't set default values immediately - let components handle it
     } finally {
       setLoading(false);
     }
@@ -39,12 +49,25 @@ export function SiteConfigProvider({ children }: { children: React.ReactNode }) 
     fetchConfig();
   };
 
+  const getSiteName = () => {
+    if (loading) return ''; // Return empty during loading to prevent flash
+    if (error) return ''; // Return empty on error too to prevent flash
+    return siteConfig.SITE_NAME || '';
+  };
+
   useEffect(() => {
     fetchConfig();
   }, []);
 
+  // Update document title whenever site config changes
+  useEffect(() => {
+    if (!loading && !error && siteConfig.SITE_NAME) {
+      document.title = siteConfig.SITE_NAME;
+    }
+  }, [siteConfig.SITE_NAME, loading, error]);
+
   return (
-    <SiteConfigContext.Provider value={{ siteConfig, loading, refreshConfig }}>
+    <SiteConfigContext.Provider value={{ siteConfig, loading, error, refreshConfig, getSiteName }}>
       {children}
     </SiteConfigContext.Provider>
   );
