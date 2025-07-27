@@ -52,22 +52,6 @@ func SessionAuthRequired(needTeam bool) gin.HandlerFunc {
 	}
 }
 
-func getClaimsFromHeader(authHeader string) (*utils.TokenClaims, string) {
-	if authHeader == "" || len(authHeader) < 8 || authHeader[:7] != "Bearer " {
-		return nil, "missing or invalid authorization header"
-	}
-
-	tokenStr := authHeader[7:]
-	token, err := jwt.ParseWithClaims(tokenStr, &utils.TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return utils.AccessSecret, nil
-	})
-	if err != nil || !token.Valid {
-		return nil, "invalid token"
-	}
-
-	return token.Claims.(*utils.TokenClaims), ""
-}
-
 func getClaimsFromCookie(c *gin.Context) (*utils.TokenClaims, string) {
 	tokenStr, err := c.Cookie("access_token")
 	if err != nil {
