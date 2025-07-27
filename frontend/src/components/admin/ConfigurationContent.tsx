@@ -111,10 +111,10 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
         refreshConfig();
       }
     } catch (err: any) {
-      let msg = err?.response?.data?.error || "Failed to create configuration";
+      let msg = err?.response?.data?.error || t("config_create_failed", "Failed to create configuration");
       
       if (!isLoaded) {
-        setCreateError("Failed to create configuration.");
+        setCreateError(t("config_create_failed", "Failed to create configuration"));
         return;
       }
       
