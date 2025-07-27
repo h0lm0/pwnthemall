@@ -30,6 +30,9 @@ const LoginPage = () => {
     try {
       const res = await axios.post("/api/login", form);
       login();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("auth:refresh"));
+      }
       localStorage.setItem("showToast", JSON.stringify({ type: "success", key: "login_success", lang: language }));
       router.push("/pwn");
     } catch (error: any) {
