@@ -15,7 +15,7 @@ func SynchronizeEnvWithDb() {
 	}
 
 	for _, cfg := range configs {
-		if !cfg.Public {
+		if !cfg.SyncWithEnv {
 			continue
 		}
 

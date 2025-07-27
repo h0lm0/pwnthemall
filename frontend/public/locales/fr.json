@@ -229,5 +229,6 @@
   "enter_key": "Entrez la clé de configuration",
   "enter_value": "Entrez la valeur de configuration",
   "select_value": "Sélectionnez une valeur",
-  "update": "Mettre à jour"
+  "update": "Mettre à jour",
+  "syncWithEnv": "Synchro. environnement"
 } 

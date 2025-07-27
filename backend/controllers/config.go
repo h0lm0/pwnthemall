@@ -9,9 +9,10 @@ import (
 )
 
 type ConfigInput struct {
-	Key    string `json:"key" binding:"required"`
-	Value  string `json:"value" binding:"required"`
-	Public bool   `json:"public"`
+	Key         string `json:"key" binding:"required"`
+	Value       string `json:"value" binding:"required"`
+	Public      bool   `json:"public"`
+	SyncWithEnv bool   `json:"syncWithEnv"`
 }
 
 func GetConfigs(c *gin.Context) {
@@ -44,9 +45,10 @@ func CreateConfig(c *gin.Context) {
 	}
 
 	cfg := models.Config{
-		Key:    input.Key,
-		Value:  input.Value,
-		Public: input.Public,
+		Key:         input.Key,
+		Value:       input.Value,
+		Public:      input.Public,
+		SyncWithEnv: input.SyncWithEnv,
 	}
 
 	if err := config.DB.Create(&cfg).Error; err != nil {
@@ -54,8 +56,8 @@ func CreateConfig(c *gin.Context) {
 		return
 	}
 
-	// Sync environment variables if this is a public config
-	if cfg.Public {
+	// Sync environment variables if this is a SyncWithEnv config
+	if cfg.SyncWithEnv {
 		config.SynchronizeEnvWithDb()
 	}
 
@@ -80,14 +82,15 @@ func UpdateConfig(c *gin.Context) {
 
 	cfg.Value = input.Value
 	cfg.Public = input.Public
+	cfg.SyncWithEnv = input.SyncWithEnv
 
 	if err := config.DB.Save(&cfg).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Sync environment variables if this is a public config
-	if cfg.Public {
+	// Sync environment variables if this is a SyncWithEnv config
+	if cfg.SyncWithEnv {
 		config.SynchronizeEnvWithDb()
 	}
 
@@ -109,8 +112,8 @@ func DeleteConfig(c *gin.Context) {
 		return
 	}
 
-	// Sync environment variables if this was a public config
-	if cfg.Public {
+	// Sync environment variables if this was a SyncWithEnv config
+	if cfg.SyncWithEnv {
 		config.SynchronizeEnvWithDb()
 	}
 
@@ -126,4 +129,4 @@ func GetPublicConfigs(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, configs)
-} 
+}

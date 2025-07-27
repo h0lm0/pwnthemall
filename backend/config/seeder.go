@@ -21,8 +21,8 @@ func getEnvWithDefault(key, defaultValue string) string {
 func seedConfig() {
 	config := []models.Config{
 		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: true},
-		{Key: "DOCKER_HOST", Value: os.Getenv("PTA_DOCKER_HOST"), Public: true},
-		{Key: "DOCKER_IMAGE_PREFIX", Value: os.Getenv("PTA_DOCKER_IMAGE_PREFIX"), Public: false},
+		{Key: "DOCKER_HOST", Value: os.Getenv("PTA_DOCKER_HOST"), Public: false, SyncWithEnv: true},
+		{Key: "DOCKER_IMAGE_PREFIX", Value: os.Getenv("PTA_DOCKER_IMAGE_PREFIX"), Public: false, SyncWithEnv: true},
 		{Key: "REGISTRATION_ENABLED", Value: getEnvWithDefault("REGISTRATION_ENABLED", "false"), Public: true},
 	}
 

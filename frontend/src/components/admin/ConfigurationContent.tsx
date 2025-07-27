@@ -76,6 +76,18 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
       },
     },
     {
+      accessorKey: "syncWithEnv",
+      header: t("syncWithEnv"),
+      cell: ({ getValue }) => {
+        const syncWithEnv = getValue() as boolean;
+        return (
+          <span className={cn("font-semibold", syncWithEnv ? "text-green-600" : "text-red-600")}>
+            {syncWithEnv ? t("yes") : t("no")}
+          </span>
+        );
+      },
+    },
+    {
       id: "actions",
       header: t("actions"),
       cell: ({ row }) => (
@@ -111,10 +123,10 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
         refreshConfig();
       }
     } catch (err: any) {
-      let msg = err?.response?.data?.error || t("config_create_failed", "Failed to create configuration");
+      let msg = err?.response?.data?.error || t("config_create_failed");
       
       if (!isLoaded) {
-        setCreateError(t("config_create_failed", "Failed to create configuration"));
+        setCreateError(t("config_create_failed"));
         return;
       }
       
@@ -217,6 +229,7 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
                 key: editingConfig.key,
                 value: editingConfig.value,
                 public: editingConfig.public,
+                syncWithEnv: editingConfig.syncWithEnv,
               }}
               onSubmit={handleUpdate}
             />

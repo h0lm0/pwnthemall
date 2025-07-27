@@ -231,5 +231,6 @@
   "enter_value": "Enter configuration value",
   "select_value": "Select value",
   "loading": "Loading...",
-  "update": "Update"
+  "update": "Update",
+  "syncWithEnv": "Sync with env vars"
 } 

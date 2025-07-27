@@ -25,6 +25,7 @@ export default function ConfigurationForm({
     key: "",
     value: "",
     public: false,
+    syncWithEnv: false,
   });
   const [errors, setErrors] = useState<Partial<ConfigFormData>>({});
 
@@ -114,6 +115,15 @@ export default function ConfigurationForm({
           onCheckedChange={(checked) => handleInputChange("public", checked as boolean)}
         />
         <Label htmlFor="public">{t("public")}</Label>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="syncWithEnv"
+          checked={formData.syncWithEnv}
+          onCheckedChange={(checked) => handleInputChange("syncWithEnv", checked as boolean)}
+        />
+        <Label htmlFor="syncWithEnv">{t("syncWithEnv")}</Label>
       </div>
 
       {apiError && (
