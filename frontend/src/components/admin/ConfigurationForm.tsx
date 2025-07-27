@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/context/LanguageContext";
 import { ConfigFormData } from "@/models/Config";
 
@@ -80,14 +81,29 @@ export default function ConfigurationForm({
 
       <div className="space-y-2">
         <Label htmlFor="value">{t("value")}</Label>
-        <Input
-          id="value"
-          type="text"
-          value={formData.value}
-          onChange={(e) => handleInputChange("value", e.target.value)}
-          className={errors.value ? "border-red-500" : ""}
-          placeholder={t("enter_value") || "Enter configuration value"}
-        />
+        {formData.key === "REGISTRATION_ENABLED" ? (
+          <Select
+            value={formData.value}
+            onValueChange={(value) => handleInputChange("value", value)}
+          >
+            <SelectTrigger className={errors.value ? "border-red-500" : ""}>
+              <SelectValue placeholder={t("select_value") || "Select value"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">True</SelectItem>
+              <SelectItem value="false">False</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input
+            id="value"
+            type="text"
+            value={formData.value}
+            onChange={(e) => handleInputChange("value", e.target.value)}
+            className={errors.value ? "border-red-500" : ""}
+            placeholder={t("enter_value") || "Enter configuration value"}
+          />
+        )}
         {errors.value && <p className="text-sm text-red-500">{errors.value}</p>}
       </div>
 

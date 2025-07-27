@@ -228,5 +228,7 @@
   "value_required": "Value is required",
   "enter_key": "Enter configuration key",
   "enter_value": "Enter configuration value",
+  "select_value": "Select value",
+  "loading": "Loading...",
   "update": "Update"
 } 

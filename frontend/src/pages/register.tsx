@@ -11,7 +11,7 @@ import Link from "next/link";
 const RegisterPage = () => {
   const router = useRouter();
   const { t } = useLanguage();
-  const { getSiteName, siteConfig } = useSiteConfig();
+  const { getSiteName, siteConfig, loading: configLoading } = useSiteConfig();
 
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -19,9 +19,13 @@ const RegisterPage = () => {
 
   // Check if registration is enabled
   useEffect(() => {
-    const isEnabled = siteConfig.REGISTRATION_ENABLED !== "false" && siteConfig.REGISTRATION_ENABLED !== "0";
-    setRegistrationEnabled(isEnabled);
-  }, [siteConfig.REGISTRATION_ENABLED]);
+    // Only check if config is loaded (not loading)
+    if (!configLoading) {
+      // Default to disabled if config is not available (security first)
+      const isEnabled = siteConfig.REGISTRATION_ENABLED === "true" || siteConfig.REGISTRATION_ENABLED === "1";
+      setRegistrationEnabled(isEnabled);
+    }
+  }, [siteConfig.REGISTRATION_ENABLED, configLoading]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -45,6 +49,25 @@ const RegisterPage = () => {
       setLoading(false);
     }
   };
+
+  // Show loading state while config is being loaded
+  if (configLoading) {
+    return (
+      <>
+        <Head>
+          <title>{getSiteName()}</title>
+        </Head>
+        <div className="bg-muted flex min-h-screen flex-col items-center justify-center px-4 py-8">
+          <div className="w-full max-w-sm">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">{t('loading') || 'Loading...'}</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   // If registration is disabled, show disabled message
   if (!registrationEnabled) {

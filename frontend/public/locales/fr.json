@@ -227,5 +227,7 @@
   "value_required": "La valeur est requise",
   "enter_key": "Entrez la clé de configuration",
   "enter_value": "Entrez la valeur de configuration",
+  "select_value": "Sélectionnez une valeur",
+  "loading": "Chargement...",
   "update": "Mettre à jour"
 } 
