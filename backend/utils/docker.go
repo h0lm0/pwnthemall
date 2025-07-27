@@ -4,6 +4,8 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -64,6 +66,33 @@ func TarDirectory(dirPath string) (io.Reader, error) {
 	return buf, nil
 }
 
+func streamAndDetectBuildError(r io.Reader) error {
+	type buildLine struct {
+		Stream      string `json:"stream"`
+		Error       string `json:"error"`
+		ErrorDetail struct {
+			Message string `json:"message"`
+		} `json:"errorDetail"`
+	}
+
+	decoder := json.NewDecoder(r)
+	for decoder.More() {
+		var msg buildLine
+		if err := decoder.Decode(&msg); err != nil {
+			return fmt.Errorf("failed to parse docker build output: %w", err)
+		}
+
+		if msg.Error != "" {
+			return fmt.Errorf("docker build failed: %s", msg.ErrorDetail.Message)
+		}
+
+		if msg.Stream != "" {
+			fmt.Print(msg.Stream)
+		}
+	}
+	return nil
+}
+
 func BuildDockerImage(slug string) error {
 	if err := EnsureDockerClientConnected(); err != nil {
 		return err
@@ -90,9 +119,10 @@ func BuildDockerImage(slug string) error {
 
 	imageName := prefix + slug
 	buildOptions := types.ImageBuildOptions{
-		Tags:       []string{imageName},
-		Dockerfile: "Dockerfile",
-		Remove:     true,
+		Tags:           []string{imageName},
+		Dockerfile:     "Dockerfile",
+		Remove:         true,
+		SuppressOutput: true,
 	}
 
 	buildResponse, err := config.DockerClient.ImageBuild(ctx, tarReader, buildOptions)
@@ -101,6 +131,10 @@ func BuildDockerImage(slug string) error {
 	}
 	defer buildResponse.Body.Close()
 
+	if err := streamAndDetectBuildError(buildResponse.Body); err != nil {
+		log.Printf("Docker build failed: %v", err)
+		return err
+	}
 	io.Copy(os.Stdout, buildResponse.Body)
 
 	log.Printf("Built image %s for challenge %s", imageName, slug)

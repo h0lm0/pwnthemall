@@ -287,7 +287,7 @@ func BuildChallengeImage(c *gin.Context) {
 	}
 	err := utils.BuildDockerImage(challenge.Slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
