@@ -12,8 +12,8 @@ import (
 
 func seedConfig() {
 	config := []models.Config{
-		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: false},
-		{Key: "FLAG_PREFIX", Value: os.Getenv("PTA_FLAG_PREFIX"), Public: false},
+		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: true},
+		{Key: "FLAG_PREFIX", Value: os.Getenv("PTA_FLAG_PREFIX"), Public: true},
 		{Key: "DOCKER_HOST", Value: os.Getenv("PTA_DOCKER_HOST"), Public: true},
 		{Key: "DOCKER_TLS_VERIFY", Value: os.Getenv("PTA_DOCKER_TLS_VERIFY"), Public: true},
 		{Key: "DOCKER_IMAGE_PREFIX", Value: os.Getenv("PTA_DOCKER_IMAGE_PREFIX"), Public: false},

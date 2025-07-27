@@ -23,12 +23,14 @@ import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSiteConfig } from "@/context/SiteConfigContext";
 import { useChallengeCategories } from "@/hooks/use-challenge-categories";
 import type { NavItem } from "@/models/NavItem";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { loggedIn, logout, authChecked } = useAuth();
   const { t } = useLanguage();
+  const { siteConfig } = useSiteConfig();
   const router = useRouter();
   const { isMobile } = useSidebar();
   const { categories, loading } = useChallengeCategories(loggedIn);
@@ -115,11 +117,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             { title: t('dashboard'), url: "/admin/dashboard" },
             { title: t('users'), url: "/admin/users" },
             { title: t('challenge_categories'), url: "/admin/challenge-categories" },
+            { title: t('configuration'), url: "/admin/configuration" },
           ],
           isActive:
             router.pathname === "/admin/dashboard" ||
             router.pathname === "/admin/users" ||
-            router.pathname === "/admin/challenge-categories",
+            router.pathname === "/admin/challenge-categories" ||
+            router.pathname === "/admin/configuration",
         });
       }
     } else {
@@ -148,7 +152,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <div className="flex flex-col h-full">
         <SidebarHeader>
           <TeamSwitcher
-            teams={[{ name: "pwnthemall", logo: Home, plan: "CTF" }]}
+            teams={[{ name: siteConfig.SITE_NAME || "pwnthemall", logo: Home, plan: "CTF" }]}
           />
         </SidebarHeader>
         {authChecked && (

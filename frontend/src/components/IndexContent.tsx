@@ -2,14 +2,16 @@ import Head from 'next/head';
 import Image from 'next/image';
 import AnimatedText from './AnimatedText';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSiteConfig } from '@/context/SiteConfigContext';
 
 const IndexContent = () => {
   const { t } = useLanguage();
+  const { siteConfig } = useSiteConfig();
   
   return (
     <>
       <Head>
-        <title>pwnthemall</title>
+        <title>{siteConfig.SITE_NAME || 'pwnthemall'}</title>
       </Head>
       <main className="bg-muted flex flex-col items-center justify-center text-center min-h-screen px-6">
         <Image

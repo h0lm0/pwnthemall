@@ -31,6 +31,8 @@ func main() {
 	if err := config.ConnectDocker(); err != nil {
 		log.Fatalf("Failed to connect to docker host: %s", err.Error())
 	}
+	// Synchronize environment variables with database configuration
+	config.SynchronizeEnvWithDb()
 	router := gin.Default()
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
@@ -65,6 +67,7 @@ func main() {
 	routes.RegisterChallengeRoutes(router)
 	routes.RegisterChallengeCategoryRoutes(router)
 	routes.RegisterTeamRoutes(router)
+	routes.RegisterConfigRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
