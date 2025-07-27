@@ -1,10 +1,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useSiteConfig } from "@/context/SiteConfigContext";
+import Head from "next/head";
 
 export default function ScoreboardPage() {
   const router = useRouter();
   const { loggedIn, checkAuth, authChecked } = useAuth();
+  const { getSiteName } = useSiteConfig();
 
   useEffect(() => {
     checkAuth();
@@ -20,10 +23,15 @@ export default function ScoreboardPage() {
   if (!loggedIn) return null;
 
   return (
-    <div className="bg-muted flex min-h-screen items-center justify-center">
-      <h1 className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
-        Scoreboard page
-      </h1>
-    </div>
+    <>
+      <Head>
+        <title>{getSiteName()}</title>
+      </Head>
+      <div className="bg-muted flex min-h-screen items-center justify-center">
+        <h1 className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
+          Scoreboard page
+        </h1>
+      </div>
+    </>
   );
 }

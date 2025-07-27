@@ -26,6 +26,7 @@ import {
 import UserForm from "./UserForm"
 import { User, UserFormData } from "@/models/User"
 import { useLanguage } from "@/context/LanguageContext"
+import { useSiteConfig } from "@/context/SiteConfigContext"
 import { toast } from "sonner"
 
 interface UsersContentProps {
@@ -35,6 +36,7 @@ interface UsersContentProps {
 
 export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const { t, isLoaded, language } = useLanguage()
+  const { getSiteName } = useSiteConfig()
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<User | null>(null)
@@ -230,7 +232,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   return (
     <>
       <Head>
-        <title>pwnthemall - admin zone</title>
+        <title>{getSiteName()}</title>
       </Head>
       <div className="bg-muted min-h-screen p-4 overflow-x-auto">
         {/* {/* Debug info - remove after testing 
