@@ -30,7 +30,7 @@ import type { NavItem } from "@/models/NavItem";
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { loggedIn, logout, authChecked } = useAuth();
   const { t } = useLanguage();
-  const { getSiteName } = useSiteConfig();
+  const { getSiteName, siteConfig } = useSiteConfig();
   const router = useRouter();
   const { isMobile } = useSidebar();
   const { categories, loading } = useChallengeCategories(loggedIn);
@@ -133,15 +133,19 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         icon: LogIn,
         isActive: router.pathname === "/login",
       });
-      items.push({
-        title: t('register'),
-        url: "/register",
-        icon: UserPlus,
-        isActive: router.pathname === "/register",
-      });
+      // Only show register link if registration is enabled
+      const registrationEnabled = siteConfig.REGISTRATION_ENABLED !== "false" && siteConfig.REGISTRATION_ENABLED !== "0";
+      if (registrationEnabled) {
+        items.push({
+          title: t('register'),
+          url: "/register",
+          icon: UserPlus,
+          isActive: router.pathname === "/register",
+        });
+      }
     }
     return items;
-  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, t]);
+  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, t, siteConfig.REGISTRATION_ENABLED]);
 
   return (
     <Sidebar
