@@ -58,23 +58,32 @@ exit /b %ERRORLEVEL%
 
 :try_gitbash
 echo Trying with Git Bash...
-set "gitbash_path=C:\Program Files\Git\bin\bash.exe"
-if exist "%gitbash_path%" (
-    echo Using native Git Bash
-    set WSL_WRAPPER_ACTIVE=1
-    "%gitbash_path%" -c "export WSL_WRAPPER_ACTIVE=1 && ./pta-cli.sh %args%"
-    exit /b %ERRORLEVEL%
-) else (
-    rem Try alternative Git Bash locations
-    set "gitbash_path=C:\Program Files (x86)\Git\bin\bash.exe"
-    if exist "!gitbash_path!" (
-        echo Using native Git Bash (x86)
+for %%G in (bash.exe) do (
+    where %%G >nul 2>&1
+    if not errorlevel 1 (
+        set "gitbash_path=%%~$PATH:G"
+        echo Using Git Bash found in PATH: !gitbash_path!
         set WSL_WRAPPER_ACTIVE=1
         "!gitbash_path!" -c "export WSL_WRAPPER_ACTIVE=1 && ./pta-cli.sh %args%"
         exit /b %ERRORLEVEL%
     )
 )
 
+rem If not found in PATH, try querying the registry for Git installation path
+for /f "tokens=2*" %%A in ('reg query "HKLM\SOFTWARE\GitForWindows" /v InstallPath 2^>nul') do (
+    set "git_install_path=%%B"
+)
+if defined git_install_path (
+    set "gitbash_path=!git_install_path!\bin\bash.exe"
+    if exist "!gitbash_path!" (
+        echo Using Git Bash found in registry: !gitbash_path!
+        set WSL_WRAPPER_ACTIVE=1
+        "!gitbash_path!" -c "export WSL_WRAPPER_ACTIVE=1 && ./pta-cli.sh %args%"
+        exit /b %ERRORLEVEL%
+    )
+)
+
+echo ❌ No valid Git Bash interpreter found.
 echo ❌ No valid bash interpreter found.
 echo.
 echo Possible solutions:
