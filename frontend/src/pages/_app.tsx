@@ -31,40 +31,40 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
     <LanguageProvider>
       <AuthProvider>
         <SiteConfigProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme={systemTheme}
-            enableSystem={false}
-            value={{
-              light: "light",
-              dark: "dark",
-              latte: "theme-latte",
-              frappe: "theme-frappe",
-              macchiato: "theme-macchiato",
-              mocha: "theme-mocha",
-              slate: "theme-slate",
-              rose: "theme-rose",
-              emerald: "theme-emerald",
-              cyan: "theme-cyan",
-              violet: "theme-violet",
-              orange: "theme-orange",
-            }}
-          >
-            <SidebarProvider defaultOpen={sidebarDefaultOpen}>
-              <AppSidebar />
-              <SidebarInset>
-                <Component {...pageProps} />
-                <CookieConsent />
-              </SidebarInset>
-            </SidebarProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme={systemTheme}
+          enableSystem={false}
+          value={{
+            light: "light",
+            dark: "dark",
+            latte: "theme-latte",
+            frappe: "theme-frappe",
+            macchiato: "theme-macchiato",
+            mocha: "theme-mocha",
+            slate: "theme-slate",
+            rose: "theme-rose",
+            emerald: "theme-emerald",
+            cyan: "theme-cyan",
+            violet: "theme-violet",
+            orange: "theme-orange",
+          }}
+        >
+          <SidebarProvider defaultOpen={sidebarDefaultOpen}>
+            <AppSidebar />
+            <SidebarInset>
+              <Component {...pageProps} />
+              <CookieConsent />
+            </SidebarInset>
+          </SidebarProvider>
 
-            <Toaster
-              richColors
-              position="top-right"
-              closeButton
-              expand
-            />
-          </ThemeProvider>
+          <Toaster
+            richColors
+            position="top-right"
+            closeButton
+            expand
+          />
+        </ThemeProvider>
         </SiteConfigProvider>
       </AuthProvider>
     </LanguageProvider>
