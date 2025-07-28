@@ -25,12 +25,12 @@ cp .env.example .env
 Open https://pwnthemall.local/ & accept the certificate
 
 ### Windows Support
-Can run the same way as linux if executed directly in the WSL terminal
-#### Required :
-   - Windows Subsystem for Linux
-   - Git Bash
+Can run the same way as Linux if executed directly in the WSL terminal.
+#### Requirements:
+   - Windows Subsystem for Linux (WSL)
+   - Alternatively, Git Bash (if WSL is not available)
 
-Use the provided `pta-cli.cmd` wrapper which will automatically detect and use WSL or Git 
+Use the provided `pta-cli.cmd` wrapper, which will automatically detect and use WSL if available, or fall back to Git Bash. 
    ```shell
    pta-cli.cmd compose up -b -e prod
    pta-cli.cmd compose up -b -e dev
