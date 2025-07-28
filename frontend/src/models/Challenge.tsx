@@ -30,5 +30,7 @@ export interface Solve {
   challenge: Challenge
   points: number
   createdAt: string
+  userId?: number
+  username?: string
 }
 

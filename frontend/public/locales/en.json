@@ -164,6 +164,7 @@
   "third_place": "🥉 Third Place",
   "solved_by": "Solved by",
   "on": "on",
+  "solved_by_user": "Solved by {username}",
   "no_solves_yet": "No solves yet",
   "be_the_first": "Be the first to solve this challenge!",
   "loading": "Loading...",

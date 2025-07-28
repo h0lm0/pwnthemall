@@ -238,6 +238,7 @@
   "third_place": "🥉 Troisième Place",
   "solved_by": "Résolu par",
   "on": "le",
+  "solved_by_user": "Résolu par {username}",
   "no_solves_yet": "Aucune résolution pour le moment",
   "be_the_first": "Soyez le premier à résoudre ce challenge !",
   "loading": "Chargement..."

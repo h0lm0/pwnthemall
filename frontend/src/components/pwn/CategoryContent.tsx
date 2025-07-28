@@ -73,6 +73,13 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   };
 
   const fetchSolves = async (challengeId: number) => {
+    if (!challengeId) {
+      console.error('No challenge ID provided to fetchSolves');
+      setSolves([]);
+      setSolvesLoading(false);
+      return;
+    }
+    
     setSolvesLoading(true);
     try {
       const response = await axios.get<Solve[]>(`/api/challenges/${challengeId}/solves`, {
@@ -81,7 +88,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
           'Pragma': 'no-cache'
         }
       });
-      setSolves(response.data);
+      setSolves(response.data || []);
     } catch (err: any) {
       console.error('Failed to fetch solves:', err);
       setSolves([]);
@@ -100,27 +107,20 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
     fetchSolves(challenge.id);
   };
 
-  const getTrophyIcon = (index: number) => {
-    switch (index) {
-      case 0:
-        return <span className="text-2xl drop-shadow-sm">🥇</span>;
-      case 1:
-        return <span className="text-2xl drop-shadow-sm">🥈</span>;
-      case 2:
-        return <span className="text-2xl drop-shadow-sm">🥉</span>;
-      default:
-        return null;
-    }
-  };
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'Unknown date';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
   
   const { t } = useLanguage();
@@ -235,7 +235,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 dark:border-cyan-400 mx-auto mb-2"></div>
                         <p className="text-muted-foreground">{t('loading') || 'Loading...'}</p>
                       </div>
-                    ) : solves.length === 0 ? (
+                    ) : !solves || solves.length === 0 ? (
                       <div className="text-center py-8">
                         <Trophy className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
                         <p className="text-lg font-medium text-foreground mb-2">{t('no_solves_yet')}</p>
@@ -245,10 +245,10 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                       <div className="space-y-3">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="text-lg font-semibold text-foreground">
-                            {t('solves')} ({solves.length})
+                            {t('solves')} ({solves?.length || 0})
                           </h3>
                         </div>
-                        {solves.map((solve, index) => (
+                        {solves && solves.map((solve, index) => (
                           <div 
                             key={`${solve.teamId}-${solve.challengeId}`} 
                             className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors duration-200"
@@ -259,13 +259,22 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                               </div>
                               {index < 3 && (
                                 <div className="text-2xl">
-                                  {getTrophyIcon(index)}
+                                  {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
                                 </div>
                               )}
                               <div>
                                 <span className="font-semibold text-foreground">{solve.team?.name || 'Unknown Team'}</span>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  {t('solved_by')} {solve.team?.name || 'Unknown Team'} {t('on')} {formatDate(solve.createdAt)}
+                                  {solve.username ? (
+                                    <>
+                                      {t('solved_by')} <span className="font-medium text-foreground/80">{solve.username}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      {t('solved_by')} {solve.team?.name || 'Unknown Team'}
+                                    </>
+                                  )}
+                                  {' '}{t('on')} {formatDate(solve.createdAt)}
                                 </div>
                               </div>
                             </div>
