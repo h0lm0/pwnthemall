@@ -294,3 +294,7 @@ func BuildChallengeImage(c *gin.Context) {
 		"message": fmt.Sprintf("Successfully built image for challenge %s", challenge.Slug),
 	})
 }
+
+func StartChallengeInstance(c *gin.Context){
+	
+}
