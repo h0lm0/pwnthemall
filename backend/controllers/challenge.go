@@ -13,7 +13,8 @@ import (
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"strings"
-
+	"time"
+	"strconv"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 )
@@ -267,13 +268,17 @@ func SubmitChallenge(c *gin.Context) {
 			}).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
 			return
-		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "challenge_solved"})
-			return
+		} 
+
+		if err := awardFirstBlood(challenge.ID, user.Team.ID, user.ID); err != nil {
+			log.Printf("FirstBlood error: %v", err)
 		}
-	} else {
-		c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
-	}
+
+		c.JSON(http.StatusOK, gin.H{"message": "challenge_solved"})
+		return
+	} 
+
+	c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
 }
 
 func GetChallengeSolves(c *gin.Context) {
@@ -350,4 +355,54 @@ func BuildChallengeImage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Successfully built image for challenge %s", challenge.Slug),
 	})
+}
+
+
+func awardFirstBlood(challengeID, teamID, userID uint) error {
+	var configFB models.FirstBloodConfig
+	if err := config.DB.Where("challenge_id = ?", challengeID).First(&configFB).Error; err != nil {
+		return nil
+	}
+
+	bonuses, err := parseBonuses(configFB.Bonuses)
+	if err != nil {
+		return fmt.Errorf("invalid bonus config: %v", err)
+	}
+
+	var exists models.FirstBlood
+	if err := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, teamID).First(&exists).Error; err == nil {
+		return nil
+	}
+
+	var count int64
+	config.DB.Model(&models.FirstBlood{}).Where("challenge_id = ?", challengeID).Count(&count)
+
+	if int(count) >= configFB.MaxTeams {
+		return nil 
+	}
+
+	points := bonuses[count]
+
+	fb := models.FirstBlood{
+		ChallengeID: challengeID,
+		TeamID:      teamID,
+		UserID:      userID,
+		Points:      points,
+		CreatedAt:   time.Now(),
+	}
+
+	return config.DB.Create(&fb).Error
+}
+
+func parseBonuses(bonusStr string) ([]int, error) {
+	parts := strings.Split(bonusStr, ",")
+	bonuses := make([]int, len(parts))
+	for i, p := range parts {
+		v, err := strconv.Atoi(strings.TrimSpace(p))
+		if err != nil {
+			return nil, err
+		}
+		bonuses[i] = v
+	}
+	return bonuses, nil
 }
