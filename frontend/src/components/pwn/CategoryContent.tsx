@@ -224,81 +224,84 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                       <TabsTrigger value="solves">{t('solves')}</TabsTrigger>
                     </TabsList>
                     
-                    <div className="flex-1 overflow-y-auto">
-                      <TabsContent value="description" className="h-full">
-                        <div className="text-left whitespace-pre-wrap text-foreground leading-relaxed">
+                    <div className="flex-1 min-h-0">
+                      <TabsContent value="description" className="h-full overflow-y-auto">
+                        <div className="text-left whitespace-pre-wrap text-foreground leading-relaxed min-h-full">
                           {selectedChallenge?.description || 'No description available'}
                         </div>
                       </TabsContent>
                       
-                      <TabsContent value="solves" className="h-full">
-                        {solvesLoading ? (
-                          <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 dark:border-cyan-400 mx-auto mb-2"></div>
-                            <p className="text-muted-foreground">{t('loading') || 'Loading...'}</p>
-                          </div>
-                        ) : !solves || solves.length === 0 ? (
-                          <div className="text-center py-8">
-                            <Trophy className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-                            <p className="text-lg font-medium text-foreground mb-2">{t('no_solves_yet')}</p>
-                            <p className="text-sm text-muted-foreground">{t('be_the_first')}</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-lg font-semibold text-foreground">
-                                {t('solves')} ({solves?.length || 0})
-                              </h3>
+                      <TabsContent value="solves" className="h-full overflow-y-auto">
+                        <div className="min-h-full">
+                          {solvesLoading ? (
+                            <div className="text-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 dark:border-cyan-400 mx-auto mb-2"></div>
+                              <p className="text-muted-foreground">{t('loading') || 'Loading...'}</p>
                             </div>
-                            {solves && solves.map((solve, index) => (
-                              <div 
-                                key={`${solve.teamId}-${solve.challengeId}`} 
-                                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors duration-200"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 text-white font-bold text-sm shadow-sm">
-                                    {index + 1}
-                                  </div>
-                                  {index < 3 && (
-                                    <div className="text-2xl">
-                                      {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                                    </div>
-                                  )}
-                                  <div>
-                                    <span className="font-semibold text-foreground">{solve.team?.name || 'Unknown Team'}</span>
-                                    <div className="text-xs text-muted-foreground mt-1">
-                                      {solve.username ? (
-                                        <>
-                                          {t('solved_by')} <span className="font-medium text-foreground/80">{solve.username}</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          {t('solved_by')} {solve.team?.name || 'Unknown Team'}
-                                        </>
-                                      )}
-                                      {' '}{t('on')} {formatDate(solve.createdAt)}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
-                                    +{solve.points} pts
-                                  </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    {formatDate(solve.createdAt)}
-                                  </div>
-                                </div>
+                          ) : !solves || solves.length === 0 ? (
+                            <div className="text-center py-8">
+                              <Trophy className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                              <p className="text-lg font-medium text-foreground mb-2">{t('no_solves_yet')}</p>
+                              <p className="text-sm text-muted-foreground">{t('be_the_first')}</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-foreground">
+                                  {t('solves')} ({solves?.length || 0})
+                                </h3>
                               </div>
-                            ))}
-                          </div>
-                        )}
+                              {solves && solves.map((solve, index) => (
+                                <div 
+                                  key={`${solve.teamId}-${solve.challengeId}`} 
+                                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors duration-200"
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white font-bold text-sm shadow-sm">
+                                      {index < 3 ? (
+                                        <span className="text-lg">
+                                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                                        </span>
+                                      ) : (
+                                        index + 1
+                                      )}
+                                    </div>
+                                    <div>
+                                      <span className="font-semibold text-foreground">{solve.team?.name || 'Unknown Team'}</span>
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        {solve.username ? (
+                                          <>
+                                            {t('solved_by')} <span className="font-medium text-foreground/80">{solve.username}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            {t('solved_by')} {solve.team?.name || 'Unknown Team'}
+                                          </>
+                                        )}
+                                        {' '}{t('on')} {formatDate(solve.createdAt)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                                      +{solve.points} pts
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      {formatDate(solve.createdAt)}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </TabsContent>
                     </div>
                   </Tabs>
                 </div>
 
                 {selectedChallenge?.solved ? (
-                  <div className="mt-6 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg flex-shrink-0">
+                  <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg flex-shrink-0">
                     <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                       <BadgeCheck className="w-5 h-5" />
                       <span className="font-medium">{t('already_solved')}</span>
@@ -308,7 +311,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                     </p>
                   </div>
                 ) : (
-                  <div className="mt-6 flex flex-col sm:flex-row items-center gap-4 flex-shrink-0">
+                  <div className="mt-4 flex flex-col sm:flex-row items-center gap-4 flex-shrink-0 pb-2">
                     <Input
                       placeholder={t('enter_your_flag')}
                       value={flag}
