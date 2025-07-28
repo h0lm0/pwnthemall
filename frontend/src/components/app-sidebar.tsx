@@ -23,12 +23,14 @@ import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSiteConfig } from "@/context/SiteConfigContext";
 import { useChallengeCategories } from "@/hooks/use-challenge-categories";
 import type { NavItem } from "@/models/NavItem";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { loggedIn, logout, authChecked } = useAuth();
   const { t } = useLanguage();
+  const { getSiteName, siteConfig } = useSiteConfig();
   const router = useRouter();
   const { isMobile } = useSidebar();
   const { categories, loading } = useChallengeCategories(loggedIn);
@@ -40,9 +42,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     role: "",
   });
 
-  React.useEffect(() => {
-    if (!authChecked) return;
-
+  // Refactored user data fetcher
+  const fetchUserData = React.useCallback(() => {
     if (loggedIn) {
       axios
         .get("/api/me")
@@ -55,11 +56,29 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             role,
           });
         })
-        .catch(() => {});
+        .catch(() => {
+          setUserData({ name: "Guest", email: "", avatar: "/logo-no-text.png", role: "" });
+        });
     } else {
       setUserData({ name: "Guest", email: "", avatar: "/logo-no-text.png", role: "" });
     }
-  }, [loggedIn, authChecked]);
+  }, [loggedIn]);
+
+  React.useEffect(() => {
+    if (!authChecked) return;
+    fetchUserData();
+  }, [loggedIn, authChecked, fetchUserData]);
+
+  // Listen for auth:refresh events to update sidebar user info
+  React.useEffect(() => {
+    const handleAuthRefresh = () => {
+      fetchUserData();
+    };
+    window.addEventListener('auth:refresh', handleAuthRefresh);
+    return () => {
+      window.removeEventListener('auth:refresh', handleAuthRefresh);
+    };
+  }, [fetchUserData]);
 
   const navItems = React.useMemo(() => {
     if (!authChecked) return [];
@@ -98,11 +117,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             { title: t('dashboard'), url: "/admin/dashboard" },
             { title: t('users'), url: "/admin/users" },
             { title: t('challenge_categories'), url: "/admin/challenge-categories" },
+            { title: t('configuration'), url: "/admin/configuration" },
           ],
           isActive:
             router.pathname === "/admin/dashboard" ||
             router.pathname === "/admin/users" ||
-            router.pathname === "/admin/challenge-categories",
+            router.pathname === "/admin/challenge-categories" ||
+            router.pathname === "/admin/configuration",
         });
       }
     } else {
@@ -112,15 +133,19 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         icon: LogIn,
         isActive: router.pathname === "/login",
       });
-      items.push({
-        title: t('register'),
-        url: "/register",
-        icon: UserPlus,
-        isActive: router.pathname === "/register",
-      });
+      // Only show register link if registration is enabled
+      const registrationEnabled = siteConfig.REGISTRATION_ENABLED !== "false" && siteConfig.REGISTRATION_ENABLED !== "0";
+      if (registrationEnabled) {
+        items.push({
+          title: t('register'),
+          url: "/register",
+          icon: UserPlus,
+          isActive: router.pathname === "/register",
+        });
+      }
     }
     return items;
-  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, t]);
+  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, t, siteConfig.REGISTRATION_ENABLED]);
 
   return (
     <Sidebar
@@ -131,7 +156,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <div className="flex flex-col h-full">
         <SidebarHeader>
           <TeamSwitcher
-            teams={[{ name: "pwnthemall", logo: Home, plan: "CTF" }]}
+            teams={[{ name: getSiteName(), logo: Home, plan: "CTF" }]}
           />
         </SidebarHeader>
         {authChecked && (

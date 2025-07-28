@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useSiteConfig } from "@/context/SiteConfigContext";
+import { useLanguage } from "@/context/LanguageContext";
 import axios from "@/lib/axios";
+import Head from "next/head";
 
 const PwnPage = () => {
   const router = useRouter();
   const { loggedIn, checkAuth, authChecked } = useAuth();
+  const { getSiteName } = useSiteConfig();
+  const { t } = useLanguage();
   const [teamChecked, setTeamChecked] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -16,10 +22,14 @@ const PwnPage = () => {
   useEffect(() => {
     if (authChecked && loggedIn) {
       axios.get("/api/me").then(res => {
+        setRole(res.data.role);
         if (res.data.teamId) {
           setHasTeam(true);
         } else {
-          router.replace("/team");
+          setHasTeam(false);
+          if (res.data.role !== "admin") {
+            router.replace("/team");
+          }
         }
         setTeamChecked(true);
       }).catch(() => {
@@ -29,14 +39,19 @@ const PwnPage = () => {
   }, [authChecked, loggedIn, router]);
 
   if (!authChecked || !loggedIn || !teamChecked) return null;
-  if (!hasTeam) return null;
+  if (!hasTeam && role !== "admin") return null;
 
   return (
-    <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 text-center">
-      <h1 className="text-3xl font-bold mb-4 text-cyan-600 dark:text-cyan-400">
-        Choose a category
-      </h1>
-    </main>
+    <>
+      <Head>
+        <title>{getSiteName()}</title>
+      </Head>
+      <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 text-center">
+        <h1 className="text-3xl font-bold mb-4 text-cyan-600 dark:text-cyan-400">
+          {t('choose_a_category')}
+        </h1>
+      </main>
+    </>
   );
 };
 

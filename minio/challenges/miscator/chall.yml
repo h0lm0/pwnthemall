@@ -5,6 +5,6 @@ category: misc
 difficulty: easy
 type: docker
 author: swinowz
-flags: ["leflagachanGe"]
+flags: ["flag"]
 hidden: true
 points: 50

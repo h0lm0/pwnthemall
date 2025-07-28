@@ -7,6 +7,7 @@ interface LanguageContextProps {
   setLanguage: (lang: Language) => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
   isLoaded: boolean;
+  clearTranslationCache: () => void;
 }
 
 // Simple loading component
@@ -32,27 +33,39 @@ const LanguageContext = createContext<LanguageContextProps>({
   setLanguage: () => {},
   t: (key) => key,
   isLoaded: false,
+  clearTranslationCache: () => {},
 });
 
 // Translation cache version - increment this when you update translations
-const TRANSLATION_VERSION = '1.0.0';
+const TRANSLATION_VERSION = '1.0.3';
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>('en');
+  // Initialize language state from localStorage if available
+  const getInitialLanguage = (): Language => {
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('language') as Language;
+      return savedLang || 'en';
+    }
+    return 'en';
+  };
+
+  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // On mount, load language and translations from localStorage if available
+  // On mount, clear other language caches and load cached translations if available
   useEffect(() => {
-    let initialLang: Language = 'en';
     if (typeof window !== 'undefined') {
-      initialLang = (localStorage.getItem('language') as Language) || 'en';
-    }
-    setLanguageState(initialLang);
-    // Try to load cached translations
-    if (typeof window !== 'undefined') {
-      const cacheKey = `translations_${initialLang}_v${TRANSLATION_VERSION}`;
+      // Clear other language caches on app load (when user logs in)
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('translations_') && !key.includes(`_${language}_v`)) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Try to load cached translations
+      const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -64,7 +77,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       }
     }
-  }, []);
+  }, [language]); // Re-run when language changes to handle cache invalidation
 
   useEffect(() => {
     const loadTranslations = async () => {
@@ -129,6 +142,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLanguageState(lang);
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', lang);
+      // Clear other language caches when switching languages
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('translations_') && !key.includes(`_${lang}_v`)) {
+          localStorage.removeItem(key);
+        }
+      });
     }
   };
 
@@ -151,13 +170,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return str;
   };
 
+
+
   // Show loading screen while translations are loading (only on initial load or language change)
   if (!isLoaded && (isInitialLoad || Object.keys(translations).length === 0)) {
     return <LoadingScreen />;
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, isLoaded }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, isLoaded, clearTranslationCache: clearTranslationCache }}>
       <div className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {children}
         {/* Subtle loading indicator for language changes */}
@@ -176,13 +197,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useLanguage = () => useContext(LanguageContext);
 
-// Utility function to clear translation cache (useful for development or when translations are updated)
+// Export clearTranslationCache function for use in other contexts
 export const clearTranslationCache = () => {
   if (typeof window !== 'undefined') {
+    // Clear all translation caches
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('translations_')) {
         localStorage.removeItem(key);
       }
     });
   }
-}; 
+};

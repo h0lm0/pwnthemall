@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -11,7 +12,7 @@ import (
 
 var DockerClient *client.Client
 
-func ConnectDocker() {
+func ConnectDocker() error {
 	SynchronizeEnvWithDb()
 
 	helper, err := connhelper.GetConnectionHelper(os.Getenv("DOCKER_HOST"))
@@ -44,11 +45,13 @@ func ConnectDocker() {
 
 	cl, err := client.NewClientWithOpts(clientOpts...)
 
-	if err != nil {
+	if err != nil || cl == nil {
 		log.Println("Unable to create docker client")
-		panic(err)
+		return err
 	} else {
-		log.Printf("Connected to %s with version %s", os.Getenv("DOCKER_HOST"), cl.ClientVersion())
+		ver, _ := cl.ServerVersion(context.Background())
+		log.Printf("Connected to %s | Version: %s", os.Getenv("DOCKER_HOST"), ver.Version)
 	}
 	DockerClient = cl
+	return nil
 }

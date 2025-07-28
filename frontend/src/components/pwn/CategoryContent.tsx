@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import axios from "@/lib/axios";
 import { useLanguage } from "@/context/LanguageContext"
+import { useSiteConfig } from "@/context/SiteConfigContext";
 import { CheckCircle, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,6 +35,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [flag, setFlag] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const { getSiteName } = useSiteConfig();
 
   const handleSubmit = async () => {
     if (!selectedChallenge) return;
@@ -62,7 +64,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
     return (
       <>
         <Head>
-          <title>pwnthemall - {cat}</title>
+          <title>{getSiteName()} - {cat}</title>
         </Head>
         <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 py-10 text-center">
           <h1 className="text-3xl font-bold mb-6 text-cyan-600 dark:text-cyan-400">
@@ -77,7 +79,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   return (
     <>
       <Head>
-        <title>pwnthemall - {cat}</title>
+        <title>{getSiteName()} - {cat}</title>
       </Head>
 
       <main className="bg-muted flex flex-col items-center justify-start min-h-screen px-6 py-10 text-center">

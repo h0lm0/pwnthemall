@@ -29,6 +29,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoggedIn(false);
     // Clear any cached data
     clearTranslationCache();
+    
+    // Notify all components about the auth change
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:refresh'));
+    }
+    
     if (redirect && typeof window !== "undefined" && window.location.pathname !== "/login") {
       window.location.href = "/login";
     }
@@ -40,6 +46,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoggedIn(true);
     } catch (err: any) {
       if (err?.response?.status === 401) {
+        // Check if user is banned
+        if (err?.response?.data?.error === "banned") {
+          console.log("User is banned, forcing logout");
+          await logout(false); // Force logout without redirect
+          return;
+        }
+        
         try {
           await axios.post("/api/refresh");
           setLoggedIn(true);

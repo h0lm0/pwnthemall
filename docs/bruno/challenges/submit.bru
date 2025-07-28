@@ -1,0 +1,15 @@
+meta {
+  name: submit
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{URL}}/api/challenges/:id/submit
+  body: none
+  auth: inherit
+}
+
+params:path {
+  id: 
+}

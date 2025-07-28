@@ -1,20 +1,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useSiteConfig } from "@/context/SiteConfigContext";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import axios from "@/lib/axios";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
+import Head from "next/head";
 
 export default function TeamPage() {
   const { t } = useLanguage();
+  const { getSiteName } = useSiteConfig();
   const [createName, setCreateName] = useState("");
   const [createPassword, setCreatePassword] = useState("");
   const [joinName, setJoinName] = useState("");
   const [joinPassword, setJoinPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { loggedIn, checkAuth, authChecked } = useAuth();
@@ -96,7 +98,11 @@ export default function TeamPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted px-2 py-8">
+    <>
+      <Head>
+        <title>{getSiteName()}</title>
+      </Head>
+      <div className="min-h-screen flex items-center justify-center bg-muted px-2 py-8">
       <Card className="w-full max-w-2xl mx-auto">
         <CardContent className="py-8">
           <CardTitle className="text-center text-3xl font-bold mb-2">{t("team")}</CardTitle>
@@ -149,6 +155,7 @@ export default function TeamPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset, SIDEBAR_COOKIE_NAME } from '@/components
 import { AppSidebar } from '@/components/app-sidebar'
 import { AuthProvider } from '@/context/AuthContext'
 import { LanguageProvider } from '@/context/LanguageContext'
+import { SiteConfigProvider } from '@/context/SiteConfigContext'
 import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
 import { CookieConsent } from "@/components/ui/CookieConsent";
@@ -29,40 +30,42 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme={systemTheme}
-          enableSystem={false}
-          value={{
-            light: "light",
-            dark: "dark",
-            latte: "theme-latte",
-            frappe: "theme-frappe",
-            macchiato: "theme-macchiato",
-            mocha: "theme-mocha",
-            slate: "theme-slate",
-            rose: "theme-rose",
-            emerald: "theme-emerald",
-            cyan: "theme-cyan",
-            violet: "theme-violet",
-            orange: "theme-orange",
-          }}
-        >
-          <SidebarProvider defaultOpen={sidebarDefaultOpen}>
-            <AppSidebar />
-            <SidebarInset>
-              <Component {...pageProps} />
-              <CookieConsent />
-            </SidebarInset>
-          </SidebarProvider>
+        <SiteConfigProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme={systemTheme}
+            enableSystem={false}
+            value={{
+              light: "light",
+              dark: "dark",
+              latte: "theme-latte",
+              frappe: "theme-frappe",
+              macchiato: "theme-macchiato",
+              mocha: "theme-mocha",
+              slate: "theme-slate",
+              rose: "theme-rose",
+              emerald: "theme-emerald",
+              cyan: "theme-cyan",
+              violet: "theme-violet",
+              orange: "theme-orange",
+            }}
+          >
+            <SidebarProvider defaultOpen={sidebarDefaultOpen}>
+              <AppSidebar />
+              <SidebarInset>
+                <Component {...pageProps} />
+                <CookieConsent />
+              </SidebarInset>
+            </SidebarProvider>
 
-          <Toaster
-            richColors
-            position="top-right"
-            closeButton
-            expand
-          />
-        </ThemeProvider>
+            <Toaster
+              richColors
+              position="top-right"
+              closeButton
+              expand
+            />
+          </ThemeProvider>
+        </SiteConfigProvider>
       </AuthProvider>
     </LanguageProvider>
   )

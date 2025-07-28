@@ -52,22 +52,6 @@ func SessionAuthRequired(needTeam bool) gin.HandlerFunc {
 	}
 }
 
-func getClaimsFromHeader(authHeader string) (*utils.TokenClaims, string) {
-	if authHeader == "" || len(authHeader) < 8 || authHeader[:7] != "Bearer " {
-		return nil, "missing or invalid authorization header"
-	}
-
-	tokenStr := authHeader[7:]
-	token, err := jwt.ParseWithClaims(tokenStr, &utils.TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return utils.AccessSecret, nil
-	})
-	if err != nil || !token.Valid {
-		return nil, "invalid token"
-	}
-
-	return token.Claims.(*utils.TokenClaims), ""
-}
-
 func getClaimsFromCookie(c *gin.Context) (*utils.TokenClaims, string) {
 	tokenStr, err := c.Cookie("access_token")
 	if err != nil {
@@ -142,7 +126,36 @@ func AuthRequired(needTeam bool) gin.HandlerFunc {
 		}
 
 		if needTeam && (user.TeamID == nil || user.Team == nil) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team required"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team_required"})
+			return
+		}
+
+		c.Set("user_id", user.ID)
+		c.Set("user", &user)
+		c.Next()
+	}
+}
+
+func AuthRequiredTeamOrAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, err := getClaimsFromCookie(c)
+		if claims == nil {
+			c.AbortWithStatusJSON(403, gin.H{"error": err})
+			return
+		}
+		var user models.User
+		if err := config.DB.Preload("Team").First(&user, claims.UserID).Error; err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			return
+		}
+
+		if user.Banned {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "banned"})
+			return
+		}
+
+		if user.Role != "admin" && (user.TeamID == nil || user.Team == nil) {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team_required"})
 			return
 		}
 

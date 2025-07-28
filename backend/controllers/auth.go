@@ -29,6 +29,24 @@ type LoginInput struct {
 
 // Register creates a new user account
 func Register(c *gin.Context) {
+	// Check if registration is enabled
+	var registrationConfig models.Config
+	if err := config.DB.Where("key = ?", "REGISTRATION_ENABLED").First(&registrationConfig).Error; err != nil {
+		// If config doesn't exist, default to enabled
+		if err.Error() == "record not found" {
+			// Continue with registration
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check registration status"})
+			return
+		}
+	} else {
+		// Check if registration is disabled
+		if registrationConfig.Value == "false" || registrationConfig.Value == "0" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Registration is currently disabled"})
+			return
+		}
+	}
+
 	var input RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		// Custom error handling for validation errors

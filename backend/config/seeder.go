@@ -10,12 +10,20 @@ import (
 	"gorm.io/gorm"
 )
 
+// getEnvWithDefault returns the environment variable value or a default if not set
+func getEnvWithDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
 func seedConfig() {
 	config := []models.Config{
-		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: false},
-		{Key: "FLAG_PREFIX", Value: os.Getenv("PTA_FLAG_PREFIX"), Public: false},
-		{Key: "DOCKER_HOST", Value: os.Getenv("PTA_DOCKER_HOST"), Public: true},
-		{Key: "DOCKER_TLS_VERIFY", Value: os.Getenv("PTA_DOCKER_TLS_VERIFY"), Public: true},
+		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: true},
+		{Key: "DOCKER_HOST", Value: os.Getenv("PTA_DOCKER_HOST"), Public: false, SyncWithEnv: true},
+		{Key: "DOCKER_IMAGE_PREFIX", Value: os.Getenv("PTA_DOCKER_IMAGE_PREFIX"), Public: false, SyncWithEnv: true},
+		{Key: "REGISTRATION_ENABLED", Value: getEnvWithDefault("REGISTRATION_ENABLED", "false"), Public: true},
 	}
 
 	for _, item := range config {
