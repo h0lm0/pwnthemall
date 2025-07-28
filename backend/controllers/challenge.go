@@ -276,6 +276,31 @@ func SubmitChallenge(c *gin.Context) {
 	}
 }
 
+func GetChallengeSolves(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+
+	result := config.DB.First(&challenge, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		return
+	}
+
+	var solves []models.Solve
+	result = config.DB.
+		Preload("Team").
+		Where("challenge_id = ?", challenge.ID).
+		Order("created_at ASC").
+		Find(&solves)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, solves)
+}
+
 func BuildChallengeImage(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
