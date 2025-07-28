@@ -37,7 +37,7 @@ for /f "usebackq skip=1" %%i in (`wsl -l -v 2^>nul`) do (
         for /f "tokens=1" %%j in ("!line!") do set "distro=%%j"
     )
     
-    echo Debug: Checking distribution: "!distro!"
+    if "%DEBUG%"=="1" echo Debug: Checking distribution: "!distro!"
     
     rem Skip Docker and empty
     if /i not "!distro!"=="docker-desktop" if /i not "!distro!"=="docker-desktop-data" if not "!distro!"=="" (
