@@ -38,6 +38,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [open, setOpen] = useState(false);
   const [solves, setSolves] = useState<Solve[]>([]);
   const [solvesLoading, setSolvesLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("description");
   const { getSiteName } = useSiteConfig();
 
   // Clear solves data when dialog opens/closes
@@ -101,6 +102,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
     setSelectedChallenge(challenge);
     setFlag("");
     setOpen(true);
+    setActiveTab("description");
     // Clear previous solves data and fetch fresh data
     setSolves([]);
     setSolvesLoading(false);
@@ -218,7 +220,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                 </DialogHeader>
 
                 <div className="flex-1 flex flex-col min-h-0">
-                  <Tabs defaultValue="description" className="w-full flex-1 flex flex-col">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
                     <TabsList className="grid w-full grid-cols-2 mb-4 flex-shrink-0">
                       <TabsTrigger value="description">{t('description')}</TabsTrigger>
                       <TabsTrigger value="solves">{t('solves')}</TabsTrigger>
@@ -300,38 +302,40 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                   </Tabs>
                 </div>
 
-                {selectedChallenge?.solved ? (
-                  <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg flex-shrink-0">
-                    <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                      <BadgeCheck className="w-5 h-5" />
-                      <span className="font-medium">{t('already_solved')}</span>
+                {activeTab === "description" && (
+                  selectedChallenge?.solved ? (
+                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg flex-shrink-0">
+                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                        <BadgeCheck className="w-5 h-5" />
+                        <span className="font-medium">{t('already_solved')}</span>
+                      </div>
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                        {t('challenge_already_solved')}
+                      </p>
                     </div>
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                      {t('challenge_already_solved')}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-4 flex flex-col sm:flex-row items-center gap-4 flex-shrink-0 pb-2">
-                    <Input
-                      placeholder={t('enter_your_flag')}
-                      value={flag}
-                      onChange={(e) => setFlag(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && flag.trim()) {
-                          handleSubmit();
-                        }
-                      }}
-                      className="w-full"
-                      disabled={loading}
-                    />
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={loading || !flag.trim()}
-                      className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
-                    >
-                      {loading ? t('submitting') : t('submit')}
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center gap-4 flex-shrink-0 pb-2">
+                      <Input
+                        placeholder={t('enter_your_flag')}
+                        value={flag}
+                        onChange={(e) => setFlag(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && flag.trim()) {
+                            handleSubmit();
+                          }
+                        }}
+                        className="w-full"
+                        disabled={loading}
+                      />
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={loading || !flag.trim()}
+                        className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
+                      >
+                        {loading ? t('submitting') : t('submit')}
+                      </Button>
+                    </div>
+                  )
                 )}
               </DialogContent>
             </Dialog>

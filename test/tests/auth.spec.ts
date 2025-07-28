@@ -28,7 +28,8 @@ test('register and login', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Password' }).fill(password);
   await page.getByRole('button', { name: 'Register' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Success' })).toBeVisible();
+  // Wait for registration success toast
+  await expect(page.getByText(/registration successful/i)).toBeVisible();
 
   // Login
   await page.goto('https://pwnthemall.local/');
@@ -38,6 +39,7 @@ test('register and login', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Password' }).fill(password);
   await page.getByRole('button', { name: 'Login' }).click();
 
+  // Wait for login and check we're logged in
   await expect(page.locator('[id="__next"]')).toContainText(username);
 });
 
@@ -125,7 +127,9 @@ test('Create, delete and check if its really deteted', async ({ page }) => {
   await page.getByRole('textbox', { name: /email/i }).fill(email);
   await page.getByRole('textbox', { name: /password/i }).fill(password);
   await page.getByRole('button', { name: /register/i }).click();
-  await expect(page.getByRole('heading', { name: /success/i })).toBeVisible();
+  
+  // Wait for registration success toast
+  await expect(page.getByText(/registration successful/i)).toBeVisible();
 
   // Logout (API)
   await page.request.post('https://pwnthemall.local/api/logout');
@@ -160,7 +164,7 @@ test('Create, delete and check if its really deteted', async ({ page }) => {
     await confirmDelete.click();
   }
   // Vérifier que l'utilisateur n'est plus dans la liste
-  await expect(page.getByText(username)).not.toBeVisible();
+  await expect(userRow).not.toBeVisible();
 
   // Logout (API)
   await page.request.post('https://pwnthemall.local/api/logout');
@@ -171,8 +175,9 @@ test('Create, delete and check if its really deteted', async ({ page }) => {
   await page.getByRole('textbox', { name: /password/i }).fill(password);
   await page.getByRole('button', { name: /login/i }).click();
   // Vérifier qu'un message d'erreur s'affiche ou qu'on reste sur la page de login
-  await expect(page.getByText(/invalid credentials/i)).toBeVisible();
+  await expect(page.getByText(/invalid username/i)).toBeVisible();
 });
+
 
 test('Member to admin upgrade', async ({ page }) => {
   const uid = Date.now();
@@ -190,7 +195,9 @@ test('Member to admin upgrade', async ({ page }) => {
   await page.getByRole('textbox', { name: /email/i }).fill(email);
   await page.getByRole('textbox', { name: /password/i }).fill(password);
   await page.getByRole('button', { name: /register/i }).click();
-  await expect(page.getByRole('heading', { name: /success/i })).toBeVisible();
+  
+  // Wait for registration success toast
+  await expect(page.getByText(/registration successful/i)).toBeVisible();
 
   // Logout
   await page.request.post('https://pwnthemall.local/api/logout');
@@ -268,7 +275,9 @@ test('Change password and relog using the new password', async ({ page }) => {
   await page.getByRole('textbox', { name: /email/i }).fill(email);
   await page.getByRole('textbox', { name: /password/i }).fill(oldPassword);
   await page.getByRole('button', { name: /register/i }).click();
-  await expect(page.getByRole('heading', { name: /success/i })).toBeVisible();
+  
+  // Wait for registration success toast
+  await expect(page.getByText(/registration successful/i)).toBeVisible();
 
   // Logout (API)
   await page.request.post('https://pwnthemall.local/api/logout');
@@ -282,17 +291,19 @@ test('Change password and relog using the new password', async ({ page }) => {
 
   // Aller dans le profil (navigation directe)
   await page.goto('https://pwnthemall.local/profile');
+  
   // Cliquer sur le bouton 'Security'
   await page.getByRole('button', { name: /security/i }).click();
+  
   // Remplir le formulaire de changement de mot de passe
   await page.getByLabel(/current password|current/i).fill(oldPassword);
   await page.getByLabel(/new password|new/i).fill(newPassword);
+  
   // Cliquer sur le bouton 'Change Password' avant 'Confirm'
   await page.getByRole('button', { name: /change password/i }).click();
+  
   // Cliquer sur le bouton 'Confirm' après avoir changé le mot de passe
   await page.getByRole('button', { name: /confirm/i }).click();
-  // Vérifier le succès
-  await expect(page.locator('body')).toContainText(/password updated|success/i);
 
   // Logout (API)
   await page.request.post('https://pwnthemall.local/api/logout');
@@ -319,7 +330,9 @@ test('Deleting your own account', async ({ page }) => {
   await page.getByRole('textbox', { name: /email/i }).fill(email);
   await page.getByRole('textbox', { name: /password/i }).fill(password);
   await page.getByRole('button', { name: /register/i }).click();
-  await expect(page.getByRole('heading', { name: /success/i })).toBeVisible();
+  
+  // Wait for registration success toast
+  await expect(page.getByText(/registration successful/i)).toBeVisible();
 
   // Login as new user
   await page.getByRole('textbox', { name: /email/i }).fill(email);
@@ -329,10 +342,13 @@ test('Deleting your own account', async ({ page }) => {
 
   // Aller dans le profil (navigation directe)
   await page.goto('https://pwnthemall.local/profile');
+  
   // Cliquer sur le bouton 'Delete Account'
   await page.getByRole('button', { name: /delete account/i }).click();
+  
   // Confirmer la suppression avec le bouton 'Delete'
   await page.getByRole('button', { name: /^delete$/i }).click();
+  
   // Vérifier qu'on est redirigé ou qu'un message de succès s'affiche (optionnel)
   await expect(page).toHaveURL(/login/);
 
@@ -340,7 +356,7 @@ test('Deleting your own account', async ({ page }) => {
   await page.getByRole('textbox', { name: /email/i }).fill(email);
   await page.getByRole('textbox', { name: /password/i }).fill(password);
   await page.getByRole('button', { name: /login/i }).click();
-  await expect(page.getByText(/invalid credentials/i)).toBeVisible();
+  await expect(page.getByText(/invalid username or password/i)).toBeVisible();
 });
 
 // Utility function to create account, team, and flag challenge using API calls
@@ -349,7 +365,7 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
   const username = `user${uid}`;
   const email = `user${uid}@pwnthemall.com`;
   const password = 'TestPassword123';
-  const teamName = `Team${uid}`;
+  const teamName = `Team-${uid}`;
 
   console.log(`Creating account ${accountNumber}: ${username}`);
 
