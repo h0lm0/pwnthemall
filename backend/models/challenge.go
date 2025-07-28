@@ -19,4 +19,8 @@ type Challenge struct {
 	Hidden                bool                 `json:"hidden"`
 	Flags                 []Flag               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"-"`
 	Points                int                  `json:"points"`
+	Hints                 []Hint               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"hints,omitempty"`
+	FirstBlood *FirstBlood `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"firstBlood,omitempty"`
+	EnableFirstBlood bool `gorm:"default:false" json:"enableFirstBlood"`
+
 }
