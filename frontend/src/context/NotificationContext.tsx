@@ -3,6 +3,7 @@ import { useNotifications } from '@/hooks/use-notifications';
 import { Notification } from '@/models/Notification';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
+import { Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -32,8 +33,28 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Show toast notification when a new notification is received
   const showToastNotification = (notification: Notification) => {
-    toast(notification.title, {
-      description: notification.message,
+    console.log('Showing toast notification:', notification);
+    
+    // Get icon based on notification type
+    const getTypeIcon = (type: string) => {
+      switch (type) {
+        case 'error':
+          return <XCircle className="w-4 h-4" />;
+        case 'warning':
+          return <AlertTriangle className="w-4 h-4" />;
+        case 'info':
+        default:
+          return <Info className="w-4 h-4" />;
+      }
+    };
+
+    const icon = getTypeIcon(notification.type);
+    const title = notification.title || 'Notification';
+    const message = notification.message || 'You have a new notification';
+
+    toast(`${title}`, {
+      description: message,
+      icon: icon,
       action: {
         label: 'View',
         onClick: () => {
@@ -41,6 +62,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
           console.log('Open notification center');
         },
       },
+      duration: 5000,
+      className: `notification-toast notification-${notification.type}`,
     });
   };
 

@@ -9,7 +9,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { useEffect, useState } from 'react';
-import { Toaster } from "sonner"; // ✅ Import du Toaster
+import { Toaster } from "@/components/ui/sonner";
 
 interface MyAppProps extends AppProps {
   sidebarDefaultOpen: boolean

@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Trash2, Send, Users, User } from "lucide-react";
+import { Trash2, Send, Users, User, CheckCircle } from "lucide-react";
 import axios from "@/lib/axios";
 
 interface NotificationsContentProps {
@@ -48,7 +48,10 @@ export default function NotificationsContent({
     setIsSending(true);
     try {
       await sendNotification(formData);
-      toast.success(t("notification_sent_success"));
+      toast.success(t("notification_sent_success"), {
+        icon: <CheckCircle className="w-4 h-4" />,
+        className: "success-toast",
+      });
       setFormData({ title: "", message: "", type: "info" });
       onRefresh();
     } catch (error) {
@@ -62,7 +65,10 @@ export default function NotificationsContent({
     setIsDeleting(id);
     try {
       await axios.delete(`/api/admin/notifications/${id}`);
-      toast.success(t("notification_deleted_success"));
+      toast.success(t("notification_deleted_success"), {
+        icon: <CheckCircle className="w-4 h-4" />,
+        className: "success-toast",
+      });
       onRefresh();
     } catch (error) {
       toast.error(t("notification_deleted_error"));

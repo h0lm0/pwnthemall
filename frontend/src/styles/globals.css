@@ -982,3 +982,87 @@ html, body {
   background: #06b6d4;
   border-color: #06b6d4;
 }
+
+/* Custom notification toast styles */
+.notification-toast {
+  border-left: 4px solid;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+  font-weight: 500 !important;
+  min-width: 320px !important;
+}
+
+.notification-toast.notification-info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%) !important;
+}
+
+.notification-toast.notification-warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%) !important;
+}
+
+.notification-toast.notification-error {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%) !important;
+}
+
+/* Success toast for admin actions */
+.success-toast {
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1fae5 !important;
+  border-left: 4px solid #10b981 !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+  font-weight: 500 !important;
+  min-width: 320px !important;
+}
+
+/* Ensure toast has proper contrast */
+.toaster .toast {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.toaster .toast .description {
+  color: hsl(var(--muted-foreground));
+}
+
+.toaster .toast .actionButton {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.toaster .toast .cancelButton {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+/* Dark theme overrides for notification toasts */
+.dark .notification-toast {
+  background: #1f2937 !important;
+  color: #f9fafb !important;
+  border: 1px solid #374151 !important;
+}
+
+.dark .notification-toast.notification-info {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1f2937 100%) !important;
+}
+
+.dark .notification-toast.notification-warning {
+  background: linear-gradient(135deg, #92400e 0%, #1f2937 100%) !important;
+}
+
+.dark .notification-toast.notification-error {
+  background: linear-gradient(135deg, #991b1b 0%, #1f2937 100%) !important;
+}
+
+.dark .success-toast {
+  background: linear-gradient(135deg, #065f46 0%, #1f2937 100%) !important;
+  color: #f9fafb !important;
+  border: 1px solid #047857 !important;
+}

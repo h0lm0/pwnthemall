@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import Head from "next/head";
 import Link from "next/link";
+import { CheckCircle } from "lucide-react";
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -37,7 +38,10 @@ const RegisterPage = () => {
 
     try {
       await axios.post(`/api/register`, form);
-      toast.success(t("registration_successful"));
+      toast.success(t("registration_successful"), {
+        icon: <CheckCircle className="w-4 h-4" />,
+        className: "success-toast",
+      });
       router.push({
         pathname: "/login",
         query: { success: "register" },

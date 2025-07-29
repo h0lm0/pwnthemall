@@ -137,10 +137,13 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
 
       ws.onmessage = (event) => {
         try {
+          console.log('WebSocket message received:', event.data);
           const notification: Notification = JSON.parse(event.data);
+          console.log('Parsed notification:', notification);
           
           // Validate notification data
           if (notification && notification.id && notification.title) {
+            console.log('Valid notification, dispatching event');
             // Add new notification to the beginning of the list
             setNotifications(prev => [notification, ...prev]);
             
