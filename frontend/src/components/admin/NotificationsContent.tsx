@@ -110,7 +110,7 @@ export default function NotificationsContent({
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{t("notifications")}</h1>
-            <p className="text-muted-foreground">
+            <p className="text-foreground">
               {t("notifications_description")}
             </p>
           </div>
@@ -124,7 +124,7 @@ export default function NotificationsContent({
                 <Send className="h-5 w-5" />
                 {t("send_notification")}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-foreground">
                 {t("send_notification_description")}
               </CardDescription>
             </CardHeader>
@@ -240,7 +240,7 @@ export default function NotificationsContent({
           <Card>
             <CardHeader>
               <CardTitle>{t("sent_notifications")}</CardTitle>
-              <CardDescription>
+              <CardDescription className="text-foreground">
                 {t("sent_notifications_description")}
               </CardDescription>
             </CardHeader>

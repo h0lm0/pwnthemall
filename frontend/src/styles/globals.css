@@ -1050,7 +1050,6 @@ html, body {
   background: rgba(0, 0, 0, 0.25) !important;
   border-color: rgba(0, 0, 0, 0.35) !important;
   color: rgba(0, 0, 0, 0.95) !important;
-  transform: scale(1.1) !important;
 }
 
 .dark .toaster .toast button[data-close-button] {
