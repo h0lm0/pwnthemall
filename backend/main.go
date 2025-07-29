@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"pwnthemall/config"
+	"pwnthemall/controllers"
 	"pwnthemall/routes"
 
 	"github.com/gin-contrib/cors"
@@ -33,6 +34,10 @@ func main() {
 	}
 	// Synchronize environment variables with database configuration
 	config.SynchronizeEnvWithDb()
+
+	// Initialize WebSocket hub for notifications
+	controllers.InitWebSocketHub()
+
 	router := gin.Default()
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
@@ -68,6 +73,7 @@ func main() {
 	routes.RegisterChallengeCategoryRoutes(router)
 	routes.RegisterTeamRoutes(router)
 	routes.RegisterConfigRoutes(router)
+	routes.RegisterNotificationRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
