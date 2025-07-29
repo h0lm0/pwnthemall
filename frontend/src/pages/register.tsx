@@ -96,13 +96,13 @@ const RegisterPage = () => {
       <Head>
         <title>{getSiteName()}</title>
       </Head>
-      <RegisterContent
-        form={form}
-        loading={loading}
-        message={null}
-        onChange={onChange}
-        onSubmit={handleRegister}
-      />
+    <RegisterContent
+      form={form}
+      loading={loading}
+      message={null}
+      onChange={onChange}
+      onSubmit={handleRegister}
+    />
     </>
   );
 };
