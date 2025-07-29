@@ -4,6 +4,7 @@ set -euo pipefail
 
 ENV_FILE="./.env"
 if [[ -f "$ENV_FILE" ]]; then
+    sed -i 's/\r$//' "$ENV_FILE"
     export $(grep -v '^#' "$ENV_FILE" | xargs)
 else
     echo "Config file $ENV_FILE not found. MINIO_ROOT_USER/MINIO_ROOT_PASSWORD needed"
