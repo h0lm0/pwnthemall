@@ -276,6 +276,63 @@ func SubmitChallenge(c *gin.Context) {
 	}
 }
 
+func GetChallengeSolves(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+
+	result := config.DB.First(&challenge, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		return
+	}
+
+	// Get solves with team information
+	var solves []models.Solve
+	result = config.DB.
+		Preload("Team").
+		Where("challenge_id = ?", challenge.ID).
+		Order("created_at ASC").
+		Find(&solves)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	// Create response with user information
+	type SolveWithUser struct {
+		models.Solve
+		UserID   uint   `json:"userId"`
+		Username string `json:"username"`
+	}
+
+	var solvesWithUsers []SolveWithUser
+
+	for _, solve := range solves {
+		// Find the submission that led to this solve
+		var submission models.Submission
+		submissionResult := config.DB.
+			Preload("User").
+			Where("challenge_id = ? AND user_id IN (SELECT id FROM users WHERE team_id = ?) AND created_at <= ?",
+				challenge.ID, solve.TeamID, solve.CreatedAt).
+			Order("created_at DESC").
+			First(&submission)
+
+		solveWithUser := SolveWithUser{
+			Solve: solve,
+		}
+
+		if submissionResult.Error == nil && submission.User != nil {
+			solveWithUser.UserID = submission.UserID
+			solveWithUser.Username = submission.User.Username
+		}
+
+		solvesWithUsers = append(solvesWithUsers, solveWithUser)
+	}
+
+	c.JSON(http.StatusOK, solvesWithUsers)
+}
+
 func BuildChallengeImage(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")

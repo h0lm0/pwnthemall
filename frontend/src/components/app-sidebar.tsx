@@ -136,12 +136,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       // Only show register link if registration is enabled
       const registrationEnabled = siteConfig.REGISTRATION_ENABLED !== "false" && siteConfig.REGISTRATION_ENABLED !== "0";
       if (registrationEnabled) {
-        items.push({
-          title: t('register'),
-          url: "/register",
-          icon: UserPlus,
-          isActive: router.pathname === "/register",
-        });
+      items.push({
+        title: t('register'),
+        url: "/register",
+        icon: UserPlus,
+        isActive: router.pathname === "/register",
+      });
       }
     }
     return items;

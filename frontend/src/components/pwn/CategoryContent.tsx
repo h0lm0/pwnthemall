@@ -1,28 +1,29 @@
-import { useState } from "react";
-import { Challenge } from "@/models/Challenge";
+import { useState, useEffect } from "react";
+import { useLanguage } from "@/context/LanguageContext";
+import { useSiteConfig } from "@/context/SiteConfigContext";
+import { Challenge, Solve } from "@/models/Challenge";
+import { BadgeCheck, Trophy } from "lucide-react";
+import axios from "@/lib/axios";
+import { toast } from "sonner";
 import Head from "next/head";
 import {
   Card,
+  CardContent,
   CardHeader,
   CardTitle,
-  CardContent,
 } from "@/components/ui/card";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import axios from "@/lib/axios";
-import { useLanguage } from "@/context/LanguageContext"
-import { useSiteConfig } from "@/context/SiteConfigContext";
-import { CheckCircle, BadgeCheck } from "lucide-react";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CategoryContentProps {
   cat: string;
@@ -35,7 +36,18 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [flag, setFlag] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [solves, setSolves] = useState<Solve[]>([]);
+  const [solvesLoading, setSolvesLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("description");
   const { getSiteName } = useSiteConfig();
+
+  // Clear solves data when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      setSolves([]);
+      setSolvesLoading(false);
+    }
+  }, [open]);
 
   const handleSubmit = async () => {
     if (!selectedChallenge) return;
@@ -48,12 +60,68 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
       if (onChallengeUpdate) {
         onChallengeUpdate();
       }
+      // Refresh solves after successful submission
+      if (selectedChallenge) {
+        fetchSolves(selectedChallenge.id);
+      }
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;
       toast.error(t(errorKey) || 'Try again');
     } finally {
       setLoading(false);
       setFlag("");
+    }
+  };
+
+  const fetchSolves = async (challengeId: number) => {
+    if (!Number.isInteger(challengeId) || challengeId <= 0) {
+      console.error('Invalid challenge ID provided to fetchSolves');
+      setSolves([]);
+      setSolvesLoading(false);
+      return;
+    }
+    
+    setSolvesLoading(true);
+    try {
+      const response = await axios.get<Solve[]>(`/api/challenges/${challengeId}/solves`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      setSolves(response.data || []);
+    } catch (err: any) {
+      console.error('Failed to fetch solves:', err);
+      setSolves([]);
+    } finally {
+      setSolvesLoading(false);
+    }
+  };
+
+  const handleChallengeSelect = (challenge: Challenge) => {
+    setSelectedChallenge(challenge);
+    setFlag("");
+    setOpen(true);
+    setActiveTab("description");
+    // Clear previous solves data and fetch fresh data
+    setSolves([]);
+    setSolvesLoading(false);
+    fetchSolves(challenge.id);
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'Unknown date';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
     }
   };
   
@@ -92,11 +160,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
             <Dialog key={challenge.id} open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Card
-                  onClick={() => {
-                    setSelectedChallenge(challenge);
-                    setFlag("");
-                    setOpen(true);
-                  }}
+                  onClick={() => handleChallengeSelect(challenge)}
                   className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer relative ${
                     challenge.solved 
                       ? 'bg-green-100 dark:bg-green-900 border-green-200 dark:border-green-700' 
@@ -138,8 +202,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                 </Card>
               </DialogTrigger>
 
-              <DialogContent className="max-w-4xl">
-                <DialogHeader>
+              <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col overflow-hidden">
+                <DialogHeader className="flex-shrink-0 pb-4">
                   <DialogTitle className={`${
                     selectedChallenge?.solved 
                       ? 'text-green-600 dark:text-green-300' 
@@ -155,41 +219,123 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="mt-4 text-left whitespace-pre-wrap">
-                  {selectedChallenge?.description || 'No description available'}
+                <div className="flex-1 flex flex-col min-h-0">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
+                    <TabsList className="grid w-full grid-cols-2 mb-4 flex-shrink-0">
+                      <TabsTrigger value="description">{t('description')}</TabsTrigger>
+                      <TabsTrigger value="solves">{t('solves')}</TabsTrigger>
+                    </TabsList>
+                    
+                    <div className="flex-1 min-h-0">
+                      <TabsContent value="description" className="h-full overflow-y-auto">
+                        <div className="text-left whitespace-pre-wrap text-foreground leading-relaxed min-h-full">
+                          {selectedChallenge?.description || 'No description available'}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="solves" className="h-full overflow-y-auto">
+                        <div className="min-h-full">
+                          {solvesLoading ? (
+                            <div className="text-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 dark:border-cyan-400 mx-auto mb-2"></div>
+                              <p className="text-muted-foreground">{t('loading') || 'Loading...'}</p>
+                            </div>
+                          ) : !solves || solves.length === 0 ? (
+                            <div className="text-center py-8">
+                              <Trophy className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                              <p className="text-lg font-medium text-foreground mb-2">{t('no_solves_yet')}</p>
+                              <p className="text-sm text-muted-foreground">{t('be_the_first')}</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-foreground">
+                                  {t('solves')} ({solves?.length || 0})
+                                </h3>
+                              </div>
+                              {solves && solves.map((solve, index) => (
+                                <div 
+                                  key={`${solve.teamId}-${solve.challengeId}`} 
+                                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors duration-200"
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white font-bold text-sm shadow-sm">
+                                      {index < 3 ? (
+                                        <span className="text-lg">
+                                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                                        </span>
+                                      ) : (
+                                        index + 1
+                                      )}
+                                    </div>
+                                    <div>
+                                      <span className="font-semibold text-foreground">{solve.team?.name || 'Unknown Team'}</span>
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        {solve.username ? (
+                                          <>
+                                            {t('solved_by')} <span className="font-medium text-foreground/80">{solve.username}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            {t('solved_by')} {solve.team?.name || 'Unknown Team'}
+                                          </>
+                                        )}
+                                        {' '}{t('on')} {formatDate(solve.createdAt)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                                      +{solve.points} pts
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      {formatDate(solve.createdAt)}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </div>
+                  </Tabs>
                 </div>
 
-                {selectedChallenge?.solved ? (
-                  <div className="mt-6 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                    <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                      <BadgeCheck className="w-5 h-5" />
-                      <span className="font-medium">{t('already_solved')}</span>
+                {activeTab === "description" && (
+                  selectedChallenge?.solved ? (
+                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg flex-shrink-0">
+                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                        <BadgeCheck className="w-5 h-5" />
+                        <span className="font-medium">{t('already_solved')}</span>
+                      </div>
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                        {t('challenge_already_solved')}
+                      </p>
                     </div>
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                      {t('challenge_already_solved')}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-6 flex flex-col sm:flex-row items-center gap-4">
-                    <Input
-                      placeholder={t('enter_your_flag')}
-                      value={flag}
-                      onChange={(e) => setFlag(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && flag.trim()) {
-                          handleSubmit();
-                        }
-                      }}
-                      className="w-full"
-                      disabled={loading}
-                    />
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={loading || !flag.trim()}
-                    >
-                      {loading ? t('submitting') : t('submit')}
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="mt-4 flex flex-col sm:flex-row items-center gap-4 flex-shrink-0 pb-2">
+                      <Input
+                        placeholder={t('enter_your_flag')}
+                        value={flag}
+                        onChange={(e) => setFlag(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && flag.trim()) {
+                            handleSubmit();
+                          }
+                        }}
+                        className="w-full"
+                        disabled={loading}
+                      />
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={loading || !flag.trim()}
+                        className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
+                      >
+                        {loading ? t('submitting') : t('submit')}
+                      </Button>
+                    </div>
+                  )
                 )}
               </DialogContent>
             </Dialog>

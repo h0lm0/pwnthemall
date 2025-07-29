@@ -50,7 +50,7 @@ const LoginPage = () => {
       <Head>
         <title>{getSiteName()}</title>
       </Head>
-      <LoginContent form={form} onChange={onChange} onSubmit={handleLogin} />
+    <LoginContent form={form} onChange={onChange} onSubmit={handleLogin} />
     </>
   );
 };
