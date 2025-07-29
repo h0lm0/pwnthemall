@@ -41,18 +41,18 @@ export default function NotificationsContent({
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.message.trim()) {
-      toast.error("Please fill in all fields");
+      toast.error(t("please_fill_fields"));
       return;
     }
 
     setIsSending(true);
     try {
       await sendNotification(formData);
-      toast.success("Notification sent successfully!");
+      toast.success(t("notification_sent_success"));
       setFormData({ title: "", message: "", type: "info" });
       onRefresh();
     } catch (error) {
-      toast.error("Failed to send notification");
+      toast.error(t("notification_sent_error"));
     } finally {
       setIsSending(false);
     }
@@ -62,10 +62,10 @@ export default function NotificationsContent({
     setIsDeleting(id);
     try {
       await axios.delete(`/api/admin/notifications/${id}`);
-      toast.success("Notification deleted successfully!");
+      toast.success(t("notification_deleted_success"));
       onRefresh();
     } catch (error) {
-      toast.error("Failed to delete notification");
+      toast.error(t("notification_deleted_error"));
     } finally {
       setIsDeleting(null);
     }
@@ -108,33 +108,33 @@ export default function NotificationsContent({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Send className="h-5 w-5" />
-                Send Notification
+                {t("send_notification")}
               </CardTitle>
               <CardDescription>
-                Send a notification to all users or a specific user
+                {t("send_notification_description")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">{t("notification_title")}</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Notification title"
+                    placeholder={t("notification_title")}
                     maxLength={255}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
+                  <Label htmlFor="message">{t("notification_message")}</Label>
                   <textarea
                     id="message"
                     value={formData.message}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Notification message"
+                    placeholder={t("notification_message")}
                     rows={4}
                     required
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -142,7 +142,7 @@ export default function NotificationsContent({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="type">Type</Label>
+                  <Label htmlFor="type">{t("notification_type")}</Label>
                   <Select
                     value={formData.type}
                     onValueChange={(value: 'info' | 'warning' | 'error') => 
@@ -153,15 +153,15 @@ export default function NotificationsContent({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="info">Info</SelectItem>
-                      <SelectItem value="warning">Warning</SelectItem>
-                      <SelectItem value="error">Error</SelectItem>
+                      <SelectItem value="info">{t("info")}</SelectItem>
+                      <SelectItem value="warning">{t("warning")}</SelectItem>
+                      <SelectItem value="error">{t("error")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="userId">Target User (Optional)</Label>
+                  <Label htmlFor="userId">{t("target_user")}</Label>
                   <Input
                     id="userId"
                     type="number"
@@ -170,25 +170,25 @@ export default function NotificationsContent({
                       ...formData, 
                       userId: e.target.value ? parseInt(e.target.value) : undefined 
                     })}
-                    placeholder="Leave empty to send to all users"
+                    placeholder={t("target_user_placeholder")}
                   />
                   <p className="text-sm text-muted-foreground">
                     {formData.userId ? (
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        Send to specific user (ID: {formData.userId})
+                        {t("send_to_specific_user", { id: formData.userId })}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        Send to all users
+                        {t("send_to_all_users")}
                       </span>
                     )}
                   </p>
                 </div>
 
                 <Button type="submit" disabled={isSending} className="w-full">
-                  {isSending ? "Sending..." : "Send Notification"}
+                  {isSending ? t("sending") : t("send_notification_button")}
                 </Button>
               </form>
             </CardContent>
@@ -197,16 +197,16 @@ export default function NotificationsContent({
           {/* Sent Notifications List */}
           <Card>
             <CardHeader>
-              <CardTitle>Sent Notifications</CardTitle>
+              <CardTitle>{t("sent_notifications")}</CardTitle>
               <CardDescription>
-                Recent notifications sent to users
+                {t("sent_notifications_description")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {!notifications || notifications.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
-                    No notifications sent yet
+                    {t("no_notifications_sent")}
                   </p>
                 ) : (
                   notifications.map((notification) => (
@@ -216,7 +216,7 @@ export default function NotificationsContent({
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium">{notification.title}</h4>
                             <Badge variant={getTypeColor(notification.type)}>
-                              {notification.type}
+                              {t(notification.type)}
                             </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground mb-2">
@@ -232,7 +232,7 @@ export default function NotificationsContent({
                             ) : (
                               <span className="flex items-center gap-1">
                                 <Users className="h-3 w-3" />
-                                All users
+                                {t("all_users")}
                               </span>
                             )}
                           </div>

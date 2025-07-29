@@ -37,7 +37,7 @@ const LanguageContext = createContext<LanguageContextProps>({
 });
 
 // Translation cache version - increment this when you update translations
-const TRANSLATION_VERSION = '1.0.3';
+const TRANSLATION_VERSION = '1.0.4';
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize language state from localStorage if available
