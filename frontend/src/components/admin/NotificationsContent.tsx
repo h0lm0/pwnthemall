@@ -34,6 +34,7 @@ export default function NotificationsContent({
     message: "",
     type: "info",
   });
+  const [targetType, setTargetType] = useState<'everyone' | 'team' | 'user'>('everyone');
   const [isSending, setIsSending] = useState(false);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
@@ -45,14 +46,21 @@ export default function NotificationsContent({
       return;
     }
 
+    // Prepare notification data based on target type
+    const notificationData = {
+      ...formData,
+      userId: targetType === 'everyone' ? undefined : formData.userId,
+    };
+
     setIsSending(true);
     try {
-      await sendNotification(formData);
+      await sendNotification(notificationData);
       toast.success(t("notification_sent_success"), {
         icon: <CheckCircle className="w-4 h-4" />,
         className: "success-toast",
       });
       setFormData({ title: "", message: "", type: "info" });
+      setTargetType('everyone');
       onRefresh();
     } catch (error) {
       toast.error(t("notification_sent_error"));
@@ -167,27 +175,55 @@ export default function NotificationsContent({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="userId">{t("target_user")}</Label>
-                  <Input
-                    id="userId"
-                    type="number"
-                    value={formData.userId || ""}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      userId: e.target.value ? parseInt(e.target.value) : undefined 
-                    })}
-                    placeholder={t("target_user_placeholder")}
-                  />
+                  <Label>{t("target_audience")}</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={targetType === 'everyone' ? 'default' : 'outline'}
+                      onClick={() => setTargetType('everyone')}
+                      className="flex-1"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      {t("everyone")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={targetType === 'team' ? 'default' : 'outline'}
+                      onClick={() => setTargetType('team')}
+                      className="flex-1"
+                      disabled
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      {t("team")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={targetType === 'user' ? 'default' : 'outline'}
+                      onClick={() => setTargetType('user')}
+                      className="flex-1"
+                      disabled
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      {t("user")}
+                    </Button>
+                  </div>
                   <p className="text-sm text-muted-foreground">
-                    {formData.userId ? (
-                      <span className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {t("send_to_specific_user", { id: formData.userId })}
-                      </span>
-                    ) : (
+                    {targetType === 'everyone' && (
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
                         {t("send_to_all_users")}
+                      </span>
+                    )}
+                    {targetType === 'team' && (
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {t("send_to_team")}
+                      </span>
+                    )}
+                    {targetType === 'user' && (
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {t("send_to_specific_user")}
                       </span>
                     )}
                   </p>
