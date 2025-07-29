@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"pwnthemall/models"
+	"strconv"
 
 	"github.com/casbin/casbin/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -21,8 +22,6 @@ func getEnvWithDefault(key, defaultValue string) string {
 func seedConfig() {
 	config := []models.Config{
 		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: true},
-		{Key: "DOCKER_HOST", Value: os.Getenv("PTA_DOCKER_HOST"), Public: false, SyncWithEnv: true},
-		{Key: "DOCKER_IMAGE_PREFIX", Value: os.Getenv("PTA_DOCKER_IMAGE_PREFIX"), Public: false, SyncWithEnv: true},
 		{Key: "REGISTRATION_ENABLED", Value: getEnvWithDefault("REGISTRATION_ENABLED", "false"), Public: true},
 	}
 
@@ -40,6 +39,31 @@ func seedConfig() {
 		}
 	}
 	log.Println("Seeding: config finished")
+}
+
+func seedDockerConfig() {
+	iByTeam, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTACES_BY_TEAM"))
+	if err != nil {
+		iByTeam = 15
+	}
+
+	iByUser, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTACES_BY_USER"))
+	if err != nil {
+		iByUser = 5
+	}
+
+	config := models.DockerConfig{
+		Host:            os.Getenv("PTA_DOCKER_HOST"),
+		ImagePrefix:     os.Getenv("PTA_DOCKER_IMAGE_PREFIX"),
+		InstancesByTeam: iByTeam,
+		InstancesByUser: iByUser,
+	}
+
+	if err := DB.Create(&config).Error; err != nil {
+		log.Printf("Failed to seed docker config: %s", err.Error())
+		return
+	}
+	log.Println("Seeding: docker config finished")
 }
 
 func seedChallengeCategory() {
@@ -181,6 +205,7 @@ func SeedCasbinFromCsv(enforcer *casbin.Enforcer) {
 func SeedDatabase() {
 	log.Println("Seeding: Database..")
 	seedConfig()
+	seedDockerConfig()
 	seedChallengeDifficulty()
 	seedChallengeCategory()
 	seedChallengeType()

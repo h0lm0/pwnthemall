@@ -1,0 +1,22 @@
+meta {
+  name: update
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{URL}}/api/docker-config
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "host": "ssh://docker@worker",
+    "imagePrefix": "test",
+    "instancesByTeam": 15,
+    "instancesByUser": 5,
+    "maxMemByInstance": 256,
+    "maxCpuByInstance": 100
+  }
+}

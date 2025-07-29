@@ -14,6 +14,7 @@ import (
 var DockerClient *client.Client
 
 func ConnectDocker() error {
+	SynchronizeEnvWithDb()
 	helper, err := connhelper.GetConnectionHelper(os.Getenv("DOCKER_HOST"))
 
 	if err != nil {

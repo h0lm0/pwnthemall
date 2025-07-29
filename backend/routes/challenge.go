@@ -18,6 +18,7 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.POST("", middleware.CheckPolicy("/challenges", "write"), controllers.CreateChallenge)
 		challenges.POST("/:id/submit", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/submit", "write"), controllers.SubmitChallenge)
 		challenges.POST("/:id/build", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/build", "write"), controllers.BuildChallengeImage)
+		challenges.POST("/:id/start", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
 		// challenges.PUT("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.UpdateUser)
 		// challenges.DELETE("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.DeleteUser)
 	}

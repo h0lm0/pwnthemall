@@ -13,6 +13,7 @@ import (
 	"pwnthemall/config"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 )
 
 func EnsureDockerClientConnected() error {
@@ -138,5 +139,37 @@ func BuildDockerImage(slug string) error {
 	io.Copy(os.Stdout, buildResponse.Body)
 
 	log.Printf("Built image %s for challenge %s", imageName, slug)
+	return nil
+}
+
+func IsImageBuilt(slug string) bool {
+	if err := EnsureDockerClientConnected(); err != nil {
+		log.Printf("Docker client not connected: %v", err)
+		return false
+	}
+
+	ctx := context.Background()
+
+	prefix := os.Getenv("PTA_DOCKER_IMAGE_PREFIX")
+	if prefix == "" {
+		prefix = "pta-"
+	}
+	imageName := prefix + slug
+
+	filtersArgs := filters.NewArgs()
+	filtersArgs.Add("reference", imageName)
+
+	images, err := config.DockerClient.ImageList(ctx, types.ImageListOptions{
+		Filters: filtersArgs,
+	})
+	if err != nil {
+		log.Printf("Failed to list docker images: %v", err)
+		return false
+	}
+
+	return len(images) > 0
+}
+
+func StartDockerInstance(image string, teamId int, userId int) error {
 	return nil
 }

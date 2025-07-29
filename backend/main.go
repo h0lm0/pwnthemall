@@ -28,7 +28,7 @@ func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
 	config.InitCasbin()
-	config.SynchronizeEnvWithDb()
+	// config.SynchronizeEnvWithDb()
 	if err := config.ConnectDocker(); err != nil {
 		log.Fatalf("Failed to connect to docker host: %s", err.Error())
 	}
@@ -68,6 +68,7 @@ func main() {
 	routes.RegisterChallengeCategoryRoutes(router)
 	routes.RegisterTeamRoutes(router)
 	routes.RegisterConfigRoutes(router)
+	routes.RegisterDockerConfigRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
