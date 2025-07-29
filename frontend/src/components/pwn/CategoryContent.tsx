@@ -74,8 +74,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   };
 
   const fetchSolves = async (challengeId: number) => {
-    if (!challengeId) {
-      console.error('No challenge ID provided to fetchSolves');
+    if (!Number.isInteger(challengeId) || challengeId <= 0) {
+      console.error('Invalid challenge ID provided to fetchSolves');
       setSolves([]);
       setSolvesLoading(false);
       return;
