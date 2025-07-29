@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
@@ -114,6 +115,14 @@ func GetUserNotifications(c *gin.Context) {
 		})
 	}
 
+	// Ensure we always return an array, even if empty
+	if response == nil {
+		response = []NotificationResponse{}
+	}
+
+	// Log the response for debugging
+	log.Printf("User %d notifications: %+v", userID, response)
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -173,6 +182,9 @@ func GetUnreadCount(c *gin.Context) {
 		return
 	}
 
+	// Log the count for debugging
+	log.Printf("User %d unread count: %d", userID, count)
+
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }
 
@@ -185,6 +197,9 @@ func GetSentNotifications(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notifications"})
 		return
 	}
+
+	// Log the raw notifications for debugging
+	log.Printf("Raw notifications from DB: %+v", notifications)
 
 	// Convert to response format with user info
 	type SentNotificationResponse struct {
@@ -215,6 +230,12 @@ func GetSentNotifications(c *gin.Context) {
 		response = append(response, resp)
 	}
 
+	// Ensure we always return an array, even if empty
+	if response == nil {
+		response = []SentNotificationResponse{}
+	}
+
+	log.Printf("Final response: %+v", response)
 	c.JSON(http.StatusOK, response)
 }
 

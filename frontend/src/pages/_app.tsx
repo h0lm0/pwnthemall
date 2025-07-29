@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { AuthProvider } from '@/context/AuthContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { SiteConfigProvider } from '@/context/SiteConfigContext'
+import { NotificationProvider } from '@/context/NotificationContext'
 import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
 import { CookieConsent } from "@/components/ui/CookieConsent";
@@ -31,6 +32,7 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
     <LanguageProvider>
       <AuthProvider>
         <SiteConfigProvider>
+          <NotificationProvider>
         <ThemeProvider
           attribute="class"
           defaultTheme={systemTheme}
@@ -65,6 +67,7 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
             expand
           />
         </ThemeProvider>
+          </NotificationProvider>
         </SiteConfigProvider>
       </AuthProvider>
     </LanguageProvider>

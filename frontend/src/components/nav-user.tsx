@@ -3,7 +3,6 @@
 import Link from "next/link"
 import {
   BadgeCheck,
-  Bell,
   ChevronsUpDown,
   LogOut,
   Sun,
@@ -45,6 +44,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from '@/context/LanguageContext'
+import { NotificationBell } from './NotificationBell'
 
 export function NavUser({
   user,
@@ -134,9 +134,11 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Bell />
+              <DropdownMenuItem asChild>
+                <div className="flex items-center gap-2">
+                  <NotificationBell />
                 Notifications
+                </div>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
