@@ -27,11 +27,11 @@ export default function ScoreboardPage() {
       <Head>
         <title>{getSiteName()}</title>
       </Head>
-      <div className="bg-muted flex min-h-screen items-center justify-center">
-        <h1 className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
-          Scoreboard page
-        </h1>
-      </div>
+    <div className="bg-muted flex min-h-screen items-center justify-center">
+      <h1 className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
+        Scoreboard page
+      </h1>
+    </div>
     </>
   );
 }

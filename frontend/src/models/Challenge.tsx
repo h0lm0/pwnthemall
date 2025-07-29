@@ -2,6 +2,7 @@ import { ChallengeCategory } from "./ChallengeCategory"
 import { ChallengeDifficulty } from "./ChallengeDifficulty"
 import { ChallengeType } from "./ChallengeType"
 import { User } from "./User"
+import { Team } from "./Team"
 
 export interface Challenge {
   id: number
@@ -20,5 +21,16 @@ export interface Challenge {
   author: string
   hidden?: boolean
   solved?: boolean
+}
+
+export interface Solve {
+  teamId: number
+  team: Team
+  challengeId: number
+  challenge: Challenge
+  points: number
+  createdAt: string
+  userId?: number
+  username?: string
 }
 
