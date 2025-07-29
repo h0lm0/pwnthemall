@@ -279,5 +279,12 @@
   "no_teams_found": "Aucune équipe trouvée",
   "no_teams_available": "Aucune équipe disponible",
   "members": "membres",
-  "please_select_team": "Veuillez sélectionner une équipe"
+  "please_select_team": "Veuillez sélectionner une équipe",
+  "select_user": "Sélectionner un utilisateur",
+  "select_user_placeholder": "Choisir un utilisateur...",
+  "search_users": "Rechercher des utilisateurs...",
+  "loading_users": "Chargement des utilisateurs...",
+  "no_users_found": "Aucun utilisateur trouvé",
+  "no_users_available": "Aucun utilisateur disponible",
+  "please_select_user": "Veuillez sélectionner un utilisateur"
 } 

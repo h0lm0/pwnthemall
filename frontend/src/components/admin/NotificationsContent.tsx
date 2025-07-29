@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Trash2, Send, Users, User, CheckCircle } from "lucide-react";
 import axios from "@/lib/axios";
 import { TeamSelector } from "./TeamSelector";
+import { UserSelector } from "./UserSelector";
 
 interface NotificationsContentProps {
   notifications: SentNotification[];
@@ -36,6 +37,7 @@ export default function NotificationsContent({
     type: "info",
   });
   const [selectedTeamId, setSelectedTeamId] = useState<number | undefined>(undefined);
+  const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
   const [targetType, setTargetType] = useState<'everyone' | 'team' | 'user'>('everyone');
   const [isSending, setIsSending] = useState(false);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
@@ -53,10 +55,15 @@ export default function NotificationsContent({
       return;
     }
 
+    if (targetType === 'user' && !selectedUserId) {
+      toast.error(t("please_select_user"));
+      return;
+    }
+
     // Prepare notification data based on target type
     const notificationData = {
       ...formData,
-      userId: targetType === 'user' ? formData.userId : undefined,
+      userId: targetType === 'user' ? selectedUserId : undefined,
       teamId: targetType === 'team' ? selectedTeamId : undefined,
     };
 
@@ -69,6 +76,7 @@ export default function NotificationsContent({
       });
       setFormData({ title: "", message: "", type: "info" });
       setSelectedTeamId(undefined);
+      setSelectedUserId(undefined);
       setTargetType('everyone');
       onRefresh();
     } catch (error) {
@@ -209,7 +217,6 @@ export default function NotificationsContent({
                       variant={targetType === 'user' ? 'default' : 'outline'}
                       onClick={() => setTargetType('user')}
                       className="flex-1"
-                      disabled
                     >
                       <User className="h-4 w-4 mr-2" />
                       {t("user")}
@@ -222,6 +229,17 @@ export default function NotificationsContent({
                       <TeamSelector
                         selectedTeamId={selectedTeamId}
                         onTeamSelect={setSelectedTeamId}
+                        disabled={isSending}
+                      />
+                    </div>
+                  )}
+
+                  {/* User selector - only show when user target is selected */}
+                  {targetType === 'user' && (
+                    <div className="mt-4">
+                      <UserSelector
+                        selectedUserId={selectedUserId}
+                        onUserSelect={setSelectedUserId}
                         disabled={isSending}
                       />
                     </div>
@@ -243,7 +261,7 @@ export default function NotificationsContent({
                     {targetType === 'user' && (
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        {t("send_to_specific_user")}
+                        {selectedUserId ? t("send_to_specific_user") : t("select_user_placeholder")}
                       </span>
                     )}
                   </p>
