@@ -20,7 +20,7 @@ func ConnectDB() *gorm.DB {
 	}
 
 	err = db.AutoMigrate(
-		&models.Config{},
+		&models.Config{}, &models.DockerConfig{},
 		&models.Team{}, &models.Solve{},
 		&models.User{}, &models.ChallengeCategory{},
 		&models.ChallengeType{}, &models.ChallengeDifficulty{},

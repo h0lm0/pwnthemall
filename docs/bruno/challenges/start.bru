@@ -1,11 +1,11 @@
 meta {
-  name: build
+  name: start
   type: http
-  seq: 4
+  seq: 5
 }
 
 post {
-  url: {{URL}}/api/challenges/:id/build
+  url: {{URL}}/api/challenges/:id/start
   body: json
   auth: inherit
 }
