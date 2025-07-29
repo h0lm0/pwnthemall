@@ -98,6 +98,8 @@
   "registration_disabled": "Registration Disabled",
   "registration_disabled_message": "New user registration is currently disabled. Please contact an administrator if you need access.",
   "back_to_login": "Back to Login",
+  "notifications": "Notifications",
+  "notifications_description": "Send notifications to users and manage sent notifications",
   "team": "Team",
   "team_access_required": "You must create or join a team to access the platform.",
   "create_team": "Create a team",

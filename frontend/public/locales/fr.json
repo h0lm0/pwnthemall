@@ -241,5 +241,7 @@
   "solved_by_user": "Résolu par {username}",
   "no_solves_yet": "Aucune résolution pour le moment",
   "be_the_first": "Soyez le premier à résoudre ce challenge !",
-  "loading": "Chargement..."
+  "loading": "Chargement...",
+  "notifications": "Notifications",
+  "notifications_description": "Envoyer des notifications aux utilisateurs et gérer les notifications envoyées"
 } 

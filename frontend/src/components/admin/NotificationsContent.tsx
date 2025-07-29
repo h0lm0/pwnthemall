@@ -92,12 +92,12 @@ export default function NotificationsContent({
         <title>{getSiteName()} - Admin Notifications</title>
       </Head>
       
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-muted min-h-screen p-4 overflow-x-auto">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Notifications</h1>
+            <h1 className="text-3xl font-bold">{t("notifications")}</h1>
             <p className="text-muted-foreground">
-              Send notifications to users and manage sent notifications
+              {t("notifications_description")}
             </p>
           </div>
         </div>
