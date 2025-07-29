@@ -68,6 +68,7 @@ func main() {
 	routes.RegisterTeamRoutes(router)
 	routes.RegisterConfigRoutes(router)
 	routes.RegisterDockerConfigRoutes(router)
+	routes.RegisterInstanceRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {

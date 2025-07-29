@@ -22,7 +22,7 @@ func getEnvWithDefault(key, defaultValue string) string {
 func seedConfig() {
 	config := []models.Config{
 		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: true},
-		{Key: "REGISTRATION_ENABLED", Value: getEnvWithDefault("REGISTRATION_ENABLED", "false"), Public: true},
+		{Key: "REGISTRATION_ENABLED", Value: getEnvWithDefault("PTA_REGISTRATION_ENABLED", "false"), Public: true},
 	}
 
 	for _, item := range config {
@@ -52,11 +52,23 @@ func seedDockerConfig() {
 		iByUser = 5
 	}
 
+	maxMem, err := strconv.Atoi(os.Getenv("PTA_DOCKER_MAXMEM_PER_INSTANCE"))
+	if err != nil {
+		maxMem = 256
+	}
+
+	maxCpu, err := strconv.ParseFloat(os.Getenv("PTA_DOCKER_MAXCPU_PER_INSTANCE"), 64)
+	if err != nil {
+		maxCpu = 0.01
+	}
+
 	config := models.DockerConfig{
-		Host:            os.Getenv("PTA_DOCKER_HOST"),
-		ImagePrefix:     os.Getenv("PTA_DOCKER_IMAGE_PREFIX"),
-		InstancesByTeam: iByTeam,
-		InstancesByUser: iByUser,
+		Host:             os.Getenv("PTA_DOCKER_HOST"),
+		ImagePrefix:      os.Getenv("PTA_DOCKER_IMAGE_PREFIX"),
+		MaxMemByInstance: maxMem,
+		MaxCpuByInstance: maxCpu,
+		InstancesByTeam:  iByTeam,
+		InstancesByUser:  iByUser,
 	}
 
 	if err := DB.Create(&config).Error; err != nil {

@@ -13,6 +13,7 @@ import (
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
@@ -379,15 +380,56 @@ func StartChallengeInstance(c *gin.Context) {
 		return
 	}
 
+	var dockerConfig models.DockerConfig
+	if err := config.DB.First(&dockerConfig).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
+		return
+	}
+
 	var user models.User
-	if err := config.DB.First(&user, userID).Error; err != nil {
+	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	if user.Team == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
+		return
+	}
+
+	var countExist int64
+	config.DB.Model(&models.Instance{}).
+		Where("user_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
+		Count(&countExist)
+
+	if int(countExist) >= 1 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "instance_already_running"})
+		return
+	}
+
+	var countUser int64
+	config.DB.Model(&models.Instance{}).
+		Where("user_id = ?", user.ID).
+		Count(&countUser)
+
+	if int(countUser) >= dockerConfig.InstancesByUser {
+		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_user_reached"})
+		return
+	}
+
+	var countTeam int64
+	config.DB.Model(&models.Instance{}).
+		Where("team_id = ?", user.Team.ID).
+		Count(&countTeam)
+
+	if int(countTeam) >= dockerConfig.InstancesByTeam {
+		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_team_reached"})
 		return
 	}
 
 	containerName, err := utils.StartDockerInstance(imageName, int(user.ID), int(*user.TeamID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error_starting_instance"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf(
 			"Error starting instance: user: %d | team: %d | challenge: %s | error: %v",
 			user.ID, *user.TeamID, challenge.Slug, err,
@@ -395,9 +437,63 @@ func StartChallengeInstance(c *gin.Context) {
 		return
 	}
 
+	instance := models.Instance{
+		Container:   containerName,
+		UserID:      user.ID,
+		TeamID:      *user.TeamID,
+		ChallengeID: challenge.ID,
+		CreatedAt:   time.Now(),
+	}
+	if err := config.DB.Create(&instance).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "instance_create_failed"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":         "instance_started",
 		"image_name":     imageName,
 		"container_name": containerName,
+	})
+}
+
+func StopChallengeInstance(c *gin.Context) {
+	challengeID := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Select("id, team_id").First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	var instance models.Instance
+	query := config.DB.Where("challenge_id = ? AND user_id = ?", challengeID, user.ID)
+	if err := query.First(&instance).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
+		return
+	}
+
+	if instance.UserID != user.ID && (user.TeamID == nil || instance.TeamID != *user.TeamID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	go func() {
+		if err := utils.StopDockerInstance(instance.Container); err != nil {
+			log.Printf("Failed to stop Docker instance: %v", err)
+		}
+
+		if err := config.DB.Delete(&instance).Error; err != nil {
+			log.Printf("Failed to delete instance from database: %v", err)
+		}
+	}()
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "instance_stopping",
+		"container": instance.Container,
 	})
 }

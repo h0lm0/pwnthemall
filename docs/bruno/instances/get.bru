@@ -1,11 +1,11 @@
 meta {
-  name: submit
+  name: get
   type: http
-  seq: 7
+  seq: 1
 }
 
-post {
-  url: {{URL}}/api/challenges/:id/submit
+get {
+  url: {{URL}}/api/instances/:id
   body: none
   auth: inherit
 }
