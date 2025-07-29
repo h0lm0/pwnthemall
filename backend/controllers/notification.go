@@ -18,6 +18,7 @@ type NotificationInput struct {
 	Message string `json:"message" binding:"required"`
 	Type    string `json:"type" binding:"required,oneof=info warning error"`
 	UserID  *uint  `json:"userId,omitempty"` // null for global notifications
+	TeamID  *uint  `json:"teamId,omitempty"` // null for global notifications
 }
 
 // NotificationResponse represents the notification response structure
@@ -56,6 +57,7 @@ func SendNotification(c *gin.Context) {
 		Message: input.Message,
 		Type:    input.Type,
 		UserID:  input.UserID,
+		TeamID:  input.TeamID,
 	}
 
 	if err := config.DB.Create(&notification).Error; err != nil {
@@ -82,6 +84,9 @@ func SendNotification(c *gin.Context) {
 	if input.UserID != nil {
 		// Send to specific user
 		WebSocketHub.SendToUser(*input.UserID, messageBytes)
+	} else if input.TeamID != nil {
+		// Send to all users in the team
+		WebSocketHub.SendToTeam(*input.TeamID, messageBytes)
 	} else {
 		// Send to all connected users except the sender
 		WebSocketHub.SendToAllExcept(messageBytes, senderID)
@@ -95,10 +100,21 @@ func GetUserNotifications(c *gin.Context) {
 	userID := c.GetUint("user_id")
 
 	var notifications []models.Notification
-	result := config.DB.Where("user_id = ? OR user_id IS NULL", userID).
-		Order("created_at DESC").
-		Limit(50).
-		Find(&notifications)
+
+	// Get user's team ID
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+
+	// Build query for notifications: user-specific, team-specific, or global
+	query := config.DB.Where("user_id = ? OR user_id IS NULL", userID)
+	if user.TeamID != nil {
+		query = query.Or("team_id = ?", *user.TeamID)
+	}
+
+	result := query.Order("created_at DESC").Limit(50).Find(&notifications)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notifications"})
@@ -135,8 +151,21 @@ func MarkNotificationAsRead(c *gin.Context) {
 	notificationID := c.Param("id")
 
 	var notification models.Notification
-	result := config.DB.Where("id = ? AND (user_id = ? OR user_id IS NULL)", notificationID, userID).
-		First(&notification)
+
+	// Get user's team ID
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+
+	// Build query for notifications: user-specific, team-specific, or global
+	query := config.DB.Where("id = ? AND (user_id = ? OR user_id IS NULL)", notificationID, userID)
+	if user.TeamID != nil {
+		query = query.Or("id = ? AND team_id = ?", notificationID, *user.TeamID)
+	}
+
+	result := query.First(&notification)
 
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Notification not found"})
@@ -158,10 +187,22 @@ func MarkNotificationAsRead(c *gin.Context) {
 func MarkAllNotificationsAsRead(c *gin.Context) {
 	userID := c.GetUint("user_id")
 
+	// Get user's team ID
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+
 	now := time.Now()
-	result := config.DB.Model(&models.Notification{}).
-		Where("(user_id = ? OR user_id IS NULL) AND read_at IS NULL", userID).
-		Update("read_at", now)
+	query := config.DB.Model(&models.Notification{}).
+		Where("(user_id = ? OR user_id IS NULL) AND read_at IS NULL", userID)
+
+	if user.TeamID != nil {
+		query = query.Or("team_id = ? AND read_at IS NULL", *user.TeamID)
+	}
+
+	result := query.Update("read_at", now)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark notifications as read"})
@@ -175,10 +216,22 @@ func MarkAllNotificationsAsRead(c *gin.Context) {
 func GetUnreadCount(c *gin.Context) {
 	userID := c.GetUint("user_id")
 
+	// Get user's team ID
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+
 	var count int64
-	result := config.DB.Model(&models.Notification{}).
-		Where("(user_id = ? OR user_id IS NULL) AND read_at IS NULL", userID).
-		Count(&count)
+	query := config.DB.Model(&models.Notification{}).
+		Where("(user_id = ? OR user_id IS NULL) AND read_at IS NULL", userID)
+
+	if user.TeamID != nil {
+		query = query.Or("team_id = ? AND read_at IS NULL", *user.TeamID)
+	}
+
+	result := query.Count(&count)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get unread count"})
@@ -194,7 +247,7 @@ func GetUnreadCount(c *gin.Context) {
 // GetSentNotifications retrieves all sent notifications (admin only)
 func GetSentNotifications(c *gin.Context) {
 	var notifications []models.Notification
-	result := config.DB.Order("created_at DESC").Limit(100).Find(&notifications)
+	result := config.DB.Preload("User").Preload("Team").Order("created_at DESC").Limit(100).Find(&notifications)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notifications"})
@@ -212,6 +265,8 @@ func GetSentNotifications(c *gin.Context) {
 		Type      string    `json:"type"`
 		UserID    *uint     `json:"userId,omitempty"`
 		Username  *string   `json:"username,omitempty"`
+		TeamID    *uint     `json:"teamId,omitempty"`
+		TeamName  *string   `json:"teamName,omitempty"`
 		CreatedAt time.Time `json:"createdAt"`
 	}
 
@@ -223,11 +278,16 @@ func GetSentNotifications(c *gin.Context) {
 			Message:   notification.Message,
 			Type:      notification.Type,
 			UserID:    notification.UserID,
+			TeamID:    notification.TeamID,
 			CreatedAt: notification.CreatedAt,
 		}
 
 		if notification.User != nil {
 			resp.Username = &notification.User.Username
+		}
+
+		if notification.Team != nil {
+			resp.TeamName = &notification.Team.Name
 		}
 
 		response = append(response, resp)

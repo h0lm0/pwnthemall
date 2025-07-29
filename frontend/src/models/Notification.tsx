@@ -12,6 +12,7 @@ export interface NotificationInput {
   message: string;
   type: 'info' | 'warning' | 'error';
   userId?: number;
+  teamId?: number;
 }
 
 export interface SentNotification {
@@ -21,5 +22,7 @@ export interface SentNotification {
   type: 'info' | 'warning' | 'error';
   userId?: number;
   username?: string;
+  teamId?: number;
+  teamName?: string;
   createdAt: string;
 } 

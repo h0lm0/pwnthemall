@@ -271,5 +271,13 @@
   "please_fill_fields": "Veuillez remplir tous les champs",
   "info": "Info",
   "warning": "Avertissement",
-  "error": "Erreur"
+  "error": "Erreur",
+  "select_team": "Sélectionner une équipe",
+  "select_team_placeholder": "Choisir une équipe...",
+  "search_teams": "Rechercher des équipes...",
+  "loading_teams": "Chargement des équipes...",
+  "no_teams_found": "Aucune équipe trouvée",
+  "no_teams_available": "Aucune équipe disponible",
+  "members": "membres",
+  "please_select_team": "Veuillez sélectionner une équipe"
 } 

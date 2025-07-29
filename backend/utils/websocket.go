@@ -3,6 +3,8 @@ package utils
 import (
 	"log"
 	"net/http"
+	"pwnthemall/config"
+	"pwnthemall/models"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -100,6 +102,29 @@ func (h *Hub) SendToAllExcept(message []byte, excludeUserID uint) {
 	h.mu.RLock()
 	for userID, client := range h.clients {
 		if userID != excludeUserID {
+			select {
+			case client.Send <- message:
+			default:
+				close(client.Send)
+				delete(h.clients, userID)
+			}
+		}
+	}
+	h.mu.RUnlock()
+}
+
+// SendToTeam sends a message to all connected clients in a specific team
+func (h *Hub) SendToTeam(teamID uint, message []byte) {
+	// Get all users in the team from the database
+	var userIDs []uint
+	if err := config.DB.Model(&models.User{}).Where("team_id = ?", teamID).Pluck("id", &userIDs).Error; err != nil {
+		log.Printf("Failed to get team members for team %d: %v", teamID, err)
+		return
+	}
+
+	h.mu.RLock()
+	for _, userID := range userIDs {
+		if client, exists := h.clients[userID]; exists {
 			select {
 			case client.Send <- message:
 			default:

@@ -4,7 +4,7 @@ export interface Team {
   id: number;
   name: string;
   creatorId: number;
-  members: User[];
+  users: User[];
   createdAt?: string;
   updatedAt?: string;
 } 
