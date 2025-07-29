@@ -339,10 +339,10 @@ func BuildChallengeImage(c *gin.Context) {
 
 	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
 	}
-	err := utils.BuildDockerImage(challenge.Slug)
+	_, err := utils.BuildDockerImage(challenge.Slug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -352,21 +352,52 @@ func BuildChallengeImage(c *gin.Context) {
 	})
 }
 
-func StartChallengeInstance(c *gin.Context){
+func StartChallengeInstance(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
 	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
 	}
-	err := utils.BuildDockerImage(challenge.Slug)
+
+	imageName, exists := utils.IsImageBuilt(challenge.Slug)
+	if !exists {
+		var err error
+		imageName, err = utils.BuildDockerImage(challenge.Slug)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_build_failed"})
+			log.Printf("Docker build failed for challenge %s: %v", challenge.Slug, err)
+			return
+		}
+	}
+
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	containerName, err := utils.StartDockerInstance(imageName, int(user.ID), int(*user.TeamID))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error_starting_instance"})
+		log.Printf(
+			"Error starting instance: user: %d | team: %d | challenge: %s | error: %v",
+			user.ID, *user.TeamID, challenge.Slug, err,
+		)
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": fmt.Sprintf("Successfully built image for challenge %s", challenge.Slug),
+		"status":         "instance_started",
+		"image_name":     imageName,
+		"container_name": containerName,
 	})
 }

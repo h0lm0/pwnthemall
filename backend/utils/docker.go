@@ -11,9 +11,12 @@ import (
 	"os"
 	"path/filepath"
 	"pwnthemall/config"
+	"pwnthemall/models"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/network"
 )
 
 func EnsureDockerClientConnected() error {
@@ -94,28 +97,41 @@ func streamAndDetectBuildError(r io.Reader) error {
 	return nil
 }
 
-func BuildDockerImage(slug string) error {
+func getDockerImagePrefix() (string, error) {
+	var cfg models.DockerConfig
+	result := config.DB.First(&cfg)
+	if result.Error != nil {
+		return "", fmt.Errorf("could not load DockerConfig: %w", result.Error)
+	}
+
+	if cfg.ImagePrefix == "" {
+		return "pta-", nil
+	}
+	return cfg.ImagePrefix, nil
+}
+
+func BuildDockerImage(slug string) (string, error) {
 	if err := EnsureDockerClientConnected(); err != nil {
-		return err
+		return "", err
 	}
 
 	tmpDir := filepath.Join(os.TempDir(), slug)
 	defer os.RemoveAll(tmpDir)
 
 	if err := DownloadChallengeContext(slug, tmpDir); err != nil {
-		return err
+		return "", err
 	}
 
 	tarReader, err := TarDirectory(tmpDir)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	ctx := context.Background()
 
-	prefix := os.Getenv("PTA_DOCKER_IMAGE_PREFIX")
-	if prefix == "" {
-		prefix = "pta-"
+	prefix, err := getDockerImagePrefix()
+	if err != nil {
+		return "", fmt.Errorf("could not get Docker image prefix: %w", err)
 	}
 
 	imageName := prefix + slug
@@ -128,32 +144,35 @@ func BuildDockerImage(slug string) error {
 
 	buildResponse, err := config.DockerClient.ImageBuild(ctx, tarReader, buildOptions)
 	if err != nil {
-		return err
+		return imageName, err
 	}
 	defer buildResponse.Body.Close()
 
 	if err := streamAndDetectBuildError(buildResponse.Body); err != nil {
 		log.Printf("Docker build failed: %v", err)
-		return err
+		return imageName, err
 	}
-	io.Copy(os.Stdout, buildResponse.Body)
 
+	io.Copy(os.Stdout, buildResponse.Body)
 	log.Printf("Built image %s for challenge %s", imageName, slug)
-	return nil
+
+	return imageName, nil
 }
 
-func IsImageBuilt(slug string) bool {
+func IsImageBuilt(slug string) (string, bool) {
 	if err := EnsureDockerClientConnected(); err != nil {
 		log.Printf("Docker client not connected: %v", err)
-		return false
+		return "", false
 	}
 
 	ctx := context.Background()
 
-	prefix := os.Getenv("PTA_DOCKER_IMAGE_PREFIX")
-	if prefix == "" {
-		prefix = "pta-"
+	prefix, err := getDockerImagePrefix()
+	if err != nil {
+		log.Printf("Could not get Docker image prefix: %v", err)
+		return "", false
 	}
+
 	imageName := prefix + slug
 
 	filtersArgs := filters.NewArgs()
@@ -164,12 +183,77 @@ func IsImageBuilt(slug string) bool {
 	})
 	if err != nil {
 		log.Printf("Failed to list docker images: %v", err)
-		return false
+		return "", false
 	}
 
-	return len(images) > 0
+	if len(images) > 0 {
+		return imageName, true
+	}
+	return imageName, false
 }
 
-func StartDockerInstance(image string, teamId int, userId int) error {
-	return nil
+func StartDockerInstance(image string, teamId int, userId int) (string, error) {
+	if err := EnsureDockerClientConnected(); err != nil {
+		return "", fmt.Errorf("docker client not connected: %w", err)
+	}
+
+	ctx := context.Background()
+
+	containerName := fmt.Sprintf("%s_team%d_user%d", image, teamId, userId)
+
+	existing, err := config.DockerClient.ContainerList(ctx, container.ListOptions{
+		All: true,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to list containers: %w", err)
+	}
+	for _, c := range existing {
+		for _, name := range c.Names {
+			if name == "/"+containerName {
+				log.Printf("Container %s already exists, starting it...", containerName)
+				if err := config.DockerClient.ContainerStart(ctx, c.ID, types.ContainerStartOptions{}); err != nil {
+					return "", fmt.Errorf("failed to start existing container: %w", err)
+				}
+				return containerName, nil
+			}
+		}
+	}
+
+	var dockerCfg models.DockerConfig
+	if err := config.DB.First(&dockerCfg).Error; err != nil {
+		return "", fmt.Errorf("failed to load docker config from DB: %w", err)
+	}
+
+	hostConfig := &container.HostConfig{
+		Resources: container.Resources{
+			Memory:   int64(dockerCfg.MaxMemByInstance) * 1024 * 1024,
+			NanoCPUs: int64(dockerCfg.MaxCpuByInstance) * 1_000_000_000,
+		},
+		AutoRemove: true,
+		RestartPolicy: container.RestartPolicy{
+			Name: "no",
+		},
+	}
+
+	resp, err := config.DockerClient.ContainerCreate(
+		ctx,
+		&container.Config{
+			Image: image,
+			Tty:   false,
+		},
+		hostConfig,
+		&network.NetworkingConfig{},
+		nil,
+		containerName,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create container: %w", err)
+	}
+
+	if err := config.DockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
+		return "", fmt.Errorf("failed to start container: %w", err)
+	}
+
+	log.Printf("Started container %s for team %d user %d", containerName, teamId, userId)
+	return containerName, nil
 }

@@ -50,6 +50,9 @@ func UpdateDockerConfig(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update Docker Configuration"})
 		return
 	}
-	config.SynchronizeEnvWithDb()
-	c.JSON(http.StatusOK, existingCfg)
+	if err := config.ConnectDocker(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Config updated but connection to Docker Daemon isn't healthy"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully updated Docker configuration"})
 }
