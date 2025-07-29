@@ -308,35 +308,21 @@ func GetChallengeSolves(c *gin.Context) {
 
 	var solvesWithUsers []SolveWithUser
 
-	// Fetch all relevant submissions for the challenge in a single query
-	var submissions []models.Submission
-	submissionResult := config.DB.
-		Preload("User").
-		Where("challenge_id = ?", challenge.ID).
-		Order("created_at DESC").
-		Find(&submissions)
-
-	if submissionResult.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": submissionResult.Error.Error()})
-		return
-	}
-
-	// Create a map for quick lookup of submissions by TeamID and CreatedAt
-	submissionMap := make(map[uint]models.Submission) // Keyed by TeamID
-	for _, submission := range submissions {
-		// Only keep the latest submission for each team
-		if existing, exists := submissionMap[submission.TeamID]; !exists || submission.CreatedAt.After(existing.CreatedAt) {
-			submissionMap[submission.TeamID] = submission
-		}
-	}
-
 	for _, solve := range solves {
+		// Find the submission that led to this solve
+		var submission models.Submission
+		submissionResult := config.DB.
+			Preload("User").
+			Where("challenge_id = ? AND user_id IN (SELECT id FROM users WHERE team_id = ?) AND created_at <= ?",
+				challenge.ID, solve.TeamID, solve.CreatedAt).
+			Order("created_at DESC").
+			First(&submission)
+
 		solveWithUser := SolveWithUser{
 			Solve: solve,
 		}
 
-		// Perform in-memory lookup for the submission
-		if submission, exists := submissionMap[solve.TeamID]; exists && submission.User != nil {
+		if submissionResult.Error == nil && submission.User != nil {
 			solveWithUser.UserID = submission.UserID
 			solveWithUser.Username = submission.User.Username
 		}
