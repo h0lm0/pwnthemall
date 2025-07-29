@@ -95,6 +95,22 @@ func (h *Hub) SendToAll(message []byte) {
 	h.broadcast <- message
 }
 
+// SendToAllExcept sends a message to all connected clients except the specified user
+func (h *Hub) SendToAllExcept(message []byte, excludeUserID uint) {
+	h.mu.RLock()
+	for userID, client := range h.clients {
+		if userID != excludeUserID {
+			select {
+			case client.Send <- message:
+			default:
+				close(client.Send)
+				delete(h.clients, userID)
+			}
+		}
+	}
+	h.mu.RUnlock()
+}
+
 // GetConnectedUsers returns a list of connected user IDs
 func (h *Hub) GetConnectedUsers() []uint {
 	h.mu.RLock()

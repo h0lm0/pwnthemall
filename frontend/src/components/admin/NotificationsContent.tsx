@@ -207,7 +207,7 @@ export default function NotificationsContent({
                       {t("user")}
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-foreground">
                     {targetType === 'everyone' && (
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />

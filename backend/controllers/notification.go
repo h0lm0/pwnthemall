@@ -47,6 +47,9 @@ func SendNotification(c *gin.Context) {
 		return
 	}
 
+	// Get the sender's user ID
+	senderID := c.GetUint("user_id")
+
 	// Create notification in database
 	notification := models.Notification{
 		Title:   input.Title,
@@ -80,8 +83,8 @@ func SendNotification(c *gin.Context) {
 		// Send to specific user
 		WebSocketHub.SendToUser(*input.UserID, messageBytes)
 	} else {
-		// Send to all connected users
-		WebSocketHub.SendToAll(messageBytes)
+		// Send to all connected users except the sender
+		WebSocketHub.SendToAllExcept(messageBytes, senderID)
 	}
 
 	c.JSON(http.StatusCreated, notificationMsg)

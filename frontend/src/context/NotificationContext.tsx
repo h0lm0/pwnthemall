@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState } from 'react';
 import { useNotifications } from '@/hooks/use-notifications';
 import { Notification } from '@/models/Notification';
 import { toast } from 'sonner';
@@ -20,20 +20,54 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { loggedIn } = useAuth();
+  const [recentlySentNotifications, setRecentlySentNotifications] = useState<Set<number>>(new Set());
   
   const {
     notifications,
     unreadCount,
     isConnected,
-    sendNotification,
+    sendNotification: originalSendNotification,
     markAsRead,
     markAllAsRead,
     refreshNotifications,
   } = useNotifications(loggedIn);
 
+  // Wrapper for sendNotification that tracks recently sent notifications
+  const sendNotification = async (notification: any) => {
+    const result = await originalSendNotification(notification);
+    
+    // Add a temporary flag to prevent showing toast for this notification
+    // We'll use a timestamp-based approach to identify recently sent notifications
+    const timestamp = Date.now();
+    setRecentlySentNotifications(prev => new Set(Array.from(prev).concat([timestamp])));
+    
+    // Remove the flag after 10 seconds
+    setTimeout(() => {
+      setRecentlySentNotifications(prev => {
+        const newSet = new Set(Array.from(prev));
+        newSet.delete(timestamp);
+        return newSet;
+      });
+    }, 10000);
+    
+    return result;
+  };
+
   // Show toast notification when a new notification is received
   const showToastNotification = (notification: Notification) => {
     console.log('Showing toast notification:', notification);
+    
+    // Check if this notification was recently sent by the current user
+    // We'll use a simple heuristic: if the notification was created very recently (within 5 seconds)
+    // and we have recently sent notifications, don't show the toast
+    const notificationTime = new Date(notification.createdAt).getTime();
+    const currentTime = Date.now();
+    const timeDiff = currentTime - notificationTime;
+    
+    if (timeDiff < 5000 && recentlySentNotifications.size > 0) {
+      console.log('Skipping toast for recently sent notification:', notification);
+      return;
+    }
     
     // Get icon based on notification type
     const getTypeIcon = (type: string) => {

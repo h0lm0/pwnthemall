@@ -995,9 +995,9 @@ html, body {
 }
 
 .notification-toast.notification-info {
-  border-left-color: #10b981;
-  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
-  border: 1px solid #d1fae5 !important;
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%) !important;
+  border: 1px solid #bfdbfe !important;
 }
 
 .notification-toast.notification-warning {
@@ -1029,6 +1029,41 @@ html, body {
   color: hsl(var(--foreground));
   border: 1px solid hsl(var(--border));
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Toast close button styling */
+.toaster .toast button[data-close-button] {
+  background: rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(0, 0, 0, 0.25) !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(0, 0, 0, 0.8) !important;
+  transition: all 0.2s ease !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.toaster .toast button[data-close-button]:hover {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(0, 0, 0, 0.35) !important;
+  color: rgba(0, 0, 0, 0.95) !important;
+  transform: scale(1.1) !important;
+}
+
+.dark .toaster .toast button[data-close-button] {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.dark .toaster .toast button[data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
 }
 
 /* Success toasts (default sonner success) */
@@ -1082,8 +1117,8 @@ html, body {
 }
 
 .dark .notification-toast.notification-info {
-  background: linear-gradient(135deg, #065f46 0%, #1f2937 100%) !important;
-  border: 1px solid #047857 !important;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1f2937 100%) !important;
+  border: 1px solid #3b82f6 !important;
 }
 
 .dark .notification-toast.notification-warning {
