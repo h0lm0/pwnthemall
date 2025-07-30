@@ -10,6 +10,7 @@ type FirstBlood struct {
     Team        *Team      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
     UserID      uint       `gorm:"not null"` 
     User        *User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-    Points      int        `gorm:"not null"`
-    CreatedAt   time.Time  `json:"CreatedAt"`
-}
+    Bonuses     string     `gorm:"type:text;not null"` // Bonuses in JSON format
+    CreatedAt   time.Time  `json:"createdAt"`
+    UpdatedAt   time.Time  `json:"updatedAt"`
+    }

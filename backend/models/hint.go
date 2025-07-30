@@ -8,6 +8,7 @@ type Hint struct {
 	Content     string    `gorm:"not null"`
 	Cost        int       `gorm:"not null;default:0"`
 	IsActive    bool      `gorm:"default:true"`
-	CreatedAt   time.Time `json:"CreatedAt"`
-	UpdatedAt   time.Time `json:"UpdatedAt"`
+	AutoActiveAt *time.Time `json:"autoActiveAt"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
