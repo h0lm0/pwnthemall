@@ -7,6 +7,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import axios from "@/lib/axios";
 import Head from "next/head";
+import { CheckCircle } from "lucide-react";
 
 const LoginPage = () => {
   const router = useRouter();

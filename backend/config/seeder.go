@@ -152,6 +152,11 @@ func seedDefaultUsers() {
 	users := []models.User{
 		{Username: "admin", Email: "admin@admin.admin", Password: "admin", Role: "admin"},
 		{Username: "user", Email: "user@user.user", Password: "user", Role: "member"},
+		{Username: "user1", Email: "user1@user.user", Password: "user1", Role: "member"},
+		{Username: "user2", Email: "user2@user.user", Password: "user2", Role: "member"},
+		{Username: "user3", Email: "user3@user.user", Password: "user3", Role: "member"},
+		{Username: "user4", Email: "user4@user.user", Password: "user4", Role: "member"},
+		{Username: "user5", Email: "user5@user.user", Password: "user5", Role: "member"},
 	}
 
 	for _, user := range users {
