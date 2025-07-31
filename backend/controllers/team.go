@@ -16,7 +16,7 @@ import (
 // GetTeams : liste toutes les équipes
 func GetTeams(c *gin.Context) {
 	var teams []models.Team
-	if err := config.DB.Find(&teams).Error; err != nil {
+	if err := config.DB.Preload("Users").Find(&teams).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

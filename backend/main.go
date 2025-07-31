@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"pwnthemall/config"
+	"pwnthemall/controllers"
 	"pwnthemall/routes"
 
 	"github.com/gin-contrib/cors"
@@ -28,11 +29,14 @@ func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
 	config.InitCasbin()
+	// config.SynchronizeEnvWithDb()
 	if err := config.ConnectDocker(); err != nil {
-		log.Fatalf("Failed to connect to docker host: %s", err.Error())
+		log.Printf("Failed to connect to docker host: %s", err.Error())
 	}
-	// Synchronize environment variables with database configuration
-	config.SynchronizeEnvWithDb()
+
+	// Initialize WebSocket hub for notifications
+	controllers.InitWebSocketHub()
+
 	router := gin.Default()
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
@@ -68,6 +72,9 @@ func main() {
 	routes.RegisterChallengeCategoryRoutes(router)
 	routes.RegisterTeamRoutes(router)
 	routes.RegisterConfigRoutes(router)
+	routes.RegisterDockerConfigRoutes(router)
+	routes.RegisterInstanceRoutes(router)
+	routes.RegisterNotificationRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
