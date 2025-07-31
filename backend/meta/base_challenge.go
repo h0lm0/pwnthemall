@@ -27,6 +27,6 @@ type HintMetadata struct {
 }
 
 type FirstBloodMetadata struct {
-    Bonuses     string     `yaml:"bonuses"`
+    Bonuses     []int      `yaml:"bonuses"`
 	Badge       string     `yaml:"badge"`
 }

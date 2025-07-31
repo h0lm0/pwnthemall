@@ -18,5 +18,5 @@ hints:
     isActive: true
     autoActiveAt: "2025-08-01T10:00:00Z"
 firstBlood:
-  bonuses: 50,25,10
+  bonuses: [50, 20]
   badge: "Crown"
