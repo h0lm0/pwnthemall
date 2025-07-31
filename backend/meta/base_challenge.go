@@ -12,8 +12,9 @@ type BaseChallengeMetadata struct {
 	Hidden      	 bool     			 `yaml:"hidden"`
 	Flags       	 []string 			 `yaml:"flags"`
 	Points      	 int      			 `yaml:"points"`
-	Scale 	 	 	 int      			 `yaml:"scale"`
-	Hints       	 *HintMetadata 		 `yaml:"hints,omitempty"`
+	MinPoints   	 int      			 `yaml:"minPoints,omitempty"`
+	ScaleFormula	 string      		 `yaml:"scale,omitempty"`
+	Hints       	 []HintMetadata 	 `yaml:"hints,omitempty"`
 	EnableFirstBlood bool 				 `yaml:"enableFirstBlood"`
 	FirstBlood  	 *FirstBloodMetadata `yaml:"firstBlood,omitempty"`
 }
@@ -27,4 +28,5 @@ type HintMetadata struct {
 
 type FirstBloodMetadata struct {
     Bonuses     string     `yaml:"bonuses"`
+	Badge       string     `yaml:"badge"`
 }
