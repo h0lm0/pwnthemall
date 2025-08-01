@@ -135,10 +135,10 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <div className="flex items-center gap-2">
+                <Link href="/notifications" className="flex items-center gap-2">
                   <NotificationBell />
-                Notifications
-                </div>
+                  {t('notifications')}
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
