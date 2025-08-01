@@ -199,19 +199,35 @@ func StartDockerInstance(image string, teamId int, userId int) (string, error) {
 
 	ctx := context.Background()
 
-	containerName := fmt.Sprintf("%s_team%d_user%d", image, teamId, userId)
+	// Use challenge name as base, add unique suffix if needed
+	baseContainerName := image
+	containerName := baseContainerName
+
+	// Check if container with this name already exists
 	existing, err := config.DockerClient.ContainerList(ctx, container.ListOptions{
 		All: true,
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to list containers: %w", err)
 	}
+
+	// If container exists, add a unique suffix
+	containerExists := false
 	for _, c := range existing {
 		for _, name := range c.Names {
 			if name == "/"+containerName {
-				return "", fmt.Errorf("container %s already exists", containerName)
+				containerExists = true
+				break
 			}
 		}
+		if containerExists {
+			break
+		}
+	}
+
+	if containerExists {
+		// Add a unique suffix based on team and user
+		containerName = fmt.Sprintf("%s_%d_%d", baseContainerName, teamId, userId)
 	}
 
 	var dockerCfg models.DockerConfig
@@ -255,21 +271,26 @@ func StartDockerInstance(image string, teamId int, userId int) (string, error) {
 }
 
 func StopDockerInstance(containerID string) error {
+	log.Printf("DEBUG: Attempting to stop Docker container: %s", containerID)
+
 	if err := EnsureDockerClientConnected(); err != nil {
+		log.Printf("DEBUG: Docker client connection failed: %v", err)
 		return fmt.Errorf("docker client not connected: %w", err)
 	}
 
 	ctx := context.Background()
 
 	if containerID == "" {
-		log.Println("containerID invalid, nothing to stop")
+		log.Println("DEBUG: containerID invalid, nothing to stop")
 		return nil
 	}
 
+	log.Printf("DEBUG: Removing container %s with force", containerID)
 	if err := config.DockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
+		log.Printf("DEBUG: Failed to remove container %s: %v", containerID, err)
 		return fmt.Errorf("failed to remove container %s: %w", containerID, err)
 	}
 
-	log.Printf("Stopped and removed container %s", containerID)
+	log.Printf("DEBUG: Successfully stopped and removed container %s", containerID)
 	return nil
 }

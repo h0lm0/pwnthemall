@@ -12,4 +12,6 @@ type Instance struct {
 	Challenge   Challenge `gorm:"foreignKey:ChallengeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"challenge"`
 	ChallengeID uint      `json:"challengeId"`
 	CreatedAt   time.Time `json:"createdAt"`
+	ExpiresAt   time.Time `json:"expiresAt"`
+	Status      string    `json:"status" gorm:"default:'running'"` // running, stopped, expired
 }

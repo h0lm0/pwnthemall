@@ -69,6 +69,11 @@ func seedDockerConfig() {
 		maxCpu = 0.01
 	}
 
+	instanceTimeout, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTANCE_TIMEOUT"))
+	if err != nil {
+		instanceTimeout = 60 // Default 60 minutes
+	}
+
 	config := models.DockerConfig{
 		Host:             os.Getenv("PTA_DOCKER_HOST"),
 		ImagePrefix:      os.Getenv("PTA_DOCKER_IMAGE_PREFIX"),
@@ -76,6 +81,7 @@ func seedDockerConfig() {
 		MaxCpuByInstance: maxCpu,
 		InstancesByTeam:  iByTeam,
 		InstancesByUser:  iByUser,
+		InstanceTimeout:  instanceTimeout,
 	}
 
 	if err := DB.Create(&config).Error; err != nil {

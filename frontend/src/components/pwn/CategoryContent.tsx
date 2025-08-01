@@ -40,9 +40,10 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [solves, setSolves] = useState<Solve[]>([]);
   const [solvesLoading, setSolvesLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
-  const [instanceStatus, setInstanceStatus] = useState<{[key: number]: 'running' | 'stopped' | 'building'}>({});
+  const [instanceStatus, setInstanceStatus] = useState<{[key: number]: 'running' | 'stopped' | 'building' | 'expired'}>({});
+  const [instanceDetails, setInstanceDetails] = useState<{[key: number]: any}>({});
   const { getSiteName } = useSiteConfig();
-  const { loading: instanceLoading, startInstance, stopInstance, buildImage } = useInstances();
+  const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
 
   // Clear solves data when dialog opens/closes
   useEffect(() => {
@@ -151,7 +152,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
     return challenge.type?.name?.toLowerCase() === 'docker';
   };
 
-  const getInstanceStatus = (challengeId: number) => {
+  const getLocalInstanceStatus = (challengeId: number) => {
     return instanceStatus[challengeId] || 'stopped';
   };
   
@@ -223,15 +224,18 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                         <Badge 
                           variant="secondary" 
                           className={`text-xs ${
-                            getInstanceStatus(challenge.id) === 'running' 
+                            getLocalInstanceStatus(challenge.id) === 'running' 
                               ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400' 
-                              : getInstanceStatus(challenge.id) === 'building'
+                              : getLocalInstanceStatus(challenge.id) === 'building'
                               ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
+                              : getLocalInstanceStatus(challenge.id) === 'expired'
+                              ? 'bg-red-300 dark:bg-red-700 text-red-900 dark:text-red-100 border border-red-500 dark:border-red-400'
                               : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
                           } pointer-events-none select-none`}
                         >
-                          {getInstanceStatus(challenge.id) === 'running' ? t('running') : 
-                           getInstanceStatus(challenge.id) === 'building' ? t('building') : t('stopped')}
+                          {getLocalInstanceStatus(challenge.id) === 'running' ? t('running') : 
+                           getLocalInstanceStatus(challenge.id) === 'building' ? t('building') : 
+                           getLocalInstanceStatus(challenge.id) === 'expired' ? t('expired') : t('stopped')}
                         </Badge>
                       </div>
                     )}
@@ -360,15 +364,15 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                                 <Badge 
                                   variant="secondary" 
                                   className={`${
-                                    getInstanceStatus(selectedChallenge.id) === 'running' 
-                                      ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400' 
-                                      : getInstanceStatus(selectedChallenge.id) === 'building'
+                                                                getLocalInstanceStatus(selectedChallenge.id) === 'running'
+                              ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400'
+                              : getLocalInstanceStatus(selectedChallenge.id) === 'building'
                                       ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
                                       : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
                                   }`}
                                 >
-                                  {getInstanceStatus(selectedChallenge.id) === 'running' ? t('running') : 
-                                   getInstanceStatus(selectedChallenge.id) === 'building' ? t('building') : t('stopped')}
+                                                            {getLocalInstanceStatus(selectedChallenge.id) === 'running' ? t('running') :
+                           getLocalInstanceStatus(selectedChallenge.id) === 'building' ? t('building') : t('stopped')}
                                 </Badge>
                               </div>
                               
@@ -377,13 +381,13 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                                   <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium text-foreground">{t('instance_status')}:</span>
                                     <span className="text-sm text-muted-foreground">
-                                      {getInstanceStatus(selectedChallenge.id) === 'running' ? t('instance_running') : 
-                                       getInstanceStatus(selectedChallenge.id) === 'building' ? t('instance_building') : 
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'running' ? t('instance_running') : 
+                                       getLocalInstanceStatus(selectedChallenge.id) === 'building' ? t('instance_building') : 
                                        t('instance_stopped')}
                                     </span>
-                                  </div>
+                                                                    </div>
                                   
-                                                                     {getInstanceStatus(selectedChallenge.id) === 'running' && (
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'running' && (
                                      <div className="p-3 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg">
                                        <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
                                          <Play className="w-4 h-4" />
@@ -393,9 +397,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                                          {t('instance_active_description')}
                                        </p>
                                      </div>
-                                   )}
+                                                                     )}
                                   
-                                                                     {getInstanceStatus(selectedChallenge.id) === 'building' && (
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'building' && (
                                      <div className="p-3 bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                                        <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300 mb-2">
                                          <Settings className="w-4 h-4 animate-spin" />
@@ -405,9 +409,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                                          {t('building_image_description')}
                                        </p>
                                      </div>
-                                   )}
+                                                                     )}
                                   
-                                                                     {getInstanceStatus(selectedChallenge.id) === 'stopped' && (
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
                                      <div className="p-3 bg-gray-50 dark:bg-gray-950/50 border border-gray-200 dark:border-gray-800 rounded-lg">
                                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
                                          <Square className="w-4 h-4" />
@@ -422,7 +426,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                               </div>
                               
                               <div className="flex gap-2">
-                                {getInstanceStatus(selectedChallenge.id) === 'stopped' && (
+                                {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
                                   <Button
                                     onClick={() => handleStartInstance(selectedChallenge.id)}
                                     disabled={instanceLoading}
@@ -442,7 +446,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                                   </Button>
                                 )}
                                 
-                                {getInstanceStatus(selectedChallenge.id) === 'running' && (
+                                {getLocalInstanceStatus(selectedChallenge.id) === 'running' && (
                                   <Button
                                     onClick={() => handleStopInstance(selectedChallenge.id)}
                                     disabled={instanceLoading}
