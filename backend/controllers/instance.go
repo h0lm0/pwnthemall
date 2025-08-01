@@ -12,7 +12,7 @@ import (
 
 func GetInstances(c *gin.Context) {
 	var instances []models.Instance
-	result := config.DB.Find(&instances)
+	result := config.DB.Preload("User").Preload("Team").Preload("Challenge").Find(&instances)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -31,7 +31,7 @@ func GetInstances(c *gin.Context) {
 func GetInstance(c *gin.Context) {
 	var instance models.Instance
 	id := c.Param("id")
-	result := config.DB.First(&instance, id)
+	result := config.DB.Preload("User").Preload("Team").Preload("Challenge").First(&instance, id)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Instance not found"})
 		return

@@ -5,11 +5,11 @@ import "time"
 type Instance struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
 	Container   string    `json:"container"`
-	User        Team      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"user"`
+	User        User      `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"user"`
 	UserID      uint      `json:"userId"`
-	Team        Team      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"team"`
+	Team        Team      `gorm:"foreignKey:TeamID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"team"`
 	TeamID      uint      `json:"teamId"`
-	Challenge   Challenge `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"challenge"`
+	Challenge   Challenge `gorm:"foreignKey:ChallengeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"challenge"`
 	ChallengeID uint      `json:"challengeId"`
 	CreatedAt   time.Time `json:"createdAt"`
 }

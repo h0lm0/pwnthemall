@@ -10,6 +10,8 @@ p, member, /challenges/category/:category, read
 p, member, /challenges/:id/start, write
 p, member, /challenges/:id/stop, write
 p, member, /challenges-categories, read
+p, member, /instances, read
+p, member, /instances/:id, read
 p, member, /challenges-categories/:id, read
 p, member, /teams, write
 p, member, /teams/join, write

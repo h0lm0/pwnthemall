@@ -251,7 +251,7 @@ func StartDockerInstance(image string, teamId int, userId int) (string, error) {
 	}
 
 	log.Printf("Started container %s for team %d user %d", containerName, teamId, userId)
-	return resp.ID, nil
+	return containerName, nil
 }
 
 func StopDockerInstance(containerID string) error {

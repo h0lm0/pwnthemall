@@ -338,9 +338,15 @@ func BuildChallengeImage(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
-	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
+	result := config.DB.Preload("ChallengeType").First(&challenge, id)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
+		return
+	}
+
+	// Check if challenge is of type docker
+	if challenge.ChallengeType.Name != "docker" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "challenge_not_docker_type"})
 		return
 	}
 	_, err := utils.BuildDockerImage(challenge.Slug)
@@ -356,50 +362,81 @@ func BuildChallengeImage(c *gin.Context) {
 func StartChallengeInstance(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
+	log.Printf("DEBUG: Starting instance for challenge ID: %s", id)
 
-	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
+	// Add request logging
+	log.Printf("DEBUG: Request headers: %v", c.Request.Header)
+	log.Printf("DEBUG: Request method: %s", c.Request.Method)
+	log.Printf("DEBUG: Request URL: %s", c.Request.URL.String())
+
+	result := config.DB.Preload("ChallengeType").First(&challenge, id)
 	if result.Error != nil {
+		log.Printf("DEBUG: Challenge not found with ID %s: %v", id, result.Error)
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
 	}
 
+	log.Printf("DEBUG: Found challenge: %s, Type: %s", challenge.Name, challenge.ChallengeType.Name)
+
+	// Check if challenge is of type docker
+	if challenge.ChallengeType.Name != "docker" {
+		log.Printf("DEBUG: Challenge is not docker type, got: %s", challenge.ChallengeType.Name)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "challenge_not_docker_type"})
+		return
+	}
+
+	log.Printf("DEBUG: Checking if image is built for challenge: %s", challenge.Slug)
 	imageName, exists := utils.IsImageBuilt(challenge.Slug)
 	if !exists {
+		log.Printf("DEBUG: Image not found, building for challenge: %s", challenge.Slug)
 		var err error
 		imageName, err = utils.BuildDockerImage(challenge.Slug)
 		if err != nil {
+			log.Printf("DEBUG: Docker build failed for challenge %s: %v", challenge.Slug, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_build_failed"})
-			log.Printf("Docker build failed for challenge %s: %v", challenge.Slug, err)
 			return
 		}
+		log.Printf("DEBUG: Image built successfully: %s", imageName)
+	} else {
+		log.Printf("DEBUG: Image already exists: %s", imageName)
 	}
 
 	userID, ok := c.Get("user_id")
 	if !ok {
+		log.Printf("DEBUG: No user_id in context")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
+	log.Printf("DEBUG: User ID from context: %v", userID)
 
 	var dockerConfig models.DockerConfig
 	if err := config.DB.First(&dockerConfig).Error; err != nil {
+		log.Printf("DEBUG: Docker config not found: %v", err)
+		log.Printf("DEBUG: This might be due to missing environment variables or database seeding issues")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
 		return
 	}
+	log.Printf("DEBUG: Docker config found: Host=%s, ImagePrefix=%s, InstancesByTeam=%d, InstancesByUser=%d",
+		dockerConfig.Host, dockerConfig.ImagePrefix, dockerConfig.InstancesByTeam, dockerConfig.InstancesByUser)
 
 	var user models.User
 	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+		log.Printf("DEBUG: User not found with ID %v: %v", userID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
+	log.Printf("DEBUG: Found user: %s, TeamID: %v", user.Username, user.TeamID)
 
-	if user.Team == nil {
+	if user.Team == nil || user.TeamID == nil {
+		log.Printf("DEBUG: User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
 		return
 	}
+	log.Printf("DEBUG: User team: %s (ID: %d)", user.Team.Name, user.Team.ID)
 
 	var countExist int64
 	config.DB.Model(&models.Instance{}).
-		Where("user_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
+		Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
 		Count(&countExist)
 
 	if int(countExist) >= 1 {
@@ -427,15 +464,14 @@ func StartChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	containerName, err := utils.StartDockerInstance(imageName, int(user.ID), int(*user.TeamID))
+	log.Printf("DEBUG: Starting Docker instance with image: %s, teamID: %d, userID: %d", imageName, *user.TeamID, user.ID)
+	containerName, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID))
 	if err != nil {
+		log.Printf("DEBUG: Error starting Docker instance: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		log.Printf(
-			"Error starting instance: user: %d | team: %d | challenge: %s | error: %v",
-			user.ID, *user.TeamID, challenge.Slug, err,
-		)
 		return
 	}
+	log.Printf("DEBUG: Docker instance started successfully: %s", containerName)
 
 	instance := models.Instance{
 		Container:   containerName,

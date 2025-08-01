@@ -42,12 +42,19 @@ func seedConfig() {
 }
 
 func seedDockerConfig() {
-	iByTeam, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTACES_BY_TEAM"))
+	var existing models.DockerConfig
+	err := DB.First(&existing).Error
+	if err == nil {
+		log.Println("Seeding: docker config already exists, skipping")
+		return
+	}
+
+	iByTeam, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTANCES_BY_TEAM"))
 	if err != nil {
 		iByTeam = 15
 	}
 
-	iByUser, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTACES_BY_USER"))
+	iByUser, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTANCES_BY_USER"))
 	if err != nil {
 		iByUser = 5
 	}
