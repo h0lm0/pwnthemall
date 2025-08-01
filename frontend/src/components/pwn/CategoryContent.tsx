@@ -199,23 +199,30 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const handleStopInstance = async (challengeId: number) => {
     try {
       await stopInstance(challengeId);
-      // Fetch the actual status from backend after stopping
-      const status = await fetchInstanceStatus(challengeId);
-      if (status) {
-        let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
-        if (status.status === 'running') {
-          localStatus = 'running';
-        } else if (status.status === 'building') {
-          localStatus = 'building';
-        } else if (status.status === 'expired') {
-          localStatus = 'expired';
-        } else {
-          localStatus = 'stopped';
+      // Immediately set status to stopped for better UX
+      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+      
+      // Wait a moment for backend to process, then verify status
+      setTimeout(async () => {
+        try {
+          const status = await fetchInstanceStatus(challengeId);
+          if (status) {
+            let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+            if (status.status === 'running') {
+              localStatus = 'running';
+            } else if (status.status === 'building') {
+              localStatus = 'building';
+            } else if (status.status === 'expired') {
+              localStatus = 'expired';
+            } else {
+              localStatus = 'stopped';
+            }
+            setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
+          }
+        } catch (error) {
+          console.error('Failed to verify status after stopping:', error);
         }
-        setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
-      } else {
-        setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
-      }
+      }, 1000); // Wait 1 second before verifying
     } catch (error) {
       // Keep current status on error
     }
