@@ -45,6 +45,47 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const { getSiteName } = useSiteConfig();
   const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
 
+  // Fetch instance status for all Docker challenges when challenges are loaded
+  const [statusFetched, setStatusFetched] = useState(false);
+  
+  useEffect(() => {
+    if (!challenges || challenges.length === 0 || statusFetched) return;
+    
+    const fetchAllInstanceStatuses = async () => {
+      const dockerChallenges = challenges.filter(challenge => isDockerChallenge(challenge));
+      
+      for (const challenge of dockerChallenges) {
+        try {
+          const status = await fetchInstanceStatus(challenge.id);
+          if (status) {
+            // Map API status to local status
+            let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+            if (status.status === 'running') {
+              localStatus = 'running';
+            } else if (status.status === 'building') {
+              localStatus = 'building';
+            } else if (status.status === 'expired') {
+              localStatus = 'expired';
+            } else {
+              // 'no_instance', 'stopped', 'no_team', etc. all map to 'stopped'
+              localStatus = 'stopped';
+            }
+            
+            setInstanceStatus(prev => ({
+              ...prev,
+              [challenge.id]: localStatus
+            }));
+          }
+        } catch (error) {
+          console.error(`Failed to fetch status for challenge ${challenge.id}:`, error);
+        }
+      }
+      setStatusFetched(true);
+    };
+
+    fetchAllInstanceStatuses();
+  }, [challenges.length, statusFetched]); // Only run once when challenges load
+
   // Clear solves data when dialog opens/closes
   useEffect(() => {
     if (!open) {
@@ -133,7 +174,23 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
     try {
       setInstanceStatus(prev => ({ ...prev, [challengeId]: 'building' }));
       await startInstance(challengeId);
-      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'running' }));
+      // Fetch the actual status from backend after starting
+      const status = await fetchInstanceStatus(challengeId);
+      if (status) {
+        let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'running';
+        if (status.status === 'running') {
+          localStatus = 'running';
+        } else if (status.status === 'building') {
+          localStatus = 'building';
+        } else if (status.status === 'expired') {
+          localStatus = 'expired';
+        } else {
+          localStatus = 'stopped';
+        }
+        setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
+      } else {
+        setInstanceStatus(prev => ({ ...prev, [challengeId]: 'running' }));
+      }
     } catch (error) {
       setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
     }
@@ -142,7 +199,23 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const handleStopInstance = async (challengeId: number) => {
     try {
       await stopInstance(challengeId);
-      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+      // Fetch the actual status from backend after stopping
+      const status = await fetchInstanceStatus(challengeId);
+      if (status) {
+        let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+        if (status.status === 'running') {
+          localStatus = 'running';
+        } else if (status.status === 'building') {
+          localStatus = 'building';
+        } else if (status.status === 'expired') {
+          localStatus = 'expired';
+        } else {
+          localStatus = 'stopped';
+        }
+        setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
+      } else {
+        setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+      }
     } catch (error) {
       // Keep current status on error
     }
