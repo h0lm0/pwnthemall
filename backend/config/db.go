@@ -20,12 +20,13 @@ func ConnectDB() *gorm.DB {
 	}
 
 	err = db.AutoMigrate(
-		&models.Config{},
+		&models.Config{}, &models.DockerConfig{},
 		&models.Team{}, &models.Solve{},
 		&models.User{}, &models.ChallengeCategory{},
 		&models.ChallengeType{}, &models.ChallengeDifficulty{},
 		&models.Challenge{}, &models.Flag{},
 		&models.Submission{}, &models.Instance{}, &models.DynamicFlag{},
+		&models.Notification{},
 	)
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)

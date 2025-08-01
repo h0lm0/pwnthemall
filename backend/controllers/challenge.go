@@ -13,8 +13,7 @@ import (
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"strings"
-	// "time"
-	// "strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 )
@@ -467,10 +466,10 @@ func BuildChallengeImage(c *gin.Context) {
 
 	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
 	}
-	err := utils.BuildDockerImage(challenge.Slug)
+	_, err := utils.BuildDockerImage(challenge.Slug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -479,53 +478,3 @@ func BuildChallengeImage(c *gin.Context) {
 		"message": fmt.Sprintf("Successfully built image for challenge %s", challenge.Slug),
 	})
 }
-
-
-// func awardFirstBlood(challengeID, teamID, userID uint) error {
-// 	var configFB models.FirstBlood
-// 	if err := config.DB.Where("challenge_id = ?", challengeID).First(&configFB).Error; err != nil {
-// 		return nil
-// 	}
-
-// 	bonuses, err := parseBonuses(configFB.Bonuses)
-// 	if err != nil {
-// 		return fmt.Errorf("invalid bonus config: %v", err)
-// 	}
-
-// 	var exists models.FirstBlood
-// 	if err := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, teamID).First(&exists).Error; err == nil {
-// 		return nil
-// 	}
-
-// 	var count int64
-// 	config.DB.Model(&models.FirstBlood{}).Where("challenge_id = ?", challengeID).Count(&count)
-
-// 	if int(count) >= configFB.MaxTeams {
-// 		return nil 
-// 	}
-
-// 	points := bonuses[count]
-
-// 	fb := models.FirstBlood{
-// 		ChallengeID: challengeID,
-// 		TeamID:      teamID,
-// 		UserID:      userID,
-// 		Points:      points,
-// 		CreatedAt:   time.Now(),
-// 	}
-
-// 	return config.DB.Create(&fb).Error
-// }
-
-// func parseBonuses(bonusStr string) ([]int, error) {
-// 	parts := strings.Split(bonusStr, ",")
-// 	bonuses := make([]int, len(parts))
-// 	for i, p := range parts {
-// 		v, err := strconv.Atoi(strings.TrimSpace(p))
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		bonuses[i] = v
-// 	}
-// 	return bonuses, nil
-// }

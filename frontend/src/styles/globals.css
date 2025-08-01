@@ -982,3 +982,156 @@ html, body {
   background: #06b6d4;
   border-color: #06b6d4;
 }
+
+/* Custom notification toast styles */
+.notification-toast {
+  border-left: 4px solid;
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+  font-weight: 500 !important;
+  min-width: 320px !important;
+}
+
+.notification-toast.notification-info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%) !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.notification-toast.notification-warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%) !important;
+  border: 1px solid #fde68a !important;
+}
+
+.notification-toast.notification-error {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%) !important;
+  border: 1px solid #fecaca !important;
+}
+
+/* Success toast for admin actions */
+.success-toast {
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1fae5 !important;
+  border-left: 4px solid #10b981 !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+  font-weight: 500 !important;
+  min-width: 320px !important;
+}
+
+/* Default toast styling */
+.toaster .toast {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Toast close button styling */
+.toaster .toast button[data-close-button] {
+  background: rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(0, 0, 0, 0.25) !important;
+  border-radius: 50% !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: rgba(0, 0, 0, 0.8) !important;
+  transition: all 0.2s ease !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.toaster .toast button[data-close-button]:hover {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(0, 0, 0, 0.35) !important;
+  color: rgba(0, 0, 0, 0.95) !important;
+}
+
+.dark .toaster .toast button[data-close-button] {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.dark .toaster .toast button[data-close-button]:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Success toasts (default sonner success) */
+.toaster .toast[data-type="success"] {
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1fae5 !important;
+  border-left: 4px solid #10b981 !important;
+}
+
+/* Error toasts (default sonner error) */
+.toaster .toast[data-type="error"] {
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%) !important;
+  color: #1f2937 !important;
+  border: 1px solid #fecaca !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+/* Dark theme for default toasts */
+.dark .toaster .toast[data-type="success"] {
+  background: linear-gradient(135deg, #065f46 0%, #1f2937 100%) !important;
+  color: #f9fafb !important;
+  border: 1px solid #047857 !important;
+}
+
+.dark .toaster .toast[data-type="error"] {
+  background: linear-gradient(135deg, #991b1b 0%, #1f2937 100%) !important;
+  color: #f9fafb !important;
+  border: 1px solid #dc2626 !important;
+}
+
+.toaster .toast .description {
+  color: hsl(var(--muted-foreground));
+}
+
+.toaster .toast .actionButton {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.toaster .toast .cancelButton {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+/* Dark theme overrides for notification toasts */
+.dark .notification-toast {
+  background: #1f2937 !important;
+  color: #f9fafb !important;
+  border: 1px solid #374151 !important;
+}
+
+.dark .notification-toast.notification-info {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1f2937 100%) !important;
+  border: 1px solid #3b82f6 !important;
+}
+
+.dark .notification-toast.notification-warning {
+  background: linear-gradient(135deg, #92400e 0%, #1f2937 100%) !important;
+  border: 1px solid #d97706 !important;
+}
+
+.dark .notification-toast.notification-error {
+  background: linear-gradient(135deg, #991b1b 0%, #1f2937 100%) !important;
+  border: 1px solid #dc2626 !important;
+}
+
+.dark .success-toast {
+  background: linear-gradient(135deg, #065f46 0%, #1f2937 100%) !important;
+  color: #f9fafb !important;
+  border: 1px solid #047857 !important;
+}

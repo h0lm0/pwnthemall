@@ -1,0 +1,15 @@
+meta {
+  name: start
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{URL}}/api/challenges/:id/start
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 3
+}

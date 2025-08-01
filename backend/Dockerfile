@@ -38,7 +38,7 @@ CMD ["sh", "/entrypoint.sh"]
 #endregion
 
 #region Prod stage
-FROM alpine:latest as prod
+FROM alpine:latest AS prod
 
 WORKDIR /app
 

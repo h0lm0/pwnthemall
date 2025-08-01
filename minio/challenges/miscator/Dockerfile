@@ -4,6 +4,6 @@ RUN apk add openssh-server
 
 RUN touch test.txt
 
-COPY /etc/shadow /tmp/shadowtest
+COPY flag.txt /flag.txt
 
 CMD [ "tail", "-f", "/dev/null" ]

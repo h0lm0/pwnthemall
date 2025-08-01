@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import axios from "@/lib/axios";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TrashIcon, UserCircleIcon, StarIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { CheckCircle } from 'lucide-react';
 import { Tooltip } from "@/components/ui/tooltip";
 import {
   TooltipContent,
@@ -287,7 +288,10 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setLeaving(true);
     try {
       await axios.post("/api/teams/leave");
-      toast.success(t("team_left_successfully"));
+      toast.success(t("team_left_successfully"), {
+        icon: <CheckCircle className="w-4 h-4" />,
+        className: "success-toast",
+      });
       setShowLeaveDialog(false);
       onTeamChange?.();
       // Trigger auth refresh to update user info
@@ -317,7 +321,10 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       const { type, message } = JSON.parse(toastData);
       if (message && typeof message === "string" && message.trim() !== "") {
         if (type === "success") {
-          toast.success(t(message));
+          toast.success(t(message), {
+            icon: <CheckCircle className="w-4 h-4" />,
+            className: "success-toast",
+          });
         } else {
           toast.error(t(message), { className: "bg-red-600 text-white" });
         }
@@ -351,7 +358,10 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setTransferring(true);
     try {
       await axios.post("/api/teams/transfer-owner", { teamId: team.id, newOwnerId });
-      toast.success(t("team_transfer_success"));
+      toast.success(t("team_transfer_success"), {
+        icon: <CheckCircle className="w-4 h-4" />,
+        className: "success-toast",
+      });
       setShowTransferOnly(false);
       setTransferTarget(null);
       onTeamChange?.();
@@ -372,7 +382,10 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     try {
       await axios.post("/api/teams/transfer-owner", { teamId: team.id, newOwnerId });
       await axios.post("/api/teams/leave");
-      toast.success(t("team_transfer_and_leave_success"));
+      toast.success(t("team_transfer_and_leave_success"), {
+        icon: <CheckCircle className="w-4 h-4" />,
+        className: "success-toast",
+      });
       setShowTransferForLeave(false);
       setTransferTarget(null);
       onTeamChange?.();
@@ -393,7 +406,10 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setDisbandError(null);
     try {
       await axios.post("/api/teams/disband", { teamId: team.id });
-      toast.success(t("team_disband_success"));
+      toast.success(t("team_disband_success"), {
+        icon: <CheckCircle className="w-4 h-4" />,
+        className: "success-toast",
+      });
       setShowDisband(false);
       // Update local state instead of reloading
       onTeamChange?.();
@@ -418,7 +434,10 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
     setKickLoading(true);
     try {
       await axios.post("/api/teams/kick", { teamId: team.id, userId });
-      toast.success(t("team_kick_success"));
+      toast.success(t("team_kick_success"), {
+        icon: <CheckCircle className="w-4 h-4" />,
+        className: "success-toast",
+      });
       setShowKickDialog(false);
       setKickTarget(null);
       onTeamChange?.();
