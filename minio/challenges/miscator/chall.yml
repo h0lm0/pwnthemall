@@ -1,6 +1,6 @@
 name: miscator
 description: |
-  El famoso miscator
+  El famoso miscator update
 category: misc
 difficulty: easy
 type: docker
@@ -8,3 +8,4 @@ author: swinowz
 flags: ["flag"]
 hidden: true
 points: 50
+ports: [8080, 22]

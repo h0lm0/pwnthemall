@@ -354,10 +354,19 @@ func BuildChallengeImage(c *gin.Context) {
 }
 
 func StartChallengeInstance(c *gin.Context) {
-	var challenge models.Challenge
 	id := c.Param("id")
 
-	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
+	var challengeType models.ChallengeType
+	if err := config.DB.Where("name = ?", "docker").First(&challengeType).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_type_not_found"})
+		return
+	}
+
+	var challenge models.Challenge
+	result := config.DB.
+		Where("challenge_type_id = ? AND id = ?", challengeType.ID, id).
+		First(&challenge)
+
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
@@ -391,7 +400,6 @@ func StartChallengeInstance(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
-
 	if user.Team == nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
 		return
@@ -399,9 +407,8 @@ func StartChallengeInstance(c *gin.Context) {
 
 	var countExist int64
 	config.DB.Model(&models.Instance{}).
-		Where("user_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
+		Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
 		Count(&countExist)
-
 	if int(countExist) >= 1 {
 		c.JSON(http.StatusForbidden, gin.H{"error": "instance_already_running"})
 		return
@@ -411,7 +418,6 @@ func StartChallengeInstance(c *gin.Context) {
 	config.DB.Model(&models.Instance{}).
 		Where("user_id = ?", user.ID).
 		Count(&countUser)
-
 	if int(countUser) >= dockerConfig.InstancesByUser {
 		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_user_reached"})
 		return
@@ -421,13 +427,29 @@ func StartChallengeInstance(c *gin.Context) {
 	config.DB.Model(&models.Instance{}).
 		Where("team_id = ?", user.Team.ID).
 		Count(&countTeam)
-
 	if int(countTeam) >= dockerConfig.InstancesByTeam {
 		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_team_reached"})
 		return
 	}
 
-	containerName, err := utils.StartDockerInstance(imageName, int(user.ID), int(*user.TeamID))
+	portCount := len(challenge.Ports)
+	if portCount == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "no_ports_defined_for_challenge"})
+		return
+	}
+
+	ports, err := utils.FindAvailablePorts(portCount)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "no_free_ports"})
+		return
+	}
+
+	internalPorts := make([]int, len(challenge.Ports))
+	for i, p := range challenge.Ports {
+		internalPorts[i] = int(p)
+	}
+
+	containerID, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, ports)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf(
@@ -438,10 +460,11 @@ func StartChallengeInstance(c *gin.Context) {
 	}
 
 	instance := models.Instance{
-		Container:   containerName,
+		Container:   containerID,
 		UserID:      user.ID,
 		TeamID:      *user.TeamID,
 		ChallengeID: challenge.ID,
+		Ports:       challenge.Ports, // enregistre les ports assignés
 		CreatedAt:   time.Now(),
 	}
 	if err := config.DB.Create(&instance).Error; err != nil {
@@ -450,9 +473,10 @@ func StartChallengeInstance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":         "instance_started",
-		"image_name":     imageName,
-		"container_name": containerName,
+		"status":       "instance_started",
+		"image_name":   imageName,
+		"container_id": containerID,
+		"ports":        ports,
 	})
 }
 

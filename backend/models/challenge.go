@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/lib/pq"
+)
 
 type Challenge struct {
 	ID                    uint                 `gorm:"primaryKey" json:"id"`
@@ -19,4 +23,5 @@ type Challenge struct {
 	Hidden                bool                 `json:"hidden"`
 	Flags                 []Flag               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"-"`
 	Points                int                  `json:"points"`
+	Ports                 pq.Int64Array        `gorm:"type:integer[]" json:"ports"`
 }
