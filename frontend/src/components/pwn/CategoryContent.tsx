@@ -188,97 +188,102 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-7xl">
           {(challenges || []).map((challenge) => (
-            <Dialog key={challenge.id} open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Card
-                  onClick={() => handleChallengeSelect(challenge)}
-                  className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer relative ${
-                    challenge.solved 
-                      ? 'bg-green-100 dark:bg-green-900 border-green-200 dark:border-green-700' 
-                      : ''
-                  }`}
-                >
-                  {challenge.solved && (
-                    <div className="absolute top-2 right-2">
-                      <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
-                    </div>
+            <Card
+              key={challenge.id}
+              onClick={() => handleChallengeSelect(challenge)}
+              className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer relative ${
+                challenge.solved 
+                  ? 'bg-green-100 dark:bg-green-900 border-green-200 dark:border-green-700' 
+                  : ''
+              }`}
+            >
+              {challenge.solved && (
+                <div className="absolute top-2 right-2">
+                  <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+              )}
+              <CardHeader>
+                <CardTitle className={`${
+                  challenge.solved 
+                    ? 'text-green-700 dark:text-green-200' 
+                    : 'text-cyan-700 dark:text-cyan-300'
+                }`}>
+                  {challenge.name || 'Unnamed Challenge'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-left space-y-2">
+                <div className="text-xs text-gray-500 mt-2">
+                  {challenge.type?.name || 'Unknown Type'}
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  {challenge.difficulty?.name || 'Unknown Difficulty'}
+                </div>
+                {isDockerChallenge(challenge) && (
+                  <div className="mt-2">
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs ${
+                        getLocalInstanceStatus(challenge.id) === 'running' 
+                          ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400' 
+                          : getLocalInstanceStatus(challenge.id) === 'building'
+                          ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
+                          : getLocalInstanceStatus(challenge.id) === 'expired'
+                          ? 'bg-red-300 dark:bg-red-700 text-red-900 dark:text-red-100 border border-red-500 dark:border-red-400'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
+                      } pointer-events-none select-none`}
+                    >
+                      {getLocalInstanceStatus(challenge.id) === 'running' ? t('running') : 
+                       getLocalInstanceStatus(challenge.id) === 'building' ? t('building') : 
+                       getLocalInstanceStatus(challenge.id) === 'expired' ? t('expired') : t('stopped')}
+                    </Badge>
+                  </div>
+                )}
+                {challenge.solved && (
+                  <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
+                    {t('solved')}
+                  </Badge>
+                )}
+                {!challenge.solved && (
+                  <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
+                    {t('unsolved')}
+                  </Badge>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col overflow-hidden">
+            <DialogHeader className="flex-shrink-0 pb-4">
+              <DialogTitle className={`${
+                selectedChallenge?.solved 
+                  ? 'text-green-600 dark:text-green-300' 
+                  : 'text-cyan-600 dark:text-cyan-300'
+              }`}>
+                {selectedChallenge?.name || 'Unnamed Challenge'}
+                {selectedChallenge?.solved && (
+                  <BadgeCheck className="inline-block w-6 h-6 ml-2 text-green-600 dark:text-green-400" />
+                )}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {t('difficulty')}: {selectedChallenge?.difficulty?.name || 'Unknown'} - {t('author')}: {selectedChallenge?.author || 'Unknown'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex-1 flex flex-col min-h-0">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
+                <TabsList className={`grid w-full mb-4 flex-shrink-0 ${
+                  selectedChallenge && isDockerChallenge(selectedChallenge) 
+                    ? 'grid-cols-3' 
+                    : 'grid-cols-2'
+                }`}>
+                  <TabsTrigger value="description">{t('description')}</TabsTrigger>
+                  <TabsTrigger value="solves">{t('solves')}</TabsTrigger>
+                  {selectedChallenge && isDockerChallenge(selectedChallenge) && (
+                    <TabsTrigger value="instance">{t('docker_instance')}</TabsTrigger>
                   )}
-                  <CardHeader>
-                    <CardTitle className={`${
-                      challenge.solved 
-                        ? 'text-green-700 dark:text-green-200' 
-                        : 'text-cyan-700 dark:text-cyan-300'
-                    }`}>
-                      {challenge.name || 'Unnamed Challenge'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-left space-y-2">
-                    <div className="text-xs text-gray-500 mt-2">
-                      {challenge.type?.name || 'Unknown Type'}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-2">
-                      {challenge.difficulty?.name || 'Unknown Difficulty'}
-                    </div>
-                    {isDockerChallenge(challenge) && (
-                      <div className="mt-2">
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs ${
-                            getLocalInstanceStatus(challenge.id) === 'running' 
-                              ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400' 
-                              : getLocalInstanceStatus(challenge.id) === 'building'
-                              ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
-                              : getLocalInstanceStatus(challenge.id) === 'expired'
-                              ? 'bg-red-300 dark:bg-red-700 text-red-900 dark:text-red-100 border border-red-500 dark:border-red-400'
-                              : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
-                          } pointer-events-none select-none`}
-                        >
-                          {getLocalInstanceStatus(challenge.id) === 'running' ? t('running') : 
-                           getLocalInstanceStatus(challenge.id) === 'building' ? t('building') : 
-                           getLocalInstanceStatus(challenge.id) === 'expired' ? t('expired') : t('stopped')}
-                        </Badge>
-                      </div>
-                    )}
-                    {challenge.solved && (
-                      <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
-                        {t('solved')}
-                      </Badge>
-                    )}
-                    {!challenge.solved && (
-                      <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
-                        {t('unsolved')}
-                      </Badge>
-                    )}
-                  </CardContent>
-                </Card>
-              </DialogTrigger>
-
-              <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col overflow-hidden">
-                <DialogHeader className="flex-shrink-0 pb-4">
-                  <DialogTitle className={`${
-                    selectedChallenge?.solved 
-                      ? 'text-green-600 dark:text-green-300' 
-                      : 'text-cyan-600 dark:text-cyan-300'
-                  }`}>
-                    {selectedChallenge?.name || 'Unnamed Challenge'}
-                    {selectedChallenge?.solved && (
-                      <BadgeCheck className="inline-block w-6 h-6 ml-2 text-green-600 dark:text-green-400" />
-                    )}
-                  </DialogTitle>
-                  <DialogDescription className="text-sm text-muted-foreground">
-                    {t('difficulty')}: {selectedChallenge?.difficulty?.name || 'Unknown'} - {t('author')}: {selectedChallenge?.author || 'Unknown'}
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="flex-1 flex flex-col min-h-0">
-                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-                    <TabsList className="grid w-full grid-cols-3 mb-4 flex-shrink-0">
-                      <TabsTrigger value="description">{t('description')}</TabsTrigger>
-                      <TabsTrigger value="solves">{t('solves')}</TabsTrigger>
-                      {selectedChallenge && isDockerChallenge(selectedChallenge) && (
-                        <TabsTrigger value="instance">{t('docker_instance')}</TabsTrigger>
-                      )}
-                    </TabsList>
+                </TabsList>
                     
                     <div className="flex-1 min-h-0">
                       <TabsContent value="description" className="h-full overflow-y-auto">
@@ -511,11 +516,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                 )}
               </DialogContent>
             </Dialog>
-          ))}
-        </div>
-      </main>
-    </>
-  );
-};
+          </main>
+        </>
+      );
+    };
 
 export default CategoryContent;
