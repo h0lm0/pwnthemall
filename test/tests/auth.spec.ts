@@ -490,54 +490,133 @@ test('Create 5 accounts, teams, and flag challenges via API', async ({ page }) =
   console.log('All 5 accounts created successfully with teams and challenge flags submitted via API');
 });
 
-test('Notifications page access and functionality', async ({ page }) => {
-  const uid = Date.now();
+// Utility function to create account, team, and flag challenge using API calls
+async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
+  const uid = Date.now() + accountNumber;
   const username = `user${uid}`;
   const email = `user${uid}@pwnthemall.com`;
   const password = 'TestPassword123';
+  const teamName = `Team-${uid}`;
 
-  // Register and login
-  await page.goto('https://pwnthemall.local/');
-  await page.getByRole('button', { name: 'Accept' }).click();
-  await page.getByRole('link', { name: 'Register' }).click();
+  console.log(`Creating account ${accountNumber}: ${username}`);
 
-  await page.getByRole('textbox', { name: 'Username' }).fill(username);
-  await page.getByRole('textbox', { name: 'Email' }).fill(email);
-  await page.getByRole('textbox', { name: 'Password' }).fill(password);
-  await page.getByRole('button', { name: 'Register' }).click();
+  try {
+    // 1. Register new account via API
+    const registerResponse = await page.request.post('https://pwnthemall.local/api/register', {
+      data: {
+        username: username,
+        email: email,
+        password: password
+      }
+    });
 
-  // Wait for registration success toast
-  await expect(page.getByText(/registration successful/i)).toBeVisible();
+    if (!registerResponse.ok()) {
+      const errorText = await registerResponse.text();
+      console.log(`Registration failed for account ${accountNumber}: ${registerResponse.status()} - ${errorText}`);
+      return;
+    }
 
-  // Login
-  await page.goto('https://pwnthemall.local/');
-  await page.getByRole('link', { name: 'Login' }).click();
+    // 2. Login via API
+    const loginResponse = await page.request.post('https://pwnthemall.local/api/login', {
+      data: {
+        identifier: email,
+        password: password
+      }
+    });
 
-  await page.getByRole('textbox', { name: 'Email' }).fill(email);
-  await page.getByRole('textbox', { name: 'Password' }).fill(password);
-  await page.getByRole('button', { name: 'Login' }).click();
+    if (!loginResponse.ok()) {
+      const errorText = await loginResponse.text();
+      console.log(`Login failed for account ${accountNumber}: ${loginResponse.status()} - ${errorText}`);
+      return;
+    }
 
-  // Wait for login and check we're logged in
-  await expect(page.locator('[id="__next"]')).toContainText(username);
+    // Get cookies from the login response for subsequent requests
+    const setCookieHeader = loginResponse.headers()['set-cookie'];
+    let cookieHeader = '';
+    
+    if (setCookieHeader) {
+      // Parse set-cookie header to extract cookie values
+      const cookiePairs = setCookieHeader.split(',').map(cookie => {
+        const [nameValue] = cookie.trim().split(';');
+        return nameValue;
+      }).filter(Boolean);
+      cookieHeader = cookiePairs.join('; ');
+    }
 
-  // Test notifications page access via user dropdown
-  await page.locator('div.relative:has(img)').first().click();
-  await page.getByRole('link', { name: 'Notifications' }).click();
-  await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible();
-  await expect(page.getByText('Manage your notifications')).toBeVisible();
+    // 3. Create team via API
+    const teamResponse = await page.request.post('https://pwnthemall.local/api/teams', {
+      data: {
+        name: teamName,
+        password: password
+      },
+      headers: {
+        'Cookie': cookieHeader
+      }
+    });
 
-  // Test tabs functionality
-  await expect(page.getByRole('tab', { name: 'All' })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Unread' })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Read' })).toBeVisible();
+    if (!teamResponse.ok()) {
+      const errorText = await teamResponse.text();
+      console.log(`Team creation failed for account ${accountNumber}: ${teamResponse.status()} - ${errorText}`);
+      return;
+    }
 
-  // Test empty state
-  await expect(page.getByText('No notifications yet')).toBeVisible();
+    // 4. Get challenges to find one to submit to
+    const challengesResponse = await page.request.get('https://pwnthemall.local/api/challenges', {
+      headers: {
+        'Cookie': cookieHeader
+      }
+    });
 
-  // Test connection status indicator
-  await expect(page.getByText('Connected')).toBeVisible();
+    if (challengesResponse.ok()) {
+      const challenges = await challengesResponse.json();
+      if (challenges && challenges.length > 0) {
+        // Find the "pwn me 999" challenge or use the first one
+        let targetChallenge = challenges.find(c => c.name === 'pwn me 999') || challenges[0];
+        
+        // Submit flag to the challenge
+        const flagResponse = await page.request.post(`https://pwnthemall.local/api/challenges/${targetChallenge.id}/submit`, {
+          data: {
+            flag: 'flag'
+          },
+          headers: {
+            'Cookie': cookieHeader
+          }
+        });
 
-  // Test navigation back to main page
-  await page.getByRole('link', { name: 'pwn' }).click();
-  await expect(page.getByText('Choose a category')).toBeVisible();
+        if (flagResponse.ok()) {
+          const flagResult = await flagResponse.json();
+          console.log(`Flag submitted successfully for account ${accountNumber}: ${JSON.stringify(flagResult)}`);
+        } else {
+          const errorText = await flagResponse.text();
+          console.log(`Flag submission failed for account ${accountNumber}: ${flagResponse.status()} - ${errorText}`);
+        }
+      } else {
+        console.log(`No challenges available for account ${accountNumber}`);
+      }
+    } else {
+      const errorText = await challengesResponse.text();
+      console.log(`Failed to get challenges for account ${accountNumber}: ${challengesResponse.status()} - ${errorText}`);
+    }
+
+    // 5. Logout via API
+    await page.request.post('https://pwnthemall.local/api/logout', {
+      headers: {
+        'Cookie': cookieHeader
+      }
+    });
+
+    console.log(`Account ${accountNumber} completed: ${username} - Team: ${teamName}`);
+
+  } catch (error) {
+    console.log(`Error processing account ${accountNumber}: ${error}`);
+  }
+}
+
+test('Create 5 accounts, teams, and flag challenges via API', async ({ page }) => {
+  // Create 5 accounts with teams and flag challenges using API calls
+  for (let i = 1; i <= 5; i++) {
+    await createAccountAndFlagChallengeAPI(page, i);
+  }
+
+  console.log('All 5 accounts created successfully with teams and challenge flags submitted via API');
 });

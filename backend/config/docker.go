@@ -2,9 +2,11 @@ package config
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"pwnthemall/models"
 
 	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/client"
@@ -13,12 +15,24 @@ import (
 var DockerClient *client.Client
 
 func ConnectDocker() error {
-	SynchronizeEnvWithDb()
+	var dockerCfg models.DockerConfig
+	if err := DB.First(&dockerCfg).Error; err != nil {
+		log.Println("Unable to load DockerConfig from DB:", err)
+		return err
+	}
 
-	helper, err := connhelper.GetConnectionHelper(os.Getenv("DOCKER_HOST"))
+	if dockerCfg.Host == "" {
+		return errors.New("DockerConfig.Host is empty in DB")
+	}
 
+	helper, err := connhelper.GetConnectionHelper(dockerCfg.Host)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Println("Failed to create connection helper:", err)
+		return err
+	}
+	if helper == nil {
+		log.Println("Unable to create connection helper (nil)")
+		return errors.New("unable to create connection helper")
 	}
 
 	httpClient := &http.Client{
@@ -27,31 +41,31 @@ func ConnectDocker() error {
 		},
 	}
 
-	var clientOpts []client.Opt
-
-	clientOpts = append(clientOpts,
+	clientOpts := []client.Opt{
 		client.WithHTTPClient(httpClient),
 		client.WithHost(helper.Host),
 		client.WithDialContext(helper.Dialer),
-	)
-
-	version := os.Getenv("DOCKER_API_VERSION")
-
-	if version != "" {
-		clientOpts = append(clientOpts, client.WithVersion(version))
-	} else {
-		clientOpts = append(clientOpts, client.WithAPIVersionNegotiation())
+		client.WithAPIVersionNegotiation(),
 	}
 
 	cl, err := client.NewClientWithOpts(clientOpts...)
-
-	if err != nil || cl == nil {
-		log.Println("Unable to create docker client")
-		return err
-	} else {
-		ver, _ := cl.ServerVersion(context.Background())
-		log.Printf("Connected to %s | Version: %s", os.Getenv("DOCKER_HOST"), ver.Version)
+	if err != nil {
+		log.Println("Unable to create docker client:", err)
+		return errors.New("unable to create docker client")
 	}
+
+	if cl == nil {
+		log.Println("Unable to create docker client")
+		return errors.New("unable to create docker client")
+	}
+
+	ver, err := cl.ServerVersion(context.Background())
+	if err != nil {
+		log.Println("Unable to create docker client:", err)
+		return fmt.Errorf("unable to create docker client: %s", err.Error())
+	}
+	log.Printf("Connected to %s | Docker Version: %s", dockerCfg.Host, ver.Version)
+
 	DockerClient = cl
 	return nil
 }
