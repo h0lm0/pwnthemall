@@ -13,8 +13,8 @@ import (
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"strings"
-	"time"
-	"strconv"
+	// "time"
+	// "strconv"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 )
@@ -270,9 +270,9 @@ func SubmitChallenge(c *gin.Context) {
 			return
 		} 
 
-		if err := awardFirstBlood(challenge.ID, user.Team.ID, user.ID); err != nil {
-			log.Printf("FirstBlood error: %v", err)
-		}
+		// if err := awardFirstBlood(challenge.ID, user.Team.ID, user.ID); err != nil {
+		// 	log.Printf("FirstBlood error: %v", err)
+		// }
 
 		c.JSON(http.StatusOK, gin.H{"message": "challenge_solved"})
 		return
@@ -338,6 +338,129 @@ func GetChallengeSolves(c *gin.Context) {
 	c.JSON(http.StatusOK, solvesWithUsers)
 }
 
+// Admin functions
+func AdminGetChallenges(c *gin.Context) {
+	var challenges []models.Challenge
+	result := config.DB.
+		Preload("ChallengeCategory").
+		Preload("ChallengeType").
+		Preload("ChallengeDifficulty").
+		Preload("Flags").
+		Preload("Hints").
+		Preload("FirstBloodConfig").
+		Find(&challenges)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, challenges)
+}
+
+func AdminGetChallenge(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+
+	result := config.DB.
+		Preload("ChallengeCategory").
+		Preload("ChallengeType").
+		Preload("ChallengeDifficulty").
+		Preload("Flags").
+		Preload("Hints").
+		Preload("FirstBloodConfig").
+		First(&challenge, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		return
+	}
+	c.JSON(http.StatusOK, challenge)
+}
+
+type AdminChallengeInput struct {
+	Name                 string `json:"name"`
+	Description          string `json:"description"`
+	Points              int    `json:"points"`
+	ChallengeCategoryID uint   `json:"challengeCategoryId"`
+	ChallengeTypeID     uint   `json:"challengeTypeId"`
+	ChallengeDifficultyID uint `json:"challengeDifficultyId"`
+	EnableFirstBlood    bool   `json:"enableFirstBlood"`
+	Hidden              bool   `json:"hidden"`
+}
+
+func AdminCreateChallenge(c *gin.Context) {
+	var input AdminChallengeInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	challenge := models.Challenge{
+		Name:                 input.Name,
+		Description:          input.Description,
+		Points:              input.Points,
+		ChallengeCategoryID: input.ChallengeCategoryID,
+		ChallengeTypeID:     input.ChallengeTypeID,
+		ChallengeDifficultyID: input.ChallengeDifficultyID,
+		EnableFirstBlood:    input.EnableFirstBlood,
+		Hidden:              input.Hidden,
+	}
+
+	if err := config.DB.Create(&challenge).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, challenge)
+}
+
+func AdminUpdateChallenge(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+
+	if err := config.DB.First(&challenge, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		return
+	}
+
+	var input AdminChallengeInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	challenge.Name = input.Name
+	challenge.Description = input.Description
+	challenge.Points = input.Points
+	challenge.ChallengeCategoryID = input.ChallengeCategoryID
+	challenge.ChallengeTypeID = input.ChallengeTypeID
+	challenge.ChallengeDifficultyID = input.ChallengeDifficultyID
+	challenge.EnableFirstBlood = input.EnableFirstBlood
+	challenge.Hidden = input.Hidden
+
+	if err := config.DB.Save(&challenge).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, challenge)
+}
+
+func AdminDeleteChallenge(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+
+	if err := config.DB.First(&challenge, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		return
+	}
+
+	if err := config.DB.Delete(&challenge).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Challenge deleted"})
+}
+
 func BuildChallengeImage(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
@@ -358,51 +481,51 @@ func BuildChallengeImage(c *gin.Context) {
 }
 
 
-func awardFirstBlood(challengeID, teamID, userID uint) error {
-	var configFB models.FirstBloodConfig
-	if err := config.DB.Where("challenge_id = ?", challengeID).First(&configFB).Error; err != nil {
-		return nil
-	}
+// func awardFirstBlood(challengeID, teamID, userID uint) error {
+// 	var configFB models.FirstBlood
+// 	if err := config.DB.Where("challenge_id = ?", challengeID).First(&configFB).Error; err != nil {
+// 		return nil
+// 	}
 
-	bonuses, err := parseBonuses(configFB.Bonuses)
-	if err != nil {
-		return fmt.Errorf("invalid bonus config: %v", err)
-	}
+// 	bonuses, err := parseBonuses(configFB.Bonuses)
+// 	if err != nil {
+// 		return fmt.Errorf("invalid bonus config: %v", err)
+// 	}
 
-	var exists models.FirstBlood
-	if err := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, teamID).First(&exists).Error; err == nil {
-		return nil
-	}
+// 	var exists models.FirstBlood
+// 	if err := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, teamID).First(&exists).Error; err == nil {
+// 		return nil
+// 	}
 
-	var count int64
-	config.DB.Model(&models.FirstBlood{}).Where("challenge_id = ?", challengeID).Count(&count)
+// 	var count int64
+// 	config.DB.Model(&models.FirstBlood{}).Where("challenge_id = ?", challengeID).Count(&count)
 
-	if int(count) >= configFB.MaxTeams {
-		return nil 
-	}
+// 	if int(count) >= configFB.MaxTeams {
+// 		return nil 
+// 	}
 
-	points := bonuses[count]
+// 	points := bonuses[count]
 
-	fb := models.FirstBlood{
-		ChallengeID: challengeID,
-		TeamID:      teamID,
-		UserID:      userID,
-		Points:      points,
-		CreatedAt:   time.Now(),
-	}
+// 	fb := models.FirstBlood{
+// 		ChallengeID: challengeID,
+// 		TeamID:      teamID,
+// 		UserID:      userID,
+// 		Points:      points,
+// 		CreatedAt:   time.Now(),
+// 	}
 
-	return config.DB.Create(&fb).Error
-}
+// 	return config.DB.Create(&fb).Error
+// }
 
-func parseBonuses(bonusStr string) ([]int, error) {
-	parts := strings.Split(bonusStr, ",")
-	bonuses := make([]int, len(parts))
-	for i, p := range parts {
-		v, err := strconv.Atoi(strings.TrimSpace(p))
-		if err != nil {
-			return nil, err
-		}
-		bonuses[i] = v
-	}
-	return bonuses, nil
-}
+// func parseBonuses(bonusStr string) ([]int, error) {
+// 	parts := strings.Split(bonusStr, ",")
+// 	bonuses := make([]int, len(parts))
+// 	for i, p := range parts {
+// 		v, err := strconv.Atoi(strings.TrimSpace(p))
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		bonuses[i] = v
+// 	}
+// 	return bonuses, nil
+// }
