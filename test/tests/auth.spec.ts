@@ -489,3 +489,55 @@ test('Create 5 accounts, teams, and flag challenges via API', async ({ page }) =
 
   console.log('All 5 accounts created successfully with teams and challenge flags submitted via API');
 });
+
+test('Notifications page access and functionality', async ({ page }) => {
+  const uid = Date.now();
+  const username = `user${uid}`;
+  const email = `user${uid}@pwnthemall.com`;
+  const password = 'TestPassword123';
+
+  // Register and login
+  await page.goto('https://pwnthemall.local/');
+  await page.getByRole('button', { name: 'Accept' }).click();
+  await page.getByRole('link', { name: 'Register' }).click();
+
+  await page.getByRole('textbox', { name: 'Username' }).fill(username);
+  await page.getByRole('textbox', { name: 'Email' }).fill(email);
+  await page.getByRole('textbox', { name: 'Password' }).fill(password);
+  await page.getByRole('button', { name: 'Register' }).click();
+
+  // Wait for registration success toast
+  await expect(page.getByText(/registration successful/i)).toBeVisible();
+
+  // Login
+  await page.goto('https://pwnthemall.local/');
+  await page.getByRole('link', { name: 'Login' }).click();
+
+  await page.getByRole('textbox', { name: 'Email' }).fill(email);
+  await page.getByRole('textbox', { name: 'Password' }).fill(password);
+  await page.getByRole('button', { name: 'Login' }).click();
+
+  // Wait for login and check we're logged in
+  await expect(page.locator('[id="__next"]')).toContainText(username);
+
+  // Test notifications page access via user dropdown
+  await page.locator('div.relative:has(img)').first().click();
+  await page.getByRole('link', { name: 'Notifications' }).click();
+  await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible();
+  await expect(page.getByText('Manage your notifications')).toBeVisible();
+
+  // Test tabs functionality
+  await expect(page.getByRole('tab', { name: 'All' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Unread' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Read' })).toBeVisible();
+
+  // Test empty state
+  await expect(page.getByText('No notifications yet')).toBeVisible();
+
+  // Test connection status indicator
+  await expect(page.getByText('Connected')).toBeVisible();
+
+  // Test navigation back to main page
+  await page.getByRole('link', { name: 'pwn' }).click();
+  await expect(page.getByText('Choose a category')).toBeVisible();
+});
