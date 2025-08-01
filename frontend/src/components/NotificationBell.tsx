@@ -29,12 +29,12 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     <>
       <div 
         className={cn(
-          "relative cursor-pointer p-2 rounded-md hover:bg-muted transition-colors",
+          "relative cursor-pointer rounded-md hover:bg-muted transition-colors",
           className
         )}
         onClick={handleClick}
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-4 w-4" />
         
         {/* Unread count badge */}
         {unreadCount > 0 && (
