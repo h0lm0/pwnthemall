@@ -3,7 +3,6 @@ import Image from 'next/image';
 import AnimatedText from './AnimatedText';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSiteConfig } from '@/context/SiteConfigContext';
-import InstanceStatus from './InstanceStatus';
 
 const IndexContent = () => {
   const { t } = useLanguage();
@@ -30,9 +29,7 @@ const IndexContent = () => {
             </p>
           </div>
           
-          <div className="w-full max-w-2xl mx-auto">
-            <InstanceStatus />
-          </div>
+
         </div>
       </main>
     </>

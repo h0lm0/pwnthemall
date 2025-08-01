@@ -211,15 +211,15 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-left space-y-2">
-                <div className="text-xs text-gray-500 mt-2">
-                  {challenge.type?.name || 'Unknown Type'}
-                </div>
-                <div className="text-xs text-gray-500 mt-2">
-                  {challenge.difficulty?.name || 'Unknown Difficulty'}
-                </div>
-                {isDockerChallenge(challenge) && (
-                  <div className="mt-2">
+              <CardContent className="text-left">
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {challenge.type?.name || 'Unknown Type'}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {challenge.difficulty?.name || 'Unknown Difficulty'}
+                  </Badge>
+                  {isDockerChallenge(challenge) && (
                     <Badge 
                       variant="secondary" 
                       className={`text-xs ${
@@ -236,18 +236,18 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                        getLocalInstanceStatus(challenge.id) === 'building' ? t('building') : 
                        getLocalInstanceStatus(challenge.id) === 'expired' ? t('expired') : t('stopped')}
                     </Badge>
-                  </div>
-                )}
-                {challenge.solved && (
-                  <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
-                    {t('solved')}
-                  </Badge>
-                )}
-                {!challenge.solved && (
-                  <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
-                    {t('unsolved')}
-                  </Badge>
-                )}
+                  )}
+                  {challenge.solved && (
+                    <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
+                      {t('solved')}
+                    </Badge>
+                  )}
+                  {!challenge.solved && (
+                    <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
+                      {t('unsolved')}
+                    </Badge>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}
