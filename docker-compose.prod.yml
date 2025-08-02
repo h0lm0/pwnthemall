@@ -41,7 +41,7 @@ services:
       REFRESH_SECRET: ${REFRESH_SECRET}
       PTA_SITE_NAME: ${PTA_SITE_NAME}
       PTA_REGISTRATION_ENABLED: ${PTA_REGISTRATION_ENABLED}
-      PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
+      PTA_DOCKER_HOST: tcp://docker-daemon:2375
       PTA_DOCKER_IMAGE_PREFIX: ${PTA_DOCKER_IMAGE_PREFIX}
       PTA_DOCKER_MAXMEM_PER_INSTANCE: ${PTA_DOCKER_MAXMEM_PER_INSTANCE}
       PTA_DOCKER_MAXCPU_PER_INSTANCE: ${PTA_DOCKER_MAXCPU_PER_INSTANCE}
@@ -53,6 +53,28 @@ services:
     networks:
       public:
       private:
+
+  # Isolated Docker daemon for challenge containers
+  docker-daemon:
+    image: docker:dind
+    container_name: pwnthemall-docker-daemon
+    privileged: true
+    environment:
+      - DOCKER_DRIVER=overlay2
+      - DOCKER_TLS_CERTDIR=/certs
+      - DOCKER_HOST=tcp://0.0.0.0:2376
+      - DOCKER_HOST_INSECURE=tcp://0.0.0.0:2375
+    command: ["dockerd", "--host=tcp://0.0.0.0:2376", "--host=tcp://0.0.0.0:2375", "--tls=false"]
+    volumes:
+      - docker-data:/var/lib/docker
+    networks:
+      private:
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   worker:
     container_name: worker
@@ -67,8 +89,11 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      docker-daemon:
+        condition: service_healthy
+    environment:
+      - DOCKER_HOST=tcp://docker-daemon:2375
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./shared/worker.pub:/home/docker/.ssh/authorized_keys
     networks:
       private:
@@ -138,6 +163,8 @@ services:
 volumes:
   postgres_data:
   minio:
+  docker-data:
+  dind-certs:
 
 networks:
   public:

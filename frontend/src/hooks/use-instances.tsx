@@ -92,7 +92,7 @@ export const useInstances = () => {
     
     try {
       debugLog(`Getting instance status for challenge ID: ${challengeId}`)
-      const response = await axios.get(`/api/challenges/${challengeId}/status`)
+      const response = await axios.get(`/api/challenges/${challengeId}/instance-status`)
       debugLog('Instance status received:', response.data)
       return response.data
     } catch (error: any) {
