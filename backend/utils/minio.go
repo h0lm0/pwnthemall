@@ -14,23 +14,22 @@ import (
 	"pwnthemall/meta"
 	"pwnthemall/models"
 
+	"github.com/lib/pq"
 	"github.com/minio/minio-go/v7"
 	"gopkg.in/yaml.v2"
 	"gorm.io/gorm"
 )
 
 func SyncChallengesFromMinIO(ctx context.Context, key string) error {
-	// Extract the bucket name and the object key
 	const bucketName = "challenges"
 	parts := strings.SplitN(key, "/", 2)
 	if len(parts) < 2 {
 		log.Printf("Invalid key format: %s", key)
 		return nil
 	}
-
 	objectKey := parts[1]
-
 	log.Printf("SyncChallengesFromMinIO begin for bucket: %s, key: %s", bucketName, objectKey)
+
 	time.Sleep(500 * time.Millisecond)
 	obj, err := config.FS.GetObject(ctx, bucketName, objectKey, minio.GetObjectOptions{})
 	_, statErr := obj.Stat()
@@ -53,15 +52,42 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 		return err
 	}
 
-	// Unmarshal the YAML content and update the database
-	var metaData meta.BaseChallengeMetadata
-	if err := yaml.Unmarshal(buf.Bytes(), &metaData); err != nil {
+	var base meta.BaseChallengeMetadata
+	if err := yaml.Unmarshal(buf.Bytes(), &base); err != nil {
 		log.Printf("Invalid YAML for %s: %v", objectKey, err)
 		return err
 	}
 
+	var (
+		metaData meta.BaseChallengeMetadata
+		ports    []int
+	)
+
+	switch base.Type {
+	case "docker":
+		var dockerMeta meta.DockerChallengeMetadata
+		if err := yaml.Unmarshal(buf.Bytes(), &dockerMeta); err != nil {
+			log.Printf("Invalid Docker YAML for %s: %v", objectKey, err)
+			return err
+		}
+		metaData = dockerMeta.Base
+		ports = dockerMeta.Ports
+
+	case "compose":
+		var composeMeta meta.ComposeChallengeMetadata
+		if err := yaml.Unmarshal(buf.Bytes(), &composeMeta); err != nil {
+			log.Printf("Invalid Compose YAML for %s: %v", objectKey, err)
+			return err
+		}
+		metaData = composeMeta.Base
+
+	default: // standard
+		metaData = base
+	}
+
 	// Update or create the challenge in the database
-	if err := updateOrCreateChallengeInDB(metaData, strings.Split(objectKey, "/")[0]); err != nil {
+	slug := strings.Split(objectKey, "/")[0]
+	if err := updateOrCreateChallengeInDB(metaData, slug, ports); err != nil {
 		log.Printf("Error updating or creating challenge in DB: %v", err)
 		return err
 	}
@@ -78,7 +104,7 @@ func deleteChallengeFromDB(slug string) error {
 	return nil
 }
 
-func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string) error {
+func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int) error {
 	var cCategory models.ChallengeCategory
 	if err := config.DB.FirstOrCreate(&cCategory, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
 		return err
@@ -99,16 +125,21 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		return err
 	}
 
-	// Remplir les champs du challenge
 	challenge.Slug = slug
 	challenge.Name = metaData.Name
 	challenge.Description = metaData.Description
 	challenge.ChallengeDifficultyID = cDifficulty.ID
 	challenge.ChallengeCategoryID = cCategory.ID
 	challenge.ChallengeTypeID = cType.ID
+	challenge.ChallengeType = &cType
 	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
+	ports64 := make(pq.Int64Array, len(ports))
+	for i, p := range ports {
+		ports64[i] = int64(p)
+	}
+	challenge.Ports = ports64
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		return err
@@ -164,7 +195,7 @@ func DownloadChallengeContext(slug string, localDir string) error {
 		if obj.Err != nil {
 			return obj.Err
 		}
-		localPath := filepath.Join(localDir, obj.Key[len(slug)+1:]) 
+		localPath := filepath.Join(localDir, obj.Key[len(slug)+1:])
 		if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
 			return err
 		}

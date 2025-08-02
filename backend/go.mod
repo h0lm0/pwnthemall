@@ -9,10 +9,13 @@ require (
 	github.com/casbin/gorm-adapter/v3 v3.33.0
 	github.com/docker/cli v28.3.2+incompatible
 	github.com/docker/docker v25.0.6+incompatible
+	github.com/docker/go-connections v0.5.0
 	github.com/gin-contrib/sessions v0.0.4
 	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/gorilla/websocket v1.5.3
 	github.com/jinzhu/copier v0.4.0
+	github.com/lib/pq v1.10.3
 	github.com/minio/minio-go/v7 v7.0.94
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/gorm v1.30.0
@@ -24,7 +27,6 @@ require (
 	github.com/casbin/govaluate v1.7.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -41,7 +43,6 @@ require (
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/sessions v1.2.1 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.6.0 // indirect

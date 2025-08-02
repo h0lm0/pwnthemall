@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"pwnthemall/config"
@@ -17,6 +18,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/go-connections/nat"
 )
 
 func EnsureDockerClientConnected() error {
@@ -95,6 +97,23 @@ func streamAndDetectBuildError(r io.Reader) error {
 		}
 	}
 	return nil
+}
+
+func FindAvailablePorts(count int) ([]int, error) {
+	ports := []int{}
+
+	for len(ports) < count {
+		l, err := net.Listen("tcp", ":0")
+		if err != nil {
+			return nil, fmt.Errorf("impossible de trouver un port libre: %v", err)
+		}
+
+		port := l.Addr().(*net.TCPAddr).Port
+		ports = append(ports, port)
+		l.Close()
+	}
+
+	return ports, nil
 }
 
 func getDockerImagePrefix() (string, error) {
@@ -192,7 +211,11 @@ func IsImageBuilt(slug string) (string, bool) {
 	return imageName, false
 }
 
-func StartDockerInstance(image string, teamId int, userId int) (string, error) {
+func StartDockerInstance(image string, teamId int, userId int, internalPorts []int, hostPorts []int) (string, error) {
+	if len(internalPorts) != len(hostPorts) {
+		return "", fmt.Errorf("internal and host ports length mismatch")
+	}
+
 	if err := EnsureDockerClientConnected(); err != nil {
 		return "", fmt.Errorf("docker client not connected: %w", err)
 	}
@@ -207,6 +230,7 @@ func StartDockerInstance(image string, teamId int, userId int) (string, error) {
 	existing, err := config.DockerClient.ContainerList(ctx, container.ListOptions{
 		All: true,
 	})
+
 	if err != nil {
 		return "", fmt.Errorf("failed to list containers: %w", err)
 	}
@@ -235,23 +259,39 @@ func StartDockerInstance(image string, teamId int, userId int) (string, error) {
 		return "", fmt.Errorf("failed to load docker config from DB: %w", err)
 	}
 
+	portBindings := nat.PortMap{}
+	exposedPorts := nat.PortSet{}
+
+	for i, internal := range internalPorts {
+		containerPort := nat.Port(fmt.Sprintf("%d/tcp", internal))
+		hostPort := hostPorts[i]
+
+		exposedPorts[containerPort] = struct{}{}
+		portBindings[containerPort] = []nat.PortBinding{
+			{HostIP: "0.0.0.0", HostPort: fmt.Sprint(hostPort)},
+		}
+	}
+
 	hostConfig := &container.HostConfig{
 		Resources: container.Resources{
 			Memory:   int64(dockerCfg.MaxMemByInstance) * 1024 * 1024,
 			NanoCPUs: int64(dockerCfg.MaxCpuByInstance) * 1_000_000_000,
 		},
-		AutoRemove: true,
+		PortBindings: portBindings,
+		AutoRemove:   true,
 		RestartPolicy: container.RestartPolicy{
 			Name: "no",
 		},
 	}
-	var containerTimeout int = 60
+
+	containerTimeout := 60
 	resp, err := config.DockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
-			Image:       image,
-			Tty:         false,
-			StopTimeout: &containerTimeout,
+			Image:        image,
+			Tty:          false,
+			ExposedPorts: exposedPorts,
+			StopTimeout:  &containerTimeout,
 		},
 		hostConfig,
 		&network.NetworkingConfig{},
@@ -266,8 +306,11 @@ func StartDockerInstance(image string, teamId int, userId int) (string, error) {
 		return "", fmt.Errorf("failed to start container: %w", err)
 	}
 
-	log.Printf("Started container %s for team %d user %d", containerName, teamId, userId)
-	return containerName, nil
+	log.Printf(
+		"Started container %s for team %d user %d on host ports %v mapping to internal %v",
+		containerName, teamId, userId, hostPorts, internalPorts,
+	)
+	return resp.ID, nil
 }
 
 func StopDockerInstance(containerID string) error {
