@@ -191,10 +191,15 @@ function check_container_status() {
     esac
 }
 
-function show_status() {
+function show_comprehensive_info() {
     echo ""
-    print_info "PwnThemAll Container Status:"
-    echo "-------------------------------"
+    print_info "PwnThemAll System Information:"
+    echo "================================="
+    
+    # Container Status
+    echo ""
+    print_info "Container Status:"
+    echo "-------------------"
     check_container_status "frontend"
     check_container_status "backend"
     check_container_status "worker"
@@ -203,15 +208,15 @@ function show_status() {
     check_container_status "minio"
     check_container_status "pwnthemall-docker-daemon"
     
+    # Application URLs
     echo ""
     print_info "Application URLs:"
     echo "-------------------"
     echo "Frontend: http://localhost:8080"
     echo "Backend API: http://localhost:8080/api"
     echo "MinIO Console: http://localhost:9001 (localhost only)"
-}
-
-function show_security_status() {
+    
+    # Security Status
     echo ""
     print_info "Security Status:"
     echo "------------------"
@@ -237,9 +242,8 @@ function show_security_status() {
         print_warning "Docker-in-Docker container is not running"
         print_warning "Application may be using direct Docker socket access"
     fi
-}
-
-function show_challenge_containers() {
+    
+    # Challenge Containers
     echo ""
     print_info "Challenge Containers:"
     echo "----------------------"
@@ -322,14 +326,17 @@ function usage() {
     echo "  $0 compose down [--env dev|prod]"
     echo "  $0 keys -g|gen"
     echo "  $0 keys -r|remove"
-    echo "  $0 status"
-    echo "  $0 security"
-    echo "  $0 challenges"
+    echo "  $0 info"
     echo "  $0 logs [container] [lines]"
     echo "  $0 monitor"
     echo ""
     echo "Security Options:"
     echo "  --secure    Use Docker-in-Docker for better security (auto-setup included)"
+    echo ""
+    echo "Info Commands:"
+    echo "  info        Show comprehensive system status (containers, security, challenges)"
+    echo "  logs        Show container logs (default: all containers, last 10 lines)"
+    echo "  monitor     Real-time Docker events monitoring (advanced)"
     exit 1
 }
 
@@ -380,14 +387,8 @@ case "${1:-}" in
                 ;;
         esac
         ;;
-    status)
-        show_status
-        ;;
-    security)
-        show_security_status
-        ;;
-    challenges)
-        show_challenge_containers
+    info)
+        show_comprehensive_info
         ;;
     logs)
         shift
