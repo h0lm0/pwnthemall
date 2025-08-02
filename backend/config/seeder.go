@@ -42,12 +42,19 @@ func seedConfig() {
 }
 
 func seedDockerConfig() {
-	iByTeam, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTACES_BY_TEAM"))
+	var existing models.DockerConfig
+	err := DB.First(&existing).Error
+	if err == nil {
+		log.Println("Seeding: docker config already exists, skipping")
+		return
+	}
+
+	iByTeam, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTANCES_BY_TEAM"))
 	if err != nil {
 		iByTeam = 15
 	}
 
-	iByUser, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTACES_BY_USER"))
+	iByUser, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTANCES_BY_USER"))
 	if err != nil {
 		iByUser = 5
 	}
@@ -62,6 +69,11 @@ func seedDockerConfig() {
 		maxCpu = 0.01
 	}
 
+	instanceTimeout, err := strconv.Atoi(os.Getenv("PTA_DOCKER_INSTANCE_TIMEOUT"))
+	if err != nil {
+		instanceTimeout = 60 // Default 60 minutes
+	}
+
 	config := models.DockerConfig{
 		Host:             os.Getenv("PTA_DOCKER_HOST"),
 		ImagePrefix:      os.Getenv("PTA_DOCKER_IMAGE_PREFIX"),
@@ -69,6 +81,7 @@ func seedDockerConfig() {
 		MaxCpuByInstance: maxCpu,
 		InstancesByTeam:  iByTeam,
 		InstancesByUser:  iByUser,
+		InstanceTimeout:  instanceTimeout,
 	}
 
 	if err := DB.Create(&config).Error; err != nil {

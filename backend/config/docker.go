@@ -18,10 +18,14 @@ func ConnectDocker() error {
 	var dockerCfg models.DockerConfig
 	if err := DB.First(&dockerCfg).Error; err != nil {
 		log.Println("Unable to load DockerConfig from DB:", err)
+		log.Println("This might be due to missing environment variables or database seeding issues")
 		return err
 	}
 
+	log.Printf("DEBUG: Docker config loaded from DB - Host: %s, ImagePrefix: %s", dockerCfg.Host, dockerCfg.ImagePrefix)
+
 	if dockerCfg.Host == "" {
+		log.Println("ERROR: DockerConfig.Host is empty in DB")
 		return errors.New("DockerConfig.Host is empty in DB")
 	}
 

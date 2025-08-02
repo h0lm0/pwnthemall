@@ -17,4 +17,6 @@ type Instance struct {
 	ChallengeID uint          `json:"challengeId"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	Ports       pq.Int64Array `gorm:"type:integer[]" json:"ports"`
+	ExpiresAt   time.Time     `json:"expiresAt"`
+	Status      string        `json:"status" gorm:"default:'running'"` // running, stopped, expired
 }
