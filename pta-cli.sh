@@ -106,6 +106,8 @@ function compose_up() {
     fi
 
     if [[ "$secure" == "true" ]]; then
+        print_info "Setting up Docker-in-Docker security..."
+        setup_secure_internal
         print_info "Starting PwnThemAll with Docker-in-Docker security"
         print_info "Challenge containers will run in isolated environment"
     else
@@ -279,9 +281,7 @@ function monitor_realtime() {
     docker events --filter 'type=container' --filter 'event=create' --filter 'event=start' --filter 'event=stop' --filter 'event=die' --format 'table {{.Time}}\t{{.Type}}\t{{.Action}}\t{{.Actor.Attributes.name}}'
 }
 
-function setup_secure() {
-    print_info "Setting up Docker-in-Docker security..."
-    
+function setup_secure_internal() {
     # Generate secure secrets if not set
     if [[ -f .env ]]; then
         source .env
@@ -327,11 +327,9 @@ function usage() {
     echo "  $0 challenges"
     echo "  $0 logs [container] [lines]"
     echo "  $0 monitor"
-    echo "  $0 setup-secure"
     echo ""
     echo "Security Options:"
-    echo "  --secure    Use Docker-in-Docker for better security"
-    echo "  setup-secure Generate secure secrets and configure DinD"
+    echo "  --secure    Use Docker-in-Docker for better security (auto-setup included)"
     exit 1
 }
 
@@ -397,9 +395,6 @@ case "${1:-}" in
         ;;
     monitor)
         monitor_realtime
-        ;;
-    setup-secure)
-        setup_secure
         ;;
     *)
         usage
