@@ -50,7 +50,8 @@ RUN adduser -D -u 1000 -s /sbin/nologin app && \
     mkdir -p /home/app/.ssh && \
     chown -R app:app /home/app/.ssh && \
     chmod 700 /home/app/.ssh && \
-    chown -R app:app /app
+    addgroup -g 984 docker && \
+    adduser app docker
 
 USER app
 

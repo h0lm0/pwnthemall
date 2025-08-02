@@ -1,0 +1,12 @@
+name: Entre les lignes
+description: |
+  J'ai fait une page dédiée à Ada Lovelace, la première programmeuse.
+  Explorez le site web et trouvez le flag !
+category: web
+difficulty: easy
+type: docker
+author: swinowz
+flags: ["NHM2I{@d@_L0V3L@C3_D3V_48915632}"]
+hidden: false
+points: 500
+ports: [5001] 
