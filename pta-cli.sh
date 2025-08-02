@@ -70,8 +70,8 @@ function compose_up() {
     local secure="false"
     
     if [ ! -f ./shared/worker ]; then
-        echo "WARN: Private key file shared/worker not found, generating new one..."
-        generate_key
+        echo "WARN: Private key file shared/worker not found, use --secure flag to generate keys"
+        exit 1
     fi
     
     while [[ $# -gt 0 ]]; do
@@ -159,14 +159,7 @@ function compose_down() {
     echo "[✓] Compose down completed"
 }
 
-function generate_key() {
-    ssh-keygen -C '' -t ed25519 -N '' -f ./shared/worker
-    chmod 400 ./shared/worker
-}
 
-function remove_key() {
-    rm -rf ./shared/worker*
-}
 
 function check_container_status() {
     local container_name=$1
@@ -236,7 +229,7 @@ function show_comprehensive_info() {
         if docker exec worker env | grep -q "DOCKER_TLS_VERIFY=1"; then
             print_status "Docker-in-Docker is using TLS encryption"
         else
-            print_warning "Docker-in-Docker is not using TLS encryption"
+            print_warning "Docker-in-Docker is using non-TLS connection (less secure)"
         fi
     else
         print_warning "Docker-in-Docker container is not running"
@@ -249,40 +242,98 @@ function show_comprehensive_info() {
     echo "----------------------"
     
     # Try to list containers in DinD first
-    if docker exec pwnthemall-docker-daemon docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null; then
-        print_status "Challenge containers (in DinD) listed successfully"
+    if docker ps | grep -q "pwnthemall-docker-daemon"; then
+        local dind_containers=$(docker exec pwnthemall-docker-daemon docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null)
+        if echo "$dind_containers" | grep -q "NAMES"; then
+            echo "$dind_containers"
+            local container_count=$(echo "$dind_containers" | wc -l)
+            if [ $container_count -eq 1 ]; then
+                print_warning "No challenge containers running in DinD"
+            else
+                print_status "Challenge containers (in DinD) listed successfully"
+            fi
+        else
+            print_warning "No challenge containers running in DinD"
+        fi
     else
         # Fallback to host Docker
         docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(pta-|challenge)" || print_warning "No challenge containers running"
     fi
 }
 
-function show_logs() {
-    local container_name="${1:-}"
-    local lines="${2:-10}"
-    
-    if [[ -z "$container_name" ]]; then
-        echo ""
-        print_info "Recent logs (last $lines lines):"
-        echo "--------------------------------"
-        docker logs --tail="$lines" pwnthemall-docker-daemon 2>/dev/null || print_error "Could not retrieve DinD logs"
-        docker logs --tail="$lines" worker 2>/dev/null || print_error "Could not retrieve worker logs"
-        docker logs --tail="$lines" backend 2>/dev/null || print_error "Could not retrieve backend logs"
-    else
-        echo ""
-        print_info "Recent logs for $container_name (last $lines lines):"
-        echo "----------------------------------------"
-        docker logs --tail="$lines" "$container_name" 2>/dev/null || print_error "Could not retrieve logs for $container_name"
-    fi
-}
+
 
 function monitor_realtime() {
     echo ""
     print_info "Starting real-time monitoring (Ctrl+C to stop):"
     echo "--------------------------------------------------"
     
-    # Monitor Docker events
-    docker events --filter 'type=container' --filter 'event=create' --filter 'event=start' --filter 'event=stop' --filter 'event=die' --format 'table {{.Time}}\t{{.Type}}\t{{.Action}}\t{{.Actor.Attributes.name}}'
+    # Check if we're using DinD setup
+    if docker ps | grep -q "pwnthemall-docker-daemon"; then
+        print_info "Detected Docker-in-Docker setup - monitoring DinD containers"
+        
+        # Show current state from DinD
+        echo ""
+        print_info "Current DinD container status:"
+        local dind_containers=$(docker exec pwnthemall-docker-daemon docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null)
+        if echo "$dind_containers" | grep -q "NAMES"; then
+            echo "$dind_containers"
+            local container_count=$(echo "$dind_containers" | wc -l)
+            if [ $container_count -eq 1 ]; then
+                print_warning "No challenge containers currently running in DinD"
+            fi
+        else
+            print_warning "No challenge containers currently running in DinD"
+        fi
+        
+        echo ""
+        print_info "Monitoring Docker events (create/start/stop/die)..."
+        print_info "Try starting/stopping a challenge instance to see events"
+        echo ""
+        printf "%-19s %-8s %s\n" "DATE TIME (DD/MM)" "ACTION" "CONTAINER"
+        printf "%-19s %-8s %s\n" "--------------" "------" "---------"
+        
+        # Monitor Docker events from DinD with human-readable time
+        docker exec pwnthemall-docker-daemon docker events --filter 'type=container' --filter 'event=create' --filter 'event=start' --filter 'event=stop' --filter 'event=die' --format '{{.Time}} {{.Action}} {{.Actor.Attributes.name}}' | while read -r timestamp action container; do
+            # Convert timestamp to human readable format
+            if [[ "$timestamp" =~ ^[0-9]+$ ]]; then
+                # Unix timestamp - convert to readable format (DD/MM format)
+                human_time=$(date -d "@$timestamp" '+%d/%m %H:%M:%S' 2>/dev/null || date -r "$timestamp" '+%d/%m %H:%M:%S' 2>/dev/null || echo "$timestamp")
+            else
+                # Already in ISO format - extract date and time (DD/MM format)
+                human_time=$(echo "$timestamp" | sed 's/.*\([0-9-]*\)T\([0-9:]*\).*/\1 \2/' | sed 's/\([0-9]*\)-\([0-9]*\)-\([0-9]*\) \([0-9:]*\)/\3\/\2 \4/' | cut -d: -f1-3)
+            fi
+            printf "%-19s %-8s %s\n" "$human_time" "$action" "$container"
+        done
+    else
+        print_info "Using host Docker - monitoring host containers"
+        
+        # Show current state from host
+        echo ""
+        print_info "Current host container status:"
+        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | head -1
+        docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -v "NAMES"
+        
+        echo ""
+        print_info "Monitoring Docker events (create/start/stop/die)..."
+        print_info "Try starting/stopping a challenge instance to see events"
+        echo ""
+        printf "%-19s %-8s %s\n" "DATE TIME (DD/MM)" "ACTION" "CONTAINER"
+        printf "%-19s %-8s %s\n" "--------------" "------" "---------"
+        
+        # Monitor Docker events from host with human-readable time
+        docker events --filter 'type=container' --filter 'event=create' --filter 'event=start' --filter 'event=stop' --filter 'event=die' --format '{{.Time}} {{.Action}} {{.Actor.Attributes.name}}' | while read -r timestamp action container; do
+            # Convert timestamp to human readable format
+            if [[ "$timestamp" =~ ^[0-9]+$ ]]; then
+                # Unix timestamp - convert to readable format (DD/MM format)
+                human_time=$(date -d "@$timestamp" '+%d/%m %H:%M:%S' 2>/dev/null || date -r "$timestamp" '+%d/%m %H:%M:%S' 2>/dev/null || echo "$timestamp")
+            else
+                # Already in ISO format - extract date and time (DD/MM format)
+                human_time=$(echo "$timestamp" | sed 's/.*\([0-9-]*\)T\([0-9:]*\).*/\1 \2/' | sed 's/\([0-9]*\)-\([0-9]*\)-\([0-9]*\) \([0-9:]*\)/\3\/\2 \4/' | cut -d: -f1-3)
+            fi
+            printf "%-19s %-8s %s\n" "$human_time" "$action" "$container"
+        done
+    fi
 }
 
 function setup_secure_internal() {
@@ -290,6 +341,13 @@ function setup_secure_internal() {
     if [[ -f .env ]]; then
         source .env
     fi
+    
+    # Regenerate SSH keys for security (fresh keys for secure setup)
+    print_info "Regenerating SSH keys for secure setup..."
+    rm -rf ./shared/worker*
+    ssh-keygen -C '' -t ed25519 -N '' -f ./shared/worker
+    chmod 400 ./shared/worker
+    print_status "Generated fresh SSH keys"
     
     # Generate JWT secrets if not set
     if [[ "${JWT_SECRET:-}" == "your_jwt_secret_here" ]] || [[ -z "${JWT_SECRET:-}" ]]; then
@@ -324,18 +382,13 @@ function usage() {
     echo "  $0 minio sync <folder>"
     echo "  $0 compose up [--build] [--env dev|prod] [--secure]"
     echo "  $0 compose down [--env dev|prod]"
-    echo "  $0 keys -g|gen"
-    echo "  $0 keys -r|remove"
-    echo "  $0 info"
-    echo "  $0 logs [container] [lines]"
-    echo "  $0 monitor"
     echo ""
     echo "Security Options:"
     echo "  --secure    Use Docker-in-Docker for better security (auto-setup included)"
+    echo "              Automatically generates SSH keys for enhanced security"
     echo ""
     echo "Info Commands:"
     echo "  info        Show comprehensive system status (containers, security, challenges)"
-    echo "  logs        Show container logs (default: all containers, last 10 lines)"
     echo "  monitor     Real-time Docker events monitoring (advanced)"
     exit 1
 }
@@ -373,26 +426,9 @@ case "${1:-}" in
                 ;;
         esac
         ;;
-    keys)
-        shift
-        case "${1:-}" in
-            -g|gen)
-                generate_key
-                ;;
-            -r|remove)
-                remove_key
-                ;;
-            *)
-                usage
-                ;;
-        esac
-        ;;
+
     info)
         show_comprehensive_info
-        ;;
-    logs)
-        shift
-        show_logs "$@"
         ;;
     monitor)
         monitor_realtime
