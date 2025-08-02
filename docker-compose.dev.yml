@@ -1,0 +1,147 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    environment:
+      - NEXT_PUBLIC_API_URL=https://pwnthemall.local
+      - NODE_ENV=developpement  
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: yarn dev
+    networks:
+      public:
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable'
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
+      SEED_DATABASE: ${SEED_DATABASE}
+      SEED_CASBIN_CSV: ${SEED_CASBIN_CSV}
+      SEED_CASBIN: ${SEED_CASBIN}
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      PTA_SITE_NAME: ${PTA_SITE_NAME}
+      PTA_REGISTRATION_ENABLED: ${PTA_REGISTRATION_ENABLED}
+      PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
+      PTA_DOCKER_IMAGE_PREFIX: ${PTA_DOCKER_IMAGE_PREFIX}
+      PTA_DOCKER_MAXMEM_PER_INSTANCE: ${PTA_DOCKER_MAXMEM_PER_INSTANCE}
+      PTA_DOCKER_MAXCPU_PER_INSTANCE: ${PTA_DOCKER_MAXCPU_PER_INSTANCE}
+      PTA_DOCKER_INSTANCES_BY_USER: ${PTA_DOCKER_INSTANCES_BY_USER}
+      PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
+    volumes:
+      - ./backend:/app
+      - ./shared/worker:/home/app/.ssh/worker
+    networks:
+      public:
+      private:
+
+  worker:
+    container_name: worker
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+      args:
+        DOCKER_GID: ${DOCKER_GID}
+        WORKER_PASSWORD: ${WORKER_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./shared/worker.pub:/home/docker/.ssh/authorized_keys
+    networks:
+      private:
+    healthcheck:
+      test: ["CMD", "nc", "127.0.0.1", "22"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  db:
+    container_name: db
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:54322:5432"
+    # volumes:
+      # - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      private:
+
+  caddy:
+    container_name: caddy
+    hostname: pwnthemmall.local
+    build:
+      context: caddy/
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+      - "127.0.0.1:443:443"
+    networks:
+      public:
+
+  minio:
+    image: 'minio/minio:latest'
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
+      MINIO_NOTIFY_WEBHOOK_ENABLE_DBSYNC: "on"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_DBSYNC: "http://backend:8080/webhook/minio"
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC: "Bearer ${MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC}"
+    volumes:
+      - "./minio/challenges:/data/challenges"
+      - "./minio/config:/data/config"
+      - "minio:/data/minio"
+    entrypoint: '/bin/sh /data/config/entrypoint.sh'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:9001:9001"
+    networks:
+      public:
+      private:
+
+volumes:
+  postgres_data:
+  minio:
+
+networks:
+  public:
+  private:
