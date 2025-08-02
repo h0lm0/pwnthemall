@@ -132,6 +132,7 @@ func AuthRequired(needTeam bool) gin.HandlerFunc {
 
 		c.Set("user_id", user.ID)
 		c.Set("user", &user)
+		c.Set("userRole", user.Role)
 		c.Next()
 	}
 }
@@ -161,6 +162,25 @@ func AuthRequiredTeamOrAdmin() gin.HandlerFunc {
 
 		c.Set("user_id", user.ID)
 		c.Set("user", &user)
+		c.Set("userRole", user.Role)
+		c.Next()
+	}
+}
+
+// AdminRequired ensures the user has admin role
+func AdminRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRole, exists := c.Get("userRole")
+		if !exists {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "admin access required"})
+			return
+		}
+
+		if userRole != "admin" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "admin access required"})
+			return
+		}
+
 		c.Next()
 	}
 }

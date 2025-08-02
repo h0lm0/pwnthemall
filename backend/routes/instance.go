@@ -8,9 +8,20 @@ import (
 )
 
 func RegisterInstanceRoutes(router *gin.Engine) {
-	challenges := router.Group("/instances")
+	// User routes (authenticated users)
+	user := router.Group("/user/instances")
+	user.Use(middleware.AuthRequired(false))
 	{
-		challenges.GET("", middleware.AuthRequiredTeamOrAdmin(), middleware.CheckPolicy("/instances", "read"), controllers.GetInstances)
-		challenges.GET("/:id", middleware.AuthRequiredTeamOrAdmin(), middleware.CheckPolicy("/instances/:id", "read"), controllers.GetInstance)
+		user.GET("", controllers.GetUserInstances)      // User's own instances
+		user.GET("/:id", controllers.GetUserInstance)   // User's own instance
+		user.GET("/team", controllers.GetTeamInstances) // Team instances
+	}
+
+	// Admin routes (admin only)
+	admin := router.Group("/admin/instances")
+	admin.Use(middleware.AuthRequired(false), middleware.AdminRequired())
+	{
+		admin.GET("", controllers.GetAdminInstances)    // All instances (full data)
+		admin.GET("/:id", controllers.GetAdminInstance) // Single instance (full data)
 	}
 }
