@@ -8,6 +8,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=https://pwnthemall.local
       - NODE_ENV=production
+      - PTA_DEBUG_ENABLED=${PTA_DEBUG_ENABLED}
     depends_on:
       - backend
     ports:
@@ -46,6 +47,7 @@ services:
       PTA_DOCKER_MAXCPU_PER_INSTANCE: ${PTA_DOCKER_MAXCPU_PER_INSTANCE}
       PTA_DOCKER_INSTANCES_BY_USER: ${PTA_DOCKER_INSTANCES_BY_USER}
       PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
+      PTA_DEBUG_ENABLED: ${PTA_DEBUG_ENABLED}
     volumes:
       - ./shared/worker:/home/app/.ssh/worker
     networks:
