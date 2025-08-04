@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useSiteConfig } from "@/context/SiteConfigContext";
 import LoginContent from "@/components/LoginContent";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import axios from "@/lib/axios";
+import Head from "next/head";
+import { CheckCircle } from "lucide-react";
 
 const LoginPage = () => {
   const router = useRouter();
   const { login } = useAuth();
   const { t, language } = useLanguage();
+  const { getSiteName } = useSiteConfig();
 
   const [form, setForm] = useState({ identifier: "", password: "" });
 
@@ -30,6 +34,9 @@ const LoginPage = () => {
     try {
       const res = await axios.post("/api/login", form);
       login();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("auth:refresh"));
+      }
       localStorage.setItem("showToast", JSON.stringify({ type: "success", key: "login_success", lang: language }));
       router.push("/pwn");
     } catch (error: any) {
@@ -40,7 +47,12 @@ const LoginPage = () => {
   };
 
   return (
+    <>
+      <Head>
+        <title>{getSiteName()}</title>
+      </Head>
     <LoginContent form={form} onChange={onChange} onSubmit={handleLogin} />
+    </>
   );
 };
 

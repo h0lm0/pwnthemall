@@ -25,6 +25,7 @@ import {
 import ChallengeCategoriesForm from "./ChallengeCategoriesForm"
 import { ChallengeCategory, ChallengeCategoryFormData } from "@/models/ChallengeCategory"
 import { useLanguage } from "@/context/LanguageContext"
+import { useSiteConfig } from "@/context/SiteConfigContext"
 
 interface ChallengeCategoriesContentProps {
   challengeCategories: ChallengeCategory[]
@@ -33,6 +34,7 @@ interface ChallengeCategoriesContentProps {
 
 export default function ChallengeCategoriesContent({ challengeCategories, onRefresh }: ChallengeCategoriesContentProps) {
   const { t } = useLanguage();
+  const { getSiteName } = useSiteConfig();
   const [editingChallengeCategory, setEditingChallengeCategory] = useState<ChallengeCategory | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<ChallengeCategory | null>(null)
@@ -89,7 +91,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
   return (
     <>
       <Head>
-        <title>pwnthemall - admin zone</title>
+        <title>{getSiteName()}</title>
       </Head>
       <div className="bg-muted min-h-screen p-4">
         <div className="mb-4 flex items-center justify-between">

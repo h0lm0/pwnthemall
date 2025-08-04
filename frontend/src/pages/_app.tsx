@@ -3,11 +3,13 @@ import { SidebarProvider, SidebarInset, SIDEBAR_COOKIE_NAME } from '@/components
 import { AppSidebar } from '@/components/app-sidebar'
 import { AuthProvider } from '@/context/AuthContext'
 import { LanguageProvider } from '@/context/LanguageContext'
+import { SiteConfigProvider } from '@/context/SiteConfigContext'
+import { NotificationProvider } from '@/context/NotificationContext'
 import { ThemeProvider } from '@/components/theme-provider'
 import '../styles/globals.css';
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { useEffect, useState } from 'react';
-import { Toaster } from "sonner"; // ✅ Import du Toaster
+import { Toaster } from "@/components/ui/sonner";
 
 interface MyAppProps extends AppProps {
   sidebarDefaultOpen: boolean
@@ -29,6 +31,8 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   return (
     <LanguageProvider>
       <AuthProvider>
+        <SiteConfigProvider>
+          <NotificationProvider>
         <ThemeProvider
           attribute="class"
           defaultTheme={systemTheme}
@@ -63,6 +67,8 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
             expand
           />
         </ThemeProvider>
+          </NotificationProvider>
+        </SiteConfigProvider>
       </AuthProvider>
     </LanguageProvider>
   )

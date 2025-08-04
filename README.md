@@ -15,13 +15,26 @@ cp .env.example .env
 
 ### Start environment
 
-bash pta-cli.sh compose up -b -e prod  
-bash pta-cli.sh compose up -b -e dev
+   ```bash
+   bash pta-cli.sh compose up -b -e prod
+   bash pta-cli.sh compose up -b -e dev
+   ```
 
 ### Navigate to the platform
 
 Open https://pwnthemall.local/ & accept the certificate
 
+### Windows Support
+Can run the same way as Linux if executed directly in the WSL terminal.
+#### Requirements:
+   - Windows Subsystem for Linux (WSL)
+   - Alternatively, Git Bash (if WSL is not available)
+
+Use the provided `pta-cli.cmd` wrapper, which will automatically detect and use WSL if available, or fall back to Git Bash. 
+   ```shell
+   pta-cli.cmd compose up -b -e prod
+   pta-cli.cmd compose up -b -e dev
+   ```
 
 ## Troubleshoot
 

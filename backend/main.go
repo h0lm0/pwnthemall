@@ -3,10 +3,12 @@ package main
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"log"
 	"net/http"
 	"os"
-
 	"pwnthemall/config"
+	"pwnthemall/controllers"
+	"pwnthemall/debug"
 	"pwnthemall/routes"
 
 	"github.com/gin-contrib/cors"
@@ -27,7 +29,14 @@ func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
 	config.InitCasbin()
-	config.ConnectDocker()
+	// config.SynchronizeEnvWithDb()
+	if err := config.ConnectDocker(); err != nil {
+		log.Printf("Failed to connect to docker host: %s", err.Error())
+	}
+
+	// Initialize WebSocket hub for notifications
+	controllers.InitWebSocketHub()
+
 	router := gin.Default()
 
 	sessionSecret := os.Getenv("SESSION_SECRET")
@@ -62,11 +71,17 @@ func main() {
 	routes.RegisterChallengeRoutes(router)
 	routes.RegisterChallengeCategoryRoutes(router)
 	routes.RegisterTeamRoutes(router)
+	routes.RegisterConfigRoutes(router)
+	routes.RegisterDockerConfigRoutes(router)
+	routes.RegisterInstanceRoutes(router)
+	routes.RegisterNotificationRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
+	debug.Log("Starting server on port %s", port)
+	log.Printf("Server starting on port %s", port)
 	router.Run(":" + port)
 }

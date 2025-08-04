@@ -9,6 +9,8 @@ category: pwn
 difficulty: intro
 type: standard
 author: h0lm
-flags: ["_pWnme1T_firsT_fLag!"]
+flags: ["flag"]
 hidden: false
 points: 10
+ports: [8080, 22]
+connection_info: ["http://$ip:8080", "ssh -p 22 user@$ip"]

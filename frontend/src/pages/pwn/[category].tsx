@@ -15,6 +15,7 @@ export default function CategoryPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [teamChecked, setTeamChecked] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,10 +32,14 @@ export default function CategoryPage() {
   useEffect(() => {
     if (authChecked && loggedIn) {
       axios.get("/api/me").then(res => {
+        setRole(res.data.role);
         if (res.data.teamId) {
           setHasTeam(true);
         } else {
-          router.replace("/team");
+          setHasTeam(false);
+          if (res.data.role !== "admin") {
+            router.replace("/team");
+          }
         }
         setTeamChecked(true);
       }).catch(() => {
@@ -44,7 +49,7 @@ export default function CategoryPage() {
   }, [authChecked, loggedIn, router]);
 
   const fetchChallenges = useCallback(async () => {
-    if (!authChecked || !loggedIn || !hasTeam || !cat) return;
+    if (!authChecked || !loggedIn || (!hasTeam && role !== "admin") || !cat) return;
     
     setLoading(true);
     setError(null);
@@ -58,14 +63,14 @@ export default function CategoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [authChecked, loggedIn, hasTeam, cat]);
+  }, [authChecked, loggedIn, hasTeam, role, cat]);
 
   useEffect(() => {
     fetchChallenges();
   }, [fetchChallenges]);
 
   if (!authChecked || !loggedIn || !teamChecked) return null;
-  if (!hasTeam) return null;
+  if (!hasTeam && role !== "admin") return null;
   if (!cat) {
     return <div>Invalid category</div>;
   }

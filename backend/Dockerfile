@@ -10,26 +10,38 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o pwnthemall
 
 #region Dev stage
-FROM golang:1.23 AS dev
+FROM golang:1.23-alpine AS dev
 
 WORKDIR /app
 
+RUN apk --no-cache add ca-certificates openssh-client
+
+RUN adduser -D -u 1000 -s /sbin/nologin app && \ 
+    mkdir -p /home/app/.ssh && \
+    chown -R app:app /home/app/.ssh && \
+    chmod 700 /home/app/.ssh && \
+    chown -R app:app /app
+
+USER app
+
+RUN mkdir -p /app/tmp
 RUN go install github.com/air-verse/air@v1.61.7
-
-RUN mkdir -p /app
-
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+COPY entrypoint.dev.sh /entrypoint.sh
 
 EXPOSE 8080
 
-CMD ["air"]
+CMD ["sh", "/entrypoint.sh"]
 #endregion
 
 #region Prod stage
-FROM alpine:latest as prod
+FROM alpine:latest AS prod
+
+ARG DOCKER_GID
+ENV DOCKER_GID=${DOCKER_GID}
 
 WORKDIR /app
 
@@ -41,14 +53,21 @@ RUN adduser -D -u 1000 -s /sbin/nologin app && \
     mkdir -p /home/app/.ssh && \
     chown -R app:app /home/app/.ssh && \
     chmod 700 /home/app/.ssh && \
-    chown -R app:app /app
+    EXISTING_GROUP=$(getent group ${DOCKER_GID} | cut -d: -f1) && \
+    if [ -z "$EXISTING_GROUP" ]; then \
+      addgroup -g ${DOCKER_GID} docker; \
+      GROUP_TO_USE=docker; \
+    else \
+      GROUP_TO_USE=$EXISTING_GROUP; \
+    fi && \
+    adduser app $GROUP_TO_USE
 
 USER app
 
 COPY config/casbin_model.conf /app/config/
 COPY config/casbin_policies.csv /app/config/
 COPY --from=go_builder /app/pwnthemall /app/pwnthemall
-COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint.prod.sh /entrypoint.sh
 
 EXPOSE 8080
 

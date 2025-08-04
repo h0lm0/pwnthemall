@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "@/lib/axios";
+import { debugLog, debugError } from "@/lib/debug";
 import { clearTranslationCache } from "@/context/LanguageContext";
 
 interface AuthContextType {
@@ -24,11 +25,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await axios.post("/api/logout");
     } catch (error) {
-      // console.error("Logout failed:", error);
+      // debugError("Logout failed:", error);
     }
     setLoggedIn(false);
     // Clear any cached data
     clearTranslationCache();
+    
+    // Notify all components about the auth change
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:refresh'));
+    }
+    
     if (redirect && typeof window !== "undefined" && window.location.pathname !== "/login") {
       window.location.href = "/login";
     }
@@ -36,15 +43,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = async () => {
     try {
-      await axios.get("/api/pwn");
+      await axios.get("/api/me");
       setLoggedIn(true);
     } catch (err: any) {
       if (err?.response?.status === 401) {
+        // Check if user is banned
+        if (err?.response?.data?.error === "banned") {
+          debugLog("User is banned, forcing logout");
+          await logout(false); // Force logout without redirect
+          return;
+        }
+        
         try {
           await axios.post("/api/refresh");
           setLoggedIn(true);
         } catch (error) {
-          console.error("Failed to refresh token:", error);
+          debugError("Failed to refresh token:", error);
           await logout(false);
         }
       } else {

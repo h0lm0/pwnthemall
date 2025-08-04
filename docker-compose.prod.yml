@@ -8,6 +8,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=https://pwnthemall.local
       - NODE_ENV=production
+      - PTA_DEBUG_ENABLED=${PTA_DEBUG_ENABLED}
     depends_on:
       - backend
     ports:
@@ -21,6 +22,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: prod
+      args:
+        DOCKER_GID: ${DOCKER_GID}
     depends_on:
       db:
         condition: service_healthy
@@ -39,11 +42,18 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       REFRESH_SECRET: ${REFRESH_SECRET}
       PTA_SITE_NAME: ${PTA_SITE_NAME}
-      PTA_FLAG_PREFIX: ${PTA_FLAG_PREFIX}
+      PTA_REGISTRATION_ENABLED: ${PTA_REGISTRATION_ENABLED}
+      PTA_PUBLIC_IP: ${PTA_PUBLIC_IP}
       PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
-      PTA_DOCKER_TLS_VERIFY: ${PTA_DOCKER_TLS_VERIFY}
+      PTA_DOCKER_IMAGE_PREFIX: ${PTA_DOCKER_IMAGE_PREFIX}
+      PTA_DOCKER_MAXMEM_PER_INSTANCE: ${PTA_DOCKER_MAXMEM_PER_INSTANCE}
+      PTA_DOCKER_MAXCPU_PER_INSTANCE: ${PTA_DOCKER_MAXCPU_PER_INSTANCE}
+      PTA_DOCKER_INSTANCES_BY_USER: ${PTA_DOCKER_INSTANCES_BY_USER}
+      PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
+      PTA_DEBUG_ENABLED: ${PTA_DEBUG_ENABLED}
     volumes:
       - ./shared/worker:/home/app/.ssh/worker
+      # - /var/run/docker.sock:/var/run/docker.sock
     networks:
       public:
       private:
@@ -79,10 +89,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    # ports:
-      # - "5432:5432"
-    # volumes:
-      # - postgres_data:/var/lib/postgresql/data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s

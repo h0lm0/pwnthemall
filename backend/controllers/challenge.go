@@ -8,13 +8,17 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"pwnthemall/config"
+	"pwnthemall/debug"
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -232,6 +236,12 @@ func SubmitChallenge(c *gin.Context) {
 		return
 	}
 
+	// Block all users (including admins) from submitting if not in a team
+	if user.Team == nil || user.TeamID == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required_to_submit"})
+		return
+	}
+
 	// Check if team has already solved this challenge
 	var existingSolve models.Solve
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).First(&existingSolve).Error; err == nil {
@@ -270,21 +280,435 @@ func SubmitChallenge(c *gin.Context) {
 	}
 }
 
-func BuildChallengeImage(c *gin.Context) {
+func GetChallengeSolves(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
-	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
+	result := config.DB.First(&challenge, id)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
 		return
 	}
-	err := utils.BuildDockerImage(challenge.Slug)
+
+	// Get solves with team information
+	var solves []models.Solve
+	result = config.DB.
+		Preload("Team").
+		Where("challenge_id = ?", challenge.ID).
+		Order("created_at ASC").
+		Find(&solves)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	// Create response with user information
+	type SolveWithUser struct {
+		models.Solve
+		UserID   uint   `json:"userId"`
+		Username string `json:"username"`
+	}
+
+	var solvesWithUsers []SolveWithUser
+
+	for _, solve := range solves {
+		// Find the submission that led to this solve
+		var submission models.Submission
+		submissionResult := config.DB.
+			Preload("User").
+			Where("challenge_id = ? AND user_id IN (SELECT id FROM users WHERE team_id = ?) AND created_at <= ?",
+				challenge.ID, solve.TeamID, solve.CreatedAt).
+			Order("created_at DESC").
+			First(&submission)
+
+		solveWithUser := SolveWithUser{
+			Solve: solve,
+		}
+
+		if submissionResult.Error == nil && submission.User != nil {
+			solveWithUser.UserID = submission.UserID
+			solveWithUser.Username = submission.User.Username
+		}
+
+		solvesWithUsers = append(solvesWithUsers, solveWithUser)
+	}
+
+	c.JSON(http.StatusOK, solvesWithUsers)
+}
+
+func BuildChallengeImage(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+
+	result := config.DB.Preload("ChallengeType").First(&challenge, id)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
+		return
+	}
+
+	// Check if challenge is of type docker
+	if challenge.ChallengeType.Name != "docker" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "challenge_not_docker_type"})
+		return
+	}
+	_, err := utils.BuildDockerImage(challenge.Slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Successfully built image for challenge %s", challenge.Slug),
+	})
+}
+
+func StartChallengeInstance(c *gin.Context) {
+	id := c.Param("id")
+	debug.Log("Starting instance for challenge ID: %s", id)
+
+	var challenge models.Challenge
+	result := config.DB.Preload("ChallengeType").First(&challenge, id)
+
+	if result.Error != nil {
+		debug.Log("Challenge not found with ID %s: %v", id, result.Error)
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
+		return
+	}
+
+	// Check if challenge is of type docker
+	if challenge.ChallengeType.Name != "docker" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "challenge_not_docker_type"})
+		return
+	}
+
+	imageName, exists := utils.IsImageBuilt(challenge.Slug)
+	if !exists {
+		var err error
+		imageName, err = utils.BuildDockerImage(challenge.Slug)
+		if err != nil {
+			debug.Log("Docker build failed for challenge %s: %v", challenge.Slug, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_build_failed"})
+			return
+		}
+		debug.Log("Image built successfully: %s", imageName)
+	}
+
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var dockerConfig models.DockerConfig
+	if err := config.DB.First(&dockerConfig).Error; err != nil {
+		debug.Log("Docker config not found: %v", err)
+		debug.Log("This might be due to missing environment variables or database seeding issues")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+		debug.Log("User not found with ID %v: %v", userID, err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	if user.Team == nil || user.TeamID == nil {
+		debug.Log("User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
+		return
+	}
+
+	var countExist int64
+	config.DB.Model(&models.Instance{}).
+		Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
+		Count(&countExist)
+	if int(countExist) >= 1 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "instance_already_running"})
+		return
+	}
+
+	var countUser int64
+	config.DB.Model(&models.Instance{}).
+		Where("user_id = ?", user.ID).
+		Count(&countUser)
+	if int(countUser) >= dockerConfig.InstancesByUser {
+		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_user_reached"})
+		return
+	}
+
+	var countTeam int64
+	config.DB.Model(&models.Instance{}).
+		Where("team_id = ?", user.Team.ID).
+		Count(&countTeam)
+	if int(countTeam) >= dockerConfig.InstancesByTeam {
+		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_team_reached"})
+		return
+	}
+
+	portCount := len(challenge.Ports)
+	if portCount == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "no_ports_defined_for_challenge"})
+		return
+	}
+
+	ports, err := utils.FindAvailablePorts(portCount)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "no_free_ports"})
+		return
+	}
+
+	internalPorts := make([]int, len(challenge.Ports))
+	for i, p := range challenge.Ports {
+		internalPorts[i] = int(p)
+	}
+
+	containerID, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, ports)
+	if err != nil {
+		log.Printf("DEBUG: Error starting Docker instance: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Calculate expiration time
+	var expiresAt time.Time
+	if dockerConfig.InstanceTimeout > 0 {
+		expiresAt = time.Now().Add(time.Duration(dockerConfig.InstanceTimeout) * time.Minute)
+	} else {
+		expiresAt = time.Now().Add(24 * time.Hour) // Default 24 hours if no timeout set
+	}
+
+	// Convert ports to pq.Int64Array for storage
+	ports64 := make(pq.Int64Array, len(ports))
+	for i, p := range ports {
+		ports64[i] = int64(p)
+	}
+
+	instance := models.Instance{
+		Container:   containerID,
+		UserID:      user.ID,
+		TeamID:      *user.TeamID,
+		ChallengeID: challenge.ID,
+		Ports:       ports64, // Store the dynamically assigned ports
+		CreatedAt:   time.Now(),
+		ExpiresAt:   expiresAt,
+		Status:      "running",
+	}
+	if err := config.DB.Create(&instance).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "instance_create_failed"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":         "instance_started",
+		"image_name":     imageName,
+		"container_name": containerID,
+		"expires_at":     expiresAt,
+		"ports":          ports,
+	})
+}
+
+func KillChallengeInstance(c *gin.Context) {
+	challengeID := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		log.Printf("DEBUG: No user_id in context for kill request")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	log.Printf("DEBUG: Killing instance for challenge ID: %s by user ID: %v", challengeID, userID)
+
+	var user models.User
+	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+		log.Printf("DEBUG: User not found with ID %v: %v", userID, err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+	log.Printf("DEBUG: Found user: %s, TeamID: %v", user.Username, user.TeamID)
+
+	if user.Team == nil || user.TeamID == nil {
+		log.Printf("DEBUG: User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
+		return
+	}
+	log.Printf("DEBUG: User team: %s (ID: %d)", user.Team.Name, user.Team.ID)
+
+	// Find the instance for this user/team and challenge
+	var instance models.Instance
+	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
+		log.Printf("DEBUG: Instance not found for team %d, challenge %s: %v", user.Team.ID, challengeID, err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
+		return
+	}
+	log.Printf("DEBUG: Found instance: ID=%d, Container=%s, Status=%s", instance.ID, instance.Container, instance.Status)
+
+	// Check if user owns this instance or is admin
+	if instance.UserID != user.ID && user.Role != "admin" {
+		log.Printf("DEBUG: User %d not authorized to kill instance owned by user %d (user role: %s)", user.ID, instance.UserID, user.Role)
+		c.JSON(http.StatusForbidden, gin.H{"error": "not_authorized"})
+		return
+	}
+	log.Printf("DEBUG: User authorized to kill instance")
+
+	// Stop the Docker container
+	log.Printf("DEBUG: Stopping Docker container: %s", instance.Container)
+	if err := utils.StopDockerInstance(instance.Container); err != nil {
+		log.Printf("DEBUG: Error stopping Docker instance: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_stop_instance"})
+		return
+	}
+	log.Printf("DEBUG: Docker container stopped successfully: %s", instance.Container)
+
+	// Update instance status
+	log.Printf("DEBUG: Updating instance status to 'stopped'")
+	instance.Status = "stopped"
+	if err := config.DB.Save(&instance).Error; err != nil {
+		log.Printf("DEBUG: Error updating instance status: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_instance"})
+		return
+	}
+	log.Printf("DEBUG: Instance status updated successfully")
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "instance_stopped",
+		"message": "Instance stopped successfully",
+	})
+	log.Printf("DEBUG: Kill instance request completed successfully for challenge %s", challengeID)
+}
+
+func GetInstanceStatus(c *gin.Context) {
+	challengeID := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	if user.Team == nil || user.TeamID == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"has_instance": false,
+			"status":       "no_team",
+		})
+		return
+	}
+
+	// Find the instance for this user/team and challenge
+	var instance models.Instance
+	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"has_instance": false,
+			"status":       "no_instance",
+		})
+		return
+	}
+
+	// Check if instance is expired
+	isExpired := time.Now().After(instance.ExpiresAt)
+	if isExpired && instance.Status == "running" {
+		instance.Status = "expired"
+		config.DB.Save(&instance)
+	}
+
+	// Get challenge details for connection info
+	var challenge models.Challenge
+	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "challenge_not_found"})
+		return
+	}
+
+	// Build connection info with actual ports
+	var connectionInfo []string
+	if instance.Status == "running" && len(challenge.ConnectionInfo) > 0 {
+		// Get the IP address from environment or use a placeholder
+		ip := os.Getenv("PTA_PUBLIC_IP")
+		if ip == "" {
+			ip = "your-instance-ip" // Fallback placeholder
+		}
+
+		// Convert instance ports to int slice for easier handling
+		instancePorts := make([]int, len(instance.Ports))
+		for i, p := range instance.Ports {
+			instancePorts[i] = int(p)
+		}
+
+		for i, info := range challenge.ConnectionInfo {
+			// Replace $ip placeholder with actual IP
+			formattedInfo := strings.ReplaceAll(info, "$ip", ip)
+
+			// If we have a corresponding port in the instance, replace the port number
+			if i < len(instancePorts) {
+				// Find the original port number in the connection info and replace it
+				// This is a simple approach - for more complex cases, we might need regex
+				for j, originalPort := range challenge.Ports {
+					if j < len(instancePorts) {
+						originalPortStr := fmt.Sprintf(":%d", originalPort)
+						newPortStr := fmt.Sprintf(":%d", instancePorts[j])
+						formattedInfo = strings.ReplaceAll(formattedInfo, originalPortStr, newPortStr)
+					}
+				}
+			}
+
+			connectionInfo = append(connectionInfo, formattedInfo)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"has_instance":    true,
+		"status":          instance.Status,
+		"created_at":      instance.CreatedAt,
+		"expires_at":      instance.ExpiresAt,
+		"is_expired":      isExpired,
+		"container":       instance.Container,
+		"ports":           instance.Ports,
+		"connection_info": connectionInfo,
+	})
+}
+
+func StopChallengeInstance(c *gin.Context) {
+	challengeID := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Select("id, team_id").First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	var instance models.Instance
+	query := config.DB.Where("challenge_id = ? AND user_id = ?", challengeID, user.ID)
+	if err := query.First(&instance).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
+		return
+	}
+
+	if instance.UserID != user.ID && (user.TeamID == nil || instance.TeamID != *user.TeamID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	go func() {
+		if err := utils.StopDockerInstance(instance.Container); err != nil {
+			log.Printf("Failed to stop Docker instance: %v", err)
+		}
+
+		if err := config.DB.Delete(&instance).Error; err != nil {
+			log.Printf("Failed to delete instance from database: %v", err)
+		}
+	}()
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "instance_stopping",
+		"container": instance.Container,
 	})
 }

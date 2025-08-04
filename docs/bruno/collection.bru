@@ -1,0 +1,17 @@
+vars:pre-request {
+  BASE_URL: pwnthemall.local
+  PROTOCOL: https
+  URL: {{PROTOCOL}}://{{BASE_URL}}
+}
+
+docs {
+  # pwnthemall
+  
+  ## Organisation de la collection
+  
+  Chaque dossier représente un groupe API gin. Lorsque les routes n'appartiennent à aucun groupe, elles sont placées dans le dossier `auth`
+  
+  ## Variables
+  
+  Des variables d'environnements sont définies & doivent être utilisées pour faciliter la création & maintenir la stabilité des requêtes
+}

@@ -1,0 +1,15 @@
+meta {
+  name: build
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{URL}}/api/challenges/:id/build
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: 3
+}
