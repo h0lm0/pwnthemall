@@ -1,0 +1,22 @@
+name: "Intro to Cryptography"
+description: "Un challenge d'introduction à la cryptographie"
+category: "pwn"
+difficulty: "Easy"
+type: "Standard"
+author: "me"
+hidden: false
+flags:
+  - "flag{example1}"
+  - "flag{example2}"
+points: 100
+minPoints: 50
+scaleFormula: "linear"
+enableFirstBlood: true
+hints:
+  - content: "Pense au chiffrement classique."
+    cost: 10
+    isActive: true
+    autoActiveAt: "2025-08-01T10:00:00Z"
+firstBlood:
+  bonuses: [50, 20]
+  badge: "Crown"
