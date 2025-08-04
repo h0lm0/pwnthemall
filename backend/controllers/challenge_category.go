@@ -13,6 +13,24 @@ type ChallengeCategoryInput struct {
 }
 
 func GetChallengeCategories(c *gin.Context) {
+	// Check if user is authenticated and get user info
+	userI, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user, ok := userI.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
+	// Check CTF timing - only allow access if CTF has started or user is admin
+	if !config.IsCTFStarted() && user.Role != "admin" {
+		c.JSON(http.StatusOK, []interface{}{}) // Return empty array instead of error
+		return
+	}
+
 	var challengeCategories []models.ChallengeCategory
 	result := config.DB.Find(&challengeCategories)
 	if result.Error != nil {

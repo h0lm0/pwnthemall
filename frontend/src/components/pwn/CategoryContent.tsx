@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
+import { useCTFStatus } from "@/hooks/use-ctf-status";
 import { Challenge, Solve } from "@/models/Challenge";
-import { BadgeCheck, Trophy, Play, Square, Settings } from "lucide-react";
+import { BadgeCheck, Trophy, Play, Square, Settings, Clock } from "lucide-react";
 import ConnectionInfo from "@/components/ConnectionInfo";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [instanceDetails, setInstanceDetails] = useState<{[key: number]: any}>({});
   const [connectionInfo, setConnectionInfo] = useState<{[key: number]: string[]}>({});
   const { getSiteName } = useSiteConfig();
+  const { ctfStatus, loading: ctfLoading } = useCTFStatus();
   const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
 
   // Fetch instance status for all Docker challenges when challenges are loaded
@@ -573,6 +575,24 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                       </div>
                       <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                         {t('challenge_already_solved')}
+                      </p>
+                    </div>
+                  ) : !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') ? (
+                    <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-lg flex-shrink-0">
+                      <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
+                        <Clock className="w-5 h-5" />
+                        <span className="font-medium">
+                          {ctfStatus.status === 'not_started' 
+                            ? (t('ctf_not_started') || 'CTF Not Started')
+                            : (t('ctf_ended') || 'CTF Ended')
+                          }
+                        </span>
+                      </div>
+                      <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                        {ctfStatus.status === 'not_started' 
+                          ? (t('flag_submission_not_available_yet') || 'Flag submission is not available yet. Please wait for the CTF to start.')
+                          : (t('flag_submission_no_longer_available') || 'Flag submission is no longer available. The CTF has ended.')
+                        }
                       </p>
                     </div>
                   ) : (
