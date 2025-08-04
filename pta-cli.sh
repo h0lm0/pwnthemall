@@ -130,6 +130,7 @@ function compose_down() {
 }
 
 function generate_key() {
+    mkdir -p ./shared
     ssh-keygen -C '' -t ed25519 -N '' -f ./shared/worker
     chmod 400 ./shared/worker
 }
