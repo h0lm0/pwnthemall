@@ -109,12 +109,28 @@ function compose_down() {
         exit 1
     fi
 
+    echo "[+] Cleaning up challenge instances..."
+    
+    # Get all containers with pta- prefix (challenge containers)
+    local challenge_containers
+    challenge_containers=$(docker ps -aq --filter "name=pta-" 2>/dev/null || true)
+    
+    if [[ -n "$challenge_containers" ]]; then
+        echo "[+] Found challenge containers, stopping and removing them..."
+        # Force remove all challenge containers (stop + remove in one command)
+        echo "$challenge_containers" | xargs docker rm -f 2>/dev/null || true
+        echo "[✓] Challenge containers cleaned up"
+    else
+        echo "[✓] No challenge containers to clean up"
+    fi
+
     echo "[+] Stopping and removing containers using $compose_file"
     docker compose -f "$compose_file" down -v
     echo "[✓] Compose down completed"
 }
 
 function generate_key() {
+    mkdir -p ./shared
     ssh-keygen -C '' -t ed25519 -N '' -f ./shared/worker
     chmod 400 ./shared/worker
 }

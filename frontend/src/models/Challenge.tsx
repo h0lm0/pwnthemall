@@ -21,6 +21,8 @@ export interface Challenge {
   author: string
   hidden?: boolean
   solved?: boolean
+  ports?: number[]
+  connectionInfo?: string[]
 }
 
 export interface Solve {

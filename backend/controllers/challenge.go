@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/debug"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"github.com/minio/minio-go/v7"
 )
 
@@ -477,12 +479,18 @@ func StartChallengeInstance(c *gin.Context) {
 		expiresAt = time.Now().Add(24 * time.Hour) // Default 24 hours if no timeout set
 	}
 
+	// Convert ports to pq.Int64Array for storage
+	ports64 := make(pq.Int64Array, len(ports))
+	for i, p := range ports {
+		ports64[i] = int64(p)
+	}
+
 	instance := models.Instance{
 		Container:   containerID,
 		UserID:      user.ID,
 		TeamID:      *user.TeamID,
 		ChallengeID: challenge.ID,
-		Ports:       challenge.Ports, // ports assigned
+		Ports:       ports64, // Store the dynamically assigned ports
 		CreatedAt:   time.Now(),
 		ExpiresAt:   expiresAt,
 		Status:      "running",
@@ -608,13 +616,58 @@ func GetInstanceStatus(c *gin.Context) {
 		config.DB.Save(&instance)
 	}
 
+	// Get challenge details for connection info
+	var challenge models.Challenge
+	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "challenge_not_found"})
+		return
+	}
+
+	// Build connection info with actual ports
+	var connectionInfo []string
+	if instance.Status == "running" && len(challenge.ConnectionInfo) > 0 {
+		// Get the IP address from environment or use a placeholder
+		ip := os.Getenv("PTA_PUBLIC_IP")
+		if ip == "" {
+			ip = "your-instance-ip" // Fallback placeholder
+		}
+
+		// Convert instance ports to int slice for easier handling
+		instancePorts := make([]int, len(instance.Ports))
+		for i, p := range instance.Ports {
+			instancePorts[i] = int(p)
+		}
+
+		for i, info := range challenge.ConnectionInfo {
+			// Replace $ip placeholder with actual IP
+			formattedInfo := strings.ReplaceAll(info, "$ip", ip)
+
+			// If we have a corresponding port in the instance, replace the port number
+			if i < len(instancePorts) {
+				// Find the original port number in the connection info and replace it
+				// This is a simple approach - for more complex cases, we might need regex
+				for j, originalPort := range challenge.Ports {
+					if j < len(instancePorts) {
+						originalPortStr := fmt.Sprintf(":%d", originalPort)
+						newPortStr := fmt.Sprintf(":%d", instancePorts[j])
+						formattedInfo = strings.ReplaceAll(formattedInfo, originalPortStr, newPortStr)
+					}
+				}
+			}
+
+			connectionInfo = append(connectionInfo, formattedInfo)
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"has_instance": true,
-		"status":       instance.Status,
-		"created_at":   instance.CreatedAt,
-		"expires_at":   instance.ExpiresAt,
-		"is_expired":   isExpired,
-		"container":    instance.Container,
+		"has_instance":    true,
+		"status":          instance.Status,
+		"created_at":      instance.CreatedAt,
+		"expires_at":      instance.ExpiresAt,
+		"is_expired":      isExpired,
+		"container":       instance.Container,
+		"ports":           instance.Ports,
+		"connection_info": connectionInfo,
 	})
 }
 

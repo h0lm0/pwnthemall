@@ -62,12 +62,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Show toast notification when a new notification is received
   const showToastNotification = (notification: Notification) => {
-    // Check if we've recently shown this notification to avoid duplicates
-    const now = Date.now();
-    const recentKey = `${notification.id}-${notification.title}`;
+    // Check if this notification was recently sent by the current user
+    // We'll use a simple heuristic: if the notification was created very recently (within 5 seconds)
+    // and we have recently sent notifications, don't show the toast
+    const notificationTime = new Date(notification.createdAt).getTime();
+    const currentTime = Date.now();
+    const timeDiff = currentTime - notificationTime;
     
-    if (recentlySentNotifications.has(recentKey)) {
-      const timeSinceLastShow = now - recentlySentNotifications.get(recentKey)!;
       if (timeSinceLastShow < 5000) { // 5 seconds
         debugLog('Skipping toast for recently sent notification:', notification);
         return;

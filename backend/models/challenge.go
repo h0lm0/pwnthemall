@@ -24,4 +24,5 @@ type Challenge struct {
 	Flags                 []Flag               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"-"`
 	Points                int                  `json:"points"`
 	Ports                 pq.Int64Array        `gorm:"type:integer[]" json:"ports"`
+	ConnectionInfo        pq.StringArray       `gorm:"type:text[]" json:"connectionInfo"`
 }

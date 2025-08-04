@@ -12,3 +12,5 @@ author: h0lm
 flags: ["flag"]
 hidden: false
 points: 10
+ports: [8080, 22]
+connection_info: ["http://$ip:8080", "ssh -p 22 user@$ip"]

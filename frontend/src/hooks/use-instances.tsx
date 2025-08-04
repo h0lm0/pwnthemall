@@ -70,16 +70,12 @@ export const useInstances = () => {
     setError(null)
     
     try {
-      debugLog(`Killing instance for challenge ID: ${challengeId}`)
       const response = await axios.post(`/api/challenges/${challengeId}/kill`)
-      debugLog('Instance killed successfully:', response.data)
       toast.success('Instance killed successfully')
       return response.data
     } catch (error: any) {
-      debugError('Failed to kill instance:', error)
-      debugError('Response data:', error.response?.data)
-      debugError('Response status:', error.response?.status)
-      setError(error.response?.data?.error || 'Failed to kill instance')
+      const errorMessage = error.response?.data?.error || 'Failed to kill instance'
+      toast.error(errorMessage)
       throw error
     } finally {
       setLoading(false)
@@ -92,7 +88,7 @@ export const useInstances = () => {
     
     try {
       debugLog(`Getting instance status for challenge ID: ${challengeId}`)
-      const response = await axios.get(`/api/challenges/${challengeId}/status`)
+      const response = await axios.get(`/api/challenges/${challengeId}/instance-status`)
       debugLog('Instance status received:', response.data)
       return response.data
     } catch (error: any) {
