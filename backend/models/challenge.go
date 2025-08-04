@@ -18,8 +18,8 @@ type Challenge struct {
 	Author                string               `json:"author"`
 	Hidden                bool                 `json:"hidden"`
 	Flags                 []Flag               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"-"`
-	Points                int                  `json:"points"`
-	MinPoints             int                  `gorm:"default:0" json:"minPoints,omitempty"`
+	Points                int                  `json:"points"` // maybe rename it basePoints
+	CurrentPoints         int                  `gorm:"-" json:"currentPoints"`
 	DecayFormulaID        uint                 `json:"decayFormulaId"`
 	DecayFormula          *DecayFormula        `gorm:"foreignKey:DecayFormulaID" json:"decayFormula,omitempty"`
 	Hints                 []Hint               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"hints,omitempty"`
