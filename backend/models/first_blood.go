@@ -11,7 +11,7 @@ type FirstBlood struct {
     UserID      uint       `gorm:"not null" json:"userId"`
     User        *User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"user,omitempty"`
     Bonuses     []int      `gorm:"type:text;not null" json:"bonuses"`
-    Badge       string     `gorm:"type:text;not null" json:"badge"`
+    Badges      []string   `gorm:"type:text;not null" json:"badges"`
     CreatedAt   time.Time  `json:"createdAt"`
     UpdatedAt   time.Time  `json:"updatedAt"`
     }
