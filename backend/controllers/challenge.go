@@ -427,7 +427,7 @@ func StartChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	containerName, err := utils.StartDockerInstance(imageName, int(user.ID), int(*user.TeamID))
+	containerName, err := utils.StartDockerInstance(imageName, int(user.ID), int(*user.TeamID), []int{}, []int{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf(
