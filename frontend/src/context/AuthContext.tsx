@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = async () => {
     try {
-      await axios.get("/api/pwn");
+      await axios.get("/api/me");
       setLoggedIn(true);
     } catch (err: any) {
       if (err?.response?.status === 401) {

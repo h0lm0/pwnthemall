@@ -4,6 +4,7 @@ import { Notification } from '@/models/Notification';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/router';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -20,6 +21,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { loggedIn } = useAuth();
+  const router = useRouter();
   const [recentlySentNotifications, setRecentlySentNotifications] = useState<Set<number>>(new Set());
   
   const {
@@ -92,8 +94,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       action: {
         label: 'View',
         onClick: () => {
-          // We'll implement this later to open notification center
-          console.log('Open notification center');
+          router.push('/notifications');
         },
       },
       duration: 5000,

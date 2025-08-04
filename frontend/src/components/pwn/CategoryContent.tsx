@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { Challenge, Solve } from "@/models/Challenge";
-import { BadgeCheck, Trophy } from "lucide-react";
+import { BadgeCheck, Trophy, Play, Square, Settings } from "lucide-react";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
 import Head from "next/head";
@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useInstances } from "@/hooks/use-instances";
 
 interface CategoryContentProps {
   cat: string;
@@ -39,7 +40,51 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [solves, setSolves] = useState<Solve[]>([]);
   const [solvesLoading, setSolvesLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
+  const [instanceStatus, setInstanceStatus] = useState<{[key: number]: 'running' | 'stopped' | 'building' | 'expired'}>({});
+  const [instanceDetails, setInstanceDetails] = useState<{[key: number]: any}>({});
   const { getSiteName } = useSiteConfig();
+  const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
+
+  // Fetch instance status for all Docker challenges when challenges are loaded
+  const [statusFetched, setStatusFetched] = useState(false);
+  
+  useEffect(() => {
+    if (!challenges || challenges.length === 0 || statusFetched) return;
+    
+    const fetchAllInstanceStatuses = async () => {
+      const dockerChallenges = challenges.filter(challenge => isDockerChallenge(challenge));
+      
+      for (const challenge of dockerChallenges) {
+        try {
+          const status = await fetchInstanceStatus(challenge.id);
+          if (status) {
+            // Map API status to local status
+            let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+            if (status.status === 'running') {
+              localStatus = 'running';
+            } else if (status.status === 'building') {
+              localStatus = 'building';
+            } else if (status.status === 'expired') {
+              localStatus = 'expired';
+            } else {
+              // 'no_instance', 'stopped', 'no_team', etc. all map to 'stopped'
+              localStatus = 'stopped';
+            }
+            
+            setInstanceStatus(prev => ({
+              ...prev,
+              [challenge.id]: localStatus
+            }));
+          }
+        } catch (error) {
+          console.error(`Failed to fetch status for challenge ${challenge.id}:`, error);
+        }
+      }
+      setStatusFetched(true);
+    };
+
+    fetchAllInstanceStatuses();
+  }, [challenges.length, statusFetched]); // Only run once when challenges load
 
   // Clear solves data when dialog opens/closes
   useEffect(() => {
@@ -124,6 +169,72 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
       return 'Invalid date';
     }
   };
+
+  const handleStartInstance = async (challengeId: number) => {
+    try {
+      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'building' }));
+      await startInstance(challengeId);
+      // Fetch the actual status from backend after starting
+      const status = await fetchInstanceStatus(challengeId);
+      if (status) {
+        let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'running';
+        if (status.status === 'running') {
+          localStatus = 'running';
+        } else if (status.status === 'building') {
+          localStatus = 'building';
+        } else if (status.status === 'expired') {
+          localStatus = 'expired';
+        } else {
+          localStatus = 'stopped';
+        }
+        setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
+      } else {
+        setInstanceStatus(prev => ({ ...prev, [challengeId]: 'running' }));
+      }
+    } catch (error) {
+      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+    }
+  };
+
+  const handleStopInstance = async (challengeId: number) => {
+    try {
+      await stopInstance(challengeId);
+      // Immediately set status to stopped for better UX
+      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+      
+      // Wait a moment for backend to process, then verify status
+      setTimeout(async () => {
+        try {
+          const status = await fetchInstanceStatus(challengeId);
+          if (status) {
+            let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+            if (status.status === 'running') {
+              localStatus = 'running';
+            } else if (status.status === 'building') {
+              localStatus = 'building';
+            } else if (status.status === 'expired') {
+              localStatus = 'expired';
+            } else {
+              localStatus = 'stopped';
+            }
+            setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
+          }
+        } catch (error) {
+          console.error('Failed to verify status after stopping:', error);
+        }
+      }, 1000); // Wait 1 second before verifying
+    } catch (error) {
+      // Keep current status on error
+    }
+  };
+
+  const isDockerChallenge = (challenge: Challenge) => {
+    return challenge.type?.name?.toLowerCase() === 'docker';
+  };
+
+  const getLocalInstanceStatus = (challengeId: number) => {
+    return instanceStatus[challengeId] || 'stopped';
+  };
   
   const { t } = useLanguage();
   
@@ -157,74 +268,102 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full max-w-7xl">
           {(challenges || []).map((challenge) => (
-            <Dialog key={challenge.id} open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Card
-                  onClick={() => handleChallengeSelect(challenge)}
-                  className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer relative ${
-                    challenge.solved 
-                      ? 'bg-green-100 dark:bg-green-900 border-green-200 dark:border-green-700' 
-                      : ''
-                  }`}
-                >
-                  {challenge.solved && (
-                    <div className="absolute top-2 right-2">
-                      <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
-                    </div>
+            <Card
+              key={challenge.id}
+              onClick={() => handleChallengeSelect(challenge)}
+              className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer relative ${
+                challenge.solved 
+                  ? 'bg-green-100 dark:bg-green-900 border-green-200 dark:border-green-700' 
+                  : ''
+              }`}
+            >
+              {challenge.solved && (
+                <div className="absolute top-2 right-2">
+                  <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+              )}
+              <CardHeader>
+                <CardTitle className={`${
+                  challenge.solved 
+                    ? 'text-green-700 dark:text-green-200' 
+                    : 'text-cyan-700 dark:text-cyan-300'
+                }`}>
+                  {challenge.name || 'Unnamed Challenge'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-left">
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {challenge.type?.name || 'Unknown Type'}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {challenge.difficulty?.name || 'Unknown Difficulty'}
+                  </Badge>
+                  {isDockerChallenge(challenge) && (
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs ${
+                        getLocalInstanceStatus(challenge.id) === 'running' 
+                          ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400' 
+                          : getLocalInstanceStatus(challenge.id) === 'building'
+                          ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
+                          : getLocalInstanceStatus(challenge.id) === 'expired'
+                          ? 'bg-red-300 dark:bg-red-700 text-red-900 dark:text-red-100 border border-red-500 dark:border-red-400'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
+                      } pointer-events-none select-none`}
+                    >
+                      {getLocalInstanceStatus(challenge.id) === 'running' ? t('running') : 
+                       getLocalInstanceStatus(challenge.id) === 'building' ? t('building') : 
+                       getLocalInstanceStatus(challenge.id) === 'expired' ? t('expired') : t('stopped')}
+                    </Badge>
                   )}
-                  <CardHeader>
-                    <CardTitle className={`${
-                      challenge.solved 
-                        ? 'text-green-700 dark:text-green-200' 
-                        : 'text-cyan-700 dark:text-cyan-300'
-                    }`}>
-                      {challenge.name || 'Unnamed Challenge'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-left space-y-2">
-                    <div className="text-xs text-gray-500 mt-2">
-                      {challenge.type?.name || 'Unknown Type'}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-2">
-                      {challenge.difficulty?.name || 'Unknown Difficulty'}
-                    </div>
-                    {challenge.solved && (
-                      <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
-                        {t('solved')}
-                      </Badge>
-                    )}
-                    {!challenge.solved && (
-                      <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
-                        {t('unsolved')}
-                      </Badge>
-                    )}
-                  </CardContent>
-                </Card>
-              </DialogTrigger>
+                  {challenge.solved && (
+                    <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
+                      {t('solved')}
+                    </Badge>
+                  )}
+                  {!challenge.solved && (
+                    <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
+                      {t('unsolved')}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-              <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col overflow-hidden">
-                <DialogHeader className="flex-shrink-0 pb-4">
-                  <DialogTitle className={`${
-                    selectedChallenge?.solved 
-                      ? 'text-green-600 dark:text-green-300' 
-                      : 'text-cyan-600 dark:text-cyan-300'
-                  }`}>
-                    {selectedChallenge?.name || 'Unnamed Challenge'}
-                    {selectedChallenge?.solved && (
-                      <BadgeCheck className="inline-block w-6 h-6 ml-2 text-green-600 dark:text-green-400" />
-                    )}
-                  </DialogTitle>
-                  <DialogDescription className="text-sm text-muted-foreground">
-                    {t('difficulty')}: {selectedChallenge?.difficulty?.name || 'Unknown'} - {t('author')}: {selectedChallenge?.author || 'Unknown'}
-                  </DialogDescription>
-                </DialogHeader>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="max-w-4xl w-[90vw] h-[80vh] flex flex-col overflow-hidden">
+            <DialogHeader className="flex-shrink-0 pb-4">
+              <DialogTitle className={`${
+                selectedChallenge?.solved 
+                  ? 'text-green-600 dark:text-green-300' 
+                  : 'text-cyan-600 dark:text-cyan-300'
+              }`}>
+                {selectedChallenge?.name || 'Unnamed Challenge'}
+                {selectedChallenge?.solved && (
+                  <BadgeCheck className="inline-block w-6 h-6 ml-2 text-green-600 dark:text-green-400" />
+                )}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {t('difficulty')}: {selectedChallenge?.difficulty?.name || 'Unknown'} - {t('author')}: {selectedChallenge?.author || 'Unknown'}
+              </DialogDescription>
+            </DialogHeader>
 
-                <div className="flex-1 flex flex-col min-h-0">
-                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-                    <TabsList className="grid w-full grid-cols-2 mb-4 flex-shrink-0">
-                      <TabsTrigger value="description">{t('description')}</TabsTrigger>
-                      <TabsTrigger value="solves">{t('solves')}</TabsTrigger>
-                    </TabsList>
+            <div className="flex-1 flex flex-col min-h-0">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
+                <TabsList className={`grid w-full mb-4 flex-shrink-0 ${
+                  selectedChallenge && isDockerChallenge(selectedChallenge) 
+                    ? 'grid-cols-3' 
+                    : 'grid-cols-2'
+                }`}>
+                  <TabsTrigger value="description">{t('description')}</TabsTrigger>
+                  <TabsTrigger value="solves">{t('solves')}</TabsTrigger>
+                  {selectedChallenge && isDockerChallenge(selectedChallenge) && (
+                    <TabsTrigger value="instance">{t('docker_instance')}</TabsTrigger>
+                  )}
+                </TabsList>
                     
                     <div className="flex-1 min-h-0">
                       <TabsContent value="description" className="h-full overflow-y-auto">
@@ -298,6 +437,124 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                           )}
                         </div>
                       </TabsContent>
+
+                      {selectedChallenge && isDockerChallenge(selectedChallenge) && (
+                        <TabsContent value="instance" className="h-full overflow-y-auto">
+                          <div className="min-h-full">
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-foreground">
+                                  {t('docker_instance')}
+                                </h3>
+                                <Badge 
+                                  variant="secondary" 
+                                  className={`${
+                                                                getLocalInstanceStatus(selectedChallenge.id) === 'running'
+                              ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400'
+                              : getLocalInstanceStatus(selectedChallenge.id) === 'building'
+                                      ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
+                                      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
+                                  }`}
+                                >
+                                                            {getLocalInstanceStatus(selectedChallenge.id) === 'running' ? t('running') :
+                           getLocalInstanceStatus(selectedChallenge.id) === 'building' ? t('building') : t('stopped')}
+                                </Badge>
+                              </div>
+                              
+                              <div className="p-4 rounded-lg border bg-card">
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-foreground">{t('instance_status')}:</span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'running' ? t('instance_running') : 
+                                       getLocalInstanceStatus(selectedChallenge.id) === 'building' ? t('instance_building') : 
+                                       t('instance_stopped')}
+                                    </span>
+                                                                    </div>
+                                  
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'running' && (
+                                     <div className="p-3 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg">
+                                       <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
+                                         <Play className="w-4 h-4" />
+                                         <span className="font-medium">{t('instance_active')}</span>
+                                       </div>
+                                       <p className="text-sm text-green-600 dark:text-green-400">
+                                         {t('instance_active_description')}
+                                       </p>
+                                     </div>
+                                                                     )}
+                                  
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'building' && (
+                                     <div className="p-3 bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                       <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300 mb-2">
+                                         <Settings className="w-4 h-4 animate-spin" />
+                                         <span className="font-medium">{t('building_image')}</span>
+                                       </div>
+                                       <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                                         {t('building_image_description')}
+                                       </p>
+                                     </div>
+                                                                     )}
+                                  
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
+                                     <div className="p-3 bg-gray-50 dark:bg-gray-950/50 border border-gray-200 dark:border-gray-800 rounded-lg">
+                                       <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
+                                         <Square className="w-4 h-4" />
+                                         <span className="font-medium">{t('instance_stopped_title')}</span>
+                                       </div>
+                                       <p className="text-sm text-gray-600 dark:text-gray-400">
+                                         {t('instance_stopped_description')}
+                                       </p>
+                                     </div>
+                                   )}
+                                </div>
+                              </div>
+                              
+                              <div className="flex gap-2">
+                                {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
+                                  <Button
+                                    onClick={() => handleStartInstance(selectedChallenge.id)}
+                                    disabled={instanceLoading}
+                                    className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
+                                  >
+                                    {instanceLoading ? (
+                                      <>
+                                        <Settings className="w-4 h-4 mr-2 animate-spin" />
+                                        {t('starting')}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Play className="w-4 h-4 mr-2" />
+                                        {t('start_instance')}
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                                
+                                {getLocalInstanceStatus(selectedChallenge.id) === 'running' && (
+                                  <Button
+                                    onClick={() => handleStopInstance(selectedChallenge.id)}
+                                    disabled={instanceLoading}
+                                    variant="destructive"
+                                  >
+                                    {instanceLoading ? (
+                                      <>
+                                        <Settings className="w-4 h-4 mr-2 animate-spin" />
+                                        {t('stopping')}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Square className="w-4 h-4 mr-2" />
+                                        {t('stop_instance')}
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+                      )}
                     </div>
                   </Tabs>
                 </div>
@@ -339,11 +596,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                 )}
               </DialogContent>
             </Dialog>
-          ))}
-        </div>
-      </main>
-    </>
-  );
-};
+          </main>
+        </>
+      );
+    };
 
 export default CategoryContent;

@@ -8,4 +8,5 @@ type DockerConfig struct {
 	InstancesByUser  int     `json:"instancesByUser"`
 	MaxMemByInstance int     `json:"maxMemByInstance"`
 	MaxCpuByInstance float64 `json:"maxCpuByInstance"`
+	InstanceTimeout  int     `json:"instanceTimeout"` // Timeout in minutes (0 = no timeout)
 }
