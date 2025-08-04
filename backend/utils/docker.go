@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"pwnthemall/config"
+	"pwnthemall/debug"
 	"pwnthemall/models"
 
 	"github.com/docker/docker/api/types"
@@ -314,26 +315,26 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 }
 
 func StopDockerInstance(containerID string) error {
-	log.Printf("DEBUG: Attempting to stop Docker container: %s", containerID)
+	debug.Log("Attempting to stop Docker container: %s", containerID)
 
 	if err := EnsureDockerClientConnected(); err != nil {
-		log.Printf("DEBUG: Docker client connection failed: %v", err)
+		debug.Log("Docker client connection failed: %v", err)
 		return fmt.Errorf("docker client not connected: %w", err)
 	}
 
 	ctx := context.Background()
 
 	if containerID == "" {
-		log.Println("DEBUG: containerID invalid, nothing to stop")
+		debug.Println("containerID invalid, nothing to stop")
 		return nil
 	}
 
-	log.Printf("DEBUG: Removing container %s with force", containerID)
+	debug.Log("Removing container %s with force", containerID)
 	if err := config.DockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
-		log.Printf("DEBUG: Failed to remove container %s: %v", containerID, err)
+		debug.Log("Failed to remove container %s: %v", containerID, err)
 		return fmt.Errorf("failed to remove container %s: %w", containerID, err)
 	}
 
-	log.Printf("DEBUG: Successfully stopped and removed container %s", containerID)
+	debug.Log("Successfully stopped and removed container %s", containerID)
 	return nil
 }
