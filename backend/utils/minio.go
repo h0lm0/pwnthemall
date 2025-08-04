@@ -141,6 +141,17 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	}
 	challenge.Ports = ports64
 
+	// Handle connection_info
+	if len(metaData.ConnectionInfo) > 0 {
+		connectionInfo := make(pq.StringArray, len(metaData.ConnectionInfo))
+		for i, info := range metaData.ConnectionInfo {
+			connectionInfo[i] = info
+		}
+		challenge.ConnectionInfo = connectionInfo
+	} else {
+		challenge.ConnectionInfo = pq.StringArray{}
+	}
+
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		return err
 	}

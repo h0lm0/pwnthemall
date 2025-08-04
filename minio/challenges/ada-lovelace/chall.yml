@@ -9,4 +9,5 @@ author: swinowz
 flags: ["NHM2I{@d@_L0V3L@C3_D3V_48915632}"]
 hidden: false
 points: 500
-ports: [5001] 
+ports: [5001]
+connection_info: ["http://$ip:5001"] 

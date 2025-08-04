@@ -21,6 +21,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: prod
+      args:
+        DOCKER_GID: ${DOCKER_GID}
     depends_on:
       db:
         condition: service_healthy
@@ -40,6 +42,7 @@ services:
       REFRESH_SECRET: ${REFRESH_SECRET}
       PTA_SITE_NAME: ${PTA_SITE_NAME}
       PTA_REGISTRATION_ENABLED: ${PTA_REGISTRATION_ENABLED}
+      PTA_PUBLIC_IP: ${PTA_PUBLIC_IP}
       PTA_DOCKER_HOST: /var/run/docker.sock
       PTA_DOCKER_IMAGE_PREFIX: ${PTA_DOCKER_IMAGE_PREFIX}
       PTA_DOCKER_MAXMEM_PER_INSTANCE: ${PTA_DOCKER_MAXMEM_PER_INSTANCE}

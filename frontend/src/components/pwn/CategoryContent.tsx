@@ -42,6 +42,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [activeTab, setActiveTab] = useState("description");
   const [instanceStatus, setInstanceStatus] = useState<{[key: number]: 'running' | 'stopped' | 'building' | 'expired'}>({});
   const [instanceDetails, setInstanceDetails] = useState<{[key: number]: any}>({});
+  const [connectionInfo, setConnectionInfo] = useState<{[key: number]: string[]}>({});
   const { getSiteName } = useSiteConfig();
   const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
 
@@ -75,6 +76,19 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
               ...prev,
               [challenge.id]: localStatus
             }));
+
+            // Store connection info if available
+            if (status.connection_info && status.connection_info.length > 0) {
+              setConnectionInfo(prev => ({
+                ...prev,
+                [challenge.id]: status.connection_info
+              }));
+            } else {
+              setConnectionInfo(prev => ({
+                ...prev,
+                [challenge.id]: []
+              }));
+            }
           }
         } catch (error) {
           console.error(`Failed to fetch status for challenge ${challenge.id}:`, error);
@@ -188,6 +202,19 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
           localStatus = 'stopped';
         }
         setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
+
+        // Store connection info if available
+        if (status.connection_info && status.connection_info.length > 0) {
+          setConnectionInfo(prev => ({
+            ...prev,
+            [challengeId]: status.connection_info
+          }));
+        } else {
+          setConnectionInfo(prev => ({
+            ...prev,
+            [challengeId]: []
+          }));
+        }
       } else {
         setInstanceStatus(prev => ({ ...prev, [challengeId]: 'running' }));
       }
@@ -482,7 +509,38 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                                          {t('instance_active_description')}
                                        </p>
                                      </div>
-                                                                     )}
+                                   )}
+
+                                  {/* Connection Info Section */}
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'running' && 
+                                   connectionInfo[selectedChallenge.id] && 
+                                   connectionInfo[selectedChallenge.id].length > 0 && (
+                                     <div className="p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                       <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 mb-3">
+                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                         </svg>
+                                         <span className="font-medium">{t('connection_info') || 'Connection Information'}</span>
+                                       </div>
+                                       <div className="space-y-2">
+                                         {connectionInfo[selectedChallenge.id].map((info, index) => (
+                                           <div key={index} className="flex items-center gap-2">
+                                             <code className="px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded text-sm font-mono flex-1 break-all">
+                                               {info}
+                                             </code>
+                                             <Button
+                                               size="sm"
+                                               variant="outline"
+                                               onClick={() => navigator.clipboard.writeText(info)}
+                                               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                             >
+                                               {t('copy') || 'Copy'}
+                                             </Button>
+                                           </div>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   )}
                                   
                                   {getLocalInstanceStatus(selectedChallenge.id) === 'building' && (
                                      <div className="p-3 bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-800 rounded-lg">
@@ -494,7 +552,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                                          {t('building_image_description')}
                                        </p>
                                      </div>
-                                                                     )}
+                                   )}
                                   
                                   {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
                                      <div className="p-3 bg-gray-50 dark:bg-gray-950/50 border border-gray-200 dark:border-gray-800 rounded-lg">
