@@ -67,9 +67,7 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
   const handleStopInstance = async () => {
     setLoading(true);
     try {
-      console.log(`InstanceControls: Stopping instance for challenge ${challengeId}`);
       await stopInstance(challengeId);
-      console.log('InstanceControls: Instance stopped successfully, fetching updated status');
       await fetchStatus();
       onStatusChange?.();
     } catch (error) {
@@ -82,9 +80,7 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
   const handleKillInstance = async () => {
     setLoading(true);
     try {
-      console.log(`InstanceControls: Killing instance for challenge ${challengeId}`);
       await killInstance(challengeId);
-      console.log('InstanceControls: Instance killed successfully, fetching updated status');
       await fetchStatus();
       onStatusChange?.();
     } catch (error) {

@@ -367,7 +367,6 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
   const password = 'TestPassword123';
   const teamName = `Team-${uid}`;
 
-  console.log(`Creating account ${accountNumber}: ${username}`);
 
   try {
     // 1. Register new account via API
@@ -381,7 +380,6 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
 
     if (!registerResponse.ok()) {
       const errorText = await registerResponse.text();
-      console.log(`Registration failed for account ${accountNumber}: ${registerResponse.status()} - ${errorText}`);
       return;
     }
 
@@ -395,7 +393,6 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
 
     if (!loginResponse.ok()) {
       const errorText = await loginResponse.text();
-      console.log(`Login failed for account ${accountNumber}: ${loginResponse.status()} - ${errorText}`);
       return;
     }
 
@@ -425,7 +422,6 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
 
     if (!teamResponse.ok()) {
       const errorText = await teamResponse.text();
-      console.log(`Team creation failed for account ${accountNumber}: ${teamResponse.status()} - ${errorText}`);
       return;
     }
 
@@ -454,17 +450,14 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
 
         if (flagResponse.ok()) {
           const flagResult = await flagResponse.json();
-          console.log(`Flag submitted successfully for account ${accountNumber}: ${JSON.stringify(flagResult)}`);
         } else {
           const errorText = await flagResponse.text();
-          console.log(`Flag submission failed for account ${accountNumber}: ${flagResponse.status()} - ${errorText}`);
         }
       } else {
         console.log(`No challenges available for account ${accountNumber}`);
       }
     } else {
       const errorText = await challengesResponse.text();
-      console.log(`Failed to get challenges for account ${accountNumber}: ${challengesResponse.status()} - ${errorText}`);
     }
 
     // 5. Logout via API
@@ -474,10 +467,9 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
       }
     });
 
-    console.log(`Account ${accountNumber} completed: ${username} - Team: ${teamName}`);
 
   } catch (error) {
-    console.log(`Error processing account ${accountNumber}: ${error}`);
+    console.log(`Error processing account ${accountNumber}`);
   }
 }
 
@@ -487,7 +479,6 @@ test('Create 5 accounts, teams, and flag challenges via API', async ({ page }) =
     await createAccountAndFlagChallengeAPI(page, i);
   }
 
-  console.log('All 5 accounts created successfully with teams and challenge flags submitted via API');
 });
 
 test('Test connection_info feature for Docker challenges', async ({ page }) => {

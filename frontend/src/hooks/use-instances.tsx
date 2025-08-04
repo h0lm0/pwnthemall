@@ -24,9 +24,7 @@ export const useInstances = () => {
   const startInstance = async (challengeId: number): Promise<InstanceResponse> => {
     setLoading(true)
     try {
-      console.log(`Starting instance for challenge ID: ${challengeId}`)
       const response = await axios.post<InstanceResponse>(`/api/challenges/${challengeId}/start`)
-      console.log('Instance started successfully:', response.data)
       toast.success('Instance started successfully')
       return response.data
     } catch (error: any) {
@@ -76,9 +74,7 @@ export const useInstances = () => {
   const stopInstance = async (challengeId: number) => {
     setLoading(true)
     try {
-      console.log(`Stopping instance for challenge ID: ${challengeId}`)
       const response = await axios.post(`/api/challenges/${challengeId}/stop`)
-      console.log('Instance stopped successfully:', response.data)
       toast.success('Instance stopped successfully')
       return response.data
     } catch (error: any) {
@@ -97,16 +93,10 @@ export const useInstances = () => {
   const killInstance = async (challengeId: number) => {
     setLoading(true)
     try {
-      console.log(`Killing instance for challenge ID: ${challengeId}`)
       const response = await axios.post(`/api/challenges/${challengeId}/kill`)
-      console.log('Instance killed successfully:', response.data)
       toast.success('Instance killed successfully')
       return response.data
     } catch (error: any) {
-      console.error('Failed to kill instance:', error)
-      console.error('Response data:', error.response?.data)
-      console.error('Response status:', error.response?.status)
-      
       const errorMessage = error.response?.data?.error || 'Failed to kill instance'
       toast.error(errorMessage)
       throw error
@@ -117,9 +107,7 @@ export const useInstances = () => {
 
   const getInstanceStatus = async (challengeId: number) => {
     try {
-      console.log(`Getting instance status for challenge ID: ${challengeId}`)
       const response = await axios.get(`/api/challenges/${challengeId}/instance-status`)
-      console.log('Instance status received:', response.data)
       return response.data
     } catch (error: any) {
       console.error('Failed to get instance status:', error)

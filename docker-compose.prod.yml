@@ -43,7 +43,7 @@ services:
       PTA_SITE_NAME: ${PTA_SITE_NAME}
       PTA_REGISTRATION_ENABLED: ${PTA_REGISTRATION_ENABLED}
       PTA_PUBLIC_IP: ${PTA_PUBLIC_IP}
-      PTA_DOCKER_HOST: /var/run/docker.sock
+      PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
       PTA_DOCKER_IMAGE_PREFIX: ${PTA_DOCKER_IMAGE_PREFIX}
       PTA_DOCKER_MAXMEM_PER_INSTANCE: ${PTA_DOCKER_MAXMEM_PER_INSTANCE}
       PTA_DOCKER_MAXCPU_PER_INSTANCE: ${PTA_DOCKER_MAXCPU_PER_INSTANCE}
@@ -51,7 +51,7 @@ services:
       PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
     volumes:
       - ./shared/worker:/home/app/.ssh/worker
-      - /var/run/docker.sock:/var/run/docker.sock
+      # - /var/run/docker.sock:/var/run/docker.sock
     networks:
       public:
       private:
