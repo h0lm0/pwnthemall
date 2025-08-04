@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInstances } from "@/hooks/use-instances";
+import { debugError } from "@/lib/debug";
 
 interface CategoryContentProps {
   cat: string;
@@ -58,7 +59,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
       
       for (const challenge of dockerChallenges) {
         try {
-          const status = await fetchInstanceStatus(challenge.id);
+          const status = await fetchInstanceStatus(challenge.id.toString());
           if (status) {
             // Map API status to local status
             let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
@@ -92,7 +93,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
             }
           }
         } catch (error) {
-          console.error(`Failed to fetch status for challenge ${challenge.id}:`, error);
+          debugError(`Failed to fetch status for challenge ${challenge.id}:`, error);
         }
       }
       setStatusFetched(true);
@@ -135,7 +136,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
   const fetchSolves = async (challengeId: number) => {
     if (!Number.isInteger(challengeId) || challengeId <= 0) {
-      console.error('Invalid challenge ID provided to fetchSolves');
+      debugError('Invalid challenge ID provided to fetchSolves');
       setSolves([]);
       setSolvesLoading(false);
       return;
@@ -151,7 +152,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
       });
       setSolves(response.data || []);
     } catch (err: any) {
-      console.error('Failed to fetch solves:', err);
+      debugError('Failed to fetch solves:', err);
       setSolves([]);
     } finally {
       setSolvesLoading(false);
@@ -180,7 +181,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
         minute: '2-digit'
       });
     } catch (error) {
-      console.error('Error formatting date:', error);
+      debugError('Error formatting date:', error);
       return 'Invalid date';
     }
   };
@@ -188,9 +189,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const handleStartInstance = async (challengeId: number) => {
     try {
       setInstanceStatus(prev => ({ ...prev, [challengeId]: 'building' }));
-      await startInstance(challengeId);
+      await startInstance(challengeId.toString());
       // Fetch the actual status from backend after starting
-      const status = await fetchInstanceStatus(challengeId);
+      const status = await fetchInstanceStatus(challengeId.toString());
       if (status) {
         let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'running';
         if (status.status === 'running') {
@@ -226,14 +227,14 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
   const handleStopInstance = async (challengeId: number) => {
     try {
-      await stopInstance(challengeId);
+      await stopInstance(challengeId.toString());
       // Immediately set status to stopped for better UX
       setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
       
       // Wait a moment for backend to process, then verify status
       setTimeout(async () => {
         try {
-          const status = await fetchInstanceStatus(challengeId);
+          const status = await fetchInstanceStatus(challengeId.toString());
           if (status) {
             let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
             if (status.status === 'running') {
@@ -248,7 +249,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
             setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
           }
         } catch (error) {
-          console.error('Failed to verify status after stopping:', error);
+          debugError('Failed to verify status after stopping:', error);
         }
       }, 1000); // Wait 1 second before verifying
     } catch (error) {

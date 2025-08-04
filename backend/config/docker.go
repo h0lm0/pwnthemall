@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"pwnthemall/debug"
 	"pwnthemall/models"
 	"strings"
 
@@ -23,7 +24,7 @@ func ConnectDocker() error {
 		return err
 	}
 
-	log.Printf("DEBUG: Docker config loaded from DB - Host: %s, ImagePrefix: %s", dockerCfg.Host, dockerCfg.ImagePrefix)
+	debug.Log("Docker config loaded from DB - Host: %s, ImagePrefix: %s", dockerCfg.Host, dockerCfg.ImagePrefix)
 
 	if dockerCfg.Host == "" {
 		log.Println("ERROR: DockerConfig.Host is empty in DB")

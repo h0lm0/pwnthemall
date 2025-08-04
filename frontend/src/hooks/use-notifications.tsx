@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Notification } from '@/models/Notification';
 import axios from '@/lib/axios';
+import { debugLog, debugError, debugWarn } from '@/lib/debug';
 
 interface UseNotificationsReturn {
   notifications: Notification[];
@@ -24,6 +25,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
     try {
       const response = await axios.get<Notification[]>('/api/notifications');
       
+      debugLog('Notifications API response:', response.data);
       
       // Handle null or undefined response data
       const notifications = response.data || [];
@@ -33,9 +35,10 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
       const unread = notifications.filter(n => !n.readAt).length;
       setUnreadCount(unread);
     } catch (error: any) {
+      debugError('Failed to fetch notifications:', error);
       // Don't show error for 403 (not authenticated) or 401 (unauthorized)
       if (error?.response?.status !== 403 && error?.response?.status !== 401) {
-        console.error('Unexpected error fetching notifications:', error);
+        debugError('Unexpected error fetching notifications:', error);
       }
       // Set empty arrays on error
       setNotifications([]);
@@ -49,10 +52,10 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
       const response = await axios.get<{ count: number }>('/api/notifications/unread-count');
       setUnreadCount(response.data?.count || 0);
     } catch (error: any) {
-      console.error('Failed to fetch unread count:', error);
+      debugError('Failed to fetch unread count:', error);
       // Don't show error for 403 (not authenticated) or 401 (unauthorized)
       if (error?.response?.status !== 403 && error?.response?.status !== 401) {
-        console.error('Unexpected error fetching unread count:', error);
+        debugError('Unexpected error fetching unread count:', error);
       }
       setUnreadCount(0);
     }
@@ -73,7 +76,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
       // Update unread count
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      debugError('Failed to mark notification as read:', error);
     }
   }, []);
 
@@ -89,7 +92,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
       
       setUnreadCount(0);
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      debugError('Failed to mark all notifications as read:', error);
     }
   }, []);
 
@@ -98,7 +101,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
     try {
       await axios.post('/api/admin/notifications', notification);
     } catch (error) {
-      console.error('Failed to send notification:', error);
+      debugError('Failed to send notification:', error);
       throw error;
     }
   }, []);
@@ -123,6 +126,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
       wsRef.current = ws;
 
       ws.onopen = () => {
+        debugLog('WebSocket connected');
         setIsConnected(true);
         
         // Clear any reconnect timeout
@@ -134,10 +138,13 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
 
       ws.onmessage = (event) => {
         try {
+          debugLog('WebSocket message received:', event.data);
           const notification: Notification = JSON.parse(event.data);
+          debugLog('Parsed notification:', notification);
           
           // Validate notification data
           if (notification && notification.id && notification.title) {
+            debugLog('Valid notification, dispatching event');
             // Add new notification to the beginning of the list
             setNotifications(prev => [notification, ...prev]);
             
@@ -151,31 +158,35 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
               }));
             }
           } else {
-            console.warn('Received invalid notification data:', notification);
+            debugWarn('Received invalid notification data:', notification);
           }
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          debugError('Failed to parse WebSocket message:', error);
         }
       };
 
       ws.onclose = () => {
+        debugLog('WebSocket disconnected');
         setIsConnected(false);
         
         // Attempt to reconnect after 5 seconds
         reconnectTimeoutRef.current = setTimeout(() => {
+          debugLog('Attempting to reconnect WebSocket...');
           connectWebSocket();
         }, 5000);
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        debugError('WebSocket error:', error);
         setIsConnected(false);
         
         // Don't attempt to reconnect on authentication errors
         if (error instanceof Event && error.type === 'error') {
+          debugLog('WebSocket connection failed - likely authentication issue');
         }
       };
     } catch (error) {
+      debugError('Failed to create WebSocket connection:', error);
       setIsConnected(false);
     }
   }, []);

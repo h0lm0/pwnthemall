@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"pwnthemall/config"
+	"pwnthemall/debug"
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"strings"
@@ -363,13 +364,13 @@ func BuildChallengeImage(c *gin.Context) {
 
 func StartChallengeInstance(c *gin.Context) {
 	id := c.Param("id")
-	log.Printf("DEBUG: Starting instance for challenge ID: %s", id)
+	debug.Log("Starting instance for challenge ID: %s", id)
 
 	var challenge models.Challenge
 	result := config.DB.Preload("ChallengeType").First(&challenge, id)
 
 	if result.Error != nil {
-		log.Printf("DEBUG: Challenge not found with ID %s: %v", id, result.Error)
+		debug.Log("Challenge not found with ID %s: %v", id, result.Error)
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
 	}
@@ -385,11 +386,11 @@ func StartChallengeInstance(c *gin.Context) {
 		var err error
 		imageName, err = utils.BuildDockerImage(challenge.Slug)
 		if err != nil {
-			log.Printf("DEBUG: Docker build failed for challenge %s: %v", challenge.Slug, err)
+			debug.Log("Docker build failed for challenge %s: %v", challenge.Slug, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_build_failed"})
 			return
 		}
-		log.Printf("DEBUG: Image built successfully: %s", imageName)
+		debug.Log("Image built successfully: %s", imageName)
 	}
 
 	userID, ok := c.Get("user_id")
@@ -400,21 +401,21 @@ func StartChallengeInstance(c *gin.Context) {
 
 	var dockerConfig models.DockerConfig
 	if err := config.DB.First(&dockerConfig).Error; err != nil {
-		log.Printf("DEBUG: Docker config not found: %v", err)
-		log.Printf("DEBUG: This might be due to missing environment variables or database seeding issues")
+		debug.Log("Docker config not found: %v", err)
+		debug.Log("This might be due to missing environment variables or database seeding issues")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
 		return
 	}
 
 	var user models.User
 	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
-		log.Printf("DEBUG: User not found with ID %v: %v", userID, err)
+		debug.Log("User not found with ID %v: %v", userID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
 
 	if user.Team == nil || user.TeamID == nil {
-		log.Printf("DEBUG: User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
+		debug.Log("User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
 		return
 	}

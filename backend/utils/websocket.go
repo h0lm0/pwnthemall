@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"log"
 	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/debug"
 	"pwnthemall/models"
 	"sync"
 
@@ -52,7 +52,7 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			h.clients[client.ID] = client
 			h.mu.Unlock()
-			log.Printf("Client %d connected", client.ID)
+			debug.Log("Client %d connected", client.ID)
 
 		case client := <-h.unregister:
 			h.mu.Lock()
@@ -61,7 +61,7 @@ func (h *Hub) Run() {
 				close(client.Send)
 			}
 			h.mu.Unlock()
-			log.Printf("Client %d disconnected", client.ID)
+			debug.Log("Client %d disconnected", client.ID)
 
 		case message := <-h.broadcast:
 			h.mu.RLock()
@@ -118,7 +118,7 @@ func (h *Hub) SendToTeam(teamID uint, message []byte) {
 	// Get all users in the team from the database
 	var userIDs []uint
 	if err := config.DB.Model(&models.User{}).Where("team_id = ?", teamID).Pluck("id", &userIDs).Error; err != nil {
-		log.Printf("Failed to get team members for team %d: %v", teamID, err)
+		debug.Log("Failed to get team members for team %d: %v", teamID, err)
 		return
 	}
 
@@ -159,11 +159,11 @@ func (c *Client) readPump() {
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				debug.Log("error: %v", err)
 			}
 			break
 		}
-		log.Printf("Received message from client %d: %s", c.ID, string(message))
+		debug.Log("Received message from client %d: %s", c.ID, string(message))
 	}
 }
 
@@ -195,7 +195,7 @@ func (c *Client) writePump() {
 func ServeWs(hub *Hub, userID uint, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		debug.Log("WebSocket upgrade error: %v", err)
 		return
 	}
 

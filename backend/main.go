@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"pwnthemall/config"
 	"pwnthemall/controllers"
+	"pwnthemall/debug"
 	"pwnthemall/routes"
 
 	"github.com/gin-contrib/cors"
@@ -81,5 +81,7 @@ func main() {
 		port = "8080"
 	}
 
+	debug.Log("Starting server on port %s", port)
+	log.Printf("Server starting on port %s", port)
 	router.Run(":" + port)
 }
