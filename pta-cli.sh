@@ -118,7 +118,7 @@ function compose_down() {
     if [[ -n "$challenge_containers" ]]; then
         echo "[+] Found challenge containers, stopping and removing them..."
         # Force remove all challenge containers (stop + remove in one command)
-        docker rm -f $challenge_containers 2>/dev/null || true
+        echo "$challenge_containers" | xargs docker rm -f 2>/dev/null || true
         echo "[✓] Challenge containers cleaned up"
     else
         echo "[✓] No challenge containers to clean up"
