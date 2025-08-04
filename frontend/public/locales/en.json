@@ -314,6 +314,8 @@
   "instance_stopped_description": "The instance is currently stopped. Start it to begin working on the challenge.",
   "connection_info": "Connection Information",
   "copy": "Copy",
+  "copied_to_clipboard": "Copied to clipboard!",
+  "copy_failed": "Failed to copy to clipboard",
   "start_instance": "Start Instance",
   "stop_instance": "Stop Instance",
   "starting": "Starting...",

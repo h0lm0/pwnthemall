@@ -312,6 +312,8 @@
   "instance_stopped_description": "Démarrez une instance pour commencer à travailler sur ce challenge Docker.",
   "connection_info": "Informations de Connexion",
   "copy": "Copier",
+  "copied_to_clipboard": "Copié dans le presse-papiers !",
+  "copy_failed": "Échec de la copie dans le presse-papiers",
   "start_instance": "Démarrer l'instance",
   "stop_instance": "Arrêter l'instance",
   "starting": "Démarrage...",

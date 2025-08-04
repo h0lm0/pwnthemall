@@ -3,6 +3,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { Challenge, Solve } from "@/models/Challenge";
 import { BadgeCheck, Trophy, Play, Square, Settings } from "lucide-react";
+import ConnectionInfo from "@/components/ConnectionInfo";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
 import Head from "next/head";
@@ -469,101 +470,46 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                         <TabsContent value="instance" className="h-full overflow-y-auto">
                           <div className="min-h-full">
                             <div className="space-y-4">
-                              <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-foreground">
-                                  {t('docker_instance')}
-                                </h3>
-                                <Badge 
-                                  variant="secondary" 
-                                  className={`${
-                                                                getLocalInstanceStatus(selectedChallenge.id) === 'running'
-                              ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400'
-                              : getLocalInstanceStatus(selectedChallenge.id) === 'building'
-                                      ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
-                                      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
-                                  }`}
-                                >
-                                                            {getLocalInstanceStatus(selectedChallenge.id) === 'running' ? t('running') :
-                           getLocalInstanceStatus(selectedChallenge.id) === 'building' ? t('building') : t('stopped')}
-                                </Badge>
-                              </div>
-                              
                               <div className="p-4 rounded-lg border bg-card">
                                 <div className="space-y-3">
                                   <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium text-foreground">{t('instance_status')}:</span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {getLocalInstanceStatus(selectedChallenge.id) === 'running' ? t('instance_running') : 
-                                       getLocalInstanceStatus(selectedChallenge.id) === 'building' ? t('instance_building') : 
-                                       t('instance_stopped')}
-                                    </span>
-                                                                    </div>
-                                  
-                                  {getLocalInstanceStatus(selectedChallenge.id) === 'running' && (
-                                     <div className="p-3 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg">
-                                       <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
-                                         <Play className="w-4 h-4" />
-                                         <span className="font-medium">{t('instance_active')}</span>
-                                       </div>
-                                       <p className="text-sm text-green-600 dark:text-green-400">
-                                         {t('instance_active_description')}
-                                       </p>
-                                     </div>
-                                   )}
+                                    <div className="flex items-center gap-2">
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'running' && (
+                                        <>
+                                          <Play className="w-4 h-4 text-green-600" />
+                                          <span className="text-sm font-medium text-green-600">{t('running')}</span>
+                                        </>
+                                      )}
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'building' && (
+                                        <>
+                                          <Settings className="w-4 h-4 text-yellow-600 animate-spin" />
+                                          <span className="text-sm font-medium text-yellow-600">{t('building')}</span>
+                                        </>
+                                      )}
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'expired' && (
+                                        <>
+                                          <Square className="w-4 h-4 text-red-600" />
+                                          <span className="text-sm font-medium text-red-600">{t('expired')}</span>
+                                        </>
+                                      )}
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
+                                        <>
+                                          <Square className="w-4 h-4 text-gray-600" />
+                                          <span className="text-sm font-medium text-gray-600">{t('stopped')}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
 
                                   {/* Connection Info Section */}
                                   {getLocalInstanceStatus(selectedChallenge.id) === 'running' && 
                                    connectionInfo[selectedChallenge.id] && 
                                    connectionInfo[selectedChallenge.id].length > 0 && (
-                                     <div className="p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                       <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 mb-3">
-                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                         </svg>
-                                         <span className="font-medium">{t('connection_info') || 'Connection Information'}</span>
-                                       </div>
-                                       <div className="space-y-2">
-                                         {connectionInfo[selectedChallenge.id].map((info, index) => (
-                                           <div key={index} className="flex items-center gap-2">
-                                             <code className="px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded text-sm font-mono flex-1 break-all">
-                                               {info}
-                                             </code>
-                                             <Button
-                                               size="sm"
-                                               variant="outline"
-                                               onClick={() => navigator.clipboard.writeText(info)}
-                                               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                                             >
-                                               {t('copy') || 'Copy'}
-                                             </Button>
-                                           </div>
-                                         ))}
-                                       </div>
-                                     </div>
-                                   )}
-                                  
-                                  {getLocalInstanceStatus(selectedChallenge.id) === 'building' && (
-                                     <div className="p-3 bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                       <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300 mb-2">
-                                         <Settings className="w-4 h-4 animate-spin" />
-                                         <span className="font-medium">{t('building_image')}</span>
-                                       </div>
-                                       <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                                         {t('building_image_description')}
-                                       </p>
-                                     </div>
-                                   )}
-                                  
-                                  {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
-                                     <div className="p-3 bg-gray-50 dark:bg-gray-950/50 border border-gray-200 dark:border-gray-800 rounded-lg">
-                                       <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
-                                         <Square className="w-4 h-4" />
-                                         <span className="font-medium">{t('instance_stopped_title')}</span>
-                                       </div>
-                                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                                         {t('instance_stopped_description')}
-                                       </p>
-                                     </div>
+                                     <ConnectionInfo 
+                                       challengeId={selectedChallenge.id} 
+                                       connectionInfo={connectionInfo[selectedChallenge.id]} 
+                                     />
                                    )}
                                 </div>
                               </div>
