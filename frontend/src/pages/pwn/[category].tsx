@@ -90,56 +90,10 @@ export default function CategoryPage() {
     return <div>Error: {error}</div>;
   }
 
-  // CTF Status Blocking - Show message when CTF hasn't started
+  // CTF Status Blocking - Redirect when CTF hasn't started
   if (!ctfLoading && ctfStatus.status === 'not_started') {
-    return (
-      <>
-        <Head>
-          <title>{getSiteName()} - {cat}</title>
-        </Head>
-        <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 text-center">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <Clock className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-              <CardTitle className="text-2xl text-blue-600">
-                {t('ctf_not_started') || 'CTF Not Started'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {t('ctf_not_started_challenges_message') || 'Challenges are not yet available. Please wait for the CTF to start.'}
-              </p>
-            </CardContent>
-          </Card>
-        </main>
-      </>
-    );
-  }
-
-  // CTF Status Blocking - Show message when CTF has ended
-  if (!ctfLoading && ctfStatus.status === 'ended') {
-    return (
-      <>
-        <Head>
-          <title>{getSiteName()} - {cat}</title>
-        </Head>
-        <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 text-center">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <Clock className="w-12 h-12 mx-auto mb-4 text-orange-600" />
-              <CardTitle className="text-2xl text-orange-600">
-                {t('ctf_ended') || 'CTF Ended'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {t('ctf_ended_challenges_message') || 'The CTF has ended. Challenges are no longer available for submission.'}
-              </p>
-            </CardContent>
-          </Card>
-        </main>
-      </>
-    );
+    router.replace('/');
+    return null;
   }
 
   return <CategoryContent cat={cat} challenges={challenges} onChallengeUpdate={fetchChallenges} />;

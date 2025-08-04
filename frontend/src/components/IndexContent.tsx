@@ -22,8 +22,8 @@ const IndexContent = ({ ctfStatus, ctfLoading, isLoggedIn, hasTeam, userRole }: 
   const { getSiteName, loading } = useSiteConfig();
   const router = useRouter();
   
-  // Show CTF status messages when logged in
-  if (isLoggedIn && !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended')) {
+  // Show CTF status message only when CTF hasn't started
+  if (isLoggedIn && !ctfLoading && ctfStatus.status === 'not_started') {
     return (
       <>
         <Head>
@@ -43,27 +43,17 @@ const IndexContent = ({ ctfStatus, ctfLoading, isLoggedIn, hasTeam, userRole }: 
           
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <Clock className={`w-12 h-12 mx-auto mb-4 ${
-                ctfStatus.status === 'not_started' ? 'text-blue-600' : 'text-orange-600'
-              }`} />
-              <CardTitle className={`text-2xl ${
-                ctfStatus.status === 'not_started' ? 'text-blue-600' : 'text-orange-600'
-              }`}>
-                {ctfStatus.status === 'not_started' 
-                  ? (t('ctf_not_started') || 'CTF Not Started')
-                  : (t('ctf_ended') || 'CTF Ended')
-                }
+              <Clock className="w-12 h-12 mx-auto mb-4 text-blue-600" />
+              <CardTitle className="text-2xl text-blue-600">
+                {t('ctf_not_started') || 'CTF Not Started'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                {ctfStatus.status === 'not_started' 
-                  ? (t('ctf_not_started_message') || 'The CTF has not started yet. Challenges will be available once the competition begins.')
-                  : (t('ctf_ended_message') || 'The CTF has ended. Thank you for participating!')
-                }
+                {t('ctf_not_started_message') || 'The CTF has not started yet. Challenges will be available once the competition begins.'}
               </p>
               
-              {ctfStatus.status === 'not_started' && !hasTeam && userRole !== "admin" && (
+              {!hasTeam && userRole !== "admin" && (
                 <div className="pt-4 border-t">
                   <div className="flex items-center justify-center gap-2 mb-3">
                     <Users className="w-5 h-5 text-green-600" />

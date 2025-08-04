@@ -86,8 +86,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     if (!authChecked) return [];
     const items: NavItem[] = [];
     
-    // Only show pwn section if CTF is active, has no timing, or still loading CTF status
-    const shouldShowPwn = ctfLoading || ctfStatus.status === 'active' || ctfStatus.status === 'no_timing';
+    // Only show pwn section if CTF has started (active, ended, no timing, or still loading CTF status)
+    const shouldShowPwn = ctfLoading || ctfStatus.status !== 'not_started';
     
     if (loggedIn && shouldShowPwn) {
       let pwnSubItems;
@@ -112,12 +112,17 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     }
     
     if (loggedIn) {
-      items.push({
-        title: t('scoreboard'),
-        url: "/scoreboard",
-        icon: List,
-        isActive: router.pathname === "/scoreboard",
-      });
+      // Only show scoreboard if CTF has started (active, ended, or no timing)
+      const shouldShowScoreboard = ctfLoading || ctfStatus.status !== 'not_started';
+      
+      if (shouldShowScoreboard) {
+        items.push({
+          title: t('scoreboard'),
+          url: "/scoreboard",
+          icon: List,
+          isActive: router.pathname === "/scoreboard",
+        });
+      }
       if (userData.role === "admin") {
         items.push({
           title: t('administration'),

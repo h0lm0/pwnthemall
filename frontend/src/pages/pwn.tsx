@@ -54,8 +54,8 @@ const PwnPage = () => {
     }
   };
 
-  // Redirect to main page when CTF hasn't started or has ended
-  if (!ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended')) {
+  // Redirect to main page only when CTF hasn't started
+  if (!ctfLoading && ctfStatus.status === 'not_started') {
     router.replace('/');
     return null;
   }
