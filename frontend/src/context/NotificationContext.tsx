@@ -69,6 +69,14 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const currentTime = Date.now();
     const timeDiff = currentTime - notificationTime;
     
+    // Create a key for this notification type to track recent shows
+    const recentKey = `${notification.type}_${notification.title}`;
+    const now = Date.now();
+    
+    // Check if we've recently shown this type of notification
+    const lastShown = recentlySentNotifications.get(recentKey);
+    if (lastShown) {
+      const timeSinceLastShow = now - lastShown;
       if (timeSinceLastShow < 5000) { // 5 seconds
         debugLog('Skipping toast for recently sent notification:', notification);
         return;

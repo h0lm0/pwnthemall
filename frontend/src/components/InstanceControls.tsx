@@ -69,7 +69,7 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
     setLoading(true);
     try {
       debugLog(`InstanceControls: Stopping instance for challenge ${challengeId}`);
-      await stopInstance(challengeId);
+      await stopInstance(challengeId.toString());
       debugLog('InstanceControls: Instance stopped successfully, fetching updated status');
       await fetchStatus();
       onStatusChange?.();
@@ -84,7 +84,7 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
     setLoading(true);
     try {
       debugLog(`InstanceControls: Killing instance for challenge ${challengeId}`);
-      await killInstance(challengeId);
+      await killInstance(challengeId.toString());
       debugLog('InstanceControls: Instance killed successfully, fetching updated status');
       await fetchStatus();
       onStatusChange?.();
