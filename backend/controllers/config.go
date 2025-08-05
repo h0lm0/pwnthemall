@@ -130,3 +130,13 @@ func GetPublicConfigs(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, configs)
 }
+
+// GetCTFStatus returns the current CTF timing status
+func GetCTFStatus(c *gin.Context) {
+	status := config.GetCTFStatus()
+	c.JSON(http.StatusOK, gin.H{
+		"status":     string(status),
+		"is_active":  config.IsCTFActive(),
+		"is_started": config.IsCTFStarted(),
+	})
+}

@@ -58,6 +58,12 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		return
 	}
 
+	// Check CTF timing - only allow access if CTF has started or user is admin
+	if !config.IsCTFStarted() && user.Role != "admin" {
+		c.JSON(http.StatusOK, []interface{}{}) // Return empty array instead of error
+		return
+	}
+
 	var challenges []models.Challenge
 	result := config.DB.
 		Preload("ChallengeCategory").

@@ -1,14 +1,23 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useSiteConfig } from "@/context/SiteConfigContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { useCTFStatus } from "@/hooks/use-ctf-status";
 import CategoryContent from "@/components/pwn/CategoryContent";
 import { Challenge } from "@/models/Challenge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock } from "lucide-react";
+import Head from "next/head";
 import axios from "@/lib/axios";
 
 export default function CategoryPage() {
   const router = useRouter();
   const { category } = router.query;
   const { loggedIn, checkAuth, authChecked } = useAuth();
+  const { getSiteName } = useSiteConfig();
+  const { t } = useLanguage();
+  const { ctfStatus, loading: ctfLoading } = useCTFStatus();
 
   const cat = Array.isArray(category) ? category[0] : category;
 
@@ -80,5 +89,12 @@ export default function CategoryPage() {
   if (error) {
     return <div>Error: {error}</div>;
   }
+
+  // CTF Status Blocking - Redirect when CTF hasn't started
+  if (!ctfLoading && ctfStatus.status === 'not_started') {
+    router.replace('/');
+    return null;
+  }
+
   return <CategoryContent cat={cat} challenges={challenges} onChallengeUpdate={fetchChallenges} />;
 }
