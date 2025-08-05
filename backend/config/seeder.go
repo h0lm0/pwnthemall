@@ -52,7 +52,7 @@ func GetCTFStatus() CTFStatus {
 	// Parse times (expecting RFC3339 format: 2006-01-02T15:04:05Z07:00)
 	startTime, err := time.Parse(time.RFC3339, startConfig.Value)
 	if err != nil {
-		log.Printf("Failed to parse CTF start time: %v", err)
+		log.Printf("Failed to parse CTF start time")
 		return CTFNoTiming
 	}
 
