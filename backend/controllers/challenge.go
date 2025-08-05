@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"pwnthemall/services"
 	"pwnthemall/utils"
 	"strings"
 	"time"
@@ -60,6 +61,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("ChallengeCategory").
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
+		Preload("DecayFormula").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ?", categoryName).
 		Find(&challenges)
@@ -80,10 +82,14 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		}
 	}
 
-	// Create response with solved status
+	// Initialize decay service
+	decayService := services.NewDecayService()
+
+	// Create response with solved status and current points
 	type ChallengeWithSolved struct {
 		models.Challenge
-		Solved bool `json:"solved"`
+		Solved       bool `json:"solved"`
+		CurrentPoints int `json:"currentPoints"`
 	}
 
 	var challengesWithSolved []ChallengeWithSolved
@@ -95,10 +101,19 @@ func GetChallengesByCategoryName(c *gin.Context) {
 				break
 			}
 		}
-		challengesWithSolved = append(challengesWithSolved, ChallengeWithSolved{
-			Challenge: challenge,
-			Solved:    solved,
-		})
+
+		// Calculate current points based on decay formula
+		var solveCount int64
+		config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
+		
+		currentPoints := decayService.CalculateDecayedPoints(&challenge, int(solveCount))
+
+		challengeWithSolved := ChallengeWithSolved{
+			Challenge:     challenge,
+			Solved:        solved,
+			CurrentPoints: currentPoints,
+		}
+		challengesWithSolved = append(challengesWithSolved, challengeWithSolved)
 	}
 
 	c.JSON(http.StatusOK, challengesWithSolved)
@@ -258,23 +273,29 @@ func SubmitChallenge(c *gin.Context) {
 			break
 		}
 	}
-	if found {
-		var solve models.Solve
-		if err := config.DB.FirstOrCreate(&solve,
-			models.Solve{
-				TeamID:      user.Team.ID,
-				ChallengeID: challenge.ID,
-				Points:      challenge.Points,
-			}).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
-			return
+		if found {
+			// Calculate decayed points
+			decayService := services.NewDecayService()
+			var solveCount int64
+			config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
+			decayedPoints := decayService.CalculateDecayedPoints(&challenge, int(solveCount))
+
+			var solve models.Solve
+			if err := config.DB.FirstOrCreate(&solve,
+				models.Solve{
+					TeamID:      user.Team.ID,
+					ChallengeID: challenge.ID,
+					Points:      decayedPoints,
+				}).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
+				return
+			} else {
+				c.JSON(http.StatusOK, gin.H{"message": "challenge_solved", "points": decayedPoints})
+				return
+			}
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "challenge_solved"})
-			return
+			c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
 		}
-	} else {
-		c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
-	}
 }
 
 func GetChallengeSolves(c *gin.Context) {
