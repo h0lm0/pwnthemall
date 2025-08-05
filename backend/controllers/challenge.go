@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/models"
-	"pwnthemall/services"
 	"pwnthemall/utils"
 	"strings"
 	"time"
@@ -83,7 +82,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	}
 
 	// Initialize decay service
-	decayService := services.NewDecayService()
+	decayService := utils.NewDecay()
 
 	// Create response with solved status and current points
 	type ChallengeWithSolved struct {
@@ -275,7 +274,7 @@ func SubmitChallenge(c *gin.Context) {
 	}
 		if found {
 			// Calculate decayed points
-			decayService := services.NewDecayService()
+			decayService := utils.NewDecay()
 			var solveCount int64
 			config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
 			decayedPoints := decayService.CalculateDecayedPoints(&challenge, int(solveCount))

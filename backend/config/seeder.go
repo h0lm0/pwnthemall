@@ -240,5 +240,5 @@ func SeedDatabase() {
 	seedChallengeCategory()
 	seedChallengeType()
 	seedDefaultUsers()
-	SeedDecayFormulas()
+
 }
