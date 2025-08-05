@@ -23,7 +23,11 @@ import (
 )
 
 func EnsureDockerClientConnected() error {
-	if _, err := config.DockerClient.Info(context.Background()); err != nil {
+	if config.DockerClient == nil {
+		if err := config.ConnectDocker(); err != nil {
+			return err
+		}
+	} else if _, err := config.DockerClient.Info(context.Background()); err != nil {
 		if err := config.ConnectDocker(); err != nil {
 			return err
 		}

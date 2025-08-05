@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DateTimePicker } from "@/components/ui/date-picker";
 import { useLanguage } from "@/context/LanguageContext";
 import { ConfigFormData } from "@/models/Config";
 
@@ -65,10 +64,6 @@ export default function ConfigurationForm({
     }
   };
 
-  const handleDateTimeChange = (field: keyof ConfigFormData, value: string) => {
-    handleInputChange(field, value);
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4 mt-4">
       <div className="space-y-2">
@@ -100,24 +95,6 @@ export default function ConfigurationForm({
               <SelectItem value="false">False</SelectItem>
             </SelectContent>
           </Select>
-        ) : formData.key === "CTF_START_TIME" || formData.key === "CTF_END_TIME" ? (
-          <div className="space-y-2">
-            <DateTimePicker
-              value={formData.value}
-              onChange={(value) => handleDateTimeChange("value", value)}
-              placeholder={formData.key === "CTF_START_TIME" 
-                ? t("select_ctf_start_time") || "Select CTF start time"
-                : t("select_ctf_end_time") || "Select CTF end time"
-              }
-              className={errors.value ? "border-red-500" : ""}
-            />
-            <p className="text-xs text-muted-foreground">
-              {formData.key === "CTF_START_TIME" 
-                ? t("ctf_start_time_help") || "Set when the CTF starts. Leave empty to disable timing."
-                : t("ctf_end_time_help") || "Set when the CTF ends. Leave empty to disable timing."
-              }
-            </p>
-          </div>
         ) : (
           <Input
             id="value"
