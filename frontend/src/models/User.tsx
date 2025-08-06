@@ -9,6 +9,8 @@ export interface User {
     id: number;
     name: string;
   };
+  ipAddresses?: string[];
+  memberSince?: string;
 }
 
 export interface UserFormData {

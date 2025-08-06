@@ -32,7 +32,6 @@ interface GameProfileData extends User {
   points?: number;
   challengesCompleted?: number;
   discordUsername?: string;
-  memberSince?: string;
   ranking?: number;
   specializations?: string[];
   badges?: string[];

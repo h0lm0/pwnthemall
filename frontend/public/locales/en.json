@@ -323,6 +323,7 @@
   "running": "Running",
   "building": "Building",
   "stopped": "Stopped",
+  "expired": "Expired",
   "active_instances": "Active Instances",
   "container": "Container",
   "started_on": "Started on",
@@ -331,5 +332,13 @@
   "challenge_not_docker_type": "This challenge is not a Docker challenge",
   "docker_build_failed": "Failed to build Docker image",
   "docker_config_not_found": "Docker configuration not found",
-  "instance_create_failed": "Failed to create instance"
+  "instance_create_failed": "Failed to create instance",
+  "challenges_completed": "Challenges Completed",
+  "score": "Score",
+  "rank": "Rank",
+  "security_settings": "Security Settings",
+  "account_settings": "Account Settings",
+  "badges": "Badges",
+  "member_since": "Member Since",
+  "profile": "Profile"
 } 

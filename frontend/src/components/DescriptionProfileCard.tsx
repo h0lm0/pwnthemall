@@ -9,7 +9,6 @@ import { useTheme } from "next-themes";
 interface GameProfileData extends User {
   points?: number;
   challengesCompleted?: number;
-  memberSince?: string;
   ranking?: number;
   description?: string;
   badges?: string[];

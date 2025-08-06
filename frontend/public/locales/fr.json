@@ -329,5 +329,14 @@
   "challenge_not_docker_type": "Ce challenge n'est pas un challenge Docker",
   "docker_build_failed": "Échec de construction de l'image Docker",
   "docker_config_not_failed": "Configuration Docker introuvable",
-  "instance_create_failed": "Échec de création de l'instance"
+  "instance_create_failed": "Échec de création de l'instance",
+  "challenges_completed": "Challenges complétés",
+  "score": "Score",
+  "rank": "Rang",
+  "security_settings": "Paramètres de sécurité",
+  "account_settings": "Paramètres du compte",
+  "badges": "Badges",
+  "member_since": "Membre depuis",
+  "profile": "Profil",
+  "expired": "Expiré"
 } 

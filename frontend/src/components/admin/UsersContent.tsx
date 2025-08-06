@@ -88,6 +88,43 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       },
     },
     {
+      accessorKey: "ipAddresses",
+      header: "IP Addresses",
+      cell: ({ row }) => {
+        const ipAddresses = row.original.ipAddresses;
+        if (!ipAddresses || ipAddresses.length === 0) {
+          return <span className="text-muted-foreground">-</span>;
+        }
+        
+        const displayIPs = ipAddresses.slice(0, 2); // Show first 2 IPs
+        const remainingCount = ipAddresses.length - displayIPs.length;
+        
+        return (
+          <div className="min-w-[120px]">
+            <div className="flex flex-wrap gap-1">
+              {displayIPs.map((ip, index) => (
+                <span 
+                  key={index}
+                  className="inline-block px-2 py-0.5 text-xs bg-muted text-muted-foreground rounded-md font-mono"
+                  title={ip}
+                >
+                  {ip}
+                </span>
+              ))}
+              {remainingCount > 0 && (
+                <span 
+                  className="inline-block px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-md font-mono"
+                  title={`${remainingCount} more IP${remainingCount > 1 ? 's' : ''}: ${ipAddresses.slice(2).join(', ')}`}
+                >
+                  +{remainingCount}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "role",
       header: t("role"),
       cell: ({ getValue }) => (

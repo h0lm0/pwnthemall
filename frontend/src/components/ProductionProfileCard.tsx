@@ -32,7 +32,6 @@ interface ExtendedUser extends User {
   points?: number;
   challengesCompleted?: number;
   discordUsername?: string;
-  memberSince?: string;
   ranking?: number;
   description?: string;
   teamId?: number;
