@@ -5,6 +5,8 @@ import { ChevronRight, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { ChallengeCategory } from "@/models/ChallengeCategory"
+import { DraggableCategoryList } from "./draggable-category-list"
 
 import {
   Collapsible,
@@ -33,6 +35,8 @@ export function NavMain({
       title: string
       url: string
     }[]
+    draggableItems?: ChallengeCategory[]
+    onReorderItems?: (items: ChallengeCategory[]) => void
   }[]
 }) {
   const { open } = useSidebar()
@@ -59,11 +63,19 @@ export function NavMain({
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent side="right" align="start" className="min-w-48">
-                    {item.items.map((subItem) => (
-                      <DropdownMenuItem asChild key={subItem.title}>
-                        <Link href={subItem.url}>{subItem.title}</Link>
-                      </DropdownMenuItem>
-                    ))}
+                    {item.draggableItems ? (
+                      item.draggableItems.map((cat) => (
+                        <DropdownMenuItem asChild key={cat.name}>
+                          <Link href={`/pwn/${cat.name}`}>{cat.name}</Link>
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      item.items?.map((subItem) => (
+                        <DropdownMenuItem asChild key={subItem.title}>
+                          <Link href={subItem.url}>{subItem.title}</Link>
+                        </DropdownMenuItem>
+                      ))
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -104,16 +116,35 @@ export function NavMain({
                     </button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="ml-6 mt-1 space-y-1">
-                      {item.items.map((subItem) => (
-                        <Link
-                          key={subItem.title}
-                          href={subItem.url}
-                          className="block rounded-lg p-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                        >
-                          {subItem.title}
+                    <div className="ml-6 mt-1">
+                      {item.draggableItems && item.onReorderItems ? (
+                        <DraggableCategoryList
+                          items={item.draggableItems.map(cat => ({
+                            id: cat.id,
+                            title: cat.name,
+                            url: `/pwn/${cat.name}`,
+                          }))}
+                          onReorder={(newItems) => {
+                            // Map back to ChallengeCategory objects
+                            const reorderedCategories = newItems.map(newItem => 
+                              item.draggableItems!.find(cat => cat.id === newItem.id)!
+                            );
+                            item.onReorderItems!(reorderedCategories);
+                          }}
+                        />
+                      ) : (
+                        <div className="space-y-1">
+                          {item.items?.map((subItem) => (
+                            <Link
+                              key={subItem.title}
+                              href={subItem.url}
+                              className="block rounded-lg p-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            >
+                              {subItem.title}
                             </Link>
-                      ))}
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </CollapsibleContent>
                 </div>

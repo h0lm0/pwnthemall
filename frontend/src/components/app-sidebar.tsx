@@ -22,6 +22,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 
 import { useChallengeCategories } from "@/hooks/use-challenge-categories";
+import { useDraggableCategories } from "@/hooks/use-draggable-categories";
 import type { NavItem } from "@/models/NavItem";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
@@ -30,7 +31,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { getSiteName, siteConfig } = useSiteConfig();
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const { categories, loading } = useChallengeCategories(loggedIn);
+  const { categories, loading, reorderCategories } = useDraggableCategories(loggedIn);
   // CTF status - show pwn and scoreboard always for now
   const ctfLoading = false;
   const ctfStatus = { status: 'running' };
@@ -106,6 +107,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         icon: Swords,
         isActive: router.pathname.startsWith("/pwn"),
         items: pwnSubItems,
+        draggableItems: loading ? undefined : categories,
+        onReorderItems: reorderCategories,
       });
     }
     
@@ -160,7 +163,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       }
     }
     return items;
-  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, t, siteConfig.REGISTRATION_ENABLED, ctfLoading, ctfStatus.status]);
+  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, reorderCategories, t, siteConfig.REGISTRATION_ENABLED, ctfLoading, ctfStatus.status]);
 
   return (
     <Sidebar
