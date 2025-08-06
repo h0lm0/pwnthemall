@@ -112,7 +112,7 @@ export function NavMain({
                           className="block rounded-lg p-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         >
                           {subItem.title}
-                        </Link>
+                            </Link>
                       ))}
                     </div>
                   </CollapsibleContent>
@@ -135,7 +135,7 @@ export function NavMain({
                 )}>
                   {item.title}
                 </span>
-              </Link>
+                </Link>
             </div>
           )
         )}

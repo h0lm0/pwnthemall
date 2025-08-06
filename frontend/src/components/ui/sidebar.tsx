@@ -65,7 +65,7 @@ export const SidebarProvider = React.forwardRef<
   }, [open])
 
   // Add keyboard shortcut for Ctrl+B
-  React.useEffect(() => {
+    React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key === 'b') {
         event.preventDefault()
@@ -77,26 +77,26 @@ export const SidebarProvider = React.forwardRef<
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [toggleSidebar])
 
-  const contextValue = React.useMemo<SidebarContextProps>(
-    () => ({
+    const contextValue = React.useMemo<SidebarContextProps>(
+      () => ({
       state: open ? "expanded" : "collapsed",
-      open,
-      setOpen,
-      isMobile,
-      toggleSidebar,
+        open,
+        setOpen,
+        isMobile,
+        toggleSidebar,
       width,
       setWidth,
-    }),
+      }),
     [open, setOpen, isMobile, toggleSidebar, width, setWidth]
-  )
+    )
 
-  return (
-    <SidebarContext.Provider value={contextValue}>
+    return (
+      <SidebarContext.Provider value={contextValue}>
       <div ref={ref} className="flex h-screen w-full" {...props}>
-        {children}
-      </div>
-    </SidebarContext.Provider>
-  )
+            {children}
+          </div>
+      </SidebarContext.Provider>
+    )
 })
 SidebarProvider.displayName = "SidebarProvider"
 
@@ -223,15 +223,15 @@ export const Sidebar = React.forwardRef<
   const { open, isMobile, width, setWidth, setOpen } = useSidebar()
 
   if (isMobile) {
-    return (
+  return (
       <div
         ref={ref}
-        className={cn(
+      className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-sidebar-foreground transform transition-transform duration-300 ease-in-out",
           open ? "translate-x-0" : "-translate-x-full",
-          className
-        )}
-        {...props}
+        className
+      )}
+      {...props}
       >
         <div className="flex flex-col h-full">
           {children}
@@ -294,16 +294,16 @@ export const SidebarContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => (
-  <div
+    <div
     ref={ref}
-    className={cn(
+      className={cn(
       "flex-1 p-2 overflow-y-auto overflow-x-hidden",
       // Ensure scrollbar is visible when needed
       "scrollbar-thin scrollbar-track-sidebar scrollbar-thumb-sidebar-accent hover:scrollbar-thumb-sidebar-accent/80",
-      className
-    )}
-    {...props}
-  />
+        className
+      )}
+      {...props}
+    />
 ))
 SidebarContent.displayName = "SidebarContent"
 
@@ -378,7 +378,7 @@ export const SidebarMenuButton = React.forwardRef<
   }
 >(({ className, size = "md", ...props }, ref) => {
   const { open } = useSidebar()
-  
+
   return (
     <button
       ref={ref}

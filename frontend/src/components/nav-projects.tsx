@@ -52,8 +52,8 @@ export function NavProjects({
               className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <item.icon className="w-4 h-4" />
-              <span>{item.name}</span>
-            </Link>
+                <span>{item.name}</span>
+              </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 opacity-0 group-hover:opacity-100 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
@@ -85,7 +85,7 @@ export function NavProjects({
         ))}
         <button className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
           <MoreHorizontal className="w-4 h-4" />
-          <span>More</span>
+            <span>More</span>
         </button>
       </div>
     </div>

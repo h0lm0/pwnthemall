@@ -88,17 +88,17 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     const shouldShowPwn = ctfLoading || ctfStatus.status !== 'not_started';
     
     if (loggedIn && shouldShowPwn) {
-      let pwnSubItems;
-      if (loading) {
-        pwnSubItems = [{ title: t('loading'), url: "#" }];
-      } else if (categories.length === 0) {
-        pwnSubItems = [{ title: t('no_categories'), url: "#" }];
-      } else {
-        pwnSubItems = categories.map((cat) => ({
-          title: cat.name,
-          url: `/pwn/${cat.name}`,
-        }));
-      }
+    let pwnSubItems;
+    if (loading) {
+      pwnSubItems = [{ title: t('loading'), url: "#" }];
+    } else if (categories.length === 0) {
+      pwnSubItems = [{ title: t('no_categories'), url: "#" }];
+    } else {
+      pwnSubItems = categories.map((cat) => ({
+        title: cat.name,
+        url: `/pwn/${cat.name}`,
+      }));
+    }
       
       items.push({
         title: t('pwn'),
@@ -114,12 +114,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       const shouldShowScoreboard = ctfLoading || ctfStatus.status !== 'not_started';
       
       if (shouldShowScoreboard) {
-        items.push({
-          title: t('scoreboard'),
-          url: "/scoreboard",
-          icon: List,
-          isActive: router.pathname === "/scoreboard",
-        });
+      items.push({
+        title: t('scoreboard'),
+        url: "/scoreboard",
+        icon: List,
+        isActive: router.pathname === "/scoreboard",
+      });
       }
       if (userData.role === "admin") {
         items.push({
