@@ -12,10 +12,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -155,23 +152,22 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       className={cn(!authChecked && "invisible pointer-events-none")}
       {...props}
     >
-      <div className="flex flex-col h-full">
-        <SidebarHeader>
+      <SidebarHeader>
+        <div className="flex items-center justify-between">
           <TeamSwitcher
             teams={[{ name: getSiteName(), logo: Home, plan: "CTF" }]}
           />
-        </SidebarHeader>
-        {authChecked && (
-          <>
-            <SidebarContent className="flex flex-col flex-1 min-h-0">
-              <NavMain items={navItems} />
-            </SidebarContent>
-            <SidebarFooter className="mt-auto">
-              <NavUser user={userData} onLogout={logout} />
-            </SidebarFooter>
-          </>
-        )}
-      </div>
+          <SidebarTrigger />
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <NavMain items={navItems} />
+      </SidebarContent>
+      
+      <SidebarFooter>
+        <NavUser user={userData} onLogout={logout} />
+      </SidebarFooter>
     </Sidebar>
   );
 }

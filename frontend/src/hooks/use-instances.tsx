@@ -55,7 +55,7 @@ export const useInstances = () => {
         setError('max_instances_reached')
       } else {
         toast.error(errorMessage || error.response?.data?.error || 'Failed to start instance')
-        setError(error.response?.data?.error || 'Failed to start instance')
+      setError(error.response?.data?.error || 'Failed to start instance')
       }
       
       throw error
