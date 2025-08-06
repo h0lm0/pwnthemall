@@ -20,7 +20,7 @@ type UserInput struct {
 
 func GetUsers(c *gin.Context) {
 	var users []models.User
-	result := config.DB.Find(&users)
+	result := config.DB.Preload("Team").Find(&users)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -153,10 +153,10 @@ func GetCurrentUser(c *gin.Context) {
 
 	if user.Team != nil {
 		response["team"] = gin.H{
-			"id":      user.Team.ID,
-			"name":    user.Team.Name,
+			"id":        user.Team.ID,
+			"name":      user.Team.Name,
 			"creatorId": user.Team.CreatorID,
-			"members": safeMembers,
+			"members":   safeMembers,
 		}
 	}
 

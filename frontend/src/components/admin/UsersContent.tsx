@@ -51,7 +51,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       accessorKey: "id",
       header: t("id"),
       cell: ({ getValue }) => (
-        <span className="block text-center w-10 min-w-[40px] max-w-[40px]">
+        <span className="block text-center w-10 min-w-[40px]">
           {getValue() as string}
         </span>
       ),
@@ -61,7 +61,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       accessorKey: "username",
       header: t("username"),
       cell: ({ getValue }) => (
-        <span className="block min-w-[150px] max-w-[250px] truncate">
+        <span className="block min-w-[120px] truncate">
           {getValue() as string}
         </span>
       ),
@@ -70,14 +70,31 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       accessorKey: "email",
       header: t("email"),
       cell: ({ getValue }) => (
-        <span className="block min-w-[200px] max-w-[300px] truncate">
+        <span className="block min-w-[150px] truncate">
           {getValue() as string}
         </span>
       ),
     },
     {
+      accessorKey: "team",
+      header: t("team"),
+      cell: ({ row }) => {
+        const team = row.original.team;
+        return (
+          <span className="block min-w-[100px] truncate">
+            {team ? team.name : "N/A"}
+          </span>
+        );
+      },
+    },
+    {
       accessorKey: "role",
       header: t("role"),
+      cell: ({ getValue }) => (
+        <span className="block min-w-[80px]">
+          {getValue() as string}
+        </span>
+      ),
     },
     {
       accessorKey: "banned",
@@ -85,7 +102,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       cell: ({ getValue }) => {
         const isBanned = getValue() as boolean
         return (
-          <span className={cn("font-semibold", isBanned ? "text-red-600" : "text-green-600")}>
+          <span className={cn("font-semibold min-w-[60px] block", isBanned ? "text-red-600" : "text-green-600")}>
             {isBanned ? t("yes") : t("no")}
           </span>
         )
@@ -95,7 +112,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       id: "actions",
       header: t("actions"),
       cell: ({ row }) => (
-        <div className="flex gap-2 whitespace-nowrap">
+        <div className="flex gap-1 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -234,7 +251,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       <Head>
         <title>{getSiteName()}</title>
       </Head>
-      <div className="bg-muted min-h-screen p-4 overflow-x-auto">
+      <div className="bg-muted min-h-screen p-4">
         {/* {/* Debug info - remove after testing 
         <div className="mb-2 text-xs text-gray-500">
           Debug: Lang={language}, Loaded={isLoaded ? 'yes' : 'no'}, Test={t('username')}

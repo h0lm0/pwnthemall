@@ -4,6 +4,11 @@ export interface User {
   email: string;
   role: string;
   banned: boolean;
+  teamId?: number;
+  team?: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface UserFormData {
