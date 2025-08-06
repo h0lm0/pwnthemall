@@ -112,7 +112,7 @@ export const SidebarTrigger = React.forwardRef<
 })
 SidebarTrigger.displayName = "SidebarTrigger"
 
-// Resize handle component with improved responsiveness and click-to-collapse
+// Resize handle component with truly instant DOM updates
 const ResizeHandle = ({ onResize, onCollapse }: { 
   onResize: (width: number) => void
   onCollapse: () => void 
@@ -121,22 +121,31 @@ const ResizeHandle = ({ onResize, onCollapse }: {
   const startX = React.useRef(0)
   const startWidth = React.useRef(0)
   const hasDragged = React.useRef(false)
+  const sidebarElement = React.useRef<HTMLElement | null>(null)
 
   const handleMouseDown = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     
+    // Get reference to the sidebar element
+    sidebarElement.current = e.currentTarget.parentElement as HTMLElement
+    
+    if (!sidebarElement.current) return
+    
     // Store initial values
     startX.current = e.clientX
-    startWidth.current = e.currentTarget.parentElement?.offsetWidth || 256
+    startWidth.current = sidebarElement.current.offsetWidth
     hasDragged.current = false
     isResizing.current = true
+    
+    // Disable transitions during resize for instant updates
+    sidebarElement.current.style.transition = 'none'
     
     // Set cursor immediately
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!isResizing.current) return
+      if (!isResizing.current || !sidebarElement.current) return
       
       const deltaX = moveEvent.clientX - startX.current
       const newWidth = Math.max(200, Math.min(500, startWidth.current + deltaX))
@@ -146,8 +155,9 @@ const ResizeHandle = ({ onResize, onCollapse }: {
         hasDragged.current = true
       }
       
-      // Update width immediately without delay
-      onResize(newWidth)
+      // Apply width changes directly and immediately (no transitions, no delays)
+      sidebarElement.current.style.width = `${newWidth}px`
+      sidebarElement.current.style.minWidth = `${newWidth}px`
     }
 
     const handleMouseUp = () => {
@@ -155,9 +165,20 @@ const ResizeHandle = ({ onResize, onCollapse }: {
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
       
-      // If no significant drag occurred, treat as click to collapse
-      if (!hasDragged.current) {
-        onCollapse()
+
+      
+      if (sidebarElement.current) {
+        // Re-enable transitions
+        sidebarElement.current.style.transition = ''
+        
+        // If no significant drag occurred, treat as click to collapse
+        if (!hasDragged.current) {
+          onCollapse()
+        } else {
+          // Update React state with final width only after drag is complete
+          const finalWidth = sidebarElement.current.offsetWidth
+          onResize(finalWidth)
+        }
       }
       
       document.removeEventListener('mousemove', handleMouseMove)
@@ -213,7 +234,9 @@ export const Sidebar = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out border-r border-sidebar-border",
+        "relative flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border",
+        // Only apply transitions when not resizing (will be controlled by JS)
+        "transition-all duration-300 ease-in-out",
         className
       )}
       style={{ width: sidebarWidth, minWidth: sidebarWidth }}
