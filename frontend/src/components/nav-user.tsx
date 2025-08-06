@@ -39,6 +39,7 @@ import { useTheme } from "next-themes"
 import {
   useSidebar,
 } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from '@/context/LanguageContext'
 import { NotificationBell } from './NotificationBell'
@@ -65,21 +66,24 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className={cn(
+                "flex w-full items-center rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-all duration-200",
+                open ? "gap-2" : "justify-center"
+              )}
             >
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="h-8 w-8 rounded-lg flex-shrink-0">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback delayMs={600} className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               {open && (
                 <>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
+                  <div className="grid flex-1 text-left text-sm leading-tight transition-all duration-200">
                     <span className="truncate font-medium">{user.name}</span>
                     {loggedIn && user.email && (
                       <span className="truncate text-xs">{user.email}</span>
                     )}
                   </div>
-                  <ChevronsUpDown className="ml-auto size-4" />
+                  <ChevronsUpDown className="size-4 ml-auto transition-all duration-200" />
                 </>
               )}
             </button>

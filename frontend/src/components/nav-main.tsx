@@ -86,13 +86,21 @@ export function NavMain({
                   <CollapsibleTrigger asChild>
                     <button
                       className={cn(
-                        "flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        "flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200",
                         item.isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
                       )}
                     >
-                      {item.icon && <item.icon className="w-4 h-4" />}
-                      <span>{item.title}</span>
-                      <ChevronRight className="ml-auto w-4 h-4 transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-90" />
+                      {item.icon && <item.icon className="w-4 h-4 flex-shrink-0" />}
+                      <span className={cn(
+                        "truncate transition-all duration-200",
+                        open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
+                      )}>
+                        {item.title}
+                      </span>
+                      <ChevronRight className={cn(
+                        "w-4 h-4 transition-all duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-90",
+                        open ? "opacity-100 ml-auto" : "opacity-0 w-0 overflow-hidden"
+                      )} />
                     </button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -116,12 +124,17 @@ export function NavMain({
               <Link
                 href={item.url}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  "flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200",
                   item.isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
                 )}
               >
-                {item.icon && <item.icon className="w-4 h-4" />}
-                {open && <span>{item.title}</span>}
+                {item.icon && <item.icon className="w-4 h-4 flex-shrink-0" />}
+                <span className={cn(
+                  "truncate transition-all duration-200",
+                  open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
+                )}>
+                  {item.title}
+                </span>
               </Link>
             </div>
           )

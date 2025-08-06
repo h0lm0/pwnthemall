@@ -5,6 +5,7 @@ import (
 	"os"
 	"pwnthemall/models"
 	"strconv"
+	"time"
 
 	"github.com/casbin/casbin/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -19,8 +20,6 @@ func getEnvWithDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
-<<<<<<< HEAD
-=======
 // CTFStatus represents the current status of the CTF
 type CTFStatus string
 
@@ -86,7 +85,6 @@ func IsCTFStarted() bool {
 	return status == CTFActive || status == CTFEnded || status == CTFNoTiming
 }
 
->>>>>>> 5f86a9970f17ebfe6472b3772aeddf91705c8378
 func seedConfig() {
 	config := []models.Config{
 		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: true},
