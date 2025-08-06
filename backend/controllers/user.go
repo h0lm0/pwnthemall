@@ -142,13 +142,14 @@ func GetCurrentUser(c *gin.Context) {
 	}
 
 	response := gin.H{
-		"id":       user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"role":     user.Role,
-		"banned":   user.Banned,
-		"teamId":   user.TeamID,
-		"team":     gin.H{},
+		"id":          user.ID,
+		"username":    user.Username,
+		"email":       user.Email,
+		"role":        user.Role,
+		"banned":      user.Banned,
+		"teamId":      user.TeamID,
+		"memberSince": user.MemberSince,
+		"team":        gin.H{},
 	}
 
 	if user.Team != nil {
