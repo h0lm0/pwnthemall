@@ -325,7 +325,12 @@ export const SidebarInset = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex-1 overflow-hidden", className)}
+    className={cn(
+      "flex-1 overflow-y-auto overflow-x-hidden h-screen",
+      // Apply custom scrollbar to main content
+      "scrollbar-thin scrollbar-track-background scrollbar-thumb-border hover:scrollbar-thumb-border/80",
+      className
+    )}
     {...props}
   />
 ))

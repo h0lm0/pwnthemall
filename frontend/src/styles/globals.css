@@ -24,6 +24,20 @@
   background: hsl(var(--sidebar-accent) / 0.8);
 }
 
+/* Scrollbar styles for main content area */
+.scrollbar-track-background::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+.scrollbar-thumb-border::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.scrollbar-thumb-border:hover::-webkit-scrollbar-thumb {
+  background: hsl(var(--border) / 0.8);
+}
+
 html, body {
   width: 100%;
   min-height: 100%;
