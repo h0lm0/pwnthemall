@@ -16,10 +16,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
+
+import { cn } from "@/lib/utils"
 import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
 
@@ -32,27 +31,32 @@ export function NavProjects({
     icon: LucideIcon
   }[]
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile, open } = useSidebar()
+
+  if (!open) {
+    return null // Hide projects section when collapsed
+  }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="px-2 py-1">
-        <h2 className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
+    <div className="p-2">
+      <div className="mb-2">
+        <h2 className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wide px-2">
           Projects
         </h2>
       </div>
-      <SidebarMenu>
+      <div className="space-y-1">
         {projects.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <Link href={item.url}>
-              <SidebarMenuButton>
-                <item.icon className="w-4 h-4" />
-                <span>{item.name}</span>
-              </SidebarMenuButton>
+          <div key={item.name} className="group relative">
+            <Link
+              href={item.url}
+              className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <item.icon className="w-4 h-4" />
+              <span>{item.name}</span>
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="absolute right-1 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+                <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 opacity-0 group-hover:opacity-100 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                   <MoreHorizontal className="w-4 h-4" />
                   <span className="sr-only">More</span>
                 </button>
@@ -63,29 +67,27 @@ export function NavProjects({
                 align={isMobile ? "end" : "start"}
               >
                 <DropdownMenuItem>
-                  <Folder className="text-muted-foreground w-4 h-4" />
+                  <Folder className="w-4 h-4 text-muted-foreground" />
                   <span>View Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Forward className="text-muted-foreground w-4 h-4" />
+                  <Forward className="w-4 h-4 text-muted-foreground" />
                   <span>Share Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Trash2 className="text-muted-foreground w-4 h-4" />
+                  <Trash2 className="w-4 h-4 text-muted-foreground" />
                   <span>Delete Project</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </SidebarMenuItem>
+          </div>
         ))}
-        <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <MoreHorizontal className="text-sidebar-foreground/70 w-4 h-4" />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
+        <button className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+          <MoreHorizontal className="w-4 h-4" />
+          <span>More</span>
+        </button>
+      </div>
     </div>
   )
 }

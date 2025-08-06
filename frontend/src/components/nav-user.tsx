@@ -37,9 +37,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useTheme } from "next-themes"
 import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/context/AuthContext"
@@ -57,33 +54,35 @@ export function NavUser({
   }
   onLogout: () => void
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile, open } = useSidebar()
   const { setTheme } = useTheme()
   const { loggedIn } = useAuth()
   const { t, language, setLanguage } = useLanguage();
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <AlertDialog>
+    <div className="p-2">
+      <AlertDialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            <button
+              className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback delayMs={600} className="rounded-lg">CN</AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                {loggedIn && user.email && (
-                  <span className="truncate text-xs">{user.email}</span>
-                )}
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
+              {open && (
+                <>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">{user.name}</span>
+                    {loggedIn && user.email && (
+                      <span className="truncate text-xs">{user.email}</span>
+                    )}
+                  </div>
+                  <ChevronsUpDown className="ml-auto size-4" />
+                </>
+              )}
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
@@ -166,8 +165,7 @@ export function NavUser({
             <AlertDialogAction onClick={onLogout}>{t('logout')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-        </AlertDialog>
-      </SidebarMenuItem>
-    </SidebarMenu>
+      </AlertDialog>
+    </div>
   )
-}
+} 

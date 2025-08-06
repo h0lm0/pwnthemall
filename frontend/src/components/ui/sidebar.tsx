@@ -35,7 +35,14 @@ export const SidebarProvider = React.forwardRef<
 >(({ defaultOpen = true, defaultWidth = 256, children, ...props }, ref) => {
   const [open, setOpen] = React.useState(defaultOpen)
   const [isMobile, setIsMobile] = React.useState(false)
-  const [width, setWidth] = React.useState(defaultWidth)
+  // Initialize width from localStorage immediately to prevent flash
+  const [width, setWidth] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarWidth')
+      return saved ? Number(saved) : defaultWidth
+    }
+    return defaultWidth
+  })
 
   React.useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -44,15 +51,7 @@ export const SidebarProvider = React.forwardRef<
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Load saved width from localStorage
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebarWidth')
-      if (saved) {
-        setWidth(Number(saved))
-      }
-    }
-  }, [])
+  // Width is now initialized synchronously above, no need for this effect
 
   // Save width to localStorage
   React.useEffect(() => {
@@ -64,6 +63,19 @@ export const SidebarProvider = React.forwardRef<
   const toggleSidebar = React.useCallback(() => {
     setOpen(!open)
   }, [open])
+
+  // Add keyboard shortcut for Ctrl+B
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 'b') {
+        event.preventDefault()
+        toggleSidebar()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [toggleSidebar])
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
@@ -113,9 +125,9 @@ export const SidebarTrigger = React.forwardRef<
 SidebarTrigger.displayName = "SidebarTrigger"
 
 // Resize handle component with truly instant DOM updates
-const ResizeHandle = ({ onResize, onCollapse }: { 
+const ResizeHandle = ({ onResize, onToggle }: { 
   onResize: (width: number) => void
-  onCollapse: () => void 
+  onToggle: () => void 
 }) => {
   const isResizing = React.useRef(false)
   const startX = React.useRef(0)
@@ -171,9 +183,9 @@ const ResizeHandle = ({ onResize, onCollapse }: {
         // Re-enable transitions
         sidebarElement.current.style.transition = ''
         
-        // If no significant drag occurred, treat as click to collapse
+        // If no significant drag occurred, treat as click to toggle
         if (!hasDragged.current) {
-          onCollapse()
+          onToggle() // This will toggle between collapse and expand
         } else {
           // Update React state with final width only after drag is complete
           const finalWidth = sidebarElement.current.offsetWidth
@@ -187,13 +199,13 @@ const ResizeHandle = ({ onResize, onCollapse }: {
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
-  }, [onResize, onCollapse])
+  }, [onResize, onToggle])
 
   return (
     <div
       className="absolute top-0 right-0 w-2 h-full cursor-col-resize hover:bg-border/50 transition-colors z-10 flex items-center justify-center group"
       onMouseDown={handleMouseDown}
-      title="Drag to resize, click to collapse"
+      title="Drag to resize, click to toggle"
     >
       {/* Visual indicator */}
       <div className="w-0.5 h-8 bg-border rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -246,12 +258,10 @@ export const Sidebar = React.forwardRef<
         {children}
       </div>
       {open && collapsible !== "none" && (
-        <ResizeHandle onResize={setWidth} onCollapse={() => setOpen(false)} />
+        <ResizeHandle onResize={setWidth} onToggle={() => setOpen(!open)} />
       )}
       {!open && collapsible === "icon" && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-          <SidebarTrigger />
-        </div>
+        <ResizeHandle onResize={setWidth} onToggle={() => setOpen(!open)} />
       )}
     </div>
   )
