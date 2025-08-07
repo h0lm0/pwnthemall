@@ -149,9 +149,23 @@ func GetCurrentUser(c *gin.Context) {
 			Scan(&totalPoints)
 	}
 
-	// Compute total number of available (non-hidden) challenges
+	// Compute total number of challenges available to solve (challenges with at least one flag)
 	var totalChallenges int64 = 0
-	config.DB.Model(&models.Challenge{}).Where("hidden = ?", false).Count(&totalChallenges)
+	if user.Role == "admin" {
+		// Admins: all challenges that have at least one flag
+		config.DB.
+			Model(&models.Flag{}).
+			Select("DISTINCT challenge_id").
+			Count(&totalChallenges)
+	} else {
+		// Members: only non-hidden challenges that have at least one flag
+		config.DB.
+			Table("flags").
+			Joins("JOIN challenges ON challenges.id = flags.challenge_id").
+			Where("challenges.hidden = ?", false).
+			Select("DISTINCT flags.challenge_id").
+			Count(&totalChallenges)
+	}
 
 	response := gin.H{
 		"id":                  user.ID,

@@ -5,5 +5,5 @@ difficulty: easy
 type: standard
 author: swinowz
 flags: ["flag"]
-hidden: true
+hidden: false
 points: 50
