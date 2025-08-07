@@ -161,6 +161,45 @@ func seedChallengeDifficulty() {
 	log.Println("Seeding: challengeTypes finished")
 }
 
+func seedDecayFormulas() {
+	decayFormulas := []models.DecayFormula{
+		{
+			Name:      "Linear Decay",
+			Type:      "linear",
+			DecayStep: 10,
+			MinPoints: 50,
+		},
+		{
+			Name:      "Exponential Decay",
+			Type:      "exponential",
+			DecayStep: 10,
+			MinPoints: 50,
+		},
+		{
+			Name:      "Logarithmic Decay",
+			Type:      "logarithmic",
+			DecayStep: 20,
+			MinPoints: 50,
+		},
+	}
+
+	for _, formula := range decayFormulas {
+		var existing models.DecayFormula
+		err := DB.Where("name = ?", formula.Name).First(&existing).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Printf("Failed to check decay formula %s: %v\n", formula.Name, err)
+			continue
+		}
+		if err == nil {
+			continue
+		}
+		if err := DB.Create(&formula).Error; err != nil {
+			log.Printf("Failed to seed decay formula %s: %v\n", formula.Name, err)
+		}
+	}
+	log.Println("Seeding: decay formulas finished")
+}
+
 func seedDefaultUsers() {
 	users := []models.User{
 		{Username: "admin", Email: "admin@admin.admin", Password: "admin", Role: "admin"},
@@ -239,6 +278,7 @@ func SeedDatabase() {
 	seedChallengeDifficulty()
 	seedChallengeCategory()
 	seedChallengeType()
+	seedDecayFormulas()
 	seedDefaultUsers()
 
 }
