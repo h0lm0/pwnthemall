@@ -36,6 +36,7 @@ interface ExtendedUser extends User {
   description?: string;
   teamId?: number;
   team?: Team;
+  totalChallenges?: number;
 }
 
 export default function ProductionProfileCard() {
@@ -109,7 +110,8 @@ export default function ProductionProfileCard() {
         ranking: res.data.ranking || null,
         description: res.data.description || null,
         teamId: res.data.teamId || null,
-        team: res.data.team || null
+        team: res.data.team || null,
+        totalChallenges: res.data.totalChallenges || null,
       };
       
       setUser(realUser);
@@ -332,7 +334,11 @@ export default function ProductionProfileCard() {
                     {t('challenges_completed')}
                   </div>
                   <div className="text-3xl font-bold text-foreground">
-                    {user.challengesCompleted !== null ? user.challengesCompleted : "N/A"}
+                    {user.challengesCompleted !== null && user.totalChallenges !== undefined
+                      ? `${user.challengesCompleted}/${user.totalChallenges}`
+                      : user.challengesCompleted !== null
+                        ? `${user.challengesCompleted}`
+                        : "N/A"}
                   </div>
                 </div>
                 

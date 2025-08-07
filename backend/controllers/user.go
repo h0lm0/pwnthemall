@@ -136,15 +136,35 @@ func GetCurrentUser(c *gin.Context) {
 		}
 	}
 
+	// Compute team-based points and number of solved challenges
+	var totalPoints int64 = 0
+	var solvesCount int64 = 0
+	if user.TeamID != nil {
+		// Count of solves for the team
+		config.DB.Model(&models.Solve{}).Where("team_id = ?", *user.TeamID).Count(&solvesCount)
+		// Sum of points from solves for the team
+		config.DB.Model(&models.Solve{}).
+			Where("team_id = ?", *user.TeamID).
+			Select("COALESCE(SUM(points), 0)").
+			Scan(&totalPoints)
+	}
+
+	// Compute total number of available (non-hidden) challenges
+	var totalChallenges int64 = 0
+	config.DB.Model(&models.Challenge{}).Where("hidden = ?", false).Count(&totalChallenges)
+
 	response := gin.H{
-		"id":          user.ID,
-		"username":    user.Username,
-		"email":       user.Email,
-		"role":        user.Role,
-		"banned":      user.Banned,
-		"teamId":      user.TeamID,
-		"memberSince": user.MemberSince,
-		"team":        gin.H{},
+		"id":                  user.ID,
+		"username":            user.Username,
+		"email":               user.Email,
+		"role":                user.Role,
+		"banned":              user.Banned,
+		"teamId":              user.TeamID,
+		"memberSince":         user.MemberSince,
+		"team":                gin.H{},
+		"points":              totalPoints,
+		"challengesCompleted": solvesCount,
+		"totalChallenges":     totalChallenges,
 	}
 
 	if user.Team != nil {

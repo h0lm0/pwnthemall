@@ -13,6 +13,7 @@ interface GameProfileData extends User {
   ranking?: number;
   specializations?: string[];
   badges?: string[];
+  totalChallenges?: number;
 }
 
 export default function ThemeAdaptiveProfileCard() {
@@ -22,16 +23,8 @@ export default function ThemeAdaptiveProfileCard() {
 
   useEffect(() => {
     axios.get<User>("/api/me").then((res: AxiosResponse<User>) => {
-      // Extend the user data with mock gaming data for demonstration
       const gameUser: GameProfileData = {
         ...res.data,
-        points: 562,
-        challengesCompleted: 38,
-        discordUsername: "m00nc4k3#1337",
-        memberSince: "2024-02-04 15:09:32",
-        ranking: 15,
-        specializations: ["Osint-db", "Hackcess"],
-        badges: ["first-blood", "speed-demon", "crypto-master"]
       };
       setUser(gameUser);
     }).finally(() => setLoading(false));
@@ -121,7 +114,11 @@ export default function ThemeAdaptiveProfileCard() {
                 Nombre de Défis Réalisés
               </div>
               <div className="text-3xl font-bold text-primary">
-                {user.challengesCompleted}
+                {user.challengesCompleted !== undefined && user.totalChallenges !== undefined
+                  ? `${user.challengesCompleted}/${user.totalChallenges}`
+                  : user.challengesCompleted !== undefined
+                    ? `${user.challengesCompleted}`
+                    : "N/A"}
               </div>
             </div>
             

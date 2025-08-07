@@ -35,6 +35,7 @@ interface GameProfileData extends User {
   ranking?: number;
   specializations?: string[];
   badges?: string[];
+  totalChallenges?: number;
 }
 
 export default function ProfileWithMenus() {
@@ -74,13 +75,6 @@ export default function ProfileWithMenus() {
     axios.get("/api/me").then((res: AxiosResponse<any>) => {
       const gameUser: GameProfileData = {
         ...res.data,
-        points: 562,
-        challengesCompleted: 38,
-        discordUsername: "m00nc4k3#1337",
-        memberSince: "2024-02-04 15:09:32",
-        ranking: 15,
-        specializations: ["Osint-db", "Hackcess"],
-        badges: ["first-blood", "speed-demon", "crypto-master"]
       };
       setUser(gameUser);
       setUsername(res.data.username);
@@ -298,7 +292,11 @@ export default function ProfileWithMenus() {
                     Nombre de Défis Réalisés
                   </div>
                   <div className="text-3xl font-bold text-primary">
-                    {user.challengesCompleted}
+                    {user.challengesCompleted !== undefined && user.totalChallenges !== undefined
+                      ? `${user.challengesCompleted}/${user.totalChallenges}`
+                      : user.challengesCompleted !== undefined
+                        ? `${user.challengesCompleted}`
+                        : "N/A"}
                   </div>
                 </div>
                 

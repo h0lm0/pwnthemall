@@ -12,6 +12,7 @@ interface GameProfileData extends User {
   ranking?: number;
   description?: string;
   badges?: string[];
+  totalChallenges?: number;
 }
 
 export default function DescriptionProfileCard() {
@@ -21,15 +22,8 @@ export default function DescriptionProfileCard() {
 
   useEffect(() => {
     axios.get<User>("/api/me").then((res: AxiosResponse<User>) => {
-      // Extend the user data with mock gaming data for demonstration
       const gameUser: GameProfileData = {
         ...res.data,
-        points: 562,
-        challengesCompleted: 38,
-        memberSince: "2024-02-04 15:09:32",
-        ranking: 15,
-        description: "Passionate cybersecurity enthusiast with a focus on OSINT and penetration testing. Always eager to learn new techniques and solve challenging puzzles.",
-        badges: ["first-blood", "speed-demon", "crypto-master"]
       };
       setUser(gameUser);
     }).finally(() => setLoading(false));
@@ -114,7 +108,11 @@ export default function DescriptionProfileCard() {
                 Nombre de Défis Réalisés
               </div>
               <div className="text-3xl font-bold text-primary">
-                {user.challengesCompleted}
+                {user.challengesCompleted !== undefined && user.totalChallenges !== undefined
+                  ? `${user.challengesCompleted}/${user.totalChallenges}`
+                  : user.challengesCompleted !== undefined
+                    ? `${user.challengesCompleted}`
+                    : "N/A"}
               </div>
             </div>
           </div>

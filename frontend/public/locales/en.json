@@ -62,6 +62,7 @@
   "change_username_confirm": "Are you sure you want to change your username to {username}?",
   "username_updated": "Username updated successfully!",
   "delete_account": "Delete Account",
+  "danger_zone": "Danger zone",
   "delete_account_confirm": "Are you sure you want to delete your account? This action cannot be undone.",
   "current_password": "Current Password",
   "new_password": "New Password",

@@ -64,6 +64,7 @@
   "change_username_confirm": "Êtes-vous sûr de vouloir changer votre nom d'utilisateur en {username} ?",
   "username_updated": "Nom d'utilisateur mis à jour avec succès !",
   "delete_account": "Supprimer le compte",
+  "danger_zone": "Zone de danger",
   "delete_account_confirm": "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action ne peut pas être annulée.",
   "current_password": "Mot de passe actuel",
   "new_password": "Nouveau mot de passe",
