@@ -24,5 +24,11 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		// challenges.POST("/:id/kill", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/kill", "write"), controllers.KillChallengeInstance)
 		// challenges.PUT("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.UpdateUser)
 		// challenges.DELETE("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.DeleteUser)
+
+		// Admin endpoints
+		challenges.GET("/admin/all", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/all", "read"), controllers.GetAllChallengesAdmin)
+		challenges.GET("/admin/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "read"), controllers.GetChallengeAdmin)
+		challenges.PUT("/admin/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "write"), controllers.UpdateChallengeAdmin)
+		challenges.DELETE("/admin/hints/:hintId", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/hints/:hintId", "write"), controllers.DeleteHint)
 	}
 }
