@@ -7,7 +7,6 @@ import { useCTFStatus } from "@/hooks/use-ctf-status";
 import CategoryContent from "@/components/pwn/CategoryContent";
 import { Challenge } from "@/models/Challenge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
 import { Clock } from "lucide-react";
 import Head from "next/head";
 import axios from "@/lib/axios";
@@ -86,10 +85,6 @@ export default function CategoryPage() {
         const data = e?.detail ?? (typeof e?.data === 'string' ? JSON.parse(e.data) : e?.data);
         if (data && data.event === 'team_solve') {
           console.log('[TeamSolve] received event', data, 'refreshing challenges for category', cat);
-          // Try to resolve challenge name from current list
-          const solved = challenges?.find((c) => c.id === data.challengeId);
-          const label = solved?.name ? `${solved.name}` : `#${data.challengeId}`;
-          toast.success(`Team solved: ${label} (+${data.points})`);
           fetchChallenges();
         }
       } catch (err) {
@@ -101,7 +96,7 @@ export default function CategoryPage() {
     return () => {
       window.removeEventListener?.('team-solve', handler as EventListener);
     };
-  }, [fetchChallenges, cat, challenges]);
+  }, [fetchChallenges, cat]);
 
   if (!authChecked || !loggedIn || !teamChecked) return null;
   if (!hasTeam && role !== "admin") return null;

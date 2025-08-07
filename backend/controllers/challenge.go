@@ -297,6 +297,8 @@ func SubmitChallenge(c *gin.Context) {
 				TeamID      uint      `json:"teamId"`
 				ChallengeID uint      `json:"challengeId"`
 				Points      int       `json:"points"`
+				UserID      uint      `json:"userId"`
+				Username    string    `json:"username"`
 				Timestamp   time.Time `json:"timestamp"`
 			}
 			event := TeamSolveEvent{
@@ -304,6 +306,8 @@ func SubmitChallenge(c *gin.Context) {
 				TeamID:      user.Team.ID,
 				ChallengeID: challenge.ID,
 				Points:      challenge.Points,
+				UserID:      user.ID,
+				Username:    user.Username,
 				Timestamp:   time.Now().UTC(),
 			}
 			if WebSocketHub != nil {

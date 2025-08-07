@@ -138,7 +138,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
 
     const tryNext = () => {
       if (tried >= candidates.length) {
-        console.warn('[WS] Exhausted all websocket endpoints, will retry in 5s...');
+        debugWarn('[WS] Exhausted all websocket endpoints, will retry in 5s...');
         reconnectTimeoutRef.current = setTimeout(() => {
           tried = 0;
           tryNext();
@@ -147,14 +147,14 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
       }
 
       const url = candidates[tried++];
-      console.log('[WS] Connecting to', url);
+      debugLog('[WS] Connecting to', url);
 
       try {
         const ws = new WebSocket(url);
         wsRef.current = ws;
 
         ws.onopen = () => {
-          console.log('[WS] Connected to', url);
+          debugLog('[WS] Connected to', url);
           setIsConnected(true);
 
           if (reconnectTimeoutRef.current) {
@@ -171,13 +171,13 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
               try {
                 const parsed = JSON.parse(event.data);
                 if (parsed && parsed.event === 'team_solve') {
-                  console.log('[WS] team_solve event', parsed);
+                  debugLog('[WS] team_solve event', parsed);
                   window.dispatchEvent(new CustomEvent('team-solve', { detail: parsed }));
                   // Also trigger the notification toast pipeline
                   const notif = {
                     id: Date.now(),
                     title: 'Team solved a challenge',
-                    message: `Challenge #${parsed.challengeId} +${parsed.points} pts`,
+                    message: `${parsed.username || 'A teammate'} solved challenge #${parsed.challengeId} (+${parsed.points} pts)`,
                     type: 'info',
                     createdAt: new Date().toISOString(),
                   } as any;
@@ -206,7 +206,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
         };
 
         ws.onclose = () => {
-          console.warn('[WS] Disconnected from', url);
+          debugWarn('[WS] Disconnected from', url);
           setIsConnected(false);
 
           // Attempt failover to next candidate immediately
@@ -214,14 +214,14 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
         };
 
         ws.onerror = (error) => {
-          console.error('[WS] Error on', url, error);
+          debugError('[WS] Error on', url, error);
           setIsConnected(false);
           try {
             ws.close();
           } catch {}
         };
       } catch (error) {
-        console.error('[WS] Failed to create WebSocket connection for', url, error);
+        debugError('[WS] Failed to create WebSocket connection for', url, error);
         setIsConnected(false);
         tryNext();
       }
