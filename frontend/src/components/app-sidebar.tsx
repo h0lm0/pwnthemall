@@ -23,6 +23,7 @@ import { useSiteConfig } from "@/context/SiteConfigContext";
 
 import { useChallengeCategories } from "@/hooks/use-challenge-categories";
 import { useDraggableCategories } from "@/hooks/use-draggable-categories";
+import { useCTFStatus } from "@/hooks/use-ctf-status";
 import type { NavItem } from "@/models/NavItem";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
@@ -32,9 +33,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const { isMobile } = useSidebar();
   const { categories, loading, reorderCategories } = useDraggableCategories(loggedIn);
-  // CTF status - show pwn and scoreboard always for now
-  const ctfLoading = false;
-  const ctfStatus = { status: 'running' };
+  const { ctfStatus, loading: ctfLoading } = useCTFStatus();
 
   const [userData, setUserData] = React.useState({
     name: "",

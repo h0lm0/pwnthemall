@@ -89,6 +89,8 @@ func seedConfig() {
 	config := []models.Config{
 		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: true},
 		{Key: "REGISTRATION_ENABLED", Value: getEnvWithDefault("PTA_REGISTRATION_ENABLED", "false"), Public: true},
+		{Key: "CTF_START_TIME", Value: getEnvWithDefault("PTA_CTF_START_TIME", ""), Public: true},
+		{Key: "CTF_END_TIME", Value: getEnvWithDefault("PTA_CTF_END_TIME", ""), Public: true},
 	}
 
 	for _, item := range config {

@@ -59,6 +59,12 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		return
 	}
 
+	// Check CTF timing - only allow access if CTF has started or user is admin
+	if !config.IsCTFStarted() && user.Role != "admin" {
+		c.JSON(http.StatusOK, []interface{}{}) // Return empty array instead of error
+		return
+	}
+
 	var challenges []models.Challenge
 	result := config.DB.
 		Preload("ChallengeCategory").
@@ -240,6 +246,17 @@ func SubmitChallenge(c *gin.Context) {
 	// Block all users (including admins) from submitting if not in a team
 	if user.Team == nil || user.TeamID == nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "team_required_to_submit"})
+		return
+	}
+
+	// Check CTF timing - block flag submission when CTF hasn't started or has ended
+	ctfStatus := config.GetCTFStatus()
+	if ctfStatus == config.CTFNotStarted {
+		c.JSON(http.StatusForbidden, gin.H{"error": "flag_submission_not_available_yet"})
+		return
+	}
+	if ctfStatus == config.CTFEnded {
+		c.JSON(http.StatusForbidden, gin.H{"error": "flag_submission_no_longer_available"})
 		return
 	}
 
