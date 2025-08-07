@@ -11,6 +11,11 @@ else
     exit 1
 fi
 
+if ! jq --help &>/dev/null; then
+    echo "The jq package is required to run the script. Please install it before running again the script."
+    exit 1
+fi
+
 MINIO_CONTAINER="minio"
 MINIO_ALIAS="localminio"
 MINIO_ENDPOINT="http://localhost:9000"
@@ -44,13 +49,15 @@ function minio_sync() {
 function compose_up() {
     local env="prod"
     local build="false"
+
     if [ ! -f ./shared/worker ]; then
         echo "WARN: Private key file shared/worker not found, generating new one..."
         generate_key
     fi
+
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            up)
+            up|-u)
                 shift
                 ;;
             -e|--env)
@@ -75,11 +82,32 @@ function compose_up() {
         exit 1
     fi
 
-    echo "[+] Running docker compose using $compose_file"
-    cmd=(docker compose -f "$compose_file" up -d)
-    [[ "$build" == "true" ]] && cmd+=(--build)
+    echo "[+] Starting services..."
 
-    "${cmd[@]}"
+    # Redirect both stdout and stderr to a log file, then display only if error
+    local log_file
+    log_file=$(mktemp)
+
+    if [[ "$build" == "true" ]]; then
+        docker compose -f "$compose_file" up -d --build >"$log_file" 2>&1
+    else
+        docker compose -f "$compose_file" up -d >"$log_file" 2>&1
+    fi
+
+    local status=$?
+
+    if [[ $status -ne 0 ]]; then
+        echo "[✗] Failed to start services:"
+        cat "$log_file"
+        rm -f "$log_file"
+        exit 1
+    fi
+
+    rm -f "$log_file"
+
+    echo "[+] Waiting for services to initialize"
+    sleep 5
+
     echo "[✓] Compose up completed"
 }
 
