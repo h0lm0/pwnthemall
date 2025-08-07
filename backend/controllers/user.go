@@ -6,6 +6,7 @@ import (
 	"pwnthemall/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -131,13 +132,7 @@ func GetCurrentUser(c *gin.Context) {
 		var members []models.User
 		if err := config.DB.Where("team_id = ?", user.TeamID).Find(&members).Error; err == nil {
 			safeMembers = make([]models.SafeUser, len(members))
-			for i, member := range members {
-				safeMembers[i] = models.SafeUser{
-					ID:       member.ID,
-					Username: member.Username,
-					Role:     member.Role,
-				}
-			}
+			copier.Copy(&safeMembers, &members)
 		}
 	}
 
