@@ -1,0 +1,30 @@
+name: "Leandro bgTo"
+description: |
+  Welcome to the Leandro bgTo challenge
+  
+category: "pwn"
+difficulty: "easy"
+type: "standard"
+author: "Dumerat"
+hidden: false
+flags:
+  - "flag"
+  - "PTA{Leandro_bg}"
+points: 150
+minPoints: 75
+decay: "linear"
+ports: [8080, 3306]
+enableFirstBlood: true
+firstBlood:
+  bonuses: [100, 50, 25]
+  badges: ["a", "b", "c"]
+hints:
+  - content: "Compliment leandre, he'll love it"
+    cost: 10
+    isActive: true
+  - content: "test"
+    cost: 25
+    isActive: false
+  - content: "hmm"
+    cost: 40
+    isActive: false

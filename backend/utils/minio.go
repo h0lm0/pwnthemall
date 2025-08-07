@@ -124,9 +124,9 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	var decayFormula models.DecayFormula
 	decayType := metaData.DecayFormula
 	if decayType == "" {
-		decayType = "linear" // default decay formula
+		decayType = "linear" // default decay --> maybe go for static decay?
 	}
-	if err := config.DB.Where("type = ?", decayType).First(&decayFormula).Error; err != nil {
+	if err := config.DB.FirstOrCreate(&decayFormula, models.DecayFormula{Type: decayType}).Error; err != nil {
 		return err
 	}
 
