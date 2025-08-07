@@ -6,7 +6,7 @@ category: "pwn"
 difficulty: "easy"
 type: "standard"
 author: "Dumerat"
-hidden: false
+hidden: true
 flags:
   - "flag"
   - "PTA{Leandro_bg}"

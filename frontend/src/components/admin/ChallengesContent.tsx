@@ -61,7 +61,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
         <CardHeader>
           <CardTitle>All Challenges</CardTitle>
           <CardDescription>
-            Manage challenge configurations including points, decay formulas, first blood bonuses, and hints
+            Manage challenge configurations
           </CardDescription>
         </CardHeader>
         <CardContent>

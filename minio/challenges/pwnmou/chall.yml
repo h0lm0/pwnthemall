@@ -1,22 +1,22 @@
-name: "Intro to Cryptography"
-description: "Un challenge d'introduction à la cryptographie"
+name: "meuh"
+description: |
+  Hi the flag is flag
+  
 category: "pwn"
-difficulty: "Easy"
-type: "Standard"
-author: "me"
+difficulty: "medium"
+type: "standard"
+author: "crypto-master"
 hidden: false
 flags:
-  - "flag{example1}"
-  - "flag{example2}"
-points: 100
-minPoints: 50
-scaleFormula: "linear"
+  - "flag"
+points: 300
+minPoints: 300
+decay: "None"
 enableFirstBlood: true
-hints:
-  - content: "Pense au chiffrement classique."
-    cost: 10
-    isActive: true
-    autoActiveAt: "2025-08-01T10:00:00Z"
 firstBlood:
-  bonuses: [50, 20]
-  badge: "Crown"
+  bonuses: [200]
+  badges: ["a"]
+hints:
+  - content: "20 points to see nothing, well"
+    cost: 20
+    isActive: true

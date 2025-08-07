@@ -11,7 +11,7 @@ flags:
   - "flag"
 points: 300
 minPoints: 150
-decay: "linear"
+decay: "None"
 enableFirstBlood: true
 firstBlood:
   bonuses: [200]

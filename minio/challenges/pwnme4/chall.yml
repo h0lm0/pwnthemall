@@ -1,14 +1,13 @@
-name: pwn me 999
+name: "hmmm"
 description: |
-  aaa
-  aaaa
-  aaaaa
-  aaaaaa
-  aaaaaabcpdea
-category: pwn
-difficulty: intro
-type: standard
-author: h0lm
-flags: ["flag"]
+  Hi the flag is flag
+  
+category: "pwn"
+difficulty: "medium"
+type: "standard"
+author: "crypto-master"
 hidden: false
-points: 10
+flags:
+  - "flag"
+points: 300
+enableFirstBlood: false
