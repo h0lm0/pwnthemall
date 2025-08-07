@@ -27,7 +27,7 @@
 
 ## 📚 Installation & Usage
 
-![alt text](docs/run.gif)
+![vhs tape run](docs/run.gif)
 
 Check out the official documentation:
 
