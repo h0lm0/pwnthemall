@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterDecayFormulaRoutes(router *gin.Engine) {
-	decayFormulas := router.Group("/api/decay-formulas")
+	decayFormulas := router.Group("/decay-formulas")
 	{
 		decayFormulas.GET("", controllers.GetDecayFormulas)
 		decayFormulas.POST("", middleware.AuthRequired(true), middleware.CheckPolicy("/api/decay-formulas", "write"), controllers.CreateDecayFormula)

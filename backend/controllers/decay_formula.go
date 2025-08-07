@@ -10,7 +10,7 @@ import (
 
 func GetDecayFormulas(c *gin.Context) {
 	var decayFormulas []models.DecayFormula
-	if err := config.DB.Find(&decayFormulas).Error; err != nil {
+	if err := config.DB.Where("name != '' AND name IS NOT NULL").Find(&decayFormulas).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -22,6 +22,12 @@ func CreateDecayFormula(c *gin.Context) {
 	var decayFormula models.DecayFormula
 	if err := c.ShouldBindJSON(&decayFormula); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate that name is not empty
+	if decayFormula.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Decay formula name cannot be empty"})
 		return
 	}
 
@@ -44,6 +50,12 @@ func UpdateDecayFormula(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&decayFormula); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate that name is not empty
+	if decayFormula.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Decay formula name cannot be empty"})
 		return
 	}
 
