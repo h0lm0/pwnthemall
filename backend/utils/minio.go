@@ -120,6 +120,16 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		return err
 	}
 
+	// Handle decay formula
+	var decayFormula models.DecayFormula
+	decayType := metaData.DecayFormula
+	if decayType == "" {
+		decayType = "linear" // default decay formula
+	}
+	if err := config.DB.Where("type = ?", decayType).First(&decayFormula).Error; err != nil {
+		return err
+	}
+
 	var challenge models.Challenge
 	if err := config.DB.Where("slug = ?", slug).First(&challenge).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
@@ -135,6 +145,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
+	challenge.DecayFormulaID = decayFormula.ID
 	ports64 := make(pq.Int64Array, len(ports))
 	for i, p := range ports {
 		ports64[i] = int64(p)
