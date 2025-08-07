@@ -312,7 +312,7 @@ func SubmitChallenge(c *gin.Context) {
 			}
 			if WebSocketHub != nil {
 				if payload, err := json.Marshal(event); err == nil {
-					WebSocketHub.SendToTeam(user.Team.ID, payload)
+					WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 				}
 			}
 
