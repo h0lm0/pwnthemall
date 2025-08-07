@@ -120,6 +120,16 @@ func DeleteConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Configuration deleted successfully"})
 }
 
+// GetCTFStatus returns the current CTF timing status
+func GetCTFStatus(c *gin.Context) {
+	status := config.GetCTFStatus()
+	c.JSON(http.StatusOK, gin.H{
+		"status":     string(status),
+		"is_active":  config.IsCTFActive(),
+		"is_started": config.IsCTFStarted(),
+	})
+}
+
 // GetPublicConfigs returns only public configurations
 func GetPublicConfigs(c *gin.Context) {
 	var configs []models.Config
@@ -129,14 +139,4 @@ func GetPublicConfigs(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, configs)
-}
-
-// GetCTFStatus returns the current CTF timing status
-func GetCTFStatus(c *gin.Context) {
-	status := config.GetCTFStatus()
-	c.JSON(http.StatusOK, gin.H{
-		"status":     string(status),
-		"is_active":  config.IsCTFActive(),
-		"is_started": config.IsCTFStarted(),
-	})
 }

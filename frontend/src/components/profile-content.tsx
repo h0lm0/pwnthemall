@@ -404,6 +404,7 @@ function ThemeSelector() {
   const themes = [
     { value: "light",      label: "Light",      previewLeft: "#ffffff", previewRight: "#f1f5f9" },
     { value: "latte",      label: "Latte",      previewLeft: "#eff1f5", previewRight: "#ccd1da" },
+    { value: "cyberpunk",  label: "Cyberpunk",  previewLeft: "#1a1a2e", previewRight: "#e91e63" },
     { value: "rose",       label: "Rose",       previewLeft: "#fffafc", previewRight: "#fee4f1" },
     { value: "emerald",    label: "Emerald",    previewLeft: "#eefbf5", previewRight: "#d5f5e7" },
     { value: "violet",     label: "Violet",     previewLeft: "#faf5ff", previewRight: "#f0e1fe" },

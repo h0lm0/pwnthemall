@@ -100,11 +100,44 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     
     debugLog('Showing toast notification:', notification);
     
-    // Show toast notification
-    if (typeof window !== 'undefined' && window.dispatchEvent) {
-      window.dispatchEvent(new CustomEvent('show-notification', { 
-        detail: notification 
-      }));
+    // Get the appropriate icon based on notification type
+    const getIcon = (type: string) => {
+      switch (type) {
+        case 'error':
+          return <XCircle className="w-4 h-4" />;
+        case 'warning':
+          return <AlertTriangle className="w-4 h-4" />;
+        default:
+          return <Info className="w-4 h-4" />;
+      }
+    };
+
+    // Show toast notification using Sonner
+    const toastOptions = {
+      icon: getIcon(notification.type),
+      className: `notification-toast notification-${notification.type}`,
+      duration: 6000, // 6 seconds
+    };
+
+    switch (notification.type) {
+      case 'error':
+        toast.error(notification.title, {
+          ...toastOptions,
+          description: notification.message,
+        });
+        break;
+      case 'warning':
+        toast.warning(notification.title, {
+          ...toastOptions,
+          description: notification.message,
+        });
+        break;
+      default:
+        toast.info(notification.title, {
+          ...toastOptions,
+          description: notification.message,
+        });
+        break;
     }
   };
 

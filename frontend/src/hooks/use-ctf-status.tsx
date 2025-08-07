@@ -50,4 +50,4 @@ export function useCTFStatus() {
     error,
     refreshStatus: fetchCTFStatus,
   };
-} 
+}

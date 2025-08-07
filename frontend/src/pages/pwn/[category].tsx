@@ -96,5 +96,12 @@ export default function CategoryPage() {
     return null;
   }
 
-  return <CategoryContent cat={cat} challenges={challenges} onChallengeUpdate={fetchChallenges} />;
+  return (
+    <>
+      <Head>
+        <title>{getSiteName()}</title>
+      </Head>
+      <CategoryContent cat={cat} challenges={challenges} onChallengeUpdate={fetchChallenges} ctfStatus={ctfStatus} ctfLoading={ctfLoading} />
+    </>
+  );
 }

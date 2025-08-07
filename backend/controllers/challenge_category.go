@@ -13,7 +13,6 @@ type ChallengeCategoryInput struct {
 }
 
 func GetChallengeCategories(c *gin.Context) {
-	// Check if user is authenticated and get user info
 	userI, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})

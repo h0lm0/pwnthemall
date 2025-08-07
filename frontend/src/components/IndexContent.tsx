@@ -78,7 +78,7 @@ const IndexContent = ({ ctfStatus, ctfLoading, isLoggedIn, hasTeam, userRole }: 
       </>
     );
   }
-
+  
   return (
     <>
       <Head>

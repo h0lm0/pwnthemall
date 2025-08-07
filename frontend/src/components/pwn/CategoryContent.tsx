@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
-import { useCTFStatus } from "@/hooks/use-ctf-status";
+import { CTFStatus } from "@/hooks/use-ctf-status";
 import { Challenge, Solve } from "@/models/Challenge";
 import { BadgeCheck, Trophy, Play, Square, Settings, Clock } from "lucide-react";
 import ConnectionInfo from "@/components/ConnectionInfo";
@@ -33,9 +33,11 @@ interface CategoryContentProps {
   cat: string;
   challenges: Challenge[];
   onChallengeUpdate?: () => void;
+  ctfStatus: CTFStatus;
+  ctfLoading: boolean;
 }
 
-const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryContentProps) => {
+const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, ctfLoading }: CategoryContentProps) => {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [flag, setFlag] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,7 +49,6 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [instanceDetails, setInstanceDetails] = useState<{[key: number]: any}>({});
   const [connectionInfo, setConnectionInfo] = useState<{[key: number]: string[]}>({});
   const { getSiteName } = useSiteConfig();
-  const { ctfStatus, loading: ctfLoading } = useCTFStatus();
   const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
 
   // Fetch instance status for all Docker challenges when challenges are loaded
@@ -384,7 +385,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
             <div className="flex-1 flex flex-col min-h-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-                <TabsList className={`grid w-full mb-4 flex-shrink-0 ${
+                <TabsList className={`grid w-full mb-4 flex-shrink-0 bg-card border rounded-lg p-1 ${
                   selectedChallenge && isDockerChallenge(selectedChallenge) 
                     ? 'grid-cols-3' 
                     : 'grid-cols-2'

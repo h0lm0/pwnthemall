@@ -60,7 +60,6 @@ const PwnPage = () => {
     return null;
   }
 
-  // Default view for active CTF or no timing
   return (
     <>
       <Head>
