@@ -174,10 +174,11 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
                   debugLog('[WS] team_solve event', parsed);
                   window.dispatchEvent(new CustomEvent('team-solve', { detail: parsed }));
                   // Also trigger the notification toast pipeline
+                  const label = parsed.challengeName || `challenge #${parsed.challengeId}`;
                   const notif = {
                     id: Date.now(),
                     title: 'Team solved a challenge',
-                    message: `${parsed.username || 'A teammate'} solved challenge #${parsed.challengeId} (+${parsed.points} pts)`,
+                    message: `${parsed.username || 'A teammate'} solved ${label} (+${parsed.points} pts)`,
                     type: 'info',
                     createdAt: new Date().toISOString(),
                   } as any;

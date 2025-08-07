@@ -293,22 +293,24 @@ func SubmitChallenge(c *gin.Context) {
 		} else {
 			// Broadcast team solve event over WebSocket
 			type TeamSolveEvent struct {
-				Event       string    `json:"event"`
-				TeamID      uint      `json:"teamId"`
-				ChallengeID uint      `json:"challengeId"`
-				Points      int       `json:"points"`
-				UserID      uint      `json:"userId"`
-				Username    string    `json:"username"`
-				Timestamp   time.Time `json:"timestamp"`
+				Event         string    `json:"event"`
+				TeamID        uint      `json:"teamId"`
+				ChallengeID   uint      `json:"challengeId"`
+				ChallengeName string    `json:"challengeName"`
+				Points        int       `json:"points"`
+				UserID        uint      `json:"userId"`
+				Username      string    `json:"username"`
+				Timestamp     time.Time `json:"timestamp"`
 			}
 			event := TeamSolveEvent{
-				Event:       "team_solve",
-				TeamID:      user.Team.ID,
-				ChallengeID: challenge.ID,
-				Points:      challenge.Points,
-				UserID:      user.ID,
-				Username:    user.Username,
-				Timestamp:   time.Now().UTC(),
+				Event:         "team_solve",
+				TeamID:        user.Team.ID,
+				ChallengeID:   challenge.ID,
+				ChallengeName: challenge.Name,
+				Points:        challenge.Points,
+				UserID:        user.ID,
+				Username:      user.Username,
+				Timestamp:     time.Now().UTC(),
 			}
 			if WebSocketHub != nil {
 				if payload, err := json.Marshal(event); err == nil {
