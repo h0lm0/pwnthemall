@@ -7,6 +7,7 @@ import { useCTFStatus } from "@/hooks/use-ctf-status";
 import CategoryContent from "@/components/pwn/CategoryContent";
 import { Challenge } from "@/models/Challenge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Clock } from "lucide-react";
 import Head from "next/head";
 import axios from "@/lib/axios";
@@ -77,6 +78,30 @@ export default function CategoryPage() {
   useEffect(() => {
     fetchChallenges();
   }, [fetchChallenges]);
+
+  useEffect(() => {
+    // Listen to websocket events via NotificationContext custom event bus
+    const handler = (e: any) => {
+      try {
+        const data = e?.detail ?? (typeof e?.data === 'string' ? JSON.parse(e.data) : e?.data);
+        if (data && data.event === 'team_solve') {
+          console.log('[TeamSolve] received event', data, 'refreshing challenges for category', cat);
+          // Try to resolve challenge name from current list
+          const solved = challenges?.find((c) => c.id === data.challengeId);
+          const label = solved?.name ? `${solved.name}` : `#${data.challengeId}`;
+          toast.success(`Team solved: ${label} (+${data.points})`);
+          fetchChallenges();
+        }
+      } catch (err) {
+        console.warn('[TeamSolve] failed to parse event', err);
+      }
+    };
+
+    window.addEventListener?.('team-solve', handler as EventListener);
+    return () => {
+      window.removeEventListener?.('team-solve', handler as EventListener);
+    };
+  }, [fetchChallenges, cat, challenges]);
 
   if (!authChecked || !loggedIn || !teamChecked) return null;
   if (!hasTeam && role !== "admin") return null;

@@ -117,78 +117,117 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
       return; // Already connected
     }
 
-    // Get the base URL from axios and properly handle HTTPS/WSS
-    const baseURL = axios.defaults.baseURL || window.location.origin;
-    const wsURL = baseURL.replace(/^https/, 'wss').replace(/^http/, 'ws') + '/api/ws/notifications';
+    // Build candidate websocket URLs
+    const origin = (typeof window !== 'undefined') ? window.location.origin : '';
+    const envBackend = (typeof window !== 'undefined') ? (process.env.NEXT_PUBLIC_BACKEND_ORIGIN || '') : '';
 
-    try {
-      const ws = new WebSocket(wsURL);
-      wsRef.current = ws;
+    const toWs = (httpUrl: string) => httpUrl.replace(/^https/, 'wss').replace(/^http/, 'ws');
 
-      ws.onopen = () => {
-        debugLog('WebSocket connected');
-        setIsConnected(true);
-        
-        // Clear any reconnect timeout
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-          reconnectTimeoutRef.current = null;
-        }
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          debugLog('WebSocket message received:', event.data);
-          const notification: Notification = JSON.parse(event.data);
-          debugLog('Parsed notification:', notification);
-          
-          // Validate notification data
-          if (notification && notification.id && notification.title) {
-            debugLog('Valid notification, dispatching event');
-            // Add new notification to the beginning of the list
-            setNotifications(prev => [notification, ...prev]);
-            
-            // Increment unread count
-            setUnreadCount(prev => prev + 1);
-            
-            // Show toast notification
-            if (typeof window !== 'undefined' && window.dispatchEvent) {
-              window.dispatchEvent(new CustomEvent('new-notification', { 
-                detail: notification 
-              }));
-            }
-          } else {
-            debugWarn('Received invalid notification data:', notification);
-          }
-        } catch (error) {
-          debugError('Failed to parse WebSocket message:', error);
-        }
-      };
-
-      ws.onclose = () => {
-        debugLog('WebSocket disconnected');
-        setIsConnected(false);
-        
-        // Attempt to reconnect after 5 seconds
-        reconnectTimeoutRef.current = setTimeout(() => {
-          debugLog('Attempting to reconnect WebSocket...');
-          connectWebSocket();
-        }, 5000);
-      };
-
-      ws.onerror = (error) => {
-        debugError('WebSocket error:', error);
-        setIsConnected(false);
-        
-        // Don't attempt to reconnect on authentication errors
-        if (error instanceof Event && error.type === 'error') {
-          debugLog('WebSocket connection failed - likely authentication issue');
-        }
-      };
-    } catch (error) {
-      debugError('Failed to create WebSocket connection:', error);
-      setIsConnected(false);
+    const candidates: string[] = [];
+    if (envBackend) {
+      candidates.push(toWs(envBackend.replace(/\/$/, '') + '/ws/notifications'));
     }
+    candidates.push(toWs(origin + '/api/ws/notifications'));
+    candidates.push(toWs(origin + '/ws/notifications'));
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      const proto = origin.startsWith('https') ? 'wss' : 'ws';
+      candidates.push(`${proto}://localhost:8080/ws/notifications`);
+    }
+
+    let tried = 0;
+
+    const tryNext = () => {
+      if (tried >= candidates.length) {
+        console.warn('[WS] Exhausted all websocket endpoints, will retry in 5s...');
+        reconnectTimeoutRef.current = setTimeout(() => {
+          tried = 0;
+          tryNext();
+        }, 5000);
+        return;
+      }
+
+      const url = candidates[tried++];
+      console.log('[WS] Connecting to', url);
+
+      try {
+        const ws = new WebSocket(url);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          console.log('[WS] Connected to', url);
+          setIsConnected(true);
+
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+          }
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            debugLog('WebSocket message received:', event.data);
+            // Dispatch raw event for listeners interested in non-notification events
+            if (typeof window !== 'undefined' && window.dispatchEvent) {
+              try {
+                const parsed = JSON.parse(event.data);
+                if (parsed && parsed.event === 'team_solve') {
+                  console.log('[WS] team_solve event', parsed);
+                  window.dispatchEvent(new CustomEvent('team-solve', { detail: parsed }));
+                  // Also trigger the notification toast pipeline
+                  const notif = {
+                    id: Date.now(),
+                    title: 'Team solved a challenge',
+                    message: `Challenge #${parsed.challengeId} +${parsed.points} pts`,
+                    type: 'info',
+                    createdAt: new Date().toISOString(),
+                  } as any;
+                  window.dispatchEvent(new CustomEvent('new-notification', { detail: notif }));
+                  return; // Do not treat as notification list item
+                }
+              } catch {}
+            }
+
+            const notification: Notification = JSON.parse(event.data);
+            debugLog('Parsed notification:', notification);
+
+            if (notification && (notification as any).id && (notification as any).title) {
+              debugLog('Valid notification, dispatching event');
+              setNotifications(prev => [notification, ...prev]);
+              setUnreadCount(prev => prev + 1);
+              if (typeof window !== 'undefined' && window.dispatchEvent) {
+                window.dispatchEvent(new CustomEvent('new-notification', { detail: notification }));
+              }
+            } else {
+              debugWarn('Received invalid notification data:', notification);
+            }
+          } catch (error) {
+            debugError('Failed to parse WebSocket message:', error);
+          }
+        };
+
+        ws.onclose = () => {
+          console.warn('[WS] Disconnected from', url);
+          setIsConnected(false);
+
+          // Attempt failover to next candidate immediately
+          tryNext();
+        };
+
+        ws.onerror = (error) => {
+          console.error('[WS] Error on', url, error);
+          setIsConnected(false);
+          try {
+            ws.close();
+          } catch {}
+        };
+      } catch (error) {
+        console.error('[WS] Failed to create WebSocket connection for', url, error);
+        setIsConnected(false);
+        tryNext();
+      }
+    };
+
+    tryNext();
   }, []);
 
   // Initialize WebSocket connection and fetch notifications

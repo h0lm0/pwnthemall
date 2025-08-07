@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -290,6 +291,27 @@ func SubmitChallenge(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
 			return
 		} else {
+			// Broadcast team solve event over WebSocket
+			type TeamSolveEvent struct {
+				Event       string    `json:"event"`
+				TeamID      uint      `json:"teamId"`
+				ChallengeID uint      `json:"challengeId"`
+				Points      int       `json:"points"`
+				Timestamp   time.Time `json:"timestamp"`
+			}
+			event := TeamSolveEvent{
+				Event:       "team_solve",
+				TeamID:      user.Team.ID,
+				ChallengeID: challenge.ID,
+				Points:      challenge.Points,
+				Timestamp:   time.Now().UTC(),
+			}
+			if WebSocketHub != nil {
+				if payload, err := json.Marshal(event); err == nil {
+					WebSocketHub.SendToTeam(user.Team.ID, payload)
+				}
+			}
+
 			c.JSON(http.StatusOK, gin.H{"message": "challenge_solved"})
 			return
 		}
