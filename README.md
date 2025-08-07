@@ -27,6 +27,8 @@
 
 ## 📚 Installation & Usage
 
+![alt text](docs/run.gif)
+
 Check out the official documentation:
 
 - 🔧 [Installation Guide](https://github.com/h0lm0/pwnthemall/wiki/Installation)
