@@ -57,7 +57,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const fetchDecayFormulas = async () => {
     try {
       const response = await axios.get("/api/decay-formulas")
-      setDecayFormulas(response.data)
+      // Filter out decay formulas with empty names
+      const validFormulas = response.data.filter((formula: DecayFormula) => formula.name && formula.name.trim() !== '')
+      setDecayFormulas(validFormulas)
     } catch (error) {
       console.error("Failed to fetch decay formulas:", error)
     }
@@ -158,14 +160,14 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               <div>
                 <Label htmlFor="decayFormula">Decay Formula</Label>
                 <Select
-                  value={formData.decayFormulaId?.toString() || ""}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, decayFormulaId: value ? parseInt(value) : null }))}
+                  value={formData.decayFormulaId?.toString() || "none"}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, decayFormulaId: value === "none" ? null : parseInt(value) }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a decay formula" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {decayFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id.toString()}>
                         {formula.name} ({formula.type}) - Step: {formula.decayStep}, Min: {formula.minPoints}
