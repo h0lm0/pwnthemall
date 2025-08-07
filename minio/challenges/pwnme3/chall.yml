@@ -7,3 +7,7 @@ author: swinowz
 flags: ["flag"]
 hidden: true
 points: 50
+
+name: "hmmm"
+description: |
+  Hi the flag is flag

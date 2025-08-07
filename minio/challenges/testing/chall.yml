@@ -1,7 +1,6 @@
-name: "hmmm"
+name: "aled"
 description: |
   Hi the flag is flag
-  
 category: "pwn"
 difficulty: "medium"
 type: "standard"
@@ -10,13 +9,7 @@ hidden: false
 flags:
   - "flag"
 points: 300
-minPoints: 150
-decay: "None"
 enableFirstBlood: true
 firstBlood:
   bonuses: [200]
   badges: ["a"]
-hints:
-  - content: "20 points to see nothing, well"
-    cost: 20
-    isActive: true

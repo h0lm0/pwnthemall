@@ -1,7 +1,6 @@
-name: "hmmm"
+name: "betterDecay"
 description: |
   Hi the flag is flag
-  
 category: "pwn"
 difficulty: "medium"
 type: "standard"
@@ -11,3 +10,8 @@ flags:
   - "flag"
 points: 300
 enableFirstBlood: false
+decayFormula:
+  name: "Standard Linear Decay"
+  type: "linear"
+  decayStep: 5
+  minPoints: 50

@@ -48,16 +48,14 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		return
 	}
 
-	// Update first blood bonus if enabled
 	if req.EnableFirstBlood && req.FirstBloodBonus > 0 {
-		// Check if first blood record exists
 		var firstBlood models.FirstBlood
 		if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&firstBlood).Error; err != nil {
-			// Create placeholder first blood record (will be populated when someone solves)
+			// Create placeholder first blood record
 			firstBlood = models.FirstBlood{
 				ChallengeID: challenge.ID,
-				TeamID:      0, // Will be set when first solve occurs
-				UserID:      0, // Will be set when first solve occurs
+				TeamID:      0,
+				UserID:      0,
 				Bonuses:     []int{req.FirstBloodBonus},
 				Badges:      []string{"first-blood"},
 			}
@@ -69,10 +67,8 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		}
 	}
 
-	// Update hints
 	for _, hintReq := range req.Hints {
 		if hintReq.ID > 0 {
-			// Update existing hint
 			var hint models.Hint
 			if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
 				hint.Content = hintReq.Content
@@ -81,10 +77,9 @@ func UpdateChallengeAdmin(c *gin.Context) {
 				config.DB.Save(&hint)
 			}
 		} else if hintReq.Content != "" {
-			// Create new hint
 			hint := models.Hint{
 				ChallengeID: challenge.ID,
-				TeamID:      0, // Global hint
+				TeamID:      0,
 				Content:     hintReq.Content,
 				Cost:        hintReq.Cost,
 				IsActive:    hintReq.IsActive,
@@ -105,7 +100,6 @@ func GetChallengeAdmin(c *gin.Context) {
 		return
 	}
 
-	// Get all decay formulas for dropdown
 	var decayFormulas []models.DecayFormula
 	config.DB.Find(&decayFormulas)
 
