@@ -75,6 +75,7 @@ func main() {
 	routes.RegisterDockerConfigRoutes(router)
 	routes.RegisterInstanceRoutes(router)
 	routes.RegisterNotificationRoutes(router)
+	routes.RegisterDecayFormulaRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
