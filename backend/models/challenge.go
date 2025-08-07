@@ -24,7 +24,7 @@ type Challenge struct {
 	Ports                 pq.Int64Array        `gorm:"type:integer[]" json:"ports"`
 	Points                int                  `json:"points"` // maybe rename it basePoints
 	CurrentPoints         int                  `gorm:"-" json:"currentPoints"`
-	DecayFormulaID        uint                 `json:"decayFormulaId"`
+	DecayFormulaID        uint                 `json:"decayFormulaId,omitempty"`
 	DecayFormula          *DecayFormula        `gorm:"foreignKey:DecayFormulaID" json:"decayFormula,omitempty"`
 	Hints                 []Hint               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"hints,omitempty"`
 	FirstBlood            *FirstBlood          `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"firstBlood,omitempty"`
