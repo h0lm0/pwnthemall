@@ -3,15 +3,78 @@ package middleware
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
 	"pwnthemall/utils"
+	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+// getClientIP extracts the real client IP from the request
+func getClientIP(c *gin.Context) string {
+	// Check X-Forwarded-For header first (common behind proxies)
+	if xff := c.GetHeader("X-Forwarded-For"); xff != "" {
+		// Take the first IP in the comma-separated list
+		if ips := strings.Split(xff, ","); len(ips) > 0 {
+			ip := strings.TrimSpace(ips[0])
+			if net.ParseIP(ip) != nil {
+				return ip
+			}
+		}
+	}
+
+	// Check X-Real-IP header (common with Nginx)
+	if xri := c.GetHeader("X-Real-IP"); xri != "" {
+		if net.ParseIP(xri) != nil {
+			return xri
+		}
+	}
+
+	// Fall back to RemoteAddr
+	if ip, _, err := net.SplitHostPort(c.Request.RemoteAddr); err == nil {
+		if net.ParseIP(ip) != nil {
+			return ip
+		}
+	}
+
+	// Last resort, return the RemoteAddr as-is
+	return c.ClientIP()
+}
+
+// updateUserIP adds the current IP to the user's IP address list if not already present
+func updateUserIP(userID uint, currentIP string) {
+	if currentIP == "" || currentIP == "127.0.0.1" || currentIP == "::1" {
+		return // Skip localhost IPs
+	}
+
+	var user models.User
+	if err := config.DB.Select("ip_addresses").First(&user, userID).Error; err != nil {
+		return
+	}
+
+	// Check if IP already exists in the list
+	for _, ip := range user.IPAddresses {
+		if ip == currentIP {
+			return // IP already tracked
+		}
+	}
+
+	// Add the new IP (limit to last 10 IPs to prevent unlimited growth)
+	user.IPAddresses = append(user.IPAddresses, currentIP)
+	if len(user.IPAddresses) > 10 {
+		user.IPAddresses = user.IPAddresses[len(user.IPAddresses)-10:]
+	}
+
+	// Update only the IP addresses field
+	config.DB.Model(&user).Select("ip_addresses").Where("id = ?", userID).Updates(models.User{
+		IPAddresses: user.IPAddresses,
+	})
+}
 
 // AuthRequired ensures a user is logged in
 func SessionAuthRequired(needTeam bool) gin.HandlerFunc {
@@ -45,6 +108,9 @@ func SessionAuthRequired(needTeam bool) gin.HandlerFunc {
 				return
 			}
 		}
+
+		// Track user IP address
+		go updateUserIP(user.ID, getClientIP(c))
 
 		c.Set("user_id", userID)
 		c.Set("user", &user)
@@ -130,6 +196,9 @@ func AuthRequired(needTeam bool) gin.HandlerFunc {
 			return
 		}
 
+		// Track user IP address
+		go updateUserIP(user.ID, getClientIP(c))
+
 		c.Set("user_id", user.ID)
 		c.Set("user", &user)
 		c.Next()
@@ -158,6 +227,9 @@ func AuthRequiredTeamOrAdmin() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "team_required"})
 			return
 		}
+
+		// Track user IP address
+		go updateUserIP(user.ID, getClientIP(c))
 
 		c.Set("user_id", user.ID)
 		c.Set("user", &user)

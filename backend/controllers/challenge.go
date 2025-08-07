@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	"github.com/minio/minio-go/v7"
+	"gorm.io/gorm"
 )
 
 func GetChallenges(c *gin.Context) {
@@ -55,6 +56,12 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	user, ok := userI.(*models.User)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
+	// Check CTF timing - only allow access if CTF has started or user is admin
+	if !config.IsCTFStarted() && user.Role != "admin" {
+		c.JSON(http.StatusOK, []interface{}{}) // Return empty array instead of error
 		return
 	}
 
@@ -242,6 +249,17 @@ func SubmitChallenge(c *gin.Context) {
 		return
 	}
 
+	// Check CTF timing - block flag submission when CTF hasn't started or has ended
+	ctfStatus := config.GetCTFStatus()
+	if ctfStatus == config.CTFNotStarted {
+		c.JSON(http.StatusForbidden, gin.H{"error": "flag_submission_not_available_yet"})
+		return
+	}
+	if ctfStatus == config.CTFEnded {
+		c.JSON(http.StatusForbidden, gin.H{"error": "flag_submission_no_longer_available"})
+		return
+	}
+
 	// Check if team has already solved this challenge
 	var existingSolve models.Solve
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).First(&existingSolve).Error; err == nil {
@@ -383,6 +401,16 @@ func StartChallengeInstance(c *gin.Context) {
 
 	imageName, exists := utils.IsImageBuilt(challenge.Slug)
 	if !exists {
+		// Check if Docker connection is available before attempting to build
+		if err := utils.EnsureDockerClientConnected(); err != nil {
+			debug.Log("Docker connection failed for challenge %s: %v", challenge.Slug, err)
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error":   "docker_unavailable",
+				"message": "Docker service is currently unavailable. Please try again later or contact an administrator.",
+			})
+			return
+		}
+
 		var err error
 		imageName, err = utils.BuildDockerImage(challenge.Slug)
 		if err != nil {
@@ -462,6 +490,16 @@ func StartChallengeInstance(c *gin.Context) {
 	internalPorts := make([]int, len(challenge.Ports))
 	for i, p := range challenge.Ports {
 		internalPorts[i] = int(p)
+	}
+
+	// Ensure Docker connection is available before starting instance
+	if err := utils.EnsureDockerClientConnected(); err != nil {
+		debug.Log("Docker connection failed when starting instance for challenge %s: %v", challenge.Slug, err)
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "docker_unavailable",
+			"message": "Docker service is currently unavailable. Please try again later or contact an administrator.",
+		})
+		return
 	}
 
 	containerID, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, ports)
@@ -602,10 +640,17 @@ func GetInstanceStatus(c *gin.Context) {
 	// Find the instance for this user/team and challenge
 	var instance models.Instance
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"has_instance": false,
-			"status":       "no_instance",
-		})
+		if err == gorm.ErrRecordNotFound {
+			// This is expected when no instance exists - don't log as error
+			c.JSON(http.StatusOK, gin.H{
+				"has_instance": false,
+				"status":       "no_instance",
+			})
+			return
+		}
+		// Log unexpected database errors
+		debug.Log("Database error when checking instance status: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database_error"})
 		return
 	}
 

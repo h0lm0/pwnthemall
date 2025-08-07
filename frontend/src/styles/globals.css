@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: hsl(var(--sidebar));
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--sidebar-accent));
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--sidebar-accent) / 0.8);
+}
+
+/* Scrollbar styles for main content area */
+.scrollbar-track-background::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+.scrollbar-thumb-border::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.scrollbar-thumb-border:hover::-webkit-scrollbar-thumb {
+  background: hsl(var(--border) / 0.8);
+}
+
 html, body {
   width: 100%;
   min-height: 100%;
@@ -66,7 +102,7 @@ html, body {
 }
 
 .theme-latte {
-  --background: 220 23% 95%;
+  --background: 220 23% 88%;
   --sidebar-background: 225 14% 77%; /* secondary */
   --muted-foreground: 233 10% 47%; /* muted-foreground */
   --foreground: 234 16% 35%;
@@ -94,34 +130,7 @@ html, body {
   --radius: 0.5rem;
 }
 
-.theme-frappe {
-  --background: 229 19% 23%;
-  --sidebar-background: 227 15% 37%; /* secondary */
-  --muted-foreground: 228 13% 52%; /* muted-foreground */
-  --foreground: 227 70% 87%;
-  --card: 230 16% 30%;
-  --card-foreground: 227 70% 87%;
-  --popover: 229 19% 23%;
-  --popover-foreground: 227 70% 87%;
-  --primary: 222 74% 74%;
-  --primary-foreground: 229 19% 23%;
-  --secondary: 227 15% 37%;
-  --secondary-foreground: 227 70% 87%;
-  --muted: 228 13% 44%;
-  --accent: 199 55% 69%;
-  --accent-foreground: 229 19% 23%;
-  --destructive: 359 68% 71%;
-  --destructive-foreground: 229 19% 23%;
-  --border: 228 22% 66%;
-  --input: 228 22% 66%;
-  --ring: 222 74% 74%;
-  --chart-1: 10 57% 88%;
-  --chart-2: 40 62% 73%;
-  --chart-3: 96 44% 68%;
-  --chart-4: 20 79% 70%;
-  --chart-5: 316 73% 84%;
-  --radius: 0.5rem;
-}
+
 
 .theme-macchiato {
   --background: 232 23% 18%;
@@ -815,6 +824,35 @@ html, body {
   --radius: 0.5rem;
 }
 
+.theme-cyberpunk {
+  --background: 240 19% 12%;
+  --sidebar-background: 290 25% 20%; /* secondary */
+  --muted-foreground: 300 25% 70%; /* muted-foreground */
+  --foreground: 320 60% 90%;
+  --card: 280 20% 15%;
+  --card-foreground: 320 60% 90%;
+  --popover: 280 20% 15%;
+  --popover-foreground: 320 60% 90%;
+  --primary: 320 65% 70%;
+  --primary-foreground: 240 19% 12%;
+  --secondary: 290 25% 20%;
+  --secondary-foreground: 320 60% 90%;
+  --muted: 290 25% 20%;
+  --accent: 280 70% 65%;
+  --accent-foreground: 240 19% 12%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 320 60% 90%;
+  --border: 320 40% 40%;
+  --input: 290 25% 20%;
+  --ring: 320 65% 70%;
+  --chart-1: 320 65% 70%;
+  --chart-2: 300 60% 65%;
+  --chart-3: 280 70% 65%;
+  --chart-4: 260 60% 60%;
+  --chart-5: 340 70% 75%;
+  --radius: 0.5rem;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -891,7 +929,7 @@ html, body {
   color: hsl(var(--foreground));
 }
 .theme-preview.theme-latte {
-  --background: 220 23% 95%;
+  --background: 220 23% 88%;
   --sidebar-background: 225 14% 77%;
   --muted-foreground: 233 10% 47%;
   --foreground: 234 16% 35%;
@@ -920,32 +958,34 @@ html, body {
   background: linear-gradient(135deg, hsl(var(--background)) 50%, hsl(var(--primary)) 50%);
   color: hsl(var(--foreground));
 }
-.theme-preview.theme-frappe {
-  --background: 229 19% 23%;
-  --sidebar-background: 227 15% 37%;
-  --muted-foreground: 228 13% 52%;
-  --foreground: 227 70% 87%;
-  --card: 230 16% 30%;
-  --card-foreground: 227 70% 87%;
-  --popover: 229 19% 23%;
-  --popover-foreground: 227 70% 87%;
-  --primary: 222 74% 74%;
-  --primary-foreground: 229 19% 23%;
-  --secondary: 227 15% 37%;
-  --secondary-foreground: 227 70% 87%;
-  --muted: 228 13% 44%;
-  --accent: 199 55% 69%;
-  --accent-foreground: 229 19% 23%;
-  --destructive: 359 68% 71%;
-  --destructive-foreground: 229 19% 23%;
-  --border: 228 22% 66%;
-  --input: 228 22% 66%;
-  --ring: 222 74% 74%;
-  --chart-1: 10 57% 88%;
-  --chart-2: 40 62% 73%;
-  --chart-3: 96 44% 68%;
-  --chart-4: 20 79% 70%;
-  --chart-5: 316 73% 84%;
+
+
+.theme-preview.theme-cyberpunk {
+  --background: 240 19% 12%;
+  --sidebar-background: 290 25% 20%;
+  --muted-foreground: 300 25% 70%;
+  --foreground: 320 60% 90%;
+  --card: 280 20% 15%;
+  --card-foreground: 320 60% 90%;
+  --popover: 280 20% 15%;
+  --popover-foreground: 320 60% 90%;
+  --primary: 320 65% 70%;
+  --primary-foreground: 240 19% 12%;
+  --secondary: 290 25% 20%;
+  --secondary-foreground: 320 60% 90%;
+  --muted: 290 25% 20%;
+  --accent: 280 70% 65%;
+  --accent-foreground: 240 19% 12%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 320 60% 90%;
+  --border: 320 40% 40%;
+  --input: 290 25% 20%;
+  --ring: 320 65% 70%;
+  --chart-1: 320 65% 70%;
+  --chart-2: 300 60% 65%;
+  --chart-3: 280 70% 65%;
+  --chart-4: 260 60% 60%;
+  --chart-5: 340 70% 75%;
   --radius: 0.5rem;
   background: linear-gradient(135deg, hsl(var(--background)) 50%, hsl(var(--primary)) 50%);
   color: hsl(var(--foreground));

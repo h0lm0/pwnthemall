@@ -2,43 +2,23 @@
 
 ## Kesako
 
-Open source CTF platform to host challenges & boxes.
-The final goal is to have only one plateform on which you can securely host all challenges you made.
+Open source CTF platform to host challenges.
+If you're searching a self hosted solution to create CTF events
 
-## Installation
+## Features
 
-cp .env.example .env
+- Run with Docker & Docker Compose
+- Deploy Dockerfile based challenges
+- GitOps way to store challenges with an universel scheme
+- Dynamic synchronization on challenges
+- 👯 Teams & badges/awards systems
+- ✍️ Fully customizable !
+- 🔥 Deploy Docker Compose based challenges (WIP)
 
-### Edit /etc/hosts to add entry
+## Installation & usage
 
-127.0.0.1 pwnthemall.local 
-
-### Start environment
-
-   ```bash
-   bash pta-cli.sh compose up -b -e prod
-   bash pta-cli.sh compose up -b -e dev
-   ```
-
-### Navigate to the platform
-
-Open https://pwnthemall.local/ & accept the certificate
-
-### Windows Support
-Can run the same way as Linux if executed directly in the WSL terminal.
-#### Requirements:
-   - Windows Subsystem for Linux (WSL)
-   - Alternatively, Git Bash (if WSL is not available)
-
-Use the provided `pta-cli.cmd` wrapper, which will automatically detect and use WSL if available, or fall back to Git Bash. 
-   ```shell
-   pta-cli.cmd compose up -b -e prod
-   pta-cli.cmd compose up -b -e dev
-   ```
-
-## Troubleshoot
-
-## License
+[Installation wiki link](https://github.com/h0lm0/pwnthemall/wiki/Installation)
+[Usage wiki link](https://github.com/h0lm0/pwnthemall/wiki/Usage)
 
 ## Credits
 
@@ -46,8 +26,4 @@ Some works that inspired this project:
 
 - https://github.com/FrancescoXX/go-fullstack-app
 - https://github.com/CTFd/CTFd
-
-|Username|Password|Role|
-|:----------:|:---------:|:------:|
-|user|user|member|
-|admin|admin|admin|
+- https://github.com/TheFlash2k/CTFd-CLI
