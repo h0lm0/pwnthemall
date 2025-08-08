@@ -185,6 +185,11 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
                   window.dispatchEvent(new CustomEvent('new-notification', { detail: notif }));
                   return; // Do not treat as notification list item
                 }
+                if (parsed && parsed.event === 'instance_update') {
+                  debugLog('[WS] instance_update event', parsed);
+                  window.dispatchEvent(new CustomEvent('instance-update', { detail: parsed }));
+                  return; // Not a Notification object
+                }
               } catch {}
             }
 

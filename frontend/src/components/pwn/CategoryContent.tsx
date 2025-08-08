@@ -105,6 +105,42 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     fetchAllInstanceStatuses();
   }, [challenges.length, statusFetched]); // Only run once when challenges load
 
+  // Real-time: listen to instance updates over WebSocket
+  useEffect(() => {
+    const handler = (e: any) => {
+      const data = e?.detail || e?.data;
+      if (!data || data.event !== 'instance_update') return;
+
+      const challengeId = Number(data.challengeId);
+      if (!challengeId) return;
+
+      // Update status
+      let newStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+      if (data.status === 'running') newStatus = 'running';
+      else if (data.status === 'building') newStatus = 'building';
+      else if (data.status === 'expired') newStatus = 'expired';
+
+      setInstanceStatus(prev => ({ ...prev, [challengeId]: newStatus }));
+
+      // Update connection info when running
+      if (newStatus === 'running' && Array.isArray(data.connectionInfo)) {
+        setConnectionInfo(prev => ({ ...prev, [challengeId]: data.connectionInfo }));
+      }
+      if (newStatus !== 'running') {
+        setConnectionInfo(prev => ({ ...prev, [challengeId]: [] }));
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('instance-update', handler as EventListener);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('instance-update', handler as EventListener);
+      }
+    };
+  }, []);
+
   // Clear solves data when dialog opens/closes
   useEffect(() => {
     if (!open) {

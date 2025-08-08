@@ -566,6 +566,63 @@ func StartChallengeInstance(c *gin.Context) {
 		return
 	}
 
+	// Broadcast instance start event to the whole team (except the starter)
+	if WebSocketHub != nil {
+		// Build connection info similar to GetInstanceStatus
+		var connectionInfo []string
+		if len(challenge.ConnectionInfo) > 0 {
+			ip := os.Getenv("PTA_PUBLIC_IP")
+			if ip == "" {
+				ip = "your-instance-ip"
+			}
+
+			for i, info := range challenge.ConnectionInfo {
+				formattedInfo := strings.ReplaceAll(info, "$ip", ip)
+				if i < len(ports) {
+					for j, originalPort := range challenge.Ports {
+						if j < len(ports) {
+							originalPortStr := fmt.Sprintf(":%d", originalPort)
+							newPortStr := fmt.Sprintf(":%d", ports[j])
+							formattedInfo = strings.ReplaceAll(formattedInfo, originalPortStr, newPortStr)
+						}
+					}
+				}
+				connectionInfo = append(connectionInfo, formattedInfo)
+			}
+		}
+
+		type InstanceEvent struct {
+			Event          string    `json:"event"`
+			TeamID         uint      `json:"teamId"`
+			UserID         uint      `json:"userId"`
+			Username       string    `json:"username"`
+			ChallengeID    uint      `json:"challengeId"`
+			Status         string    `json:"status"`
+			CreatedAt      time.Time `json:"createdAt"`
+			ExpiresAt      time.Time `json:"expiresAt"`
+			Container      string    `json:"container"`
+			Ports          []int     `json:"ports"`
+			ConnectionInfo []string  `json:"connectionInfo"`
+		}
+
+		event := InstanceEvent{
+			Event:          "instance_update",
+			TeamID:         user.Team.ID,
+			UserID:         user.ID,
+			Username:       user.Username,
+			ChallengeID:    challenge.ID,
+			Status:         "running",
+			CreatedAt:      instance.CreatedAt,
+			ExpiresAt:      instance.ExpiresAt,
+			Container:      instance.Container,
+			Ports:          ports,
+			ConnectionInfo: connectionInfo,
+		}
+		if payload, err := json.Marshal(event); err == nil {
+			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":         "instance_started",
 		"image_name":     imageName,
@@ -635,6 +692,31 @@ func KillChallengeInstance(c *gin.Context) {
 		return
 	}
 	log.Printf("DEBUG: Instance status updated successfully")
+
+	// Broadcast instance stopped event to team (except the actor)
+	if WebSocketHub != nil {
+		type InstanceEvent struct {
+			Event       string    `json:"event"`
+			TeamID      uint      `json:"teamId"`
+			UserID      uint      `json:"userId"`
+			Username    string    `json:"username"`
+			ChallengeID uint      `json:"challengeId"`
+			Status      string    `json:"status"`
+			UpdatedAt   time.Time `json:"updatedAt"`
+		}
+		event := InstanceEvent{
+			Event:       "instance_update",
+			TeamID:      user.Team.ID,
+			UserID:      user.ID,
+			Username:    user.Username,
+			ChallengeID: instance.ChallengeID,
+			Status:      "stopped",
+			UpdatedAt:   time.Now().UTC(),
+		}
+		if payload, err := json.Marshal(event); err == nil {
+			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
+		}
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "instance_stopped",
@@ -779,6 +861,35 @@ func StopChallengeInstance(c *gin.Context) {
 			log.Printf("Failed to delete instance from database: %v", err)
 		}
 	}()
+
+	// Broadcast instance stopped event to team (except the actor)
+	if WebSocketHub != nil {
+		// Retrieve basic user for username if available
+		var user models.User
+		if err := config.DB.Select("id, username, team_id").First(&user, userID).Error; err == nil && user.TeamID != nil {
+			type InstanceEvent struct {
+				Event       string    `json:"event"`
+				TeamID      uint      `json:"teamId"`
+				UserID      uint      `json:"userId"`
+				Username    string    `json:"username"`
+				ChallengeID uint      `json:"challengeId"`
+				Status      string    `json:"status"`
+				UpdatedAt   time.Time `json:"updatedAt"`
+			}
+			event := InstanceEvent{
+				Event:       "instance_update",
+				TeamID:      *user.TeamID,
+				UserID:      user.ID,
+				Username:    user.Username,
+				ChallengeID: instance.ChallengeID,
+				Status:      "stopped",
+				UpdatedAt:   time.Now().UTC(),
+			}
+			if payload, err := json.Marshal(event); err == nil {
+				WebSocketHub.SendToTeamExcept(*user.TeamID, user.ID, payload)
+			}
+		}
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "instance_stopping",
