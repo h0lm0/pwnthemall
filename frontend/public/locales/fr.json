@@ -377,5 +377,6 @@
   "a_teammate": "un coéquipier",
   "team_solved_title": "L'équipe a résolu un challenge",
   "team_solved_message": "{username} a résolu {label} (+{points} pts)",
-  "instance_started_by_user": "Démarrée par {username}"
+  "instance_started_by_user": "Démarrée par {username}",
+  "demo_restriction": "Cette page/action est désactivée en environnement de démo"
 }
