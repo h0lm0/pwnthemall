@@ -12,7 +12,7 @@ import (
 
 type ChallengeAdminUpdateRequest struct {
 	Points            int           `json:"points"`
-	DecayFormulaID    uint          `json:"decayFormulaId"`
+	DecayFormulaID    *uint         `json:"decayFormulaId"`
 	EnableFirstBlood  bool          `json:"enableFirstBlood"`
 	FirstBloodBonuses []int         `json:"firstBloodBonuses"`
 	Hints             []HintRequest `json:"hints"`
@@ -42,7 +42,14 @@ func UpdateChallengeAdmin(c *gin.Context) {
 
 	// Update challenge basic fields
 	challenge.Points = req.Points
-	challenge.DecayFormulaID = req.DecayFormulaID
+	
+	// Gérer le DecayFormulaID - si 0 ou nil, on met à nil pour désactiver le decay
+	if req.DecayFormulaID == nil || *req.DecayFormulaID == 0 {
+		challenge.DecayFormulaID = nil
+	} else {
+		challenge.DecayFormulaID = req.DecayFormulaID
+	}
+	
 	challenge.EnableFirstBlood = req.EnableFirstBlood
 
 	// Convert []int to pq.Int64Array
@@ -71,16 +78,43 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.FirstBlood{})
 	}
 
+	// Gestion des hints - approche complète de synchronisation
+	// 1. Récupérer tous les hints existants pour ce challenge
+	var existingHints []models.Hint
+	config.DB.Where("challenge_id = ?", challenge.ID).Find(&existingHints)
+	
+	// 2. Créer une map des IDs des hints dans la requête
+	requestHintIDs := make(map[uint]bool)
 	for _, hintReq := range req.Hints {
 		if hintReq.ID > 0 {
+			requestHintIDs[hintReq.ID] = true
+		}
+	}
+	
+	// 3. Supprimer les hints qui ne sont plus dans la liste
+	for _, existingHint := range existingHints {
+		if !requestHintIDs[existingHint.ID] {
+			if err := config.DB.Delete(&existingHint).Error; err != nil {
+				log.Printf("Failed to delete hint %d: %v", existingHint.ID, err)
+			}
+		}
+	}
+	
+	// 4. Créer ou mettre à jour les hints de la requête
+	for _, hintReq := range req.Hints {
+		if hintReq.ID > 0 {
+			// Mettre à jour un hint existant
 			var hint models.Hint
 			if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
 				hint.Content = hintReq.Content
 				hint.Cost = hintReq.Cost
 				hint.IsActive = hintReq.IsActive
-				config.DB.Save(&hint)
+				if err := config.DB.Save(&hint).Error; err != nil {
+					log.Printf("Failed to update hint %d: %v", hint.ID, err)
+				}
 			}
 		} else if hintReq.Content != "" {
+			// Créer un nouveau hint
 			hint := models.Hint{
 				ChallengeID: challenge.ID,
 				Content:     hintReq.Content,

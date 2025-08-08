@@ -15,7 +15,17 @@ func GetDecayFormulas(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, decayFormulas)
+	// Ajouter une option "None" pour désactiver le decay
+	noneOption := models.DecayFormula{
+		ID:   0,
+		Name: "None (No Decay)",
+		Type: "none",
+	}
+
+	// Insérer l'option "None" au début de la liste
+	allFormulas := append([]models.DecayFormula{noneOption}, decayFormulas...)
+
+	c.JSON(http.StatusOK, allFormulas)
 }
 
 func CreateDecayFormula(c *gin.Context) {

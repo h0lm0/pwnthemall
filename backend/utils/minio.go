@@ -145,7 +145,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
-	challenge.DecayFormulaID = decayFormula.ID
+	challenge.DecayFormulaID = &decayFormula.ID
 	ports64 := make(pq.Int64Array, len(ports))
 	for i, p := range ports {
 		ports64[i] = int64(p)
