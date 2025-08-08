@@ -371,5 +371,8 @@
   "ctf_not_started_message": "La compétition CTF n'a pas encore commencé. Veuillez attendre le début de la compétition.",
   "ctf_not_started": "CTF Non Démarré",
   "flag_submission_no_longer_available": "La soumission de flags n'est plus disponible",
-  "ctf_ended": "CTF Terminé"
-} 
+  "ctf_ended": "CTF Terminé",
+  "cannot_stop_instance_not_owner": "Vous ne pouvez pas arrêter cette instance car elle a été démarrée par {username}.",
+  "a_teammate": "un coéquipier",
+  "instance_started_by_user": "Démarrée par {username}"
+}
