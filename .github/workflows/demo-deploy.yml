@@ -24,7 +24,7 @@ jobs:
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
+          ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
             cd '${{ secrets.DEPLOY_PATH }}' &&
             git fetch --tags &&
             git checkout \"${TAG}\" &&
