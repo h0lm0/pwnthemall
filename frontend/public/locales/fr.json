@@ -374,5 +374,7 @@
   "ctf_ended": "CTF Terminé",
   "cannot_stop_instance_not_owner": "Vous ne pouvez pas arrêter cette instance car elle a été démarrée par {username}.",
   "a_teammate": "un coéquipier",
+  "team_solved_title": "L'équipe a résolu un challenge",
+  "team_solved_message": "{username} a résolu {label} (+{points} pts)",
   "instance_started_by_user": "Démarrée par {username}"
 }

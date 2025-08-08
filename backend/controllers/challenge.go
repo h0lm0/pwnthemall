@@ -318,6 +318,48 @@ func SubmitChallenge(c *gin.Context) {
 				}
 			}
 
+			// Best-effort: stop any running instance for this team and challenge when solved
+			go func(teamID uint, chalID uint, actorID uint, actorName string) {
+				var instance models.Instance
+				if err := config.DB.Where("team_id = ? AND challenge_id = ?", teamID, chalID).First(&instance).Error; err == nil {
+					// Try stopping the container
+					if instance.Container != "" {
+						if err := utils.StopDockerInstance(instance.Container); err != nil {
+							log.Printf("Failed to stop Docker instance on solve: %v", err)
+						}
+					}
+					// Remove instance record to free the slot
+					if err := config.DB.Delete(&instance).Error; err != nil {
+						log.Printf("Failed to delete instance on solve: %v", err)
+					}
+
+					// Notify team listeners that instance stopped
+					if WebSocketHub != nil {
+						type InstanceEvent struct {
+							Event       string    `json:"event"`
+							TeamID      uint      `json:"teamId"`
+							UserID      uint      `json:"userId"`
+							Username    string    `json:"username"`
+							ChallengeID uint      `json:"challengeId"`
+							Status      string    `json:"status"`
+							UpdatedAt   time.Time `json:"updatedAt"`
+						}
+						evt := InstanceEvent{
+							Event:       "instance_update",
+							TeamID:      teamID,
+							UserID:      actorID,
+							Username:    actorName,
+							ChallengeID: chalID,
+							Status:      "stopped",
+							UpdatedAt:   time.Now().UTC(),
+						}
+						if payload, err := json.Marshal(evt); err == nil {
+							WebSocketHub.SendToTeamExcept(teamID, actorID, payload)
+						}
+					}
+				}
+			}(user.Team.ID, challenge.ID, user.ID, user.Username)
+
 			c.JSON(http.StatusOK, gin.H{"message": "challenge_solved"})
 			return
 		}

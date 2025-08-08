@@ -192,6 +192,15 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
       // Refresh solves after successful submission
       if (selectedChallenge) {
         fetchSolves(selectedChallenge.id);
+        // Also stop any running instance for this challenge (best-effort UX)
+        try {
+          if (getLocalInstanceStatus(selectedChallenge.id) === 'running') {
+            await stopInstance(selectedChallenge.id.toString());
+            setInstanceStatus(prev => ({ ...prev, [selectedChallenge.id]: 'stopped' }));
+            // Show a local toast only to the solver about the instance being stopped
+            toast.success(t('instance_stopped_success') || 'Instance stopped successfully');
+          }
+        } catch {}
       }
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;

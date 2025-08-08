@@ -376,5 +376,7 @@
   "ctf_ended": "CTF Ended",
   "cannot_stop_instance_not_owner": "You can't stop this instance because it was started by {username}.",
   "a_teammate": "a teammate",
+  "team_solved_title": "Team solved a challenge",
+  "team_solved_message": "{username} solved {label} (+{points} pts)",
   "instance_started_by_user": "Started by {username}"
 }

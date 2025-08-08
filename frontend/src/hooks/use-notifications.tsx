@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 import { Notification } from '@/models/Notification';
 import axios from '@/lib/axios';
 import { debugLog, debugError, debugWarn } from '@/lib/debug';
@@ -19,6 +20,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { t } = useLanguage();
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -175,10 +177,13 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
                   window.dispatchEvent(new CustomEvent('team-solve', { detail: parsed }));
                   // Also trigger the notification toast pipeline
                   const label = parsed.challengeName || `challenge #${parsed.challengeId}`;
+                  const title = t('team_solved_title') || 'Team solved a challenge';
+                  const username = parsed.username || t('a_teammate') || 'A teammate';
+                  const message = t('team_solved_message', { username, label, points: parsed.points }) || `${username} solved ${label} (+${parsed.points} pts)`;
                   const notif = {
                     id: Date.now(),
-                    title: 'Team solved a challenge',
-                    message: `${parsed.username || 'A teammate'} solved ${label} (+${parsed.points} pts)`,
+                    title,
+                    message,
                     type: 'info',
                     createdAt: new Date().toISOString(),
                   } as any;
@@ -234,7 +239,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
     };
 
     tryNext();
-  }, []);
+  }, [t]);
 
   // Initialize WebSocket connection and fetch notifications
   useEffect(() => {
