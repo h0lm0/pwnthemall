@@ -75,6 +75,7 @@ func main() {
 	routes.RegisterDockerConfigRoutes(router)
 	routes.RegisterInstanceRoutes(router)
 	routes.RegisterNotificationRoutes(router)
+	// Badges routes removed
 
 	port := os.Getenv("PORT")
 	if port == "" {

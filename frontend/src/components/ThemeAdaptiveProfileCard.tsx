@@ -132,43 +132,7 @@ export default function ThemeAdaptiveProfileCard() {
             </div>
           </div>
 
-          {/* Badges Section */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-primary mb-4">
-              Badges & Récompenses
-            </h3>
-            <div className="flex gap-3">
-              {/* First Blood Badge */}
-              <div className="w-14 h-14 bg-gradient-to-br from-red-500/20 to-rose-600/30 rounded-xl border border-red-400/40 flex items-center justify-center hover:scale-105 transition-all duration-200 cursor-pointer group relative">
-                <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-rose-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🩸</span>
-                </div>
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-border">
-                  First Blood
-                </div>
-              </div>
-              
-              {/* Speed Demon Badge */}
-              <div className="w-14 h-14 bg-gradient-to-br from-yellow-500/20 to-orange-600/30 rounded-xl border border-yellow-400/40 flex items-center justify-center hover:scale-105 transition-all duration-200 cursor-pointer group relative">
-                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">⚡</span>
-                </div>
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-border">
-                  Speed Demon
-                </div>
-              </div>
-              
-              {/* Crypto Master Badge */}
-              <div className="w-14 h-14 bg-gradient-to-br from-cyan-500/20 to-blue-600/30 rounded-xl border border-cyan-400/40 flex items-center justify-center hover:scale-105 transition-all duration-200 cursor-pointer group relative">
-                <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🔐</span>
-                </div>
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-border">
-                  Crypto Master
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Badges removed */}
 
           {/* Member Since */}
           <div className="text-center pt-4 border-t border-border">
