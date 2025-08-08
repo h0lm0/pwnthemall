@@ -46,6 +46,32 @@ function minio_sync() {
     echo "[✓] Sync successful"
 }
 
+function env_randomize() {
+    local env_file="$ENV_FILE"
+    if [[ ! -f "$env_file" ]]; then
+        echo "[✗] .env file not found: $env_file"
+        exit 1
+    fi
+
+    echo "[+] Randomizing sensitive values in $env_file"
+
+    rand_str() {
+        local length="$1"
+        tr -dc 'A-Za-z0-9' </dev/urandom | head -c "$length"
+    }
+
+    sed -i \
+        -e "s|^\(POSTGRES_PASSWORD=\).*|\1$(rand_str 20)|" \
+        -e "s|^\(JWT_SECRET=\).*|\1$(rand_str 30)|" \
+        -e "s|^\(REFRESH_SECRET=\).*|\1$(rand_str 30)|" \
+        -e "s|^\(MINIO_ROOT_PASSWORD=\).*|\1$(rand_str 40)|" \
+        -e "s|^\(MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC=\).*|\1$(rand_str 40)|" \
+        -e "s|^\(WORKER_PASSWORD=\).*|\1$(rand_str 25)|" \
+        "$env_file"
+
+    echo "[✓] Randomization complete"
+}
+
 function compose_up() {
     local env="prod"
     local build="false"
@@ -174,6 +200,7 @@ function usage() {
     echo "  $0 compose down [--env dev|prod]"
     echo "  $0 keys -g|gen"
     echo "  $0 keys -r|remove"
+    echo "  $0 env randomize"
     exit 1
 }
 
@@ -218,6 +245,17 @@ case "${1:-}" in
                 ;;
             -r|remove)
                 remove_key
+                ;;
+            *)
+                usage
+                ;;
+        esac
+        ;;
+    env)
+        shift
+        case "${1:-}" in
+            randomize)
+                env_randomize
                 ;;
             *)
                 usage
