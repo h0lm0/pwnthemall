@@ -25,12 +25,4 @@ jobs:
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
-            cd '${{ secrets.DEPLOY_PATH }}' &&
-            git fetch --tags &&
-            git checkout \"${TAG}\" &&
-            bash pta-cli.sh compose down -e prod &&
-            cp .env.example .env
-            bash pta-cli.sh env randomize
-            bash pta-cli.sh compose up -b -e prod
-          "
+          ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash demo.sh &>>/var/log/pwnthemall/demo.log"
