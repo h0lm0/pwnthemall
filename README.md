@@ -31,8 +31,8 @@
 
 Check out the official documentation:
 
-- 🔧 [Installation Guide](https://github.com/h0lm0/pwnthemall/wiki/Installation)
-- 🕹️ [Usage Guide](https://github.com/h0lm0/pwnthemall/wiki/Usage)
+- 🔧 [Installation Guide](https://github.com/h0lm0/pwnthemall/wiki/I-%E2%80%90-Installation)
+- 🕹️ [Usage Guide](https://github.com/h0lm0/pwnthemall/wiki/II-%E2%80%90-Usage)
 
 ---
 
