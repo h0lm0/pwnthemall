@@ -84,8 +84,23 @@ export default function CategoryPage() {
       try {
         const data = e?.detail ?? (typeof e?.data === 'string' ? JSON.parse(e.data) : e?.data);
         if (data && data.event === 'team_solve') {
-          console.log('[TeamSolve] received event', data, 'refreshing challenges for category', cat);
-          fetchChallenges();
+          console.log('[TeamSolve] received event', data, 'updating challenges for category', cat);
+
+          // Instantly update local state to mark the challenge as solved if it's in the current list
+          let foundInList = false;
+          setChallenges((prev) => {
+            const exists = prev.some((c) => c.id === data.challengeId);
+            if (!exists) return prev;
+            foundInList = true;
+            return prev.map((c) => (c.id === data.challengeId ? { ...c, solved: true } : c));
+          });
+
+          // If the challenge isn't in the current list (different category/page), skip.
+          // If it is but you still want to ensure server truth, you can optionally refetch:
+          if (!foundInList) {
+            // Not in this category, ignore. If you prefer, you could trigger a lightweight refresh here.
+            return;
+          }
         }
       } catch (err) {
         console.warn('[TeamSolve] failed to parse event', err);
@@ -96,7 +111,7 @@ export default function CategoryPage() {
     return () => {
       window.removeEventListener?.('team-solve', handler as EventListener);
     };
-  }, [fetchChallenges, cat]);
+  }, [cat]);
 
   if (!authChecked || !loggedIn || !teamChecked) return null;
   if (!hasTeam && role !== "admin") return null;
