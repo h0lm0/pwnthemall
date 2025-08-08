@@ -318,7 +318,7 @@ export const SidebarFooter = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "p-2 border-t border-sidebar-border",
+        "p-2",
         !open && "items-center",
         className
       )}

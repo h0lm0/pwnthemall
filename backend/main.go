@@ -54,7 +54,7 @@ func main() {
 	router.Use(sessions.Sessions("pwnthemall", store))
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://pwnthemall.local"},
+		AllowOrigins:     []string{"https://pwnthemall.local", "https://demo.pwnthemall.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -75,6 +75,7 @@ func main() {
 	routes.RegisterDockerConfigRoutes(router)
 	routes.RegisterInstanceRoutes(router)
 	routes.RegisterNotificationRoutes(router)
+	// Badges routes removed
 
 	port := os.Getenv("PORT")
 	if port == "" {

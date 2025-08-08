@@ -11,6 +11,9 @@ export interface User {
   };
   ipAddresses?: string[];
   memberSince?: string;
+  points?: number;
+  challengesCompleted?: number;
+  totalChallenges?: number;
 }
 
 export interface UserFormData {

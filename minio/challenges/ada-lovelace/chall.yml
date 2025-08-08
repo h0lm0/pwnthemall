@@ -6,7 +6,7 @@ category: web
 difficulty: easy
 type: docker
 author: swinowz
-flags: ["NHM2I{@d@_L0V3L@C3_D3V_48915632}"]
+flags: ["flag"]
 hidden: false
 points: 500
 ports: [5001]

@@ -49,7 +49,27 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
     fetchStatus();
     // Poll for status updates every 30 seconds
     const interval = setInterval(fetchStatus, 30000);
-    return () => clearInterval(interval);
+    // Also react instantly to websocket instance updates for this challenge
+    const handler = (e: any) => {
+      try {
+        const data = e?.detail ?? (typeof e?.data === 'string' ? JSON.parse(e.data) : e?.data);
+        if (data && data.event === 'instance_update') {
+          const cid = Number(data.challengeId);
+          if (cid === challengeId) {
+            fetchStatus();
+          }
+        }
+      } catch {}
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('instance-update', handler as EventListener);
+    }
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('instance-update', handler as EventListener);
+      }
+    };
   }, [fetchStatus]);
 
   const handleStartInstance = async () => {

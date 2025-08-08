@@ -136,15 +136,49 @@ func GetCurrentUser(c *gin.Context) {
 		}
 	}
 
+	// Compute team-based points and number of solved challenges
+	var totalPoints int64 = 0
+	var solvesCount int64 = 0
+	if user.TeamID != nil {
+		// Count of solves for the team
+		config.DB.Model(&models.Solve{}).Where("team_id = ?", *user.TeamID).Count(&solvesCount)
+		// Sum of points from solves for the team
+		config.DB.Model(&models.Solve{}).
+			Where("team_id = ?", *user.TeamID).
+			Select("COALESCE(SUM(points), 0)").
+			Scan(&totalPoints)
+	}
+
+	// Compute total number of challenges available to solve (challenges with at least one flag)
+	var totalChallenges int64 = 0
+	if user.Role == "admin" {
+		// Admins: all challenges that have at least one flag
+		config.DB.
+			Model(&models.Flag{}).
+			Select("DISTINCT challenge_id").
+			Count(&totalChallenges)
+	} else {
+		// Members: only non-hidden challenges that have at least one flag
+		config.DB.
+			Table("flags").
+			Joins("JOIN challenges ON challenges.id = flags.challenge_id").
+			Where("challenges.hidden = ?", false).
+			Select("DISTINCT flags.challenge_id").
+			Count(&totalChallenges)
+	}
+
 	response := gin.H{
-		"id":          user.ID,
-		"username":    user.Username,
-		"email":       user.Email,
-		"role":        user.Role,
-		"banned":      user.Banned,
-		"teamId":      user.TeamID,
-		"memberSince": user.MemberSince,
-		"team":        gin.H{},
+		"id":                  user.ID,
+		"username":            user.Username,
+		"email":               user.Email,
+		"role":                user.Role,
+		"banned":              user.Banned,
+		"teamId":              user.TeamID,
+		"memberSince":         user.MemberSince,
+		"team":                gin.H{},
+		"points":              totalPoints,
+		"challengesCompleted": solvesCount,
+		"totalChallenges":     totalChallenges,
 	}
 
 	if user.Team != nil {

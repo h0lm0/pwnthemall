@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInstances } from "@/hooks/use-instances";
 import { debugError } from "@/lib/debug";
+import type { User } from "@/models/User";
 
 interface CategoryContentProps {
   cat: string;
@@ -48,6 +49,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
   const [instanceStatus, setInstanceStatus] = useState<{[key: number]: 'running' | 'stopped' | 'building' | 'expired'}>({});
   const [instanceDetails, setInstanceDetails] = useState<{[key: number]: any}>({});
   const [connectionInfo, setConnectionInfo] = useState<{[key: number]: string[]}>({});
+  const [instanceOwner, setInstanceOwner] = useState<{[key: number]: { userId: number; username?: string } }>({});
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { getSiteName } = useSiteConfig();
   const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
 
@@ -105,6 +108,57 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     fetchAllInstanceStatuses();
   }, [challenges.length, statusFetched]); // Only run once when challenges load
 
+  // Real-time: listen to instance updates over WebSocket
+  useEffect(() => {
+    const handler = (e: any) => {
+      const data = e?.detail || e?.data;
+      if (!data || data.event !== 'instance_update') return;
+
+      const challengeId = Number(data.challengeId);
+      if (!challengeId) return;
+
+      // Update status
+      let newStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+      if (data.status === 'running') newStatus = 'running';
+      else if (data.status === 'building') newStatus = 'building';
+      else if (data.status === 'expired') newStatus = 'expired';
+
+      setInstanceStatus(prev => ({ ...prev, [challengeId]: newStatus }));
+
+      // Update connection info when running
+      if (newStatus === 'running' && Array.isArray(data.connectionInfo)) {
+        setConnectionInfo(prev => ({ ...prev, [challengeId]: data.connectionInfo }));
+      }
+      if (newStatus !== 'running') {
+        setConnectionInfo(prev => ({ ...prev, [challengeId]: [] }));
+      }
+
+      // Track instance owner from event payload
+      if (newStatus === 'running' && (typeof data.userId === 'number' || typeof data.userId === 'string')) {
+        const ownerId = Number(data.userId);
+        setInstanceOwner(prev => ({
+          ...prev,
+          [challengeId]: { userId: ownerId, username: data.username }
+        }));
+      } else if (newStatus !== 'running') {
+        setInstanceOwner(prev => {
+          const copy = { ...prev } as any;
+          delete copy[challengeId];
+          return copy;
+        });
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('instance-update', handler as EventListener);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('instance-update', handler as EventListener);
+      }
+    };
+  }, []);
+
   // Clear solves data when dialog opens/closes
   useEffect(() => {
     if (!open) {
@@ -112,6 +166,17 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
       setSolvesLoading(false);
     }
   }, [open]);
+
+  // Fetch current user (for ownership checks)
+  useEffect(() => {
+    let mounted = true;
+    axios.get<User>("/api/me").then((res) => {
+      if (mounted) setCurrentUser(res.data as User);
+    }).catch(() => {
+      // ignore
+    });
+    return () => { mounted = false };
+  }, []);
 
   const handleSubmit = async () => {
     if (!selectedChallenge) return;
@@ -127,6 +192,15 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
       // Refresh solves after successful submission
       if (selectedChallenge) {
         fetchSolves(selectedChallenge.id);
+        // Also stop any running instance for this challenge (best-effort UX)
+        try {
+          if (getLocalInstanceStatus(selectedChallenge.id) === 'running') {
+            await stopInstance(selectedChallenge.id.toString());
+            setInstanceStatus(prev => ({ ...prev, [selectedChallenge.id]: 'stopped' }));
+            // Show a local toast only to the solver about the instance being stopped
+            toast.success(t('instance_stopped_success') || 'Instance stopped successfully');
+          }
+        } catch {}
       }
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;
@@ -230,6 +304,16 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
 
   const handleStopInstance = async (challengeId: number) => {
     try {
+      // If we know the owner and it's not the current user (and not admin), show localized toast and abort
+      const owner = instanceOwner[challengeId];
+      if (owner && currentUser && owner.userId !== currentUser.id && currentUser.role !== 'admin') {
+        const ownerName = owner.username || t('a_teammate');
+        const key = 'cannot_stop_instance_not_owner';
+        const translated = t(key, { username: ownerName });
+        toast.error(translated !== key ? translated : `You can't stop this instance because it was started by ${ownerName}.`);
+        return;
+      }
+
       await stopInstance(challengeId.toString());
       // Immediately set status to stopped for better UX
       setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
@@ -255,8 +339,21 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
           debugError('Failed to verify status after stopping:', error);
         }
       }, 1000); // Wait 1 second before verifying
-    } catch (error) {
-      // Keep current status on error
+    } catch (error: any) {
+      // If backend denies or not found while we think it's running, assume non-owner attempt
+      const errCode = error?.response?.data?.error;
+      const httpStatus = error?.response?.status;
+      if (
+        (errCode === 'not_authorized' || errCode === 'forbidden' || errCode === 'instance_not_found') &&
+        getLocalInstanceStatus(challengeId) === 'running'
+      ) {
+        const owner = instanceOwner[challengeId];
+        const ownerName = owner?.username || t('a_teammate');
+        const key = 'cannot_stop_instance_not_owner';
+        const translated = t(key, { username: ownerName });
+        toast.error(translated !== key ? translated : `You can't stop this instance because it was started by ${ownerName}.`);
+      }
+      // Keep current status on error otherwise
     }
   };
 
@@ -507,6 +604,11 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                   </div>
 
                                   {/* Connection Info Section */}
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'running' && instanceOwner[selectedChallenge.id] && (
+                                    <div className="text-sm text-muted-foreground">
+                                      {t('instance_started_by_user', { username: instanceOwner[selectedChallenge.id]?.username || t('a_teammate') })}
+                                    </div>
+                                  )}
                                   {getLocalInstanceStatus(selectedChallenge.id) === 'running' && 
                                    connectionInfo[selectedChallenge.id] && 
                                    connectionInfo[selectedChallenge.id].length > 0 && (
