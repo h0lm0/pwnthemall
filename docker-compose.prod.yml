@@ -108,7 +108,7 @@ services:
       args:
         CADDY_ENV: ${CADDY_ENV}  
     ports:
-      - "8080:80"
+      - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
     networks:
       public:
