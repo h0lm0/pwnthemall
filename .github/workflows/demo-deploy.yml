@@ -15,7 +15,7 @@ jobs:
 
       - name: Set up SSH
         run: |
-          apt update && apt install -y openssh-client
+          sudo apt update && sudo apt install -y openssh-client
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
