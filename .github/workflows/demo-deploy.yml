@@ -15,21 +15,14 @@ jobs:
 
       - name: Set up SSH
         run: |
+          sudo apt update && sudo apt install -y openssh-client
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy demo
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
-            cd '${{ secrets.DEPLOY_PATH }}' &&
-            git fetch --tags &&
-            git checkout \"${TAG}\" &&
-            bash pta-cli.sh compose down -e prod &&
-            cp .env.example .env
-            bash pta-cli.sh env randomize
-            bash pta-cli.sh compose up -b -e prod
-          "
+          ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash demo.sh &>>/var/log/pwnthemall/demo.log"
