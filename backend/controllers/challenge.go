@@ -70,7 +70,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		return
 	}
 
-	// Get solved challenges for the user's team
+	// Get stid challenges for the user's team
 	var solvedChallengeIds []uint
 	if user.Team != nil {
 		var solves []models.Solve
@@ -87,8 +87,8 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	// Create response with solved status and current points
 	type ChallengeWithSolved struct {
 		models.Challenge
-		Solved       bool `json:"solved"`
-		CurrentPoints int `json:"currentPoints"`
+		Solved        bool `json:"solved"`
+		CurrentPoints int  `json:"currentPoints"`
 	}
 
 	var challengesWithSolved []ChallengeWithSolved
@@ -104,7 +104,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		// Calculate current points based on decay formula
 		var solveCount int64
 		config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
-		
+
 		currentPoints := decayService.CalculateDecayedPoints(&challenge, int(solveCount))
 
 		challengeWithSolved := ChallengeWithSolved{
@@ -272,29 +272,33 @@ func SubmitChallenge(c *gin.Context) {
 			break
 		}
 	}
-		if found {
-			// Calculate decayed points
-			decayService := utils.NewDecay()
-			var solveCount int64
-			config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
-			decayedPoints := decayService.CalculateDecayedPoints(&challenge, int(solveCount))
+	if found {
+		// Calculate decayed points
+		decayService := utils.NewDecay()
+		var solveCount int64
+		config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
+		decayedPoints := decayService.CalculateDecayedPoints(&challenge, int(solveCount))
 
-			var solve models.Solve
-			if err := config.DB.FirstOrCreate(&solve,
-				models.Solve{
-					TeamID:      user.Team.ID,
-					ChallengeID: challenge.ID,
-					Points:      decayedPoints,
-				}).Error; err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
-				return
-			} else {
-				c.JSON(http.StatusOK, gin.H{"message": "challenge_solved", "points": decayedPoints})
-				return
-			}
-		} else {
-			c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
+		// Create the solve record directly
+		solve := models.Solve{
+			TeamID:      user.Team.ID,
+			ChallengeID: challenge.ID,
+			UserID:      user.ID,
+			Points:      decayedPoints,
+			SolvedBy:    user.Username,
 		}
+
+		if err := config.DB.Create(&solve).Error; err != nil {
+			log.Printf("Failed to create solve: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "challenge_solved", "points": decayedPoints})
+		return
+	} else {
+		c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
+	}
 }
 
 func GetChallengeSolves(c *gin.Context) {

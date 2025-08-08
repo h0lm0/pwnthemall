@@ -69,7 +69,7 @@ func UpdateDecayFormula(c *gin.Context) {
 
 func DeleteDecayFormula(c *gin.Context) {
 	id := c.Param("id")
-	
+
 	if err := config.DB.Delete(&models.DecayFormula{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
