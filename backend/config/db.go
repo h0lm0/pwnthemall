@@ -24,7 +24,8 @@ func ConnectDB() *gorm.DB {
 		&models.Team{}, &models.Solve{},
 		&models.User{}, &models.ChallengeCategory{},
 		&models.ChallengeType{}, &models.ChallengeDifficulty{},
-		&models.Challenge{}, &models.Flag{},
+		&models.DecayFormula{}, &models.Challenge{}, &models.Flag{},
+		&models.Hint{}, &models.FirstBlood{},
 		&models.Submission{}, &models.Instance{}, &models.DynamicFlag{},
 		&models.Notification{},
 	)

@@ -61,6 +61,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
 		Preload("DecayFormula").
+		Preload("Hints").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ?", categoryName).
 		Find(&challenges)
@@ -292,6 +293,30 @@ func SubmitChallenge(c *gin.Context) {
 			log.Printf("Failed to create solve: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
 			return
+		}
+
+		// Check and create FirstBlood if this solve qualifies for a position bonus
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			// La position est solveCount (0-based), donc 0 = 1er, 1 = 2ème, etc.
+			position := int(solveCount)
+
+			// Pour l'instant, on utilise le même bonus pour toutes les positions
+			// Plus tard, on pourra étendre pour avoir un array de bonus différents
+			bonuses := challenge.FirstBloodBonuses
+			if position < len(bonuses) {
+				// Convert int64 to int for the bonus value
+				bonusValue := int(bonuses[position])
+				firstBlood := models.FirstBlood{
+					ChallengeID: challenge.ID,
+					TeamID:      user.Team.ID,
+					UserID:      user.ID,
+					Bonuses:     []int{bonusValue},
+					Badges:      []string{fmt.Sprintf("position-%d", position+1)},
+				}
+				if err := config.DB.Create(&firstBlood).Error; err != nil {
+					log.Printf("Failed to create first blood: %v", err)
+				}
+			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "challenge_solved", "points": decayedPoints})

@@ -11,6 +11,5 @@ type Team struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	Solves    []Solve   `json:"solves,omitempty"`
-	Hints     []Hint    `gorm:"foreignKey:TeamID" json:"hints,omitempty"`
 	Users     []User    `gorm:"foreignKey:TeamID" json:"users,omitempty"`
 }

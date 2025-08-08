@@ -13,6 +13,7 @@ points: 300
 minPoints: 300
 decay: "None"
 enableFirstBlood: true
+
 firstBlood:
   bonuses: [200]
   badges: ["a"]
