@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"pwnthemall/config"
@@ -36,7 +37,37 @@ func GetTeam(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"team": team, "members": members})
+	// Compute per-member points by attributing each team solve to the user whose submission led to it
+	// IMPORTANT: JSON only supports string keys for maps; use string keys to avoid marshal errors
+	memberPoints := map[string]int{}
+	var totalPoints int
+
+	// Fetch all solves for this team
+	var solves []models.Solve
+	if err := config.DB.Where("team_id = ?", team.ID).Order("created_at ASC").Find(&solves).Error; err == nil {
+		for _, solve := range solves {
+			// Find the submission that led to this solve: the latest submission for this challenge
+			// by a member of the team at or before the solve time
+			var submission models.Submission
+			subRes := config.DB.
+				Where("challenge_id = ? AND user_id IN (SELECT id FROM users WHERE team_id = ?) AND created_at <= ?",
+					solve.ChallengeID, team.ID, solve.CreatedAt).
+				Order("created_at DESC").
+				First(&submission)
+			if subRes.Error == nil && submission.UserID != 0 {
+				key := fmt.Sprintf("%d", submission.UserID)
+				memberPoints[key] += solve.Points
+			}
+			totalPoints += solve.Points
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"team":         team,
+		"members":      members,
+		"memberPoints": memberPoints,
+		"totalPoints":  totalPoints,
+	})
 }
 
 // CreateTeam : crée une équipe et assigne l'utilisateur courant

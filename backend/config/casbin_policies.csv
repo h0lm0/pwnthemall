@@ -14,6 +14,8 @@ p, member, /challenges-categories, read
 p, member, /instances, read
 p, member, /instances/:id, read
 p, member, /challenges-categories/:id, read
+p, member, /teams, read
+p, member, /teams/:id, read
 p, member, /teams, write
 p, member, /teams/join, write
 p, member, /teams/leave, write
