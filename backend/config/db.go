@@ -33,7 +33,7 @@ func ConnectDB() *gorm.DB {
 	}
 
 	DB = db
-	if os.Getenv("SEED_DATABASE") == "true" {
+	if os.Getenv("PTA_SEED_DATABASE") == "true" {
 		SeedDatabase()
 	}
 	return db
