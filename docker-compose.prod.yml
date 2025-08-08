@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       target: prod
     environment:
-      - NEXT_PUBLIC_API_URL=https://pwnthemall.local
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NODE_ENV=production
       - PTA_DEBUG_ENABLED=${PTA_DEBUG_ENABLED}
     depends_on:
@@ -34,11 +34,13 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC: ${MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC}
       PTA_SEED_DATABASE: ${PTA_SEED_DATABASE}
       PTA_PTA_SEED_CASBIN_CSV: ${PTA_PTA_SEED_CASBIN_CSV}
       PTA_SEED_CASBIN: ${PTA_SEED_CASBIN}
       JWT_SECRET: ${JWT_SECRET}
       REFRESH_SECRET: ${REFRESH_SECRET}
+      PTA_DEMO: ${PTA_DEMO}
       PTA_SITE_NAME: ${PTA_SITE_NAME}
       PTA_REGISTRATION_ENABLED: ${PTA_REGISTRATION_ENABLED}
       PTA_PUBLIC_IP: ${PTA_PUBLIC_IP}
@@ -103,6 +105,8 @@ services:
     build:
       context: caddy/
       dockerfile: Dockerfile
+      args:
+        CADDY_ENV: ${CADDY_ENV}  
     ports:
       - "8080:80"
       - "0.0.0.0:443:443"

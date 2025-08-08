@@ -615,7 +615,7 @@ func StartChallengeInstance(c *gin.Context) {
 		if len(challenge.ConnectionInfo) > 0 {
 			ip := os.Getenv("PTA_PUBLIC_IP")
 			if ip == "" {
-				ip = "your-instance-ip"
+				ip = "worker-ip"
 			}
 
 			for i, info := range challenge.ConnectionInfo {

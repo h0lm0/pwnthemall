@@ -10,7 +10,7 @@ import (
 func RegisterDockerConfigRoutes(router *gin.Engine) {
 
 	// Admin-only endpoints
-	configs := router.Group("/docker-config", middleware.AuthRequired(false))
+	configs := router.Group("/docker-config", middleware.DemoRestriction, middleware.AuthRequired(false))
 	{
 		configs.GET("", middleware.CheckPolicy("/docker-config", "read"), controllers.GetDockerConfig)
 		configs.PUT("", middleware.CheckPolicy("/docker-config", "write"), controllers.UpdateDockerConfig)
