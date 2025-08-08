@@ -64,6 +64,7 @@
   "change_username_confirm": "Êtes-vous sûr de vouloir changer votre nom d'utilisateur en {username} ?",
   "username_updated": "Nom d'utilisateur mis à jour avec succès !",
   "delete_account": "Supprimer le compte",
+  "danger_zone": "Zone de danger",
   "delete_account_confirm": "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action ne peut pas être annulée.",
   "current_password": "Mot de passe actuel",
   "new_password": "Nouveau mot de passe",
@@ -336,6 +337,7 @@
   "security_settings": "Paramètres de sécurité",
   "account_settings": "Paramètres du compte",
   "badges": "Badges",
+  "no_badges_yet": "Aucun badge pour le moment",
   "member_since": "Membre depuis",
   "profile": "Profil",
   "expired": "Expiré",
@@ -370,5 +372,10 @@
   "ctf_not_started_message": "La compétition CTF n'a pas encore commencé. Veuillez attendre le début de la compétition.",
   "ctf_not_started": "CTF Non Démarré",
   "flag_submission_no_longer_available": "La soumission de flags n'est plus disponible",
-  "ctf_ended": "CTF Terminé"
-} 
+  "ctf_ended": "CTF Terminé",
+  "cannot_stop_instance_not_owner": "Vous ne pouvez pas arrêter cette instance car elle a été démarrée par {username}.",
+  "a_teammate": "un coéquipier",
+  "team_solved_title": "L'équipe a résolu un challenge",
+  "team_solved_message": "{username} a résolu {label} (+{points} pts)",
+  "instance_started_by_user": "Démarrée par {username}"
+}

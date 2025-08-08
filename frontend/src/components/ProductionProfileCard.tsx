@@ -36,6 +36,7 @@ interface ExtendedUser extends User {
   description?: string;
   teamId?: number;
   team?: Team;
+  totalChallenges?: number;
 }
 
 export default function ProductionProfileCard() {
@@ -50,7 +51,7 @@ export default function ProductionProfileCard() {
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('profileActiveTab');
-      if (saved && ["Account", "Appearance", "Badges", "Team"].includes(saved)) {
+  if (saved && ["Account", "Appearance", "Badges", "Team"].includes(saved)) {
         return saved as Tab;
       }
     }
@@ -109,7 +110,8 @@ export default function ProductionProfileCard() {
         ranking: res.data.ranking || null,
         description: res.data.description || null,
         teamId: res.data.teamId || null,
-        team: res.data.team || null
+        team: res.data.team || null,
+        totalChallenges: res.data.totalChallenges || null,
       };
       
       setUser(realUser);
@@ -332,7 +334,11 @@ export default function ProductionProfileCard() {
                     {t('challenges_completed')}
                   </div>
                   <div className="text-3xl font-bold text-foreground">
-                    {user.challengesCompleted !== null ? user.challengesCompleted : "N/A"}
+                    {user.challengesCompleted !== null && user.totalChallenges !== undefined
+                      ? `${user.challengesCompleted}/${user.totalChallenges}`
+                      : user.challengesCompleted !== null
+                        ? `${user.challengesCompleted}`
+                        : "N/A"}
                   </div>
                 </div>
                 
@@ -525,78 +531,9 @@ export default function ProductionProfileCard() {
             
             {activeTab === "Badges" && (
               <div className="space-y-6 w-full">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                  {/* First Blood Badge */}
-                  <div className="flex flex-col items-center p-6 rounded-xl border border-border bg-card hover:scale-105 transition-all duration-200 cursor-pointer group relative min-h-[140px]">
-                    <div className="w-20 h-20 bg-gradient-to-br from-red-500/20 to-rose-600/30 rounded-xl border border-red-400/40 flex items-center justify-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-rose-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xl font-bold">🩸</span>
-                      </div>
-                    </div>
-                    <h4 className="text-base font-semibold text-center">First Blood</h4>
-                    <p className="text-sm text-muted-foreground text-center mt-1">Be the first to solve a challenge</p>
-                  </div>
-                  
-                  {/* Speed Demon Badge */}
-                  <div className="flex flex-col items-center p-6 rounded-xl border border-border bg-card hover:scale-105 transition-all duration-200 cursor-pointer group relative min-h-[140px]">
-                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-500/20 to-orange-600/30 rounded-xl border border-yellow-400/40 flex items-center justify-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xl font-bold">⚡</span>
-                      </div>
-                    </div>
-                    <h4 className="text-base font-semibold text-center">Speed Demon</h4>
-                    <p className="text-sm text-muted-foreground text-center mt-1">Solve challenges in record time</p>
-                  </div>
-                  
-                  {/* Crypto Master Badge */}
-                  <div className="flex flex-col items-center p-6 rounded-xl border border-border bg-card hover:scale-105 transition-all duration-200 cursor-pointer group relative min-h-[140px]">
-                    <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-blue-600/30 rounded-xl border border-cyan-400/40 flex items-center justify-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xl font-bold">🔐</span>
-                      </div>
-                    </div>
-                    <h4 className="text-base font-semibold text-center">Crypto Master</h4>
-                    <p className="text-sm text-muted-foreground text-center mt-1">Expert in cryptography challenges</p>
-                  </div>
-                  
-                  {/* Night Owl Badge */}
-                  <div className="flex flex-col items-center p-6 rounded-xl border border-border bg-card/50 hover:scale-105 transition-all duration-200 cursor-pointer group relative opacity-50 min-h-[140px]">
-                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-indigo-600/30 rounded-xl border border-purple-400/40 flex items-center justify-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xl font-bold">🦉</span>
-                      </div>
-                    </div>
-                    <h4 className="text-base font-semibold text-center">Night Owl</h4>
-                    <p className="text-sm text-muted-foreground text-center mt-1">Solve challenges after midnight</p>
-                  </div>
-                  
-                  {/* Team Player Badge */}
-                  <div className="flex flex-col items-center p-6 rounded-xl border border-border bg-card/50 hover:scale-105 transition-all duration-200 cursor-pointer group relative opacity-50 min-h-[140px]">
-                    <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-600/30 rounded-xl border border-green-400/40 flex items-center justify-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xl font-bold">👥</span>
-                      </div>
-                    </div>
-                    <h4 className="text-base font-semibold text-center">Team Player</h4>
-                    <p className="text-sm text-muted-foreground text-center mt-1">Active team collaborator</p>
-                  </div>
-                  
-                  {/* Perfectionist Badge */}
-                  <div className="flex flex-col items-center p-6 rounded-xl border border-border bg-card/50 hover:scale-105 transition-all duration-200 cursor-pointer group relative opacity-50 min-h-[140px]">
-                    <div className="w-20 h-20 bg-gradient-to-br from-pink-500/20 to-rose-600/30 rounded-xl border border-pink-400/40 flex items-center justify-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xl font-bold">💎</span>
-                      </div>
-                    </div>
-                    <h4 className="text-base font-semibold text-center">Perfectionist</h4>
-                    <p className="text-sm text-muted-foreground text-center mt-1">100% completion rate</p>
-                  </div>
-                </div>
-                <div className="text-center pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    {t('badges_earned')}: 3/6 • {t('badges_locked')}: 3
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  {t('no_badges_yet')}
+                </p>
               </div>
             )}
             

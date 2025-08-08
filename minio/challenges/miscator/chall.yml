@@ -6,6 +6,6 @@ difficulty: easy
 type: docker
 author: swinowz
 flags: ["flag"]
-hidden: true
+hidden: false
 points: 50
 ports: [8080, 22]

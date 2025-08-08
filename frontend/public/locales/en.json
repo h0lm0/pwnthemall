@@ -62,6 +62,7 @@
   "change_username_confirm": "Are you sure you want to change your username to {username}?",
   "username_updated": "Username updated successfully!",
   "delete_account": "Delete Account",
+  "danger_zone": "Danger zone",
   "delete_account_confirm": "Are you sure you want to delete your account? This action cannot be undone.",
   "current_password": "Current Password",
   "new_password": "New Password",
@@ -339,6 +340,7 @@
   "security_settings": "Security Settings",
   "account_settings": "Account Settings",
   "badges": "Badges",
+  "no_badges_yet": "No badges yet",
   "member_since": "Member Since",
   "profile": "Profile",
   "select_ctf_start_date": "Select CTF start date",
@@ -372,5 +374,10 @@
   "ctf_not_started_message": "The CTF competition has not started yet. Please wait for the competition to begin.",
   "ctf_not_started": "CTF Not Started",
   "flag_submission_no_longer_available": "Flag submission is no longer available",
-  "ctf_ended": "CTF Ended"
-} 
+  "ctf_ended": "CTF Ended",
+  "cannot_stop_instance_not_owner": "You can't stop this instance because it was started by {username}.",
+  "a_teammate": "a teammate",
+  "team_solved_title": "Team solved a challenge",
+  "team_solved_message": "{username} solved {label} (+{points} pts)",
+  "instance_started_by_user": "Started by {username}"
+}

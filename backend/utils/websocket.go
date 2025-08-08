@@ -136,6 +136,31 @@ func (h *Hub) SendToTeam(teamID uint, message []byte) {
 	h.mu.RUnlock()
 }
 
+// SendToTeamExcept sends a message to all connected clients in a specific team except one user
+func (h *Hub) SendToTeamExcept(teamID uint, excludeUserID uint, message []byte) {
+	var userIDs []uint
+	if err := config.DB.Model(&models.User{}).Where("team_id = ?", teamID).Pluck("id", &userIDs).Error; err != nil {
+		debug.Log("Failed to get team members for team %d: %v", teamID, err)
+		return
+	}
+
+	h.mu.RLock()
+	for _, userID := range userIDs {
+		if userID == excludeUserID {
+			continue
+		}
+		if client, exists := h.clients[userID]; exists {
+			select {
+			case client.Send <- message:
+			default:
+				close(client.Send)
+				delete(h.clients, userID)
+			}
+		}
+	}
+	h.mu.RUnlock()
+}
+
 // GetConnectedUsers returns a list of connected user IDs
 func (h *Hub) GetConnectedUsers() []uint {
 	h.mu.RLock()

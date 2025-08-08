@@ -72,7 +72,6 @@ export const useInstances = () => {
       debugLog(`Stopping instance for challenge ID: ${challengeId}`)
       const response = await axios.post(`/api/challenges/${challengeId}/stop`)
       debugLog('Instance stopped successfully:', response.data)
-      toast.success('Instance stopped successfully')
       return response.data
     } catch (error: any) {
       debugError('Failed to stop instance:', error)

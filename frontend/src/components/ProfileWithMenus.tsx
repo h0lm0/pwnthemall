@@ -35,6 +35,7 @@ interface GameProfileData extends User {
   ranking?: number;
   specializations?: string[];
   badges?: string[];
+  totalChallenges?: number;
 }
 
 export default function ProfileWithMenus() {
@@ -74,13 +75,6 @@ export default function ProfileWithMenus() {
     axios.get("/api/me").then((res: AxiosResponse<any>) => {
       const gameUser: GameProfileData = {
         ...res.data,
-        points: 562,
-        challengesCompleted: 38,
-        discordUsername: "m00nc4k3#1337",
-        memberSince: "2024-02-04 15:09:32",
-        ranking: 15,
-        specializations: ["Osint-db", "Hackcess"],
-        badges: ["first-blood", "speed-demon", "crypto-master"]
       };
       setUser(gameUser);
       setUsername(res.data.username);
@@ -298,7 +292,11 @@ export default function ProfileWithMenus() {
                     Nombre de Défis Réalisés
                   </div>
                   <div className="text-3xl font-bold text-primary">
-                    {user.challengesCompleted}
+                    {user.challengesCompleted !== undefined && user.totalChallenges !== undefined
+                      ? `${user.challengesCompleted}/${user.totalChallenges}`
+                      : user.challengesCompleted !== undefined
+                        ? `${user.challengesCompleted}`
+                        : "N/A"}
                   </div>
                 </div>
                 
@@ -312,29 +310,7 @@ export default function ProfileWithMenus() {
                 </div>
               </div>
 
-              {/* Badges Section */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-primary mb-4">
-                  Badges & Récompenses
-                </h3>
-                <div className="flex gap-3">
-                  <div className="w-14 h-14 bg-gradient-to-br from-red-500/20 to-rose-600/30 rounded-xl border border-red-400/40 flex items-center justify-center hover:scale-105 transition-all duration-200 cursor-pointer group relative">
-                    <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-rose-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">🩸</span>
-                    </div>
-                  </div>
-                  <div className="w-14 h-14 bg-gradient-to-br from-yellow-500/20 to-orange-600/30 rounded-xl border border-yellow-400/40 flex items-center justify-center hover:scale-105 transition-all duration-200 cursor-pointer group relative">
-                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">⚡</span>
-                    </div>
-                  </div>
-                  <div className="w-14 h-14 bg-gradient-to-br from-cyan-500/20 to-blue-600/30 rounded-xl border border-cyan-400/40 flex items-center justify-center hover:scale-105 transition-all duration-200 cursor-pointer group relative">
-                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">🔐</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Badges removed */}
 
               {/* Member Since */}
               <div className="text-center pt-4 border-t border-border">
