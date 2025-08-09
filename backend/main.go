@@ -76,6 +76,10 @@ func main() {
 	routes.RegisterInstanceRoutes(router)
 	routes.RegisterNotificationRoutes(router)
 	routes.RegisterDecayFormulaRoutes(router)
+<<<<<<< HEAD
+=======
+	// New: badge routes
+>>>>>>> feature/hint-firstblood
 	routes.RegisterBadgeRoutes(router)
 
 	port := os.Getenv("PORT")

@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import ProfileHeader from "../components/profile-header";
-import ProfileContent from "../components/profile-content";
+import ProductionProfileCard from "../components/ProductionProfileCard";
 import { Loader } from "lucide-react";
 
 export default function ProfilePage() {
@@ -20,17 +19,16 @@ export default function ProfilePage() {
   }, [authChecked, loggedIn, router]);
 
   if (!authChecked) {
-    return <Loader/>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader className="animate-spin text-primary" size={32} />
+      </div>
+    );
   }
 
   if (!loggedIn) {
     return null;
   }
 
-  return (
-    <div className="space-y-6 px-4 py-10 bg-muted min-h-screen">
-      <ProfileHeader />
-      <ProfileContent />
-    </div>
-  );
+  return <ProductionProfileCard />;
 }

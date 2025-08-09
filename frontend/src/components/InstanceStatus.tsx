@@ -32,7 +32,6 @@ const InstanceStatus = ({ className }: InstanceStatusProps) => {
     setLoading(true)
     try {
       await axios.post(`/api/instances/${instanceId}/stop`)
-      toast.success(t('instance_stopped_success') || 'Instance stopped successfully')
       fetchInstances()
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to stop instance'

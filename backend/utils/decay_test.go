@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"testing"
 	"pwnthemall/models"
+	"testing"
 )
 
 func TestCalculateLinearDecay(t *testing.T) {
@@ -16,9 +16,9 @@ func TestCalculateLinearDecay(t *testing.T) {
 		decayStep  int
 		expected   int
 	}{
-		{0, 2, 100},  // no decay
-		{1, 2, 20},   // log2(2)=1 → decay = 100 → final = MinPoints = 20
-		{3, 2, 20},   // log2(4)=2 → decay = 200 → final = MinPoints
+		{0, 2, 100}, // no decay
+		{1, 2, 20},  // log2(2)=1 → decay = 100 → final = MinPoints = 20
+		{3, 2, 20},  // log2(4)=2 → decay = 200 → final = MinPoints
 		{10, 2, 20},
 	}
 
@@ -47,10 +47,10 @@ func TestCalculateLogarithmicDecay(t *testing.T) {
 		decayStep  int
 		expected   int
 	}{
-		{0, 2, 100},    // pas de decay si solveCount = 0
-		{1, 2, 50},     // log2(1+1) = 1, decayAmount = 1 * 100 / 2 = 50 (approx)
-		{3, 2, 21},     // log2(3+1)=2, decayAmount=2*100/2=100 mais minPoints=20 donc 21
-		{10, 2, 20},    // decay large, mais minPoints = 20
+		{0, 2, 100}, // pas de decay si solveCount = 0
+		{1, 2, 50},  // log2(1+1) = 1, decayAmount = 1 * 100 / 2 = 50 (approx)
+		{3, 2, 21},  // log2(3+1)=2, decayAmount=2*100/2=100 mais minPoints=20 donc 21
+		{10, 2, 20}, // decay large, mais minPoints = 20
 	}
 
 	for _, tt := range tests {

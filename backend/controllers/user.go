@@ -153,10 +153,10 @@ func GetCurrentUser(c *gin.Context) {
 
 	if user.Team != nil {
 		response["team"] = gin.H{
-			"id":      user.Team.ID,
-			"name":    user.Team.Name,
+			"id":        user.Team.ID,
+			"name":      user.Team.Name,
 			"creatorId": user.Team.CreatorID,
-			"members": safeMembers,
+			"members":   safeMembers,
 		}
 	}
 
@@ -176,4 +176,31 @@ func BanOrUnbanUser(c *gin.Context) {
 	config.DB.Save(&user)
 
 	c.JSON(http.StatusOK, gin.H{"banned": user.Banned})
+}
+
+func GetUserByIP(c *gin.Context) {
+	ip := c.Query("ip")
+	if ip == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "IP address is required"})
+		return
+	}
+
+	var users []models.User
+	result := config.DB.Preload("Team").Where("ip_addresses LIKE ?", "%\""+ip+"\"%").Find(&users)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search users by IP"})
+		return
+	}
+
+	var filteredUsers []models.User
+	for _, user := range users {
+		for _, userIP := range user.IPAddresses {
+			if userIP == ip {
+				filteredUsers = append(filteredUsers, user)
+				break
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, filteredUsers)
 }

@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "@/lib/axios";
+import { debugLog, debugError } from "@/lib/debug";
 import { clearTranslationCache } from "@/context/LanguageContext";
 
 interface AuthContextType {
@@ -24,7 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await axios.post("/api/logout");
     } catch (error) {
-      // console.error("Logout failed:", error);
+      // debugError("Logout failed:", error);
     }
     setLoggedIn(false);
     // Clear any cached data
@@ -48,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (err?.response?.status === 401) {
         // Check if user is banned
         if (err?.response?.data?.error === "banned") {
-          console.log("User is banned, forcing logout");
+          debugLog("User is banned, forcing logout");
           await logout(false); // Force logout without redirect
           return;
         }
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await axios.post("/api/refresh");
           setLoggedIn(true);
         } catch (error) {
-          console.error("Failed to refresh token:", error);
+          debugError("Failed to refresh token:", error);
           await logout(false);
         }
       } else {
