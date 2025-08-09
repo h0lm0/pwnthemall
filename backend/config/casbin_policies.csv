@@ -24,4 +24,7 @@ p, member, /notifications/unread-count, read
 p, member, /notifications/:id/read, write
 p, member, /notifications/read-all, write
 p, member, /ws/notifications, read
+p, member, /badges, read
+p, member, /badges/:id, read
+p, member, /users/:id/badges, read
 p, admin, /*, *

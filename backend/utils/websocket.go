@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/debug"
 	"pwnthemall/models"
 	"sync"
 
@@ -159,11 +160,11 @@ func (c *Client) readPump() {
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				debug.Log("error: %v", err)
 			}
 			break
 		}
-		log.Printf("Received message from client %d: %s", c.ID, string(message))
+		debug.Log("Received message from client %d: %s", c.ID, string(message))
 	}
 }
 
@@ -173,29 +174,23 @@ func (c *Client) writePump() {
 		c.Conn.Close()
 	}()
 
-	for {
-		select {
-		case message, ok := <-c.Send:
-			if !ok {
-				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-
-			c.mu.Lock()
-			err := c.Conn.WriteMessage(websocket.TextMessage, message)
-			c.mu.Unlock()
-			if err != nil {
-				return
-			}
+	for message := range c.Send {
+		c.mu.Lock()
+		err := c.Conn.WriteMessage(websocket.TextMessage, message)
+		c.mu.Unlock()
+		if err != nil {
+			return
 		}
 	}
+	// Channel closed
+	_ = c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 }
 
 // ServeWs handles WebSocket requests from clients
 func ServeWs(hub *Hub, userID uint, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+	debug.Log("WebSocket upgrade error: %v", err)
 		return
 	}
 
@@ -210,4 +205,28 @@ func ServeWs(hub *Hub, userID uint, w http.ResponseWriter, r *http.Request) {
 
 	go client.writePump()
 	go client.readPump()
+}
+
+// SendToTeamExcept sends a message to all connected clients in a team except one user
+func (h *Hub) SendToTeamExcept(teamID uint, excludeUserID uint, message []byte) {
+	var userIDs []uint
+	if err := config.DB.Model(&models.User{}).Where("team_id = ?", teamID).Pluck("id", &userIDs).Error; err != nil {
+		debug.Log("Failed to get team members for team %d: %v", teamID, err)
+		return
+	}
+	h.mu.RLock()
+	for _, uid := range userIDs {
+		if uid == excludeUserID {
+			continue
+		}
+		if client, exists := h.clients[uid]; exists {
+			select {
+			case client.Send <- message:
+			default:
+				close(client.Send)
+				delete(h.clients, uid)
+			}
+		}
+	}
+	h.mu.RUnlock()
 }
