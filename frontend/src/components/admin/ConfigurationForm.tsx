@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateTimePicker } from "@/components/ui/date-picker";
 import { useLanguage } from "@/context/LanguageContext";
 import { ConfigFormData } from "@/models/Config";
 
@@ -42,7 +43,8 @@ export default function ConfigurationForm({
       newErrors.key = t("key_required") || "Key is required";
     }
 
-    if (!formData.value.trim()) {
+    // Allow empty values for CTF timing configurations
+    if (!formData.value.trim() && formData.key !== "CTF_START_TIME" && formData.key !== "CTF_END_TIME") {
       newErrors.value = t("value_required") || "Value is required";
     }
 
@@ -95,6 +97,25 @@ export default function ConfigurationForm({
               <SelectItem value="false">False</SelectItem>
             </SelectContent>
           </Select>
+        ) : (formData.key === "CTF_START_TIME" || formData.key === "CTF_END_TIME") ? (
+          <div className="space-y-2">
+            <DateTimePicker
+              date={formData.value ? new Date(formData.value) : undefined}
+              onDateChange={(date) => handleInputChange("value", date ? date.toISOString() : "")}
+              placeholder={
+                formData.key === "CTF_START_TIME"
+                  ? t("select_ctf_start_date") || "Select CTF start date and time"
+                  : t("select_ctf_end_date") || "Select CTF end date and time"
+              }
+              className={errors.value ? "border-red-500" : ""}
+            />
+            <p className="text-sm text-muted-foreground">
+              {formData.key === "CTF_START_TIME" 
+                ? t("ctf_start_time_description") || "Set when the CTF competition starts. Leave empty for no time restrictions."
+                : t("ctf_end_time_description") || "Set when the CTF competition ends. Leave empty for no time restrictions."
+              }
+            </p>
+          </div>
         ) : (
           <Input
             id="value"

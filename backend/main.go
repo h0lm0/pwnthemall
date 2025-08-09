@@ -76,6 +76,8 @@ func main() {
 	routes.RegisterInstanceRoutes(router)
 	routes.RegisterNotificationRoutes(router)
 	routes.RegisterDecayFormulaRoutes(router)
+	// New: badge routes
+	routes.RegisterBadgeRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {

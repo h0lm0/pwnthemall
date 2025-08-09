@@ -28,6 +28,7 @@ func ConnectDB() *gorm.DB {
 		&models.Hint{}, &models.FirstBlood{},
 		&models.Submission{}, &models.Instance{}, &models.DynamicFlag{},
 		&models.Notification{},
+		&models.Badge{}, &models.UserBadge{},
 	)
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)

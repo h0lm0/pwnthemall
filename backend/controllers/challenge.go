@@ -295,11 +295,13 @@ func SubmitChallenge(c *gin.Context) {
 			return
 		}
 
+		// After a successful solve, award first blood badge if applicable
+		CheckAndAwardFirstBlood(user.ID, challenge.ID)
+
 		// Check and create FirstBlood if this solve qualifies for a position bonus
 		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
 			// La position est solveCount (0-based), donc 0 = 1er, 1 = 2ème, etc.
 			position := int(solveCount)
-
 			// Pour l'instant, on utilise le même bonus pour toutes les positions
 			// Plus tard, on pourra étendre pour avoir un array de bonus différents
 			bonuses := challenge.FirstBloodBonuses
@@ -544,6 +546,53 @@ func StopChallengeInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "instance_stopping",
 		"container": instance.Container,
+	})
+}
+
+func KillChallengeInstance(c *gin.Context) {
+	challengeID := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	if user.Team == nil || user.TeamID == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
+		return
+	}
+
+	var instance models.Instance
+	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
+		return
+	}
+
+	if instance.UserID != user.ID && user.Role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not_authorized"})
+		return
+	}
+
+	if err := utils.StopDockerInstance(instance.Container); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_stop_instance"})
+		return
+	}
+
+	instance.Status = "stopped"
+	if err := config.DB.Save(&instance).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_instance"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "instance_stopped",
+		"message": "Instance stopped successfully",
 	})
 }
 

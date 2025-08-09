@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import axios from '@/lib/axios'
+import { debugLog, debugError } from '@/lib/debug'
 import { Instance, InstanceResponse } from '@/models/Instance'
 import { toast } from 'sonner'
 
 export const useInstances = () => {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const buildImage = async (challengeId: number) => {
     setLoading(true)
@@ -21,92 +23,76 @@ export const useInstances = () => {
     }
   }
 
-  const startInstance = async (challengeId: number): Promise<InstanceResponse> => {
+  const startInstance = async (challengeId: string): Promise<InstanceResponse> => {
     setLoading(true)
+    setError(null)
+    
     try {
-      console.log(`Starting instance for challenge ID: ${challengeId}`)
+      debugLog(`Starting instance for challenge ID: ${challengeId}`)
       const response = await axios.post<InstanceResponse>(`/api/challenges/${challengeId}/start`)
-      console.log('Instance started successfully:', response.data)
+      debugLog('Instance started successfully:', response.data)
       toast.success('Instance started successfully')
       return response.data
     } catch (error: any) {
-      console.error('Failed to start instance:', error)
-      console.error('Response data:', error.response?.data)
-      console.error('Response status:', error.response?.status)
+      debugError('Failed to start instance:', error)
+      debugError('Response data:', error.response?.data)
+      debugError('Response status:', error.response?.status)
       
-      const errorKey = error.response?.data?.error
-      let errorMessage = 'Failed to start instance'
+      const errorCode = error.response?.data?.error
+      const errorMessage = error.response?.data?.message
       
-      switch (errorKey) {
-        case 'team_required':
-          errorMessage = 'You must be in a team to start an instance'
-          break
-        case 'instance_already_running':
-          errorMessage = 'An instance is already running for this challenge'
-          break
-        case 'max_instances_by_user_reached':
-          errorMessage = 'You have reached the maximum number of instances'
-          break
-        case 'max_instances_by_team_reached':
-          errorMessage = 'Your team has reached the maximum number of instances'
-          break
-        case 'docker_build_failed':
-          errorMessage = 'Failed to build Docker image'
-          break
-        case 'challenge_not_docker_type':
-          errorMessage = 'This challenge is not a Docker challenge'
-          break
-        case 'docker_config_not_found':
-          errorMessage = 'Docker configuration not found'
-          break
-        case 'instance_create_failed':
-          errorMessage = 'Failed to create instance'
-          break
-        default:
-          errorMessage = error.response?.data?.error || 'Failed to start instance'
+      if (errorCode === 'docker_unavailable') {
+        toast.error(errorMessage || 'Docker service is currently unavailable. Please try again later.')
+        setError('docker_unavailable')
+      } else if (errorCode === 'instance_already_running') {
+        toast.error('Instance is already running for this challenge')
+        setError('instance_already_running')
+      } else if (errorCode === 'max_instances_by_user_reached') {
+        toast.error('You have reached the maximum number of instances allowed')
+        setError('max_instances_reached')
+      } else if (errorCode === 'max_instances_by_team_reached') {
+        toast.error('Your team has reached the maximum number of instances allowed')
+        setError('max_instances_reached')
+      } else {
+        toast.error(errorMessage || error.response?.data?.error || 'Failed to start instance')
+      setError(error.response?.data?.error || 'Failed to start instance')
       }
       
-      toast.error(errorMessage)
       throw error
     } finally {
       setLoading(false)
     }
   }
 
-  const stopInstance = async (challengeId: number) => {
+  const stopInstance = async (challengeId: string) => {
     setLoading(true)
+    setError(null)
+    
     try {
-      console.log(`Stopping instance for challenge ID: ${challengeId}`)
+      debugLog(`Stopping instance for challenge ID: ${challengeId}`)
       const response = await axios.post(`/api/challenges/${challengeId}/stop`)
-      console.log('Instance stopped successfully:', response.data)
-      toast.success('Instance stopped successfully')
+      debugLog('Instance stopped successfully:', response.data)
       return response.data
     } catch (error: any) {
-      console.error('Failed to stop instance:', error)
-      console.error('Response data:', error.response?.data)
-      console.error('Response status:', error.response?.status)
-      
-      const errorMessage = error.response?.data?.error || 'Failed to stop instance'
-      toast.error(errorMessage)
+      debugError('Failed to stop instance:', error)
+      debugError('Response data:', error.response?.data)
+      debugError('Response status:', error.response?.status)
+      setError(error.response?.data?.error || 'Failed to stop instance')
       throw error
     } finally {
       setLoading(false)
     }
   }
 
-  const killInstance = async (challengeId: number) => {
+  const killInstance = async (challengeId: string) => {
     setLoading(true)
+    setError(null)
+    
     try {
-      console.log(`Killing instance for challenge ID: ${challengeId}`)
       const response = await axios.post(`/api/challenges/${challengeId}/kill`)
-      console.log('Instance killed successfully:', response.data)
       toast.success('Instance killed successfully')
       return response.data
     } catch (error: any) {
-      console.error('Failed to kill instance:', error)
-      console.error('Response data:', error.response?.data)
-      console.error('Response status:', error.response?.status)
-      
       const errorMessage = error.response?.data?.error || 'Failed to kill instance'
       toast.error(errorMessage)
       throw error
@@ -115,17 +101,23 @@ export const useInstances = () => {
     }
   }
 
-  const getInstanceStatus = async (challengeId: number) => {
+  const getInstanceStatus = async (challengeId: string) => {
+    setLoading(true)
+    setError(null)
+    
     try {
-      console.log(`Getting instance status for challenge ID: ${challengeId}`)
+      debugLog(`Getting instance status for challenge ID: ${challengeId}`)
       const response = await axios.get(`/api/challenges/${challengeId}/instance-status`)
-      console.log('Instance status received:', response.data)
+      debugLog('Instance status received:', response.data)
       return response.data
     } catch (error: any) {
-      console.error('Failed to get instance status:', error)
-      console.error('Response data:', error.response?.data)
-      console.error('Response status:', error.response?.status)
-      return null
+      debugError('Failed to get instance status:', error)
+      debugError('Response data:', error.response?.data)
+      debugError('Response status:', error.response?.status)
+      setError(error.response?.data?.error || 'Failed to get instance status')
+      throw error
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -135,6 +127,7 @@ export const useInstances = () => {
     startInstance,
     stopInstance,
     killInstance,
-    getInstanceStatus
+    getInstanceStatus,
+    error,
   }
 } 

@@ -145,9 +145,9 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create refresh token"})
 		return
 	}
-	
+
 	// Set both tokens as secure HTTP-only cookies
-	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true) // 1 hour, secure, httpOnly
+	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true)        // 1 hour, secure, httpOnly
 	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", true, true) // 7 days, secure, httpOnly
 
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
@@ -241,7 +241,7 @@ func UpdateCurrentUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Username updated",
+		"message":  "Username updated",
 		"username": user.Username,
 	})
 }

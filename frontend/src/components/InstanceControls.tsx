@@ -5,6 +5,7 @@ import { Play, Square, Trash2, Clock } from 'lucide-react';
 import { useInstances } from '@/hooks/use-instances';
 import { useLanguage } from '@/context/LanguageContext';
 import { toast } from 'sonner';
+import { debugLog, debugError } from '../lib/debug';
 
 interface InstanceControlsProps {
   challengeId: number;
@@ -37,10 +38,10 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
 
   const fetchStatus = useCallback(async () => {
     try {
-      const status = await getInstanceStatus(challengeId);
+      const status = await getInstanceStatus(challengeId.toString());
       setInstanceStatus(status);
     } catch (error) {
-      console.error('Failed to fetch instance status:', error);
+      debugError('Failed to fetch instance status:', error);
     }
   }, [challengeId, getInstanceStatus]);
 
@@ -48,17 +49,37 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
     fetchStatus();
     // Poll for status updates every 30 seconds
     const interval = setInterval(fetchStatus, 30000);
-    return () => clearInterval(interval);
+    // Also react instantly to websocket instance updates for this challenge
+    const handler = (e: any) => {
+      try {
+        const data = e?.detail ?? (typeof e?.data === 'string' ? JSON.parse(e.data) : e?.data);
+        if (data && data.event === 'instance_update') {
+          const cid = Number(data.challengeId);
+          if (cid === challengeId) {
+            fetchStatus();
+          }
+        }
+      } catch {}
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('instance-update', handler as EventListener);
+    }
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('instance-update', handler as EventListener);
+      }
+    };
   }, [fetchStatus]);
 
   const handleStartInstance = async () => {
     setLoading(true);
     try {
-      await startInstance(challengeId);
+      await startInstance(challengeId.toString());
       await fetchStatus();
       onStatusChange?.();
-    } catch (error) {
-      console.error('Failed to start instance:', error);
+    } catch (error: any) {
+      debugError('Failed to start instance:', error);
     } finally {
       setLoading(false);
     }
@@ -67,13 +88,13 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
   const handleStopInstance = async () => {
     setLoading(true);
     try {
-      console.log(`InstanceControls: Stopping instance for challenge ${challengeId}`);
-      await stopInstance(challengeId);
-      console.log('InstanceControls: Instance stopped successfully, fetching updated status');
+      debugLog(`InstanceControls: Stopping instance for challenge ${challengeId}`);
+      await stopInstance(challengeId.toString());
+      debugLog('InstanceControls: Instance stopped successfully, fetching updated status');
       await fetchStatus();
       onStatusChange?.();
-    } catch (error) {
-      console.error('InstanceControls: Failed to stop instance:', error);
+    } catch (error: any) {
+      debugError('InstanceControls: Failed to stop instance:', error);
     } finally {
       setLoading(false);
     }
@@ -82,13 +103,13 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
   const handleKillInstance = async () => {
     setLoading(true);
     try {
-      console.log(`InstanceControls: Killing instance for challenge ${challengeId}`);
-      await killInstance(challengeId);
-      console.log('InstanceControls: Instance killed successfully, fetching updated status');
+      debugLog(`InstanceControls: Killing instance for challenge ${challengeId}`);
+      await killInstance(challengeId.toString());
+      debugLog('InstanceControls: Instance killed successfully, fetching updated status');
       await fetchStatus();
       onStatusChange?.();
-    } catch (error) {
-      console.error('InstanceControls: Failed to kill instance:', error);
+    } catch (error: any) {
+      debugError('InstanceControls: Failed to kill instance:', error);
     } finally {
       setLoading(false);
     }

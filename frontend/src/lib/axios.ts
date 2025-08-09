@@ -1,4 +1,5 @@
 import axios from "axios";
+import { debugLog } from "./debug";
 
 const instance = axios.create({
   withCredentials: true,
@@ -26,7 +27,7 @@ instance.interceptors.response.use(
     ) {
       if (!banHandled) {
         banHandled = true;
-        console.log("User is banned, triggering logout");
+        debugLog("User is banned, triggering logout");
         
         // Clear translation cache
         Object.keys(localStorage).forEach((key) => {

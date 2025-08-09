@@ -50,6 +50,7 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
             cyan: "theme-cyan",
             violet: "theme-violet",
             orange: "theme-orange",
+            cyberpunk: "theme-cyberpunk",
           }}
         >
           <SidebarProvider defaultOpen={sidebarDefaultOpen}>

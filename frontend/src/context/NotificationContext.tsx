@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { Info, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/router';
+import { debugLog } from '../lib/debug';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -22,7 +23,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { loggedIn } = useAuth();
   const router = useRouter();
-  const [recentlySentNotifications, setRecentlySentNotifications] = useState<Set<number>>(new Set());
+  const [recentlySentNotifications, setRecentlySentNotifications] = useState<Map<string, number>>(new Map());
   
   const {
     notifications,
@@ -41,14 +42,18 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     // Add a temporary flag to prevent showing toast for this notification
     // We'll use a timestamp-based approach to identify recently sent notifications
     const timestamp = Date.now();
-    setRecentlySentNotifications(prev => new Set(Array.from(prev).concat([timestamp])));
+    setRecentlySentNotifications(prev => {
+      const newMap = new Map(prev);
+      newMap.set(timestamp.toString(), timestamp);
+      return newMap;
+    });
     
     // Remove the flag after 10 seconds
     setTimeout(() => {
       setRecentlySentNotifications(prev => {
-        const newSet = new Set(Array.from(prev));
-        newSet.delete(timestamp);
-        return newSet;
+        const newMap = new Map(prev);
+        newMap.delete(timestamp.toString());
+        return newMap;
       });
     }, 10000);
     
@@ -57,8 +62,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Show toast notification when a new notification is received
   const showToastNotification = (notification: Notification) => {
-    console.log('Showing toast notification:', notification);
-    
     // Check if this notification was recently sent by the current user
     // We'll use a simple heuristic: if the notification was created very recently (within 5 seconds)
     // and we have recently sent notifications, don't show the toast
@@ -66,40 +69,76 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const currentTime = Date.now();
     const timeDiff = currentTime - notificationTime;
     
-    if (timeDiff < 5000 && recentlySentNotifications.size > 0) {
-      console.log('Skipping toast for recently sent notification:', notification);
-      return;
+    // Create a key for this notification type to track recent shows
+    const recentKey = `${notification.type}_${notification.title}`;
+    const now = Date.now();
+    
+    // Check if we've recently shown this type of notification
+    const lastShown = recentlySentNotifications.get(recentKey);
+    if (lastShown) {
+      const timeSinceLastShow = now - lastShown;
+      if (timeSinceLastShow < 5000) { // 5 seconds
+        debugLog('Skipping toast for recently sent notification:', notification);
+        return;
+      }
     }
     
-    // Get icon based on notification type
-    const getTypeIcon = (type: string) => {
+    // Update recent notifications
+    setRecentlySentNotifications(prev => {
+      const newMap = new Map(prev);
+      newMap.set(recentKey, now);
+      
+      // Clean up old entries (older than 10 seconds)
+      Array.from(newMap.entries()).forEach(([key, timestamp]) => {
+        if (now - timestamp > 10000) {
+          newMap.delete(key);
+        }
+      });
+      
+      return newMap;
+    });
+    
+    debugLog('Showing toast notification:', notification);
+    
+    // Get the appropriate icon based on notification type
+    const getIcon = (type: string) => {
       switch (type) {
         case 'error':
           return <XCircle className="w-4 h-4" />;
         case 'warning':
           return <AlertTriangle className="w-4 h-4" />;
-        case 'info':
         default:
           return <Info className="w-4 h-4" />;
       }
     };
 
-    const icon = getTypeIcon(notification.type);
-    const title = notification.title || 'Notification';
-    const message = notification.message || 'You have a new notification';
-
-    toast(`${title}`, {
-      description: message,
-      icon: icon,
-      action: {
-        label: 'View',
-        onClick: () => {
-          router.push('/notifications');
-        },
-      },
-      duration: 5000,
+    // Show toast notification using Sonner
+    const toastOptions = {
+      icon: getIcon(notification.type),
       className: `notification-toast notification-${notification.type}`,
-    });
+      duration: 6000, // 6 seconds
+    };
+
+    switch (notification.type) {
+      case 'error':
+        toast.error(notification.title, {
+          ...toastOptions,
+          description: notification.message,
+        });
+        break;
+      case 'warning':
+        toast.warning(notification.title, {
+          ...toastOptions,
+          description: notification.message,
+        });
+        break;
+      default:
+        toast.info(notification.title, {
+          ...toastOptions,
+          description: notification.message,
+        });
+        break;
+    }
   };
 
   // Listen for new notification events from WebSocket

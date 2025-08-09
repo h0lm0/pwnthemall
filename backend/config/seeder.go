@@ -5,6 +5,7 @@ import (
 	"os"
 	"pwnthemall/models"
 	"strconv"
+	"time"
 
 	"github.com/casbin/casbin/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -19,10 +20,66 @@ func getEnvWithDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
+// CTFStatus represents the current status of the CTF
+type CTFStatus string
+
+const (
+	CTFNotStarted CTFStatus = "not_started"
+	CTFActive     CTFStatus = "active"
+	CTFEnded      CTFStatus = "ended"
+	CTFNoTiming   CTFStatus = "no_timing"
+)
+
+// GetCTFStatus returns the current status of the CTF based on start and end times
+func GetCTFStatus() CTFStatus {
+	var startConfig, endConfig models.Config
+
+	if err := DB.Where("key = ?", "CTF_START_TIME").First(&startConfig).Error; err != nil {
+		return CTFNoTiming
+	}
+	if err := DB.Where("key = ?", "CTF_END_TIME").First(&endConfig).Error; err != nil {
+		return CTFNoTiming
+	}
+	if startConfig.Value == "" || endConfig.Value == "" {
+		return CTFNoTiming
+	}
+
+	startTime, err := time.Parse(time.RFC3339, startConfig.Value)
+	if err != nil {
+		log.Printf("Failed to parse CTF start time")
+		return CTFNoTiming
+	}
+	endTime, err := time.Parse(time.RFC3339, endConfig.Value)
+	if err != nil {
+		log.Printf("Failed to parse CTF end time: %v", err)
+		return CTFNoTiming
+	}
+
+	now := time.Now()
+	if now.Before(startTime) {
+		return CTFNotStarted
+	} else if now.After(endTime) {
+		return CTFEnded
+	}
+	return CTFActive
+}
+
+func IsCTFActive() bool {
+	status := GetCTFStatus()
+	return status == CTFActive || status == CTFNoTiming
+}
+
+func IsCTFStarted() bool {
+	status := GetCTFStatus()
+	return status == CTFActive || status == CTFEnded || status == CTFNoTiming
+}
+
 func seedConfig() {
 	config := []models.Config{
 		{Key: "SITE_NAME", Value: os.Getenv("PTA_SITE_NAME"), Public: true},
 		{Key: "REGISTRATION_ENABLED", Value: getEnvWithDefault("PTA_REGISTRATION_ENABLED", "false"), Public: true},
+		{Key: "CTF_START_TIME", Value: getEnvWithDefault("PTA_CTF_START_TIME", ""), Public: true},
+		{Key: "CTF_END_TIME", Value: getEnvWithDefault("PTA_CTF_END_TIME", ""), Public: true},
 	}
 
 	for _, item := range config {
