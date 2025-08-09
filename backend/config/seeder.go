@@ -33,10 +33,7 @@ const (
 // GetCTFStatus returns the current status of the CTF based on start and end times
 func GetCTFStatus() CTFStatus {
 	var startConfig, endConfig models.Config
-<<<<<<< HEAD
-=======
 
->>>>>>> feature/hint-firstblood
 	if err := DB.Where("key = ?", "CTF_START_TIME").First(&startConfig).Error; err != nil {
 		return CTFNoTiming
 	}
@@ -46,10 +43,7 @@ func GetCTFStatus() CTFStatus {
 	if startConfig.Value == "" || endConfig.Value == "" {
 		return CTFNoTiming
 	}
-<<<<<<< HEAD
-=======
 
->>>>>>> feature/hint-firstblood
 	startTime, err := time.Parse(time.RFC3339, startConfig.Value)
 	if err != nil {
 		log.Printf("Failed to parse CTF start time")
@@ -60,37 +54,22 @@ func GetCTFStatus() CTFStatus {
 		log.Printf("Failed to parse CTF end time: %v", err)
 		return CTFNoTiming
 	}
-<<<<<<< HEAD
-=======
 
->>>>>>> feature/hint-firstblood
 	now := time.Now()
 	if now.Before(startTime) {
 		return CTFNotStarted
 	} else if now.After(endTime) {
 		return CTFEnded
-<<<<<<< HEAD
-	} else {
-		return CTFActive
-	}
-}
-
-// IsCTFActive returns true if the CTF is currently active
-=======
 	}
 	return CTFActive
 }
 
->>>>>>> feature/hint-firstblood
 func IsCTFActive() bool {
 	status := GetCTFStatus()
 	return status == CTFActive || status == CTFNoTiming
 }
 
-<<<<<<< HEAD
 // IsCTFStarted returns true if the CTF has started (active or ended)
-=======
->>>>>>> feature/hint-firstblood
 func IsCTFStarted() bool {
 	status := GetCTFStatus()
 	return status == CTFActive || status == CTFEnded || status == CTFNoTiming

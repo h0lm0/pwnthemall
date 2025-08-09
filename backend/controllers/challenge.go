@@ -316,7 +316,6 @@ func SubmitChallenge(c *gin.Context) {
 			return
 		}
 
-<<<<<<< HEAD
 		// Broadcast team solve event
 		type TeamSolveEvent struct {
 			Event         string    `json:"event"`
@@ -381,10 +380,9 @@ func SubmitChallenge(c *gin.Context) {
 				}
 			}
 		}(user.Team.ID, challenge.ID, user.ID, user.Username)
-=======
+
 		// After a successful solve, award first blood badge if applicable
 		CheckAndAwardFirstBlood(user.ID, challenge.ID)
->>>>>>> feature/hint-firstblood
 
 		// Check and create FirstBlood if this solve qualifies for a position bonus
 		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
