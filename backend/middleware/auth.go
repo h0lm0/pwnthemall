@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"pwnthemall/config"
 	"pwnthemall/models"
 	"pwnthemall/utils"
@@ -48,7 +49,7 @@ func getClientIP(c *gin.Context) string {
 
 // updateUserIP adds the current IP to the user's IP address list if not already present
 func updateUserIP(userID uint, currentIP string) {
-	if currentIP == "" || currentIP == "127.0.0.1" || currentIP == "::1" {
+	if currentIP == "" || currentIP == "127.0.0.1" || currentIP == "::1" || os.Getenv("PTA_DEMO") == "true" {
 		return // Skip localhost IPs
 	}
 
