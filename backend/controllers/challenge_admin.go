@@ -12,7 +12,7 @@ import (
 
 type ChallengeAdminUpdateRequest struct {
 	Points            int           `json:"points"`
-	DecayFormulaID    *uint         `json:"decayFormulaId"`
+	DecayFormulaID    uint          `json:"decayFormulaId"`
 	EnableFirstBlood  bool          `json:"enableFirstBlood"`
 	FirstBloodBonuses []int         `json:"firstBloodBonuses"`
 	Hints             []HintRequest `json:"hints"`
@@ -42,14 +42,10 @@ func UpdateChallengeAdmin(c *gin.Context) {
 
 	// Update challenge basic fields
 	challenge.Points = req.Points
-	
+
 	// Gérer le DecayFormulaID - si 0 ou nil, on met à nil pour désactiver le decay
-	if req.DecayFormulaID == nil || *req.DecayFormulaID == 0 {
-		challenge.DecayFormulaID = nil
-	} else {
-		challenge.DecayFormulaID = req.DecayFormulaID
-	}
-	
+	challenge.DecayFormulaID = req.DecayFormulaID
+
 	challenge.EnableFirstBlood = req.EnableFirstBlood
 
 	// Convert []int to pq.Int64Array
@@ -82,7 +78,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	// 1. Récupérer tous les hints existants pour ce challenge
 	var existingHints []models.Hint
 	config.DB.Where("challenge_id = ?", challenge.ID).Find(&existingHints)
-	
+
 	// 2. Créer une map des IDs des hints dans la requête
 	requestHintIDs := make(map[uint]bool)
 	for _, hintReq := range req.Hints {
@@ -90,7 +86,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 			requestHintIDs[hintReq.ID] = true
 		}
 	}
-	
+
 	// 3. Supprimer les hints qui ne sont plus dans la liste
 	for _, existingHint := range existingHints {
 		if !requestHintIDs[existingHint.ID] {
@@ -99,7 +95,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 			}
 		}
 	}
-	
+
 	// 4. Créer ou mettre à jour les hints de la requête
 	for _, hintReq := range req.Hints {
 		if hintReq.ID > 0 {

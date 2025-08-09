@@ -448,7 +448,7 @@ func StartChallengeInstance(c *gin.Context) {
 
 	var countExist int64
 	config.DB.Model(&models.Instance{}).
-		Where("user_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
+		Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
 		Count(&countExist)
 
 	if int(countExist) >= 1 {
@@ -476,7 +476,7 @@ func StartChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	containerName, err := utils.StartDockerInstance(imageName, int(user.ID), int(*user.TeamID), []int{}, []int{})
+	containerName, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), []int{}, []int{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		log.Printf(
@@ -544,5 +544,48 @@ func StopChallengeInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "instance_stopping",
 		"container": instance.Container,
+	})
+}
+
+func GetInstanceStatus(c *gin.Context) {
+	challengeID := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+	if user.TeamID == nil || user.Team == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
+		return
+	}
+
+	var instance models.Instance
+	if err := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, *user.TeamID).Order("created_at DESC").First(&instance).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{"has_instance": false})
+		return
+	}
+
+	var dockerConfig models.DockerConfig
+	if err := config.DB.First(&dockerConfig).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
+		return
+	}
+
+	expiresAt := instance.CreatedAt.Add(time.Duration(dockerConfig.InstanceTimeout) * time.Minute)
+	isExpired := time.Now().After(expiresAt)
+
+	c.JSON(http.StatusOK, gin.H{
+		"has_instance": true,
+		"status":       instance.Status,
+		"created_at":   instance.CreatedAt,
+		"expires_at":   expiresAt,
+		"is_expired":   isExpired,
+		"container":    instance.Container,
 	})
 }

@@ -34,8 +34,15 @@ func ConnectDB() *gorm.DB {
 	}
 
 	DB = db
+
+	fixInstanceUserForeignKey()
 	if os.Getenv("SEED_DATABASE") == "true" {
 		SeedDatabase()
 	}
 	return db
+}
+
+func fixInstanceUserForeignKey() {
+	DB.Exec(`ALTER TABLE instances DROP CONSTRAINT IF EXISTS fk_instances_user;`)
+	DB.Exec(`ALTER TABLE instances ADD CONSTRAINT fk_instances_user FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE;`)
 }

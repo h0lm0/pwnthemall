@@ -15,12 +15,12 @@ func NewDecay() *DecayService {
 // CalculateDecayedPoints calcule les points décayés selon la formule
 func (ds *DecayService) CalculateDecayedPoints(challenge *models.Challenge, solveCount int) int {
 	// Si aucune decay formula n'est définie, retourner les points de base
-	if challenge.DecayFormulaID == nil {
+	if challenge.DecayFormulaID == 0 {
 		return challenge.Points
 	}
 
 	var decay models.DecayFormula
-	if err := config.DB.Where("id = ?", *challenge.DecayFormulaID).First(&decay).Error; err != nil {
+	if err := config.DB.Where("id = ?", challenge.DecayFormulaID).First(&decay).Error; err != nil {
 		// Si la decay formula n'existe pas, retourner les points de base
 		return challenge.Points
 	}
@@ -94,7 +94,6 @@ func (ds *DecayService) calculateExponentialDecay(basePoints, solveCount int, de
 
 	return decayedPoints
 }
-
 
 func (ds *DecayService) calculateCustomDecay(basePoints, solveCount int, decay *models.DecayFormula) int {
 	// ouais on verra ça une autre fois
