@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Team } from "@/models/Team";
 import { User } from "@/models/User";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// Removed style selector UI to keep only the classic table view
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -20,7 +20,7 @@ import axios from "@/lib/axios";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TrashIcon, UserCircleIcon, StarIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { CheckCircle } from 'lucide-react';
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface TeamManagementSectionProps {
@@ -30,13 +30,7 @@ interface TeamManagementSectionProps {
   onTeamChange?: () => void;
 }
 
-export const TEAM_STYLES = [
-  { key: "classic", label: "Classic Table" },
-  { key: "modern", label: "Modern Grid" },
-  { key: "compact", label: "Compact List" },
-  { key: "cards", label: "Member Cards" },
-  { key: "minimal", label: "Minimal View" },
-];
+// Only the classic view is kept. All themed variations removed.
 
 interface TeamStyleViewProps {
   team: Team;
@@ -70,24 +64,33 @@ interface TeamStyleViewProps {
   handleDisbandClick: () => void;
   onConfirmLeave: () => void;
   onConfirmDisband: () => void;
+  memberPointsMap?: Record<number, number>;
+  totalPoints?: number;
 }
 
 // --- TEAM STYLE COMPONENTS ---
 
 // Classic: Traditional table style
 function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, setTransferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
-  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband
+  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband, memberPointsMap, totalPoints
 }: TeamStyleViewProps) {
   return (
     <div className="rounded-lg border bg-background">
       <div className="p-4 border-b">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-3 flex-wrap">
           <h3 className="font-bold text-lg">{team.name}</h3>
-          {isCreator && (
-            <Button variant="destructive" size="sm" onClick={handleDisbandClick} disabled={disbanding}>
-              {t('disband_team')}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-full border bg-muted px-3 py-1">
+              <StarIcon className="w-4 h-4 text-yellow-400" />
+              <span className="font-semibold">{typeof totalPoints === 'number' ? totalPoints : 0}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">{t('points') || 'Points'}</span>
+            </div>
+            {isCreator && (
+              <Button variant="destructive" size="sm" onClick={handleDisbandClick} disabled={disbanding}>
+                {t('disband_team')}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -123,7 +126,7 @@ function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, 
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-1">
                     <StarIcon className="w-4 h-4 text-yellow-400" />
-                    <span>0</span>
+                    <span>{memberPointsMap?.[m.id] ?? m.points ?? 0}</span>
                   </div>
                 </td>
                 <td className="py-3 px-4 text-right">
@@ -154,241 +157,7 @@ function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, 
   );
 }
 
-// Modern: Grid layout with cards
-function ModernTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, setTransferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
-  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband
-}: TeamStyleViewProps) {
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-bold text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{team.name}</h3>
-        {isCreator && (
-          <Button variant="destructive" onClick={handleDisbandClick} disabled={disbanding}>
-            {t('disband_team')}
-          </Button>
-        )}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {members.map((m) => (
-          <Card key={m.id} className="hover:shadow-lg transition-all duration-200 border-2">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarFallback className="text-lg font-semibold">{m.username[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <h4 className="font-semibold">{m.username}</h4>
-                  {m.id === team.creatorId ? (
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
-                      Creator
-                    </Badge>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">Member</span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-1">
-                  <StarIcon className="w-4 h-4 text-yellow-400" />
-                  <span className="font-medium">0 points</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {isCreator && m.id !== currentUser.id && m.id !== team.creatorId && (
-                  <Button size="sm" variant="destructive" onClick={() => onKick(m)} disabled={kickLoading} className="flex-1">
-                    {t('kick')}
-                  </Button>
-                )}
-                {isCreator && m.id !== team.creatorId && (
-                  <Button size="sm" variant="outline" onClick={() => onTransfer(m)} disabled={transferring} className="flex-1">
-                    {t('transfer')}
-                  </Button>
-                )}
-                {m.id === currentUser.id && !isCreator && (
-                  <Button size="sm" variant="outline" onClick={handleLeaveClick} disabled={leaving} className="flex-1">
-                    {t('leave')}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Compact: Dense list view
-function CompactTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, setTransferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
-  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband
-}: TeamStyleViewProps) {
-  return (
-    <div className="space-y-3">
-      <div className="flex justify-between items-center pb-2 border-b">
-        <h3 className="font-bold text-lg">{team.name}</h3>
-        {isCreator && (
-          <Button variant="destructive" size="sm" onClick={handleDisbandClick} disabled={disbanding}>
-            {t('disband_team')}
-          </Button>
-        )}
-      </div>
-      {members.map((m) => (
-        <div key={m.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-muted/50 transition-colors">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-6 h-6">
-              <AvatarFallback className="text-xs">{m.username[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="font-medium text-sm">{m.username}</span>
-            {m.id === team.creatorId && (
-              <Badge variant="outline" className="text-xs px-1 py-0">
-                Creator
-              </Badge>
-            )}
-            <div className="flex items-center gap-1 ml-2">
-              <StarIcon className="w-3 h-3 text-yellow-400" />
-              <span className="text-xs text-muted-foreground">0</span>
-            </div>
-          </div>
-          <div className="flex gap-1">
-            {isCreator && m.id !== currentUser.id && m.id !== team.creatorId && (
-              <Button size="icon" variant="destructive" onClick={() => onKick(m)} disabled={kickLoading} className="h-6 w-6">
-                <TrashIcon className="w-3 h-3" />
-              </Button>
-            )}
-            {isCreator && m.id !== team.creatorId && (
-              <Button size="icon" variant="outline" onClick={() => onTransfer(m)} disabled={transferring} className="h-6 w-6">
-                <UserGroupIcon className="w-3 h-3" />
-              </Button>
-            )}
-            {m.id === currentUser.id && !isCreator && (
-              <Button size="sm" variant="outline" onClick={handleLeaveClick} disabled={leaving} className="h-6 text-xs px-2">
-                {t('leave')}
-              </Button>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Cards: Individual member cards
-function CardsTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, setTransferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
-  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband
-}: TeamStyleViewProps) {
-  return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="font-bold text-2xl mb-2">{team.name}</h3>
-        <p className="text-muted-foreground">{members.length} {members.length === 1 ? 'member' : 'members'}</p>
-        {isCreator && (
-          <Button variant="destructive" onClick={handleDisbandClick} disabled={disbanding} className="mt-3">
-            {t('disband_team')}
-          </Button>
-        )}
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {members.map((m) => (
-          <Card key={m.id} className="relative overflow-hidden hover:shadow-xl transition-all duration-300 border-2">
-            <CardContent className="p-6">
-              <div className="text-center space-y-4">
-                <Avatar className="w-16 h-16 mx-auto">
-                  <AvatarFallback className="text-2xl font-bold">{m.username[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h4 className="font-bold text-lg">{m.username}</h4>
-                  {m.id === team.creatorId ? (
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white mt-1">
-                      Team Creator
-                    </Badge>
-                  ) : (
-                    <p className="text-muted-foreground">Team Member</p>
-                  )}
-                </div>
-                <div className="flex items-center justify-center gap-2 text-lg">
-                  <StarIcon className="w-5 h-5 text-yellow-400" />
-                  <span className="font-semibold">0 points</span>
-                </div>
-                <div className="flex gap-2">
-                  {isCreator && m.id !== currentUser.id && m.id !== team.creatorId && (
-                    <Button variant="destructive" onClick={() => onKick(m)} disabled={kickLoading} className="flex-1">
-                      {t('kick')}
-                    </Button>
-                  )}
-                  {isCreator && m.id !== team.creatorId && (
-                    <Button variant="outline" onClick={() => onTransfer(m)} disabled={transferring} className="flex-1">
-                      {t('transfer')}
-                    </Button>
-                  )}
-                  {m.id === currentUser.id && !isCreator && (
-                    <Button variant="outline" onClick={handleLeaveClick} disabled={leaving} className="w-full">
-                      {t('leave')}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Minimal: Simple and clean
-function MinimalTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, setTransferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
-  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband
-}: TeamStyleViewProps) {
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="font-medium text-lg">{team.name}</h3>
-          <p className="text-sm text-muted-foreground">{members.length} members</p>
-        </div>
-        {isCreator && (
-          <Button variant="ghost" onClick={handleDisbandClick} disabled={disbanding} className="text-destructive hover:text-destructive">
-            {t('disband_team')}
-          </Button>
-        )}
-      </div>
-      <div className="space-y-2">
-        {members.map((m) => (
-          <div key={m.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-b-0">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span>{m.username}</span>
-              {m.id === team.creatorId && (
-                <span className="text-xs text-muted-foreground">(Creator)</span>
-              )}
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <StarIcon className="w-3 h-3" />
-                <span>0</span>
-              </div>
-            </div>
-            <div className="flex gap-1">
-              {isCreator && m.id !== currentUser.id && m.id !== team.creatorId && (
-                <Button size="sm" variant="ghost" onClick={() => onKick(m)} disabled={kickLoading} className="text-destructive hover:text-destructive h-auto py-1 px-2">
-                  ×
-                </Button>
-              )}
-              {isCreator && m.id !== team.creatorId && (
-                <Button size="sm" variant="ghost" onClick={() => onTransfer(m)} disabled={transferring} className="h-auto py-1 px-2">
-                  ↗
-                </Button>
-              )}
-              {m.id === currentUser.id && !isCreator && (
-                <Button size="sm" variant="ghost" onClick={handleLeaveClick} disabled={leaving} className="text-destructive hover:text-destructive h-auto py-1 px-2">
-                  {t('leave')}
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// All other themed views removed.
 
 export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ team, members, currentUser, onTeamChange }) => {
   const { t } = useLanguage();
@@ -407,7 +176,9 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const [showKickDialog, setShowKickDialog] = useState(false);
   const [kickTarget, setKickTarget] = useState<User | null>(null);
   const [transferTarget, setTransferTarget] = useState<User | null>(null);
-  const [activeStyle, setActiveStyle] = useState("classic");
+  // Points map fetched from backend; defaults to empty
+  const [memberPointsMap, setMemberPointsMap] = useState<Record<number, number>>({});
+  const [totalPoints, setTotalPoints] = useState<number>(0);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDisbandDialog, setShowDisbandDialog] = useState(false);
   const [showCreatorLeaveChoice, setShowCreatorLeaveChoice] = useState(false);
@@ -415,6 +186,53 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const isCreator = team.creatorId === currentUser.id;
   const otherMembers = members.filter(m => m.id !== currentUser.id);
   const isAlone = otherMembers.length === 0;
+
+  // Fetch enriched team info to get memberPoints (if available)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await axios.get(`/api/teams/${team.id}`);
+        const rawMp = res.data?.memberPoints as Record<string, number> | undefined;
+        if (!cancelled && rawMp) {
+          const normalized: Record<number, number> = {};
+          for (const [k, v] of Object.entries(rawMp)) {
+            const id = Number(k);
+            if (!Number.isNaN(id)) normalized[id] = typeof v === 'number' ? v : 0;
+          }
+          setMemberPointsMap(normalized);
+          const tp = typeof res.data?.totalPoints === 'number'
+            ? res.data.totalPoints
+            : Object.values(normalized).reduce((a, b) => a + (b || 0), 0);
+          setTotalPoints(tp);
+        } else if (!cancelled) {
+          setMemberPointsMap({});
+          setTotalPoints(0);
+        }
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [team.id]);
+
+  // Live update on team_solve websocket events
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (evt: Event) => {
+      const e = evt as CustomEvent;
+      const detail = e.detail || {};
+      const eventTeamId = detail.teamId as number | undefined;
+      const eventUserId = detail.userId as number | undefined;
+      const eventPoints = detail.points as number | undefined;
+      if (!eventTeamId || eventTeamId !== team.id) return;
+      if (typeof eventPoints !== 'number') return;
+      setTotalPoints((prev) => (prev || 0) + eventPoints);
+      if (typeof eventUserId === 'number') {
+        setMemberPointsMap((prev) => ({ ...prev, [eventUserId]: (prev?.[eventUserId] || 0) + eventPoints }));
+      }
+    };
+    window.addEventListener('team-solve' as any, handler as any);
+    return () => window.removeEventListener('team-solve' as any, handler as any);
+  }, [team.id]);
 
   const handleLeaveClick = () => {
     if (isCreator && otherMembers.length > 0) {
@@ -602,48 +420,46 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const onConfirmTransfer = () => { if (transferTarget) handleTransferOnly(transferTarget.id); };
   const onCancelTransfer = () => { setTransferTarget(null); setShowTransferOnly(false); };
 
-  const renderTeamView = () => {
-    const commonProps = {
-      team, members, currentUser, isCreator, otherMembers, onKick, onTransfer,
-      kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick,
-      transferTarget, setTransferTarget, showTransferDialog: showTransferOnly,
-      setShowTransferDialog: setShowTransferOnly, onConfirmTransfer, onCancelTransfer,
-      kickLoading, transferring, t, showLeaveDialog, setShowLeaveDialog,
-      showDisbandDialog, setShowDisbandDialog, leaving, disbanding,
-      handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband
-    };
-
-    switch (activeStyle) {
-      case "modern": return <ModernTeamView {...commonProps} />;
-      case "compact": return <CompactTeamView {...commonProps} />;
-      case "cards": return <CardsTeamView {...commonProps} />;
-      case "minimal": return <MinimalTeamView {...commonProps} />;
-      default: return <ClassicTeamView {...commonProps} />;
-    }
-  };
+  const renderTeamView = () => (
+    <ClassicTeamView
+      team={team}
+      members={members}
+      currentUser={currentUser}
+      isCreator={isCreator}
+      otherMembers={otherMembers}
+      onKick={onKick}
+      onTransfer={onTransfer}
+      kickTarget={kickTarget}
+      showKickDialog={showKickDialog}
+      setShowKickDialog={setShowKickDialog}
+      onConfirmKick={onConfirmKick}
+      onCancelKick={onCancelKick}
+      transferTarget={transferTarget}
+      setTransferTarget={setTransferTarget}
+      showTransferDialog={showTransferOnly}
+      setShowTransferDialog={setShowTransferOnly}
+      onConfirmTransfer={onConfirmTransfer}
+      onCancelTransfer={onCancelTransfer}
+      kickLoading={kickLoading}
+      transferring={transferring}
+      t={t}
+      showLeaveDialog={showLeaveDialog}
+      setShowLeaveDialog={setShowLeaveDialog}
+      showDisbandDialog={showDisbandDialog}
+      setShowDisbandDialog={setShowDisbandDialog}
+      leaving={leaving}
+      disbanding={disbanding}
+      handleLeaveClick={handleLeaveClick}
+      handleDisbandClick={handleDisbandClick}
+      onConfirmLeave={onConfirmLeave}
+      onConfirmDisband={onConfirmDisband}
+      memberPointsMap={memberPointsMap}
+  totalPoints={totalPoints}
+    />
+  );
 
   return (
     <div className="space-y-4">
-      {/* Style Selector */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">Team Management</h3>
-          <p className="text-sm text-muted-foreground">Choose a display style</p>
-        </div>
-        <Select value={activeStyle} onValueChange={setActiveStyle}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select style" />
-          </SelectTrigger>
-          <SelectContent>
-            {TEAM_STYLES.map((style) => (
-              <SelectItem key={style.key} value={style.key}>
-                {style.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Team View */}
       {renderTeamView()}
 
