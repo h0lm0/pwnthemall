@@ -47,10 +47,11 @@ RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs
 
 COPY --from=build /app/public ./public
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
+COPY --chown=nextjs:nodejs --from=build /app/.next/standalone ./
+COPY --chown=nextjs:nodejs --from=build /app/.next/static ./.next/static
 
-RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app
+# Create cache directory with correct ownership without a slow recursive chown
+RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app/.next/cache
 
 USER nextjs
 EXPOSE 3000

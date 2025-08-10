@@ -25,6 +25,25 @@ MOUNT_PATH="/data"
 DOCKER_GID=$(getent group docker | cut -d: -f3)
 export DOCKER_GID
 
+# Global flags
+VERBOSE="false"
+
+function log_info() {
+    echo "$1"
+}
+
+function log_debug() {
+    if [[ "$VERBOSE" == "true" ]]; then
+        >&2 echo "$1"
+    fi
+}
+
+# Parse global flags (-v/--verbose) before dispatching subcommands
+while [[ ${1:-} =~ ^--?v(erbose)?$ ]]; do
+    VERBOSE="true"
+    shift || true
+done
+
 function minio_alias() {
     docker compose -f docker-compose.prod.yml exec -it "$MINIO_CONTAINER" mc alias set "$MINIO_ALIAS" "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" 2>/dev/null || true
 }
@@ -75,6 +94,7 @@ function env_randomize() {
 function compose_up() {
     local env="prod"
     local build="false"
+    local follow_logs="false"
 
     if [ ! -f ./shared/worker ]; then
         echo "WARN: Private key file shared/worker not found, generating new one..."
@@ -94,6 +114,10 @@ function compose_up() {
                 build="true"
                 shift
                 ;;
+            -l|--logs|--follow-logs)
+                follow_logs="true"
+                shift
+                ;;
             *)
                 echo "[✗] Unknown option: $1"
                 usage
@@ -109,30 +133,62 @@ function compose_up() {
     fi
 
     echo "[+] Starting services..."
+    [[ "$VERBOSE" == "true" ]] && echo "    env=$env compose_file=$compose_file build=$build follow_logs=$follow_logs"
 
     # Redirect both stdout and stderr to a log file, then display only if error
     local log_file
     log_file=$(mktemp)
 
-    if [[ "$build" == "true" ]]; then
-        docker compose -f "$compose_file" up -d --build >"$log_file" 2>&1
+    if [[ "$VERBOSE" == "true" ]]; then
+        # In verbose mode, stream output directly
+        if [[ "$build" == "true" ]]; then
+            log_debug "+ docker compose -f $compose_file up -d --build"
+            docker compose -f "$compose_file" up -d --build | sed 's/^/[compose] /'
+        else
+            log_debug "+ docker compose -f $compose_file up -d"
+            docker compose -f "$compose_file" up -d | sed 's/^/[compose] /'
+        fi
     else
-        docker compose -f "$compose_file" up -d >"$log_file" 2>&1
+        if [[ "$build" == "true" ]]; then
+            docker compose -f "$compose_file" up -d --build >"$log_file" 2>&1
+        else
+            docker compose -f "$compose_file" up -d >"$log_file" 2>&1
+        fi
     fi
 
     local status=$?
 
     if [[ $status -ne 0 ]]; then
         echo "[✗] Failed to start services:"
-        cat "$log_file"
+        if [[ -f "$log_file" ]]; then
+            cat "$log_file"
+        else
+            echo "(no log file captured)"
+        fi
         rm -f "$log_file"
         exit 1
     fi
 
-    rm -f "$log_file"
+    rm -f "$log_file" 2>/dev/null || true
 
     echo "[+] Waiting for services to initialize"
     sleep 5
+
+    if [[ "$VERBOSE" == "true" ]]; then
+        echo "[+] Current service status:"
+        log_debug "+ docker compose -f $compose_file ps"
+        docker compose -f "$compose_file" ps
+        echo
+        echo "[+] Recent logs (last 100 lines per service):"
+        log_debug "+ docker compose -f $compose_file logs --tail=100"
+        docker compose -f "$compose_file" logs --tail=100 || true
+    fi
+
+    if [[ "$follow_logs" == "true" ]]; then
+        echo "[+] Following logs (Ctrl-C to stop)..."
+        log_debug "+ docker compose -f $compose_file logs -f --tail=100"
+        docker compose -f "$compose_file" logs -f --tail=100 || true
+    fi
 
     echo "[✓] Compose up completed"
 }
@@ -172,6 +228,7 @@ function compose_down() {
     if [[ -n "$challenge_containers" ]]; then
         echo "[+] Found challenge containers, stopping and removing them..."
         # Force remove all challenge containers (stop + remove in one command)
+        [[ "$VERBOSE" == "true" ]] && echo "$challenge_containers"
         echo "$challenge_containers" | xargs docker rm -f 2>/dev/null || true
         echo "[✓] Challenge containers cleaned up"
     else
@@ -179,6 +236,8 @@ function compose_down() {
     fi
 
     echo "[+] Stopping and removing containers using $compose_file"
+    [[ "$VERBOSE" == "true" ]] && docker compose -f "$compose_file" ps || true
+    [[ "$VERBOSE" == "true" ]] && echo "+ docker compose -f $compose_file down -v"
     docker compose -f "$compose_file" down -v
     echo "[✓] Compose down completed"
 }
@@ -195,9 +254,9 @@ function remove_key() {
 
 function usage() {
     echo "Usage:"
-    echo "  $0 minio sync <folder>"
-    echo "  $0 compose up [--build] [--env dev|prod]"
-    echo "  $0 compose down [--env dev|prod]"
+    echo "  $0 [-v|--verbose] minio sync <folder>"
+    echo "  $0 [-v|--verbose] compose up [--build] [--env dev|prod] [-l|--logs]"
+    echo "  $0 [-v|--verbose] compose down [--env dev|prod]"
     echo "  $0 keys -g|gen"
     echo "  $0 keys -r|remove"
     echo "  $0 env randomize"
