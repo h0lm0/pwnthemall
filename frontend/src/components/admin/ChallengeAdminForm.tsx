@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { FirstBloodManager } from "./FirstBloodManager"
 
 interface ChallengeAdminFormProps {
   challenge: Challenge
@@ -38,6 +39,11 @@ interface Hint {
   challengeId: number
 }
 
+interface FirstBloodBonus {
+  points: number
+  badge: string
+}
+
 export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdminFormProps) {
   const [loading, setLoading] = useState(false)
   const [generalLoading, setGeneralLoading] = useState(false)
@@ -45,10 +51,24 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const [formData, setFormData] = useState({
     points: challenge.points || 0,
     enableFirstBlood: challenge.enableFirstBlood || false,
-    firstBloodBonus: challenge.firstBloodBonus || 100,
     decayFormulaId: challenge.decayFormulaId || null as number | null,
     hints: challenge.hints || [] as Hint[],
   })
+  
+  // Convert arrays to FirstBloodBonus objects for easier management
+  const initializeFirstBloodBonuses = (): FirstBloodBonus[] => {
+    const bonuses = challenge.firstBloodBonuses || []
+    const badges = challenge.firstBloodBadges || []
+    
+    if (bonuses.length === 0) return []
+    
+    return bonuses.map((points, index) => ({
+      points,
+      badge: badges[index] || 'trophy'
+    }))
+  }
+  
+  const [firstBloodBonuses, setFirstBloodBonuses] = useState<FirstBloodBonus[]>(initializeFirstBloodBonuses())
   const [generalData, setGeneralData] = useState({
     name: challenge.name || "",
     description: challenge.description || "",
@@ -75,10 +95,15 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const handleSubmit = async () => {
     setLoading(true)
     try {
+      // Convert FirstBloodBonus objects back to separate arrays
+      const firstBloodBonusesArray = firstBloodBonuses.map(bonus => bonus.points)
+      const firstBloodBadgesArray = firstBloodBonuses.map(bonus => bonus.badge)
+      
       await axios.put(`/api/challenges/admin/${challenge.id}`, {
         points: formData.points,
         enableFirstBlood: formData.enableFirstBlood,
-        firstBloodBonus: formData.firstBloodBonus,
+        firstBloodBonuses: firstBloodBonusesArray,
+        firstBloodBadges: firstBloodBadgesArray,
         decayFormulaId: formData.decayFormulaId,
         hints: formData.hints.map(hint => ({
           id: hint.id,
@@ -270,37 +295,21 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
         </TabsContent>
 
         <TabsContent value="firstblood" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>First Blood Bonus</CardTitle>
-              <CardDescription>
-                Configure the first blood bonus for this challenge
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="enableFirstBlood">Enable First Blood Bonus</Label>
-                <Switch
-                  id="enableFirstBlood"
-                  checked={formData.enableFirstBlood}
-                  onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, enableFirstBlood: checked }))}
-                />
-              </div>
+          <div className="flex items-center justify-between mb-4">
+            <Label htmlFor="enableFirstBlood">Enable First Blood System</Label>
+            <Switch
+              id="enableFirstBlood"
+              checked={formData.enableFirstBlood}
+              onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, enableFirstBlood: checked }))}
+            />
+          </div>
 
-              {formData.enableFirstBlood && (
-                <div>
-                  <Label htmlFor="firstBloodBonus">First Blood Bonus Points</Label>
-                  <Input
-                    id="firstBloodBonus"
-                    type="number"
-                    min="0"
-                    value={formData.firstBloodBonus}
-                    onChange={(e) => setFormData(prev => ({ ...prev, firstBloodBonus: parseInt(e.target.value) || 0 }))}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {formData.enableFirstBlood && (
+            <FirstBloodManager 
+              bonuses={firstBloodBonuses}
+              onChange={setFirstBloodBonuses}
+            />
+          )}
 
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={onClose}>

@@ -165,6 +165,31 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		challenge.ConnectionInfo = pq.StringArray{}
 	}
 
+	// Handle First Blood configuration
+	challenge.EnableFirstBlood = metaData.EnableFirstBlood
+	if metaData.FirstBlood != nil {
+		if len(metaData.FirstBlood.Bonuses) > 0 {
+			bonuses64 := make(pq.Int64Array, len(metaData.FirstBlood.Bonuses))
+			for i, bonus := range metaData.FirstBlood.Bonuses {
+				bonuses64[i] = int64(bonus)
+			}
+			challenge.FirstBloodBonuses = bonuses64
+		} else {
+			challenge.FirstBloodBonuses = pq.Int64Array{}
+		}
+
+		if len(metaData.FirstBlood.Badges) > 0 {
+			badgesArray := make(pq.StringArray, len(metaData.FirstBlood.Badges))
+			copy(badgesArray, metaData.FirstBlood.Badges)
+			challenge.FirstBloodBadges = badgesArray
+		} else {
+			challenge.FirstBloodBadges = pq.StringArray{}
+		}
+	} else {
+		challenge.FirstBloodBonuses = pq.Int64Array{}
+		challenge.FirstBloodBadges = pq.StringArray{}
+	}
+
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		return err
 	}
@@ -181,6 +206,27 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		}
 		if err := config.DB.Create(&newFlag).Error; err != nil {
 			return err
+		}
+	}
+
+	// Handle hints from YAML
+	if len(metaData.Hints) > 0 {
+		// Delete existing hints to replace them with YAML configuration
+		if err := config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.Hint{}).Error; err != nil {
+			return err
+		}
+
+		// Create hints from YAML metadata
+		for _, hintMeta := range metaData.Hints {
+			hint := models.Hint{
+				ChallengeID: challenge.ID,
+				Content:     hintMeta.Content,
+				Cost:        hintMeta.Cost,
+				IsActive:    hintMeta.IsActive,
+			}
+			if err := config.DB.Create(&hint).Error; err != nil {
+				return err
+			}
 		}
 	}
 

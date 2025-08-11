@@ -25,7 +25,8 @@ export interface Challenge {
   connectionInfo?: string[]
   points?: number
   enableFirstBlood?: boolean
-  firstBloodBonus?: number
+  firstBloodBonuses?: number[]
+  firstBloodBadges?: string[]
   decayFormula?: {
     id: number
     name: string

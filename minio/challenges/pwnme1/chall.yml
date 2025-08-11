@@ -1,4 +1,4 @@
-name: pwn me 1
+name: pwn me 10
 description: |
   aaa
   aaaa
@@ -12,3 +12,7 @@ author: h0lm
 flags: ["flag"]
 hidden: false
 points: 10
+enableFirstBlood: true
+firstBlood:
+  bonuses: [200]
+  badges: ["a"]

@@ -32,4 +32,5 @@ type Challenge struct {
 	FirstBlood            *FirstBlood          `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"firstBlood,omitempty"`
 	EnableFirstBlood      bool                 `gorm:"default:false" json:"enableFirstBlood"`
 	FirstBloodBonuses     pq.Int64Array        `gorm:"type:integer[]" json:"firstBloodBonuses"`
+	FirstBloodBadges      pq.StringArray       `gorm:"type:text[]" json:"firstBloodBadges"`
 }

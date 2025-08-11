@@ -15,6 +15,7 @@ type ChallengeAdminUpdateRequest struct {
 	DecayFormulaID    uint          `json:"decayFormulaId"`
 	EnableFirstBlood  bool          `json:"enableFirstBlood"`
 	FirstBloodBonuses []int         `json:"firstBloodBonuses"`
+	FirstBloodBadges  []string      `json:"firstBloodBadges"`
 	Hints             []HintRequest `json:"hints"`
 }
 
@@ -64,6 +65,15 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		challenge.FirstBloodBonuses = int64Array
 	} else {
 		challenge.FirstBloodBonuses = []int64{}
+	}
+
+	// Convert []string to pq.StringArray for badges
+	if len(req.FirstBloodBadges) > 0 {
+		stringArray := make([]string, len(req.FirstBloodBadges))
+		copy(stringArray, req.FirstBloodBadges)
+		challenge.FirstBloodBadges = stringArray
+	} else {
+		challenge.FirstBloodBadges = []string{}
 	}
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
