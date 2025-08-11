@@ -3,8 +3,10 @@ import axios from '@/lib/axios'
 import { debugLog, debugError } from '@/lib/debug'
 import { Instance, InstanceResponse } from '@/models/Instance'
 import { toast } from 'sonner'
+import { useLanguage } from '@/context/LanguageContext'
 
 export const useInstances = () => {
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -53,6 +55,11 @@ export const useInstances = () => {
       } else if (errorCode === 'max_instances_by_team_reached') {
         toast.error('Your team has reached the maximum number of instances allowed')
         setError('max_instances_reached')
+      } else if (errorCode === 'instance_cooldown_not_elapsed') {
+        const remaining = Number(error.response?.data?.remaining_seconds ?? 0)
+        const secs = Math.max(0, Math.floor(remaining))
+        toast.error(t('instance_cooldown_wait', { seconds: secs }) || `Please wait ${secs}s before starting a new instance`)
+        setError('instance_cooldown_not_elapsed')
       } else {
         toast.error(errorMessage || error.response?.data?.error || 'Failed to start instance')
       setError(error.response?.data?.error || 'Failed to start instance')

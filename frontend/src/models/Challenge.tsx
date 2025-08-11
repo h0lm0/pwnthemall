@@ -23,6 +23,7 @@ export interface Challenge {
   solved?: boolean
   ports?: number[]
   connectionInfo?: string[]
+  geoRadiusKm?: number | null
   points?: number
   enableFirstBlood?: boolean
   firstBloodBonuses?: number[]

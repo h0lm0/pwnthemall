@@ -386,7 +386,7 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
     // 2. Login via API
     const loginResponse = await page.request.post('https://pwnthemall.local/api/login', {
       data: {
-        identifier: email,
+        username: email,
         password: password
       }
     });

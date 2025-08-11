@@ -16,7 +16,7 @@ import { useLanguage } from "@/context/LanguageContext"
 
 interface LoginContentProps {
     form: {
-        identifier: string
+        username: string
         password: string
     }
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
@@ -42,11 +42,11 @@ export default function LoginContent({
                     <CardContent>
                         <form onSubmit={onSubmit} className="grid gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="identifier">{t('username_or_email')}</Label>
+                                <Label htmlFor="username">{t('username_or_email')}</Label>
                                 <Input
-                                    id="identifier"
-                                    name="identifier"
-                                    value={form.identifier}
+                                    id="username"
+                                    name="username"
+                                    value={form.username}
                                     onChange={onChange}
                                     placeholder="you@example.com"
                                     required

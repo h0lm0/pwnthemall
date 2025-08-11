@@ -45,6 +45,8 @@ func UpdateDockerConfig(c *gin.Context) {
 	existingCfg.InstancesByUser = newCfg.InstancesByUser
 	existingCfg.MaxMemByInstance = newCfg.MaxMemByInstance
 	existingCfg.MaxCpuByInstance = newCfg.MaxCpuByInstance
+	existingCfg.InstanceTimeout = newCfg.InstanceTimeout
+	existingCfg.InstanceCooldownSeconds = newCfg.InstanceCooldownSeconds
 
 	if err := config.DB.Save(&existingCfg).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update Docker Configuration"})

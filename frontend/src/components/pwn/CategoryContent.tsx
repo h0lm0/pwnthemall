@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GeoPicker from "./GeoPicker";
 import { useInstances } from "@/hooks/use-instances";
 import { debugError } from "@/lib/debug";
 import type { User } from "@/models/User";
@@ -42,6 +43,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [flag, setFlag] = useState("");
   const [loading, setLoading] = useState(false);
+  const [geoCoords, setGeoCoords] = useState<{lat: number; lng: number} | null>(null);
   const [open, setOpen] = useState(false);
   const [solves, setSolves] = useState<Solve[]>([]);
   const [solvesLoading, setSolvesLoading] = useState(false);
@@ -182,7 +184,22 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     if (!selectedChallenge) return;
     setLoading(true);
     try {
-      const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, { flag });
+      let payload: any = { flag };
+      if (selectedChallenge.type?.name?.toLowerCase() === 'geo') {
+        if (geoCoords && !Number.isNaN(geoCoords.lat) && !Number.isNaN(geoCoords.lng)) {
+          payload = { lat: geoCoords.lat, lng: geoCoords.lng };
+        } else {
+          const parts = flag.split(',').map((p) => p.trim());
+          if (parts.length === 2) {
+            const lat = parseFloat(parts[0]);
+            const lng = parseFloat(parts[1]);
+            if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+              payload = { lat, lng };
+            }
+          }
+        }
+      }
+      const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, payload);
 
       toast.success(t(res.data.message) || 'Challenge solved!');
       // Refresh challenges after successful submission
@@ -704,22 +721,28 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                       </p>
                     </div>
                   ) : (
-                    <div className="mt-4 flex flex-col sm:flex-row items-center gap-4 flex-shrink-0 pb-2">
-                      <Input
-                        placeholder={t('enter_your_flag')}
-                        value={flag}
-                        onChange={(e) => setFlag(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && flag.trim()) {
-                            handleSubmit();
-                          }
-                        }}
-                        className="w-full"
-                        disabled={loading}
-                      />
+                    <div className="mt-4 flex flex-col gap-4 flex-shrink-0 pb-2">
+                       {selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? (
+                         <div className="w-full" style={{ height: '380px' }}>
+                           <GeoPicker value={geoCoords} onChange={setGeoCoords} height={380} radiusKm={selectedChallenge?.geoRadiusKm ?? null} />
+                         </div>
+                       ) : (
+                        <Input
+                          placeholder={t('enter_your_flag')}
+                          value={flag}
+                          onChange={(e) => setFlag(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && flag.trim()) {
+                              handleSubmit();
+                            }
+                          }}
+                          className="w-full"
+                          disabled={loading}
+                        />
+                      )}
                       <Button
                         onClick={handleSubmit}
-                        disabled={loading || !flag.trim()}
+                        disabled={loading || (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim())}
                         className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
                       >
                         {loading ? t('submitting') : t('submit')}

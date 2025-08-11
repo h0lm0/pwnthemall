@@ -22,12 +22,14 @@ import (
 
 func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	const bucketName = "challenges"
+	// Key can be in two forms depending on MinIO webhook config:
+	// 1) "challenges/<slug>/chall.yml" (includes bucket)
+	// 2) "<slug>/chall.yml" (object key only)
+	objectKey := key
 	parts := strings.SplitN(key, "/", 2)
-	if len(parts) < 2 {
-		log.Printf("Invalid key format: %s", key)
-		return nil
+	if len(parts) == 2 && parts[0] == bucketName {
+		objectKey = parts[1]
 	}
-	objectKey := parts[1]
 	log.Printf("SyncChallengesFromMinIO begin for bucket: %s, key: %s", bucketName, objectKey)
 
 	time.Sleep(500 * time.Millisecond)
@@ -74,6 +76,30 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 		ports = dockerMeta.Ports
 
 	case "compose":
+	case "geo":
+		var geoMeta meta.GeoChallengeMetadata
+		if err := yaml.Unmarshal(buf.Bytes(), &geoMeta); err != nil {
+			log.Printf("Invalid Geo YAML for %s: %v", objectKey, err)
+			return err
+		}
+		metaData = geoMeta.Base
+		// Save or update GeoSpec separately
+		defer func(slug string, g meta.GeoChallengeMetadata) {
+			// after challenge record is saved below, persist GeoSpec
+			var challenge models.Challenge
+			if err := config.DB.Where("slug = ?", slug).First(&challenge).Error; err == nil {
+				var existing models.GeoSpec
+				if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&existing).Error; err == nil {
+					existing.TargetLat = g.TargetLat
+					existing.TargetLng = g.TargetLng
+					existing.RadiusKm = g.RadiusKm
+					_ = config.DB.Save(&existing).Error
+				} else {
+					gs := models.GeoSpec{ChallengeID: challenge.ID, TargetLat: g.TargetLat, TargetLng: g.TargetLng, RadiusKm: g.RadiusKm}
+					_ = config.DB.Create(&gs).Error
+				}
+			}
+		}(strings.Split(objectKey, "/")[0], geoMeta)
 		var composeMeta meta.ComposeChallengeMetadata
 		if err := yaml.Unmarshal(buf.Bytes(), &composeMeta); err != nil {
 			log.Printf("Invalid Compose YAML for %s: %v", objectKey, err)

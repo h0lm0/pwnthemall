@@ -3,6 +3,12 @@ pwnthemall.local {
         reverse_proxy backend:8080
     }
 
+    # WebSocket endpoint should be proxied to backend without stripping the prefix
+    @ws path /ws/*
+    handle @ws {
+        reverse_proxy backend:8080
+    }
+
     handle_path /minio-api/* {
         reverse_proxy minio:9000
     }

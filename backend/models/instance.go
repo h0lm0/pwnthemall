@@ -12,9 +12,9 @@ type Instance struct {
 	User        User          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"user"`
 	UserID      uint          `json:"userId"`
 	Team        Team          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"team"`
-	TeamID      uint          `json:"teamId"`
+	TeamID      uint          `gorm:"index;uniqueIndex:uniq_team_challenge" json:"teamId"`
 	Challenge   Challenge     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"challenge"`
-	ChallengeID uint          `json:"challengeId"`
+	ChallengeID uint          `gorm:"index;uniqueIndex:uniq_team_challenge" json:"challengeId"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	Ports       pq.Int64Array `gorm:"type:integer[]" json:"ports"`
 	ExpiresAt   time.Time     `json:"expiresAt"`
