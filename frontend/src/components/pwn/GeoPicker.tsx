@@ -14,6 +14,7 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
   const instanceRef = React.useRef<any>(null);
   const markerRef = React.useRef<any>(null);
   const circleRef = React.useRef<any>(null);
+  const resizeObserverRef = React.useRef<ResizeObserver | null>(null);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -82,11 +83,39 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
           if (circleRef.current) circleRef.current.setLatLng([lat, lng]);
         }
       });
+
+      // Give the browser a tick to lay out the dialog/tabs, then fix map size
+      setTimeout(() => {
+        try { map.invalidateSize(); } catch {}
+      }, 100);
+
+      // Keep the map responsive: observe container resize and window events
+      if (mapRef.current && 'ResizeObserver' in window) {
+        resizeObserverRef.current = new ResizeObserver(() => {
+          try { map.invalidateSize(); } catch {}
+        });
+        resizeObserverRef.current.observe(mapRef.current);
+      }
+      const handleResize = () => { try { map.invalidateSize(); } catch {} };
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', handleResize);
+      // Store cleanup hooks on the map instance for later removal
+      (map as any)._ptaCleanup = () => {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('orientationchange', handleResize);
+        if (resizeObserverRef.current) {
+          try { resizeObserverRef.current.disconnect(); } catch {}
+          resizeObserverRef.current = null;
+        }
+      };
     })();
 
     return () => {
       destroyed = true;
       try {
+        if (instanceRef.current && (instanceRef.current as any)._ptaCleanup) {
+          try { (instanceRef.current as any)._ptaCleanup(); } catch {}
+        }
         if (instanceRef.current) instanceRef.current.remove();
       } catch {}
     };

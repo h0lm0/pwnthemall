@@ -717,9 +717,11 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     </div>
                   ) : (
                     <div className="mt-4 flex flex-col gap-4 flex-shrink-0 pb-2">
-                      {selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? (
-                        <GeoPicker value={geoCoords} onChange={setGeoCoords} height={300} radiusKm={selectedChallenge?.geoRadiusKm ?? null} />
-                      ) : (
+                       {selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? (
+                         <div className="w-full" style={{ height: '380px' }}>
+                           <GeoPicker value={geoCoords} onChange={setGeoCoords} height={380} radiusKm={selectedChallenge?.geoRadiusKm ?? null} />
+                         </div>
+                       ) : (
                         <Input
                           placeholder={t('enter_your_flag')}
                           value={flag}
