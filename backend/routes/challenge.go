@@ -25,10 +25,14 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		// challenges.PUT("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.UpdateUser)
 		// challenges.DELETE("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.DeleteUser)
 
-		challenges.GET("/admin/all", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/all", "read"), controllers.GetAllChallengesAdmin)
-		challenges.GET("/admin/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "read"), controllers.GetChallengeAdmin)
-		challenges.PUT("/admin/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "write"), controllers.UpdateChallengeAdmin)
-		challenges.PUT("/admin/:id/general", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "write"), controllers.UpdateChallengeGeneralAdmin)
-		challenges.DELETE("/admin/hints/:hintId", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/hints/:hintId", "write"), controllers.DeleteHint)
+	}
+
+	adminChallenges := router.Group("/admin/challenges")
+	{
+		adminChallenges.GET("", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges", "read"), controllers.GetAllChallengesAdmin)
+		adminChallenges.GET("/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges/:id", "read"), controllers.GetChallengeAdmin)
+		adminChallenges.PUT("/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges/:id", "write"), controllers.UpdateChallengeAdmin)
+		adminChallenges.PUT("/:id/general", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges/:id", "write"), controllers.UpdateChallengeGeneralAdmin)
+		adminChallenges.DELETE("/hints/:hintId", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges/hints/:hintId", "write"), controllers.DeleteHint)
 	}
 }

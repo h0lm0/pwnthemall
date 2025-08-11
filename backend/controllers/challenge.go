@@ -26,7 +26,7 @@ import (
 
 func GetChallenges(c *gin.Context) {
 	var challenges []models.Challenge
-	result := config.DB.Find(&challenges)
+	result := config.DB.Where("hidden = false").Find(&challenges)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -72,7 +72,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
-		Where("challenge_categories.name = ?", categoryName).
+		Where("challenge_categories.name = ? and hidden = false", categoryName).
 		Find(&challenges)
 
 	if result.Error != nil {

@@ -20,4 +20,4 @@ firstBlood:
 hints:
   - content: "20 points to see nothing, well"
     cost: 20
-    isActive: true
+    is_active: true

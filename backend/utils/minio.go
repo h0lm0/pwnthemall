@@ -59,9 +59,8 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	}
 
 	var (
-		metaData       meta.BaseChallengeMetadata
-		ports          []int
-		connectionInfo []string
+		metaData meta.BaseChallengeMetadata
+		ports    []int
 	)
 
 	switch base.Type {
@@ -73,7 +72,6 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 		}
 		metaData = dockerMeta.Base
 		ports = dockerMeta.Ports
-		connectionInfo = dockerMeta.Base.ConnectionInfo
 
 	case "compose":
 		var composeMeta meta.ComposeChallengeMetadata
@@ -82,16 +80,13 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 			return err
 		}
 		metaData = composeMeta.Base
-		connectionInfo = composeMeta.Base.ConnectionInfo
 
 	default: // standard
 		metaData = base
-		connectionInfo = base.ConnectionInfo
 	}
-
 	// Update or create the challenge in the database
 	slug := strings.Split(objectKey, "/")[0]
-	if err := updateOrCreateChallengeInDB(metaData, slug, ports, connectionInfo); err != nil {
+	if err := updateOrCreateChallengeInDB(metaData, slug, ports); err != nil {
 		log.Printf("Error updating or creating challenge in DB: %v", err)
 		return err
 	}
@@ -108,7 +103,7 @@ func deleteChallengeFromDB(slug string) error {
 	return nil
 }
 
-func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int, connectionInfo []string) error {
+func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int) error {
 	var cCategory models.ChallengeCategory
 	if err := config.DB.FirstOrCreate(&cCategory, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
 		return err
@@ -124,7 +119,10 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		return err
 	}
 
-	// Note: decay formula is now managed via admin interface, not via YAML
+	var cDecayFormula models.DecayFormula
+	if err := config.DB.FirstOrCreate(&cDecayFormula, models.DecayFormula{Name: cDecayFormula.Name, Step: cDecayFormula.Step, MinPoints: cDecayFormula.MinPoints}).Error; err != nil {
+		return err
+	}
 	var challenge models.Challenge
 	if err := config.DB.Where("slug = ?", slug).First(&challenge).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
@@ -140,7 +138,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
-	// Note: DecayFormulaID is managed via admin interface, not from YAML
+	challenge.DecayFormula = &cDecayFormula
 	ports64 := make(pq.Int64Array, len(ports))
 	for i, p := range ports {
 		ports64[i] = int64(p)
@@ -148,9 +146,9 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.Ports = ports64
 
 	// Handle connection_info
-	if len(connectionInfo) > 0 {
-		connInfo := make(pq.StringArray, len(connectionInfo))
-		copy(connInfo, connectionInfo)
+	if len(metaData.ConnectionInfo) > 0 {
+		connInfo := make(pq.StringArray, len(metaData.ConnectionInfo))
+		copy(connInfo, metaData.ConnectionInfo)
 		challenge.ConnectionInfo = connInfo
 	} else {
 		challenge.ConnectionInfo = pq.StringArray{}

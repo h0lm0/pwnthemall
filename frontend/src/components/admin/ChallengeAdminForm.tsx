@@ -27,7 +27,7 @@ interface ChallengeAdminFormProps {
 interface DecayFormula {
   id: number
   name: string
-  decayStep: number
+  step: number
   minPoints: number
   maxDecay: number
 }
@@ -90,7 +90,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       ).map((formula: any) => ({
         id: formula.id,
         name: formula.name,
-        decayStep: formula.decayStep || 10,
+        step: formula.step || 10,
         minPoints: formula.minPoints || 10,
         maxDecay: formula.maxDecay || 90.0
       }))
@@ -107,7 +107,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       const firstBloodBonusesArray = firstBloodBonuses.map(bonus => bonus.points)
       const firstBloodBadgesArray = firstBloodBonuses.map(bonus => bonus.badge)
       
-      await axios.put(`/api/challenges/admin/${challenge.id}`, {
+      await axios.put(`/api/admin/challenges/${challenge.id}`, {
         points: formData.points,
         enableFirstBlood: formData.enableFirstBlood,
         firstBloodBonuses: firstBloodBonusesArray,
@@ -133,7 +133,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const handleGeneralSubmit = async () => {
     setGeneralLoading(true)
     try {
-      await axios.put(`/api/challenges/admin/${challenge.id}/general`, generalData)
+      await axios.put(`/api/admin/challenges/${challenge.id}/general`, generalData)
       toast.success("Challenge information updated successfully")
       onClose()
     } catch (error) {
@@ -168,7 +168,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
 
   const handleDeleteHint = async (hintId: number) => {
     try {
-      await axios.delete(`/api/challenges/admin/hints/${hintId}`)
+      await axios.delete(`/api/admin/challenges/hints/${hintId}`)
       
       setFormData(prev => ({
         ...prev,
@@ -283,7 +283,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     <SelectItem value="none">None</SelectItem>
                     {decayFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id.toString()}>
-                        {formula.name} - Step: {formula.decayStep}, Min: {formula.minPoints}, Max: {formula.maxDecay}%
+                        {formula.name} - Step: {formula.step}, Min: {formula.minPoints}, Max: {formula.maxDecay}%
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -1,7 +1,5 @@
 package meta
 
-import "time"
-
 type BaseChallengeMetadata struct {
 	Name             string              `yaml:"name"`
 	Description      string              `yaml:"description"`
@@ -12,7 +10,7 @@ type BaseChallengeMetadata struct {
 	Hidden           bool                `yaml:"hidden"`
 	Flags            []string            `yaml:"flags"`
 	Points           int                 `yaml:"points"`
-	ConnectionInfo   []string            `yaml:"connectionInfo,omitempty"`
+	ConnectionInfo   []string            `yaml:"connection_info,omitempty"`
 	DecayFormula     string              `yaml:"decay,omitempty"`
 	Hints            []HintMetadata      `yaml:"hints,omitempty"`
 	EnableFirstBlood bool                `yaml:"enableFirstBlood"`
@@ -20,13 +18,19 @@ type BaseChallengeMetadata struct {
 }
 
 type HintMetadata struct {
-	Content      string     `yaml:"content"`
-	Cost         int        `yaml:"cost"`
-	IsActive     bool       `yaml:"isActive"`
-	AutoActiveAt *time.Time `yaml:"autoActiveAt"`
+	Content  string `yaml:"content"`
+	Cost     int    `yaml:"cost"`
+	IsActive bool   `yaml:"is_active"`
+	// AutoActiveAt *time.Time `yaml:"auto_activate_at"`
 }
 
 type FirstBloodMetadata struct {
 	Bonuses []int    `yaml:"bonuses"`
 	Badges  []string `yaml:"badges"`
+}
+
+type DecayFormula struct {
+	Name      string `yaml:"name"`
+	Step      int    `yaml:"step"`
+	MinPoints int    `yaml:"min_points"`
 }

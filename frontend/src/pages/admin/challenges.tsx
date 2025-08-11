@@ -13,7 +13,7 @@ export default function ChallengesPage() {
 
   const fetchChallenges = () => {
     axios
-      .get<Challenge[]>("/api/challenges/admin/all")
+      .get<Challenge[]>("/api/admin/challenges")
       .then((res) => setChallenges(res.data))
       .catch(() => setChallenges([]))
   }

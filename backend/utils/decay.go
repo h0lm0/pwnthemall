@@ -60,8 +60,7 @@ func (ds *DecayService) calculateSolveBasedDecay(challenge *models.Challenge, de
 		return basePoints
 	}
 
-	// Calculer la réduction des points : chaque solve après le premier retire DecayStep points
-	pointsLost := (solveNumber - 1) * decay.DecayStep
+	pointsLost := (solveNumber - 1) * decay.Step
 	currentPoints := basePoints - pointsLost
 
 	// S'assurer qu'on ne descend pas en dessous du minimum
