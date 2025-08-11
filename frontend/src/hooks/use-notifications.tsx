@@ -248,8 +248,16 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
   useEffect(() => {
     // Only connect if we're in the browser and authenticated
     if (typeof window !== 'undefined' && isAuthenticated) {
-      fetchNotifications();
-      connectWebSocket();
+      // Ensure cookies/session are applied by first fetching notifications,
+      // then connect to WebSocket after the request resolves.
+      (async () => {
+        try {
+          await fetchNotifications();
+        } finally {
+          // Small defer to let the browser commit cookies if needed
+          setTimeout(() => connectWebSocket(), 50);
+        }
+      })();
     } else if (wsRef.current) {
       // Close connection if not authenticated
       wsRef.current.close();
