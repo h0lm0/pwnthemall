@@ -71,6 +71,8 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("ChallengeCategory").
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
+		Preload("DecayFormula").
+		Preload("Hints").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ?", categoryName).
 		Find(&challenges)
@@ -80,7 +82,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		return
 	}
 
-	// Get solved challenges for the user's team
+	// Get stid challenges for the user's team
 	var solvedChallengeIds []uint
 	if user.Team != nil {
 		var solves []models.Solve
@@ -91,10 +93,14 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		}
 	}
 
-	// Create response with solved status
+	// Initialize decay service
+	decayService := utils.NewDecay()
+
+	// Create response with solved status and current points
 	type ChallengeWithSolved struct {
 		models.Challenge
-		Solved bool `json:"solved"`
+		Solved        bool `json:"solved"`
+		CurrentPoints int  `json:"currentPoints"`
 	}
 
 	var challengesWithSolved []ChallengeWithSolved
@@ -106,10 +112,19 @@ func GetChallengesByCategoryName(c *gin.Context) {
 				break
 			}
 		}
-		challengesWithSolved = append(challengesWithSolved, ChallengeWithSolved{
-			Challenge: challenge,
-			Solved:    solved,
-		})
+
+		// Calculate current points based on decay formula
+		var solveCount int64
+		config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
+
+		currentPoints := decayService.CalculateDecayedPoints(&challenge, int(solveCount))
+
+		challengeWithSolved := ChallengeWithSolved{
+			Challenge:     challenge,
+			Solved:        solved,
+			CurrentPoints: currentPoints,
+		}
+		challengesWithSolved = append(challengesWithSolved, challengeWithSolved)
 	}
 
 	c.JSON(http.StatusOK, challengesWithSolved)
@@ -281,15 +296,26 @@ func SubmitChallenge(c *gin.Context) {
 		}
 	}
 	if found {
-		var solve models.Solve
-		if err := config.DB.FirstOrCreate(&solve,
-			models.Solve{
-				TeamID:      user.Team.ID,
-				ChallengeID: challenge.ID,
-				Points:      challenge.Points,
-			}).Error; err != nil {
+		// Calculate decayed points
+		decayService := utils.NewDecay()
+		var solveCount int64
+		config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
+		decayedPoints := decayService.CalculateDecayedPoints(&challenge, int(solveCount))
+
+		// Create the solve record directly
+		solve := models.Solve{
+			TeamID:      user.Team.ID,
+			ChallengeID: challenge.ID,
+			UserID:      user.ID,
+			Points:      decayedPoints,
+			SolvedBy:    user.Username,
+		}
+
+		if err := config.DB.Create(&solve).Error; err != nil {
+			log.Printf("Failed to create solve: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
 			return
+<<<<<<< HEAD
 		} else {
 			// Broadcast team solve event over WebSocket
 			type TeamSolveEvent struct {
@@ -362,7 +388,36 @@ func SubmitChallenge(c *gin.Context) {
 
 			c.JSON(http.StatusOK, gin.H{"message": "challenge_solved"})
 			return
+=======
+>>>>>>> feature/hint-firstblood
 		}
+
+		// Check and create FirstBlood if this solve qualifies for a position bonus
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			// La position est solveCount (0-based), donc 0 = 1er, 1 = 2ème, etc.
+			position := int(solveCount)
+
+			// Pour l'instant, on utilise le même bonus pour toutes les positions
+			// Plus tard, on pourra étendre pour avoir un array de bonus différents
+			bonuses := challenge.FirstBloodBonuses
+			if position < len(bonuses) {
+				// Convert int64 to int for the bonus value
+				bonusValue := int(bonuses[position])
+				firstBlood := models.FirstBlood{
+					ChallengeID: challenge.ID,
+					TeamID:      user.Team.ID,
+					UserID:      user.ID,
+					Bonuses:     []int{bonusValue},
+					Badges:      []string{fmt.Sprintf("position-%d", position+1)},
+				}
+				if err := config.DB.Create(&firstBlood).Error; err != nil {
+					log.Printf("Failed to create first blood: %v", err)
+				}
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "challenge_solved", "points": decayedPoints})
+		return
 	} else {
 		c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
 	}
@@ -429,15 +484,9 @@ func BuildChallengeImage(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
-	result := config.DB.Preload("ChallengeType").First(&challenge, id)
+	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
-		return
-	}
-
-	// Check if challenge is of type docker
-	if challenge.ChallengeType.Name != "docker" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "challenge_not_docker_type"})
 		return
 	}
 	_, err := utils.BuildDockerImage(challenge.Slug)
@@ -451,24 +500,34 @@ func BuildChallengeImage(c *gin.Context) {
 }
 
 func StartChallengeInstance(c *gin.Context) {
+<<<<<<< HEAD
 	id := c.Param("id")
 	debug.Log("Starting instance for challenge ID: %s", id)
 
+=======
+>>>>>>> feature/hint-firstblood
 	var challenge models.Challenge
-	result := config.DB.Preload("ChallengeType").First(&challenge, id)
+	id := c.Param("id")
 
+	result := config.DB.First(&challenge, id).Where("type = ?", models.ChallengeType{Name: "docker"})
 	if result.Error != nil {
+<<<<<<< HEAD
 		debug.Log("Challenge not found with ID %s: %v", id, result.Error)
+=======
+>>>>>>> feature/hint-firstblood
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
 	}
 
+<<<<<<< HEAD
 	// Check if challenge is of type docker
 	if challenge.ChallengeType.Name != "docker" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "challenge_not_docker_type"})
 		return
 	}
 
+=======
+>>>>>>> feature/hint-firstblood
 	imageName, exists := utils.IsImageBuilt(challenge.Slug)
 	if !exists {
 		// Check if Docker connection is available before attempting to build
@@ -484,11 +543,18 @@ func StartChallengeInstance(c *gin.Context) {
 		var err error
 		imageName, err = utils.BuildDockerImage(challenge.Slug)
 		if err != nil {
+<<<<<<< HEAD
 			debug.Log("Docker build failed for challenge %s: %v", challenge.Slug, err)
+=======
+>>>>>>> feature/hint-firstblood
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_build_failed"})
+			log.Printf("Docker build failed for challenge %s: %v", challenge.Slug, err)
 			return
 		}
+<<<<<<< HEAD
 		debug.Log("Image built successfully: %s", imageName)
+=======
+>>>>>>> feature/hint-firstblood
 	}
 
 	userID, ok := c.Get("user_id")
@@ -499,21 +565,31 @@ func StartChallengeInstance(c *gin.Context) {
 
 	var dockerConfig models.DockerConfig
 	if err := config.DB.First(&dockerConfig).Error; err != nil {
+<<<<<<< HEAD
 		debug.Log("Docker config not found: %v", err)
 		debug.Log("This might be due to missing environment variables or database seeding issues")
+=======
+>>>>>>> feature/hint-firstblood
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
 		return
 	}
 
 	var user models.User
 	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+<<<<<<< HEAD
 		debug.Log("User not found with ID %v: %v", userID, err)
+=======
+>>>>>>> feature/hint-firstblood
 		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
 
+<<<<<<< HEAD
 	if user.Team == nil || user.TeamID == nil {
 		debug.Log("User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
+=======
+	if user.Team == nil {
+>>>>>>> feature/hint-firstblood
 		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
 		return
 	}
@@ -522,6 +598,7 @@ func StartChallengeInstance(c *gin.Context) {
 	config.DB.Model(&models.Instance{}).
 		Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
 		Count(&countExist)
+
 	if int(countExist) >= 1 {
 		c.JSON(http.StatusForbidden, gin.H{"error": "instance_already_running"})
 		return
@@ -531,6 +608,7 @@ func StartChallengeInstance(c *gin.Context) {
 	config.DB.Model(&models.Instance{}).
 		Where("user_id = ?", user.ID).
 		Count(&countUser)
+
 	if int(countUser) >= dockerConfig.InstancesByUser {
 		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_user_reached"})
 		return
@@ -540,19 +618,15 @@ func StartChallengeInstance(c *gin.Context) {
 	config.DB.Model(&models.Instance{}).
 		Where("team_id = ?", user.Team.ID).
 		Count(&countTeam)
+
 	if int(countTeam) >= dockerConfig.InstancesByTeam {
 		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_team_reached"})
 		return
 	}
 
-	portCount := len(challenge.Ports)
-	if portCount == 0 {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "no_ports_defined_for_challenge"})
-		return
-	}
-
-	ports, err := utils.FindAvailablePorts(portCount)
+	containerName, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), []int{}, []int{})
 	if err != nil {
+<<<<<<< HEAD
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "no_free_ports"})
 		return
 	}
@@ -575,10 +649,17 @@ func StartChallengeInstance(c *gin.Context) {
 	containerID, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, ports)
 	if err != nil {
 		log.Printf("DEBUG: Error starting Docker instance: %v", err)
+=======
+>>>>>>> feature/hint-firstblood
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf(
+			"Error starting instance: user: %d | team: %d | challenge: %s | error: %v",
+			user.ID, *user.TeamID, challenge.Slug, err,
+		)
 		return
 	}
 
+<<<<<<< HEAD
 	// Calculate expiration time
 	var expiresAt time.Time
 	if dockerConfig.InstanceTimeout > 0 {
@@ -593,15 +674,18 @@ func StartChallengeInstance(c *gin.Context) {
 		ports64[i] = int64(p)
 	}
 
+=======
+>>>>>>> feature/hint-firstblood
 	instance := models.Instance{
-		Container:   containerID,
+		Container:   containerName,
 		UserID:      user.ID,
 		TeamID:      *user.TeamID,
 		ChallengeID: challenge.ID,
+<<<<<<< HEAD
 		Ports:       ports64, // Store the dynamically assigned ports
+=======
+>>>>>>> feature/hint-firstblood
 		CreatedAt:   time.Now(),
-		ExpiresAt:   expiresAt,
-		Status:      "running",
 	}
 	if err := config.DB.Create(&instance).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "instance_create_failed"})
@@ -668,6 +752,7 @@ func StartChallengeInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":         "instance_started",
 		"image_name":     imageName,
+<<<<<<< HEAD
 		"container_name": containerID,
 		"expires_at":     expiresAt,
 		"ports":          ports,
@@ -865,6 +950,9 @@ func GetInstanceStatus(c *gin.Context) {
 		"container":       instance.Container,
 		"ports":           instance.Ports,
 		"connection_info": connectionInfo,
+=======
+		"container_name": containerName,
+>>>>>>> feature/hint-firstblood
 	})
 }
 
@@ -936,5 +1024,48 @@ func StopChallengeInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "instance_stopping",
 		"container": instance.Container,
+	})
+}
+
+func GetInstanceStatus(c *gin.Context) {
+	challengeID := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+	if user.TeamID == nil || user.Team == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
+		return
+	}
+
+	var instance models.Instance
+	if err := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, *user.TeamID).Order("created_at DESC").First(&instance).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{"has_instance": false})
+		return
+	}
+
+	var dockerConfig models.DockerConfig
+	if err := config.DB.First(&dockerConfig).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
+		return
+	}
+
+	expiresAt := instance.CreatedAt.Add(time.Duration(dockerConfig.InstanceTimeout) * time.Minute)
+	isExpired := time.Now().After(expiresAt)
+
+	c.JSON(http.StatusOK, gin.H{
+		"has_instance": true,
+		"status":       instance.Status,
+		"created_at":   instance.CreatedAt,
+		"expires_at":   expiresAt,
+		"is_expired":   isExpired,
+		"container":    instance.Container,
 	})
 }

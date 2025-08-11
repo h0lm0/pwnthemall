@@ -75,7 +75,11 @@ func main() {
 	routes.RegisterDockerConfigRoutes(router)
 	routes.RegisterInstanceRoutes(router)
 	routes.RegisterNotificationRoutes(router)
+<<<<<<< HEAD
 	// Badges routes removed
+=======
+	routes.RegisterDecayFormulaRoutes(router)
+>>>>>>> feature/hint-firstblood
 
 	port := os.Getenv("PORT")
 	if port == "" {

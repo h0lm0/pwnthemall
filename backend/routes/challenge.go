@@ -17,12 +17,25 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 
 		challenges.POST("", middleware.CheckPolicy("/challenges", "write"), controllers.CreateChallenge)
 		challenges.POST("/:id/submit", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/submit", "write"), controllers.SubmitChallenge)
+<<<<<<< HEAD
 		challenges.POST("/:id/build", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/build", "write"), controllers.BuildChallengeImage)
 		challenges.GET("/:id/instance-status", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/instance-status", "read"), controllers.GetInstanceStatus)
 		challenges.POST("/:id/start", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
 		challenges.POST("/:id/stop", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/stop", "write"), controllers.StopChallengeInstance)
 		challenges.POST("/:id/kill", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/kill", "write"), controllers.KillChallengeInstance)
+=======
+		challenges.POST("/:id/build", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/build", "write"), controllers.BuildChallengeImage)
+		challenges.GET("/:id/instance-status", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/instance-status", "read"), controllers.GetInstanceStatus)
+		challenges.POST("/:id/start", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
+		challenges.POST("/:id/stop", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/stop", "write"), controllers.StopChallengeInstance)
+		// challenges.POST("/:id/kill", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/kill", "write"), controllers.KillChallengeInstance)
+>>>>>>> feature/hint-firstblood
 		// challenges.PUT("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.UpdateUser)
 		// challenges.DELETE("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.DeleteUser)
+
+		challenges.GET("/admin/all", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/all", "read"), controllers.GetAllChallengesAdmin)
+		challenges.GET("/admin/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "read"), controllers.GetChallengeAdmin)
+		challenges.PUT("/admin/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "write"), controllers.UpdateChallengeAdmin)
+		challenges.DELETE("/admin/hints/:hintId", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/hints/:hintId", "write"), controllers.DeleteHint)
 	}
 }

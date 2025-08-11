@@ -24,7 +24,8 @@ func ConnectDB() *gorm.DB {
 		&models.Team{}, &models.Solve{},
 		&models.User{}, &models.ChallengeCategory{},
 		&models.ChallengeType{}, &models.ChallengeDifficulty{},
-		&models.Challenge{}, &models.Flag{},
+		&models.DecayFormula{}, &models.Challenge{}, &models.Flag{},
+		&models.Hint{}, &models.FirstBlood{},
 		&models.Submission{}, &models.Instance{}, &models.DynamicFlag{},
 		&models.Notification{},
 	)
@@ -33,8 +34,19 @@ func ConnectDB() *gorm.DB {
 	}
 
 	DB = db
+<<<<<<< HEAD
 	if os.Getenv("PTA_SEED_DATABASE") == "true" {
+=======
+
+	fixInstanceUserForeignKey()
+	if os.Getenv("SEED_DATABASE") == "true" {
+>>>>>>> feature/hint-firstblood
 		SeedDatabase()
 	}
 	return db
+}
+
+func fixInstanceUserForeignKey() {
+	DB.Exec(`ALTER TABLE instances DROP CONSTRAINT IF EXISTS fk_instances_user;`)
+	DB.Exec(`ALTER TABLE instances ADD CONSTRAINT fk_instances_user FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE;`)
 }

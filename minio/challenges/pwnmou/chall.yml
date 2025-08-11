@@ -1,0 +1,23 @@
+name: "meuh"
+description: |
+  Hi the flag is flag
+  
+category: "pwn"
+difficulty: "medium"
+type: "standard"
+author: "crypto-master"
+hidden: false
+flags:
+  - "flag"
+points: 300
+minPoints: 300
+decay: "None"
+enableFirstBlood: true
+
+firstBlood:
+  bonuses: [200]
+  badges: ["a"]
+hints:
+  - content: "20 points to see nothing, well"
+    cost: 20
+    isActive: true

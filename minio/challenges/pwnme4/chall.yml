@@ -1,16 +1,23 @@
-name: pwn me 999
+name: "betterDecay"
 description: |
-  aaa
-  aaaa
-  aaaaa
-  aaaaaa
-  aaaaaabcpdea
-category: pwn
-difficulty: intro
-type: standard
-author: h0lm
-flags: ["flag"]
+  Hi the flag is flag
+category: "pwn"
+difficulty: "medium"
+type: "standard"
+author: "crypto-master"
 hidden: false
+<<<<<<< HEAD
 points: 10
 ports: [8080, 22]
 connection_info: ["http://$ip:8080", "ssh -p 22 user@$ip"]
+=======
+flags:
+  - "flag"
+points: 300
+enableFirstBlood: false
+decayFormula:
+  name: "Standard Linear Decay"
+  type: "linear"
+  decayStep: 5
+  minPoints: 50
+>>>>>>> feature/hint-firstblood
