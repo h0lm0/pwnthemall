@@ -17,7 +17,7 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
   const circleRef = React.useRef<any>(null);
 
   const [query, setQuery] = React.useState("");
-  const [results, setResults] = React.useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
+  const [results, setResults] = React.useState<Array<{ place_id?: number | string; display_name: string; lat: string; lon: string }>>([]);
   const [searching, setSearching] = React.useState(false);
   const debounceRef = React.useRef<any>(null);
   const ignoreSearchOnceRef = React.useRef(false);
@@ -147,12 +147,27 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
     debounceRef.current = setTimeout(async () => {
       try {
         setSearching(true);
-        const params = new URLSearchParams({ q: query.trim(), format: "json", addressdetails: "0", limit: "5" });
+        const params = new URLSearchParams({ q: query.trim(), format: "json", addressdetails: "0", limit: "8", dedupe: "1" });
         const res = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
           headers: { "Accept-Language": (typeof navigator !== 'undefined' ? navigator.language : 'en') as string },
         });
         const data = await res.json();
-        if (Array.isArray(data)) setResults(data);
+        if (Array.isArray(data)) {
+          const seenByName: Record<string, boolean> = {};
+          const seenByRoundedCoords: Record<string, boolean> = {};
+          const unique = [] as Array<{ place_id?: number | string; display_name: string; lat: string; lon: string }>;
+          for (const r of data) {
+            const nameKey = (r.display_name || '').toLowerCase();
+            const latNum = parseFloat(r.lat);
+            const lonNum = parseFloat(r.lon);
+            const coordKey = `${isFinite(latNum) ? latNum.toFixed(3) : r.lat}|${isFinite(lonNum) ? lonNum.toFixed(3) : r.lon}`;
+            if (seenByName[nameKey] || seenByRoundedCoords[coordKey]) continue;
+            seenByName[nameKey] = true;
+            seenByRoundedCoords[coordKey] = true;
+            unique.push(r);
+          }
+          setResults(unique.slice(0, 5));
+        }
       } catch {
         setResults([]);
       } finally {
