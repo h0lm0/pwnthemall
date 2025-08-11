@@ -506,7 +506,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
 
             <div className="flex-1 flex flex-col min-h-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-                <TabsList className={`grid w-full mb-4 flex-shrink-0 bg-card border rounded-lg p-1 ${
+                <TabsList className={`grid w-full mb-4 flex-shrink-0 bg-card border rounded-lg p-1 relative z-[1200] ${
                   selectedChallenge && isDockerChallenge(selectedChallenge) 
                     ? 'grid-cols-3' 
                     : 'grid-cols-2'
@@ -518,9 +518,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   )}
                 </TabsList>
                     
-                    <div className="flex-1 min-h-0 relative overflow-hidden">
+                    <div className="flex-1 min-h-0 relative overflow-hidden z-[1100] min-h-[30vh]">
                       {/* Tab Panels: absolutely positioned & independently scrollable */}
-                      <TabsContent value="description" className="absolute inset-0 overflow-y-auto mt-0 pr-2">
+                      <TabsContent value="description" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
                         <div className="text-left text-foreground leading-relaxed min-h-full">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
@@ -578,10 +578,67 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                           >
                             {selectedChallenge?.description || 'No description available'}
                           </ReactMarkdown>
+
+                          {/* Submission / Interaction area within Description tab */}
+                          {selectedChallenge?.solved ? (
+                            <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg">
+                              <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                                <BadgeCheck className="w-5 h-5" />
+                                <span className="font-medium">{t('already_solved')}</span>
+                              </div>
+                              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                                {t('challenge_already_solved')}
+                              </p>
+                            </div>
+                          ) : !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') ? (
+                            <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-lg">
+                              <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
+                                <Clock className="w-5 h-5" />
+                                <span className="font-medium">
+                                  {ctfStatus.status === 'not_started' 
+                                    ? (t('ctf_not_started') || 'CTF Not Started')
+                                    : (t('ctf_ended') || 'CTF Ended')}
+                                </span>
+                              </div>
+                              <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                                {ctfStatus.status === 'not_started' 
+                                  ? (t('flag_submission_not_available_yet') || 'Flag submission is not available yet. Please wait for the CTF to start.')
+                                  : (t('flag_submission_no_longer_available') || 'Flag submission is no longer available. The CTF has ended.')}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="mt-4 flex flex-col gap-4 pb-2">
+                              {selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? (
+                                <div className="w-full" style={{ height: '40vh', maxHeight: 420 }}>
+                                  <GeoPicker value={geoCoords} onChange={setGeoCoords} height={'100%'} radiusKm={selectedChallenge?.geoRadiusKm ?? null} />
+                                </div>
+                              ) : (
+                                <Input
+                                  placeholder={t('enter_your_flag')}
+                                  value={flag}
+                                  onChange={(e) => setFlag(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && flag.trim()) {
+                                      handleSubmit();
+                                    }
+                                  }}
+                                  className="w-full"
+                                  disabled={loading}
+                                />
+                              )}
+                              <Button
+                                onClick={handleSubmit}
+                                disabled={loading || (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim())}
+                                className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
+                              >
+                                {loading ? t('submitting') : t('submit')}
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </TabsContent>
                       
-                      <TabsContent value="solves" className="absolute inset-0 overflow-y-auto mt-0 pr-2">
+                      <TabsContent value="solves" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
                         <div className="min-h-full">
                           {solvesLoading ? (
                             <div className="text-center py-8">
@@ -648,7 +705,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                       </TabsContent>
 
                       {selectedChallenge && isDockerChallenge(selectedChallenge) && (
-                        <TabsContent value="instance" className="absolute inset-0 overflow-y-auto mt-0 pr-2">
+                        <TabsContent value="instance" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
                           <div className="min-h-full">
                             <div className="space-y-4">
                               <div className="p-4 rounded-lg border bg-card">
@@ -749,65 +806,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   </Tabs>
                 </div>
 
-                {activeTab === "description" && (
-                  selectedChallenge?.solved ? (
-                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg flex-shrink-0">
-                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                        <BadgeCheck className="w-5 h-5" />
-                        <span className="font-medium">{t('already_solved')}</span>
-                      </div>
-                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                        {t('challenge_already_solved')}
-                      </p>
-                    </div>
-                  ) : !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') ? (
-                    <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-lg flex-shrink-0">
-                      <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
-                        <Clock className="w-5 h-5" />
-                        <span className="font-medium">
-                          {ctfStatus.status === 'not_started' 
-                            ? (t('ctf_not_started') || 'CTF Not Started')
-                            : (t('ctf_ended') || 'CTF Ended')
-                          }
-                        </span>
-                      </div>
-                      <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
-                        {ctfStatus.status === 'not_started' 
-                          ? (t('flag_submission_not_available_yet') || 'Flag submission is not available yet. Please wait for the CTF to start.')
-                          : (t('flag_submission_no_longer_available') || 'Flag submission is no longer available. The CTF has ended.')
-                        }
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="mt-4 flex flex-col gap-4 flex-shrink-0 pb-2">
-                       {selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? (
-                         <div className="w-full" style={{ height: '380px' }}>
-                           <GeoPicker value={geoCoords} onChange={setGeoCoords} height={380} radiusKm={selectedChallenge?.geoRadiusKm ?? null} />
-                         </div>
-                       ) : (
-                        <Input
-                          placeholder={t('enter_your_flag')}
-                          value={flag}
-                          onChange={(e) => setFlag(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && flag.trim()) {
-                              handleSubmit();
-                            }
-                          }}
-                          className="w-full"
-                          disabled={loading}
-                        />
-                      )}
-                      <Button
-                        onClick={handleSubmit}
-                        disabled={loading || (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim())}
-                        className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
-                      >
-                        {loading ? t('submitting') : t('submit')}
-                      </Button>
-                    </div>
-                  )
-                )}
+                {/* Submission UI is now shown inside the Description tab content above */}
               </DialogContent>
             </Dialog>
           </main>
