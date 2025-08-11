@@ -108,33 +108,11 @@ function compose_up() {
         exit 1
     fi
 
-    echo "[+] Starting services..."
-
-    # Redirect both stdout and stderr to a log file, then display only if error
-    local log_file
-    log_file=$(mktemp)
-
     if [[ "$build" == "true" ]]; then
-        docker compose -f "$compose_file" up -d --build >"$log_file" 2>&1
+        docker compose -f "$compose_file" up -d --build
     else
-        docker compose -f "$compose_file" up -d >"$log_file" 2>&1
+        docker compose -f "$compose_file" up -d
     fi
-
-    local status=$?
-
-    if [[ $status -ne 0 ]]; then
-        echo "[✗] Failed to start services:"
-        cat "$log_file"
-        rm -f "$log_file"
-        exit 1
-    fi
-
-    rm -f "$log_file"
-
-    echo "[+] Waiting for services to initialize"
-    sleep 5
-
-    echo "[✓] Compose up completed"
 }
 
 function compose_down() {
