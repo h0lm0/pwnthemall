@@ -463,6 +463,11 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                        getLocalInstanceStatus(challenge.id) === 'expired' ? t('expired') : t('stopped')}
                     </Badge>
                   )}
+                  {challenge.hints && challenge.hints.length > 0 && (
+                    <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600">
+                      {challenge.hints.length} {challenge.hints.length === 1 ? t('hint') : t('hints')}
+                    </Badge>
+                  )}
                   {challenge.solved && (
                     <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
                       {t('solved')}

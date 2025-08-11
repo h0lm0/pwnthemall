@@ -24,6 +24,24 @@ export interface Challenge {
   ports?: number[]
   connectionInfo?: string[]
   geoRadiusKm?: number | null
+  points?: number
+  enableFirstBlood?: boolean
+  firstBloodBonuses?: number[]
+  firstBloodBadges?: string[]
+  decayFormula?: {
+    id: number
+    name: string
+    type: string
+    step: number
+    minPoints: number
+  }
+  decayFormulaId?: number
+  hints?: {
+    id: number
+    content: string
+    cost: number
+    challengeId: number
+  }[]
 }
 
 export interface Solve {
@@ -36,4 +54,3 @@ export interface Solve {
   userId?: number
   username?: string
 }
-

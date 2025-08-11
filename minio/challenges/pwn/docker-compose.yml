@@ -1,3 +1,0 @@
-services:
-  pwnme1:
-    build: .

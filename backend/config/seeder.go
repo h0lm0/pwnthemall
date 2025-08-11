@@ -34,14 +34,42 @@ const (
 func GetCTFStatus() CTFStatus {
 	var startConfig, endConfig models.Config
 
-	// Get start time
+	// Get start time - create if missing
 	if err := DB.Where("key = ?", "CTF_START_TIME").First(&startConfig).Error; err != nil {
-		return CTFNoTiming
+		if err == gorm.ErrRecordNotFound {
+			// Create missing CTF_START_TIME config
+			startConfig = models.Config{
+				Key:    "CTF_START_TIME",
+				Value:  getEnvWithDefault("PTA_CTF_START_TIME", ""),
+				Public: true,
+			}
+			if createErr := DB.Create(&startConfig).Error; createErr != nil {
+				log.Printf("Failed to create CTF_START_TIME config: %v", createErr)
+				return CTFNoTiming
+			}
+		} else {
+			log.Printf("Database error getting CTF_START_TIME: %v", err)
+			return CTFNoTiming
+		}
 	}
 
-	// Get end time
+	// Get end time - create if missing
 	if err := DB.Where("key = ?", "CTF_END_TIME").First(&endConfig).Error; err != nil {
-		return CTFNoTiming
+		if err == gorm.ErrRecordNotFound {
+			// Create missing CTF_END_TIME config
+			endConfig = models.Config{
+				Key:    "CTF_END_TIME",
+				Value:  getEnvWithDefault("PTA_CTF_END_TIME", ""),
+				Public: true,
+			}
+			if createErr := DB.Create(&endConfig).Error; createErr != nil {
+				log.Printf("Failed to create CTF_END_TIME config: %v", createErr)
+				return CTFNoTiming
+			}
+		} else {
+			log.Printf("Database error getting CTF_END_TIME: %v", err)
+			return CTFNoTiming
+		}
 	}
 
 	// If either time is empty, no timing is configured
@@ -238,6 +266,42 @@ func seedChallengeDifficulty() {
 	log.Println("Seeding: challengeTypes finished")
 }
 
+func seedDecayFormulas() {
+	decayFormulas := []models.DecayFormula{
+		{
+			Name:      "Linear Decay",
+			Step: 10,
+			MinPoints: 50,
+		},
+		{
+			Name:      "Exponential Decay",
+			Step: 10,
+			MinPoints: 50,
+		},
+		{
+			Name:      "Logarithmic Decay",
+			Step: 20,
+			MinPoints: 50,
+		},
+	}
+
+	for _, formula := range decayFormulas {
+		var existing models.DecayFormula
+		err := DB.Where("name = ?", formula.Name).First(&existing).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			log.Printf("Failed to check decay formula %s: %v\n", formula.Name, err)
+			continue
+		}
+		if err == nil {
+			continue
+		}
+		if err := DB.Create(&formula).Error; err != nil {
+			log.Printf("Failed to seed decay formula %s: %v\n", formula.Name, err)
+		}
+	}
+	log.Println("Seeding: decay formulas finished")
+}
+
 func seedDefaultUsers() {
 	users := []models.User{
 		{Username: "admin", Email: "admin@admin.admin", Password: "admin", Role: "admin"},
@@ -316,5 +380,7 @@ func SeedDatabase() {
 	seedChallengeDifficulty()
 	seedChallengeCategory()
 	seedChallengeType()
+	seedDecayFormulas()
 	seedDefaultUsers()
+
 }
