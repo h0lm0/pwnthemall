@@ -518,6 +518,22 @@ func StartChallengeInstance(c *gin.Context) {
 		return
 	}
 
+	// Cooldown enforcement: prevent immediate restart after a stop by any team member
+	if dockerConfig.InstanceCooldownSeconds > 0 {
+		var cd models.InstanceCooldown
+		if err := config.DB.Where("team_id = ? AND challenge_id = ?", *user.TeamID, challenge.ID).First(&cd).Error; err == nil {
+			elapsed := time.Since(cd.LastStoppedAt)
+			remaining := time.Duration(dockerConfig.InstanceCooldownSeconds)*time.Second - elapsed
+			if remaining > 0 {
+				c.JSON(http.StatusTooEarly, gin.H{
+					"error":             "instance_cooldown_not_elapsed",
+					"remaining_seconds": int(remaining.Seconds()),
+				})
+				return
+			}
+		}
+	}
+
 	var countExist int64
 	config.DB.Model(&models.Instance{}).
 		Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
@@ -735,6 +751,18 @@ func KillChallengeInstance(c *gin.Context) {
 	}
 	log.Printf("DEBUG: Instance status updated successfully")
 
+	// Record cooldown immediately before kill to prevent rapid restarts
+	if instance.TeamID != 0 {
+		now := time.Now().UTC()
+		var cd models.InstanceCooldown
+		if err := config.DB.Where("team_id = ? AND challenge_id = ?", instance.TeamID, instance.ChallengeID).First(&cd).Error; err == nil {
+			cd.LastStoppedAt = now
+			_ = config.DB.Save(&cd).Error
+		} else {
+			_ = config.DB.Create(&models.InstanceCooldown{TeamID: instance.TeamID, ChallengeID: instance.ChallengeID, LastStoppedAt: now}).Error
+		}
+	}
+
 	// Broadcast instance stopped event to team (except the actor)
 	if WebSocketHub != nil {
 		type InstanceEvent struct {
@@ -883,7 +911,13 @@ func StopChallengeInstance(c *gin.Context) {
 	}
 
 	var instance models.Instance
-	query := config.DB.Where("challenge_id = ? AND user_id = ?", challengeID, user.ID)
+	// Scope by team to be consistent with start and kill handlers
+	query := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, func() uint {
+		if user.TeamID != nil {
+			return *user.TeamID
+		}
+		return 0
+	}())
 	if err := query.First(&instance).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
 		return
@@ -894,6 +928,18 @@ func StopChallengeInstance(c *gin.Context) {
 		return
 	}
 
+	// Record cooldown immediately to prevent race conditions with immediate restarts
+	if instance.TeamID != 0 {
+		now := time.Now().UTC()
+		var cd models.InstanceCooldown
+		if err := config.DB.Where("team_id = ? AND challenge_id = ?", instance.TeamID, instance.ChallengeID).First(&cd).Error; err == nil {
+			cd.LastStoppedAt = now
+			_ = config.DB.Save(&cd).Error
+		} else {
+			_ = config.DB.Create(&models.InstanceCooldown{TeamID: instance.TeamID, ChallengeID: instance.ChallengeID, LastStoppedAt: now}).Error
+		}
+	}
+
 	go func() {
 		if err := utils.StopDockerInstance(instance.Container); err != nil {
 			log.Printf("Failed to stop Docker instance: %v", err)
@@ -902,6 +948,8 @@ func StopChallengeInstance(c *gin.Context) {
 		if err := config.DB.Delete(&instance).Error; err != nil {
 			log.Printf("Failed to delete instance from database: %v", err)
 		}
+
+		// Cooldown already recorded synchronously above
 	}()
 
 	// Broadcast instance stopped event to team (except the actor)

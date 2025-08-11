@@ -142,14 +142,22 @@ func seedDockerConfig() {
 		instanceTimeout = 60 // Default 60 minutes
 	}
 
+	// Cooldown seconds between stop and next start for same team/challenge
+	cooldownEnv := getEnvWithDefault("PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS", "0")
+	cooldownSeconds, err := strconv.Atoi(cooldownEnv)
+	if err != nil {
+		cooldownSeconds = 0 // Disabled by default
+	}
+
 	config := models.DockerConfig{
-		Host:             os.Getenv("PTA_DOCKER_HOST"),
-		ImagePrefix:      os.Getenv("PTA_DOCKER_IMAGE_PREFIX"),
-		MaxMemByInstance: maxMem,
-		MaxCpuByInstance: maxCpu,
-		InstancesByTeam:  iByTeam,
-		InstancesByUser:  iByUser,
-		InstanceTimeout:  instanceTimeout,
+		Host:                    os.Getenv("PTA_DOCKER_HOST"),
+		ImagePrefix:             os.Getenv("PTA_DOCKER_IMAGE_PREFIX"),
+		MaxMemByInstance:        maxMem,
+		MaxCpuByInstance:        maxCpu,
+		InstancesByTeam:         iByTeam,
+		InstancesByUser:         iByUser,
+		InstanceTimeout:         instanceTimeout,
+		InstanceCooldownSeconds: cooldownSeconds,
 	}
 
 	if err := DB.Create(&config).Error; err != nil {
