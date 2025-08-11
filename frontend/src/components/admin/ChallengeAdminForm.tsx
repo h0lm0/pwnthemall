@@ -27,9 +27,9 @@ interface ChallengeAdminFormProps {
 interface DecayFormula {
   id: number
   name: string
-  type: string
   decayStep: number
   minPoints: number
+  maxDecay: number
 }
 
 interface Hint {
@@ -84,8 +84,16 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const fetchDecayFormulas = async () => {
     try {
       const response = await axios.get("/api/decay-formulas")
-      // Filter out decay formulas with empty names
-      const validFormulas = response.data.filter((formula: DecayFormula) => formula.name && formula.name.trim() !== '')
+      // Filter out decay formulas with empty names and ensure all required fields
+      const validFormulas = response.data.filter((formula: DecayFormula) => 
+        formula.name && formula.name.trim() !== '' && formula.id > 0
+      ).map((formula: any) => ({
+        id: formula.id,
+        name: formula.name,
+        decayStep: formula.decayStep || 10,
+        minPoints: formula.minPoints || 10,
+        maxDecay: formula.maxDecay || 90.0
+      }))
       setDecayFormulas(validFormulas)
     } catch (error) {
       console.error("Failed to fetch decay formulas:", error)
@@ -275,7 +283,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     <SelectItem value="none">None</SelectItem>
                     {decayFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id.toString()}>
-                        {formula.name} ({formula.type}) - Step: {formula.decayStep}, Min: {formula.minPoints}
+                        {formula.name} - Step: {formula.decayStep}, Min: {formula.minPoints}, Max: {formula.maxDecay}%
                       </SelectItem>
                     ))}
                   </SelectContent>

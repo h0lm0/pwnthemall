@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"math"
 	"pwnthemall/config"
 	"pwnthemall/models"
 )
@@ -12,8 +11,8 @@ func NewDecay() *DecayService {
 	return &DecayService{}
 }
 
-// CalculateDecayedPoints calcule les points décayés selon la formule
-func (ds *DecayService) CalculateDecayedPoints(challenge *models.Challenge, solveCount int) int {
+// CalculateCurrentPoints calcule les points actuels d'un challenge en fonction du nombre de solves
+func (ds *DecayService) CalculateCurrentPoints(challenge *models.Challenge) int {
 	// Si aucune decay formula n'est définie, retourner les points de base
 	if challenge.DecayFormulaID == 0 {
 		return challenge.Points
@@ -25,83 +24,50 @@ func (ds *DecayService) CalculateDecayedPoints(challenge *models.Challenge, solv
 		return challenge.Points
 	}
 
+	// Compter le nombre de solves pour ce challenge
+	var solveCount int64
+	config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
+
+	return ds.calculateSolveBasedDecay(challenge, &decay, int(solveCount))
+}
+
+// CalculateDecayedPoints calcule les points pour un solve spécifique en fonction du nombre total de solves
+func (ds *DecayService) CalculateDecayedPoints(challenge *models.Challenge, solvePosition int) int {
+	// Si aucune decay formula n'est définie, retourner les points de base
+	if challenge.DecayFormulaID == 0 {
+		return challenge.Points
+	}
+
+	var decay models.DecayFormula
+	if err := config.DB.Where("id = ?", challenge.DecayFormulaID).First(&decay).Error; err != nil {
+		// Si la decay formula n'existe pas, retourner les points de base
+		return challenge.Points
+	}
+
+	// Utiliser la position du solve comme nombre de solves à ce moment-là
+	return ds.calculateSolveBasedDecay(challenge, &decay, solvePosition)
+}
+
+// calculateSolveBasedDecay calcule le decay basé sur le nombre de solves
+func (ds *DecayService) calculateSolveBasedDecay(challenge *models.Challenge, decay *models.DecayFormula, solvePosition int) int {
 	basePoints := challenge.Points
 
-	switch decay.Type {
-	case "linear":
-		return ds.calculateLinearDecay(basePoints, solveCount, &decay)
-	case "logarithmic":
-		return ds.calculateLogarithmicDecay(basePoints, solveCount, &decay)
-	case "exponential":
-		return ds.calculateExponentialDecay(basePoints, solveCount, &decay)
-	case "custom":
-		return ds.calculateCustomDecay(basePoints, solveCount, &decay)
-	default:
-		return basePoints
-	}
-}
+	// La position est 0-based, donc on ajoute 1 pour avoir le numéro de solve (1-based)
+	solveNumber := solvePosition + 1
 
-func (ds *DecayService) calculateLinearDecay(basePoints, solveCount int, decay *models.DecayFormula) int {
-	if solveCount <= 0 {
+	// Si c'est le premier solve, pas de decay
+	if solveNumber <= 1 {
 		return basePoints
 	}
 
-	totalDecay := int(float64(solveCount) * float64(decay.DecayStep))
-	final := basePoints - totalDecay
+	// Calculer la réduction des points : chaque solve après le premier retire DecayStep points
+	pointsLost := (solveNumber - 1) * decay.DecayStep
+	currentPoints := basePoints - pointsLost
 
-	if final < decay.MinPoints {
-		return decay.MinPoints
-	}
-	return final
-}
-
-func (ds *DecayService) calculateLogarithmicDecay(basePoints, solveCount int, decay *models.DecayFormula) int {
-	if solveCount <= 0 {
-		return basePoints
+	// S'assurer qu'on ne descend pas en dessous du minimum
+	if currentPoints < decay.MinPoints {
+		currentPoints = decay.MinPoints
 	}
 
-	base := decay.DecayStep
-	if base <= 1 {
-		base = 2.0
-	}
-
-	logFactor := math.Log(float64(solveCount)+1) / math.Log(float64(base))
-	decayAmount := int(logFactor * float64(basePoints))
-	final := basePoints - decayAmount
-
-	if final < decay.MinPoints {
-		return decay.MinPoints
-	}
-	return final
-}
-
-func (ds *DecayService) calculateExponentialDecay(basePoints, solveCount int, decay *models.DecayFormula) int {
-	if solveCount <= 0 {
-		return basePoints
-	}
-
-	k := float64(decay.DecayStep)
-	if k <= 0 {
-		k = 0.1
-	}
-
-	decayFactor := math.Exp(-k * float64(solveCount))
-	decayedPoints := int(float64(basePoints) * decayFactor)
-
-	if decayedPoints < decay.MinPoints {
-		return decay.MinPoints
-	}
-
-	return decayedPoints
-}
-
-func (ds *DecayService) calculateCustomDecay(basePoints, solveCount int, decay *models.DecayFormula) int {
-	// ouais on verra ça une autre fois
-	return basePoints
-}
-
-func (ds *DecayService) GetSolveCount(challengeID uint) int {
-	var count int64
-	config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challengeID).Count(&count)
-	return int(count)
+	return currentPoints
 }

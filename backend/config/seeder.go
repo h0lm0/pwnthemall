@@ -261,19 +261,16 @@ func seedDecayFormulas() {
 	decayFormulas := []models.DecayFormula{
 		{
 			Name:      "Linear Decay",
-			Type:      "linear",
 			DecayStep: 10,
 			MinPoints: 50,
 		},
 		{
 			Name:      "Exponential Decay",
-			Type:      "exponential",
 			DecayStep: 10,
 			MinPoints: 50,
 		},
 		{
 			Name:      "Logarithmic Decay",
-			Type:      "logarithmic",
 			DecayStep: 20,
 			MinPoints: 50,
 		},

@@ -19,7 +19,6 @@ func GetDecayFormulas(c *gin.Context) {
 	noneOption := models.DecayFormula{
 		ID:   0,
 		Name: "None (No Decay)",
-		Type: "none",
 	}
 
 	// Insérer l'option "None" au début de la liste
