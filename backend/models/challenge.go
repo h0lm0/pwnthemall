@@ -23,9 +23,6 @@ type Challenge struct {
 	Hidden                bool                 `json:"hidden"`
 	Flags                 []Flag               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"-"`
 	Ports                 pq.Int64Array        `gorm:"type:integer[]" json:"ports"`
-<<<<<<< HEAD
-	ConnectionInfo        pq.StringArray       `gorm:"type:text[]" json:"connectionInfo"`
-=======
 	Points                int                  `json:"points"` // maybe rename it basePoints
 	CurrentPoints         int                  `gorm:"-" json:"currentPoints"`
 	DecayFormulaID        uint                 `json:"decayFormulaId,omitempty"`
@@ -34,5 +31,4 @@ type Challenge struct {
 	FirstBlood            *FirstBlood          `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"firstBlood,omitempty"`
 	EnableFirstBlood      bool                 `gorm:"default:false" json:"enableFirstBlood"`
 	FirstBloodBonuses     pq.Int64Array        `gorm:"type:integer[]" json:"firstBloodBonuses"`
->>>>>>> feature/hint-firstblood
 }

@@ -34,13 +34,9 @@ func ConnectDB() *gorm.DB {
 	}
 
 	DB = db
-<<<<<<< HEAD
-	if os.Getenv("PTA_SEED_DATABASE") == "true" {
-=======
 
 	fixInstanceUserForeignKey()
 	if os.Getenv("SEED_DATABASE") == "true" {
->>>>>>> feature/hint-firstblood
 		SeedDatabase()
 	}
 	return db
