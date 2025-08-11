@@ -23,8 +23,8 @@ type RegisterInput struct {
 }
 
 type LoginInput struct {
-	Identifier string `json:"identifier" binding:"required"`
-	Password   string `json:"password" binding:"required"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 // Register creates a new user account
@@ -114,12 +114,19 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	var input LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_input"})
+		return
+	}
+
+	usernameOrEmail := strings.TrimSpace(input.Username)
+
+	if usernameOrEmail == "" || strings.TrimSpace(input.Password) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "please_fill_fields"})
 		return
 	}
 
 	var user models.User
-	if err := config.DB.Where("username = ? OR email = ?", input.Identifier, input.Identifier).First(&user).Error; err != nil {
+	if err := config.DB.Where("username = ? OR email = ?", usernameOrEmail, usernameOrEmail).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_credentials"})
 		return
 	}
@@ -145,9 +152,9 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create refresh token"})
 		return
 	}
-	
+
 	// Set both tokens as secure HTTP-only cookies
-	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true) // 1 hour, secure, httpOnly
+	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true)        // 1 hour, secure, httpOnly
 	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", true, true) // 7 days, secure, httpOnly
 
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
@@ -241,7 +248,7 @@ func UpdateCurrentUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Username updated",
+		"message":  "Username updated",
 		"username": user.Username,
 	})
 }

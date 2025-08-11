@@ -15,7 +15,7 @@ const LoginPage = () => {
   const { t, language } = useLanguage();
   const { getSiteName } = useSiteConfig();
 
-  const [form, setForm] = useState({ identifier: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: "" });
 
   useEffect(() => {
     if (router.query.success === "register") {
@@ -32,6 +32,7 @@ const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Send "username" in payload (can be username or email)
       const res = await axios.post("/api/login", form);
       login();
       if (typeof window !== "undefined") {
