@@ -59,8 +59,9 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	}
 
 	var (
-		metaData meta.BaseChallengeMetadata
-		ports    []int
+		metaData       meta.BaseChallengeMetadata
+		ports          []int
+		connectionInfo []string
 	)
 
 	switch base.Type {
@@ -72,6 +73,7 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 		}
 		metaData = dockerMeta.Base
 		ports = dockerMeta.Ports
+		connectionInfo = dockerMeta.Base.ConnectionInfo
 
 	case "compose":
 		var composeMeta meta.ComposeChallengeMetadata
@@ -80,14 +82,16 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 			return err
 		}
 		metaData = composeMeta.Base
+		connectionInfo = composeMeta.Base.ConnectionInfo
 
 	default: // standard
 		metaData = base
+		connectionInfo = base.ConnectionInfo
 	}
 
 	// Update or create the challenge in the database
 	slug := strings.Split(objectKey, "/")[0]
-	if err := updateOrCreateChallengeInDB(metaData, slug, ports); err != nil {
+	if err := updateOrCreateChallengeInDB(metaData, slug, ports, connectionInfo); err != nil {
 		log.Printf("Error updating or creating challenge in DB: %v", err)
 		return err
 	}
@@ -104,7 +108,7 @@ func deleteChallengeFromDB(slug string) error {
 	return nil
 }
 
-func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int) error {
+func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int, connectionInfo []string) error {
 	var cCategory models.ChallengeCategory
 	if err := config.DB.FirstOrCreate(&cCategory, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
 		return err
@@ -153,12 +157,10 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.Ports = ports64
 
 	// Handle connection_info
-	if len(metaData.ConnectionInfo) > 0 {
-		connectionInfo := make(pq.StringArray, len(metaData.ConnectionInfo))
-		for i, info := range metaData.ConnectionInfo {
-			connectionInfo[i] = info
-		}
-		challenge.ConnectionInfo = connectionInfo
+	if len(connectionInfo) > 0 {
+		connInfo := make(pq.StringArray, len(connectionInfo))
+		copy(connInfo, connectionInfo)
+		challenge.ConnectionInfo = connInfo
 	} else {
 		challenge.ConnectionInfo = pq.StringArray{}
 	}

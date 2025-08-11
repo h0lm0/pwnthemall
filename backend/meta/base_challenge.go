@@ -3,19 +3,20 @@ package meta
 import "time"
 
 type BaseChallengeMetadata struct {
-	Name        	 string   			 `yaml:"name"`
-	Description 	 string   			 `yaml:"description"`
-	Category    	 string   			 `yaml:"category"`
-	Difficulty  	 string   			 `yaml:"difficulty"`
-	Type        	 string   			 `yaml:"type"`
-	Author      	 string   			 `yaml:"author"`
-	Hidden      	 bool     			 `yaml:"hidden"`
-	Flags       	 []string 			 `yaml:"flags"`
-	Points      	 int      			 `yaml:"points"`
-	DecayFormula	 string				 `yaml:"decay,omitempty"`
-	Hints       	 []HintMetadata		 	 `yaml:"hints,omitempty"`
-	EnableFirstBlood bool 				 `yaml:"enableFirstBlood"`
-	FirstBlood  	 *FirstBloodMetadata 		 `yaml:"firstBlood,omitempty"`
+	Name             string              `yaml:"name"`
+	Description      string              `yaml:"description"`
+	Category         string              `yaml:"category"`
+	Difficulty       string              `yaml:"difficulty"`
+	Type             string              `yaml:"type"`
+	Author           string              `yaml:"author"`
+	Hidden           bool                `yaml:"hidden"`
+	Flags            []string            `yaml:"flags"`
+	Points           int                 `yaml:"points"`
+	ConnectionInfo   []string            `yaml:"connectionInfo,omitempty"`
+	DecayFormula     string              `yaml:"decay,omitempty"`
+	Hints            []HintMetadata      `yaml:"hints,omitempty"`
+	EnableFirstBlood bool                `yaml:"enableFirstBlood"`
+	FirstBlood       *FirstBloodMetadata `yaml:"firstBlood,omitempty"`
 }
 
 type HintMetadata struct {
@@ -26,6 +27,6 @@ type HintMetadata struct {
 }
 
 type FirstBloodMetadata struct {
-    Bonuses     []int      `yaml:"bonuses"`
-    Badges      []string   `yaml:"badges"`
+	Bonuses []int    `yaml:"bonuses"`
+	Badges  []string `yaml:"badges"`
 }

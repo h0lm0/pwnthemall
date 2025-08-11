@@ -34,14 +34,42 @@ const (
 func GetCTFStatus() CTFStatus {
 	var startConfig, endConfig models.Config
 
-	// Get start time
+	// Get start time - create if missing
 	if err := DB.Where("key = ?", "CTF_START_TIME").First(&startConfig).Error; err != nil {
-		return CTFNoTiming
+		if err == gorm.ErrRecordNotFound {
+			// Create missing CTF_START_TIME config
+			startConfig = models.Config{
+				Key:    "CTF_START_TIME",
+				Value:  getEnvWithDefault("PTA_CTF_START_TIME", ""),
+				Public: true,
+			}
+			if createErr := DB.Create(&startConfig).Error; createErr != nil {
+				log.Printf("Failed to create CTF_START_TIME config: %v", createErr)
+				return CTFNoTiming
+			}
+		} else {
+			log.Printf("Database error getting CTF_START_TIME: %v", err)
+			return CTFNoTiming
+		}
 	}
 
-	// Get end time
+	// Get end time - create if missing
 	if err := DB.Where("key = ?", "CTF_END_TIME").First(&endConfig).Error; err != nil {
-		return CTFNoTiming
+		if err == gorm.ErrRecordNotFound {
+			// Create missing CTF_END_TIME config
+			endConfig = models.Config{
+				Key:    "CTF_END_TIME",
+				Value:  getEnvWithDefault("PTA_CTF_END_TIME", ""),
+				Public: true,
+			}
+			if createErr := DB.Create(&endConfig).Error; createErr != nil {
+				log.Printf("Failed to create CTF_END_TIME config: %v", createErr)
+				return CTFNoTiming
+			}
+		} else {
+			log.Printf("Database error getting CTF_END_TIME: %v", err)
+			return CTFNoTiming
+		}
 	}
 
 	// If either time is empty, no timing is configured
