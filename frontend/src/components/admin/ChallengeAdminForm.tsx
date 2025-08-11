@@ -40,6 +40,7 @@ interface Hint {
 
 export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdminFormProps) {
   const [loading, setLoading] = useState(false)
+  const [generalLoading, setGeneralLoading] = useState(false)
   const [decayFormulas, setDecayFormulas] = useState<DecayFormula[]>([])
   const [formData, setFormData] = useState({
     points: challenge.points || 0,
@@ -47,6 +48,12 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     firstBloodBonus: challenge.firstBloodBonus || 100,
     decayFormulaId: challenge.decayFormulaId || null as number | null,
     hints: challenge.hints || [] as Hint[],
+  })
+  const [generalData, setGeneralData] = useState({
+    name: challenge.name || "",
+    description: challenge.description || "",
+    author: challenge.author || "",
+    hidden: challenge.hidden || false,
   })
   const [newHint, setNewHint] = useState({ content: "", cost: 0 })
 
@@ -90,6 +97,20 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     }
   }
 
+  const handleGeneralSubmit = async () => {
+    setGeneralLoading(true)
+    try {
+      await axios.put(`/api/challenges/admin/${challenge.id}/general`, generalData)
+      toast.success("Challenge information updated successfully")
+      onClose()
+    } catch (error) {
+      toast.error("Failed to update challenge information")
+      console.error(error)
+    } finally {
+      setGeneralLoading(false)
+    }
+  }
+
   const handleAddHint = () => {
     if (!newHint.content.trim() || newHint.cost < 0) {
       toast.error("Please provide valid hint content and cost")
@@ -130,12 +151,71 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="points" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="points">Points & Decay</TabsTrigger>
           <TabsTrigger value="firstblood">First Blood</TabsTrigger>
           <TabsTrigger value="hints">Hints</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="general" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>General Information</CardTitle>
+              <CardDescription>
+                Edit the basic information for this challenge
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="name">Challenge Name</Label>
+                <Input
+                  id="name"
+                  value={generalData.name}
+                  onChange={(e) => setGeneralData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter challenge name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={generalData.description}
+                  onChange={(e) => setGeneralData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter challenge description"
+                  rows={4}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="author">Author</Label>
+                <Input
+                  id="author"
+                  value={generalData.author}
+                  onChange={(e) => setGeneralData(prev => ({ ...prev, author: e.target.value }))}
+                  placeholder="Enter author name"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="hidden">Hidden</Label>
+                <Switch
+                  id="hidden"
+                  checked={generalData.hidden}
+                  onCheckedChange={(checked: boolean) => setGeneralData(prev => ({ ...prev, hidden: checked }))}
+                />
+              </div>
+
+              <div className="pt-4">
+                <Button onClick={handleGeneralSubmit} disabled={generalLoading} className="w-full">
+                  {generalLoading ? "Saving..." : "Save General Information"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="points" className="space-y-4">
           <Card>
@@ -178,6 +258,15 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
             </CardContent>
           </Card>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading}>
+              {loading ? "Saving..." : "Save Configuration"}
+            </Button>
+          </div>
         </TabsContent>
 
         <TabsContent value="firstblood" className="space-y-4">
@@ -212,6 +301,15 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               )}
             </CardContent>
           </Card>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading}>
+              {loading ? "Saving..." : "Save Configuration"}
+            </Button>
+          </div>
         </TabsContent>
 
         <TabsContent value="hints" className="space-y-4">
@@ -271,17 +369,17 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               )}
             </CardContent>
           </Card>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading}>
+              {loading ? "Saving..." : "Save Configuration"}
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
-
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} disabled={loading}>
-          {loading ? "Saving..." : "Save Changes"}
-        </Button>
-      </div>
     </div>
   )
 }

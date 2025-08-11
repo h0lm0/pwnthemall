@@ -28,6 +28,7 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.GET("/admin/all", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/all", "read"), controllers.GetAllChallengesAdmin)
 		challenges.GET("/admin/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "read"), controllers.GetChallengeAdmin)
 		challenges.PUT("/admin/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "write"), controllers.UpdateChallengeAdmin)
+		challenges.PUT("/admin/:id/general", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/:id", "write"), controllers.UpdateChallengeGeneralAdmin)
 		challenges.DELETE("/admin/hints/:hintId", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/admin/hints/:hintId", "write"), controllers.DeleteHint)
 	}
 }

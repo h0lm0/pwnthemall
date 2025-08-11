@@ -18,6 +18,13 @@ type ChallengeAdminUpdateRequest struct {
 	Hints             []HintRequest `json:"hints"`
 }
 
+type ChallengeGeneralUpdateRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Author      string `json:"author"`
+	Hidden      bool   `json:"hidden"`
+}
+
 type HintRequest struct {
 	ID       uint   `json:"id,omitempty"`
 	Content  string `json:"content"`
@@ -121,6 +128,35 @@ func UpdateChallengeAdmin(c *gin.Context) {
 				log.Printf("Failed to create hint: %v", err)
 			}
 		}
+	}
+
+	c.JSON(http.StatusOK, challenge)
+}
+
+func UpdateChallengeGeneralAdmin(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+
+	if err := config.DB.First(&challenge, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		return
+	}
+
+	var req ChallengeGeneralUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Update challenge general fields
+	challenge.Name = req.Name
+	challenge.Description = req.Description
+	challenge.Author = req.Author
+	challenge.Hidden = req.Hidden
+
+	if err := config.DB.Save(&challenge).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update challenge"})
+		return
 	}
 
 	c.JSON(http.StatusOK, challenge)
