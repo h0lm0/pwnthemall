@@ -58,17 +58,21 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
       const L = (window as any).L;
       leafletReadyRef.current = true;
 
-      const initial = value || { lat: 48.85837, lng: 2.294481 }; // Eiffel Tower default
+      // Default far from any likely target to avoid hinting the answer (Antarctica)
+      const initial = value || { lat: -82, lng: 0 };
       const map = L.map(mapRef.current).setView([initial.lat, initial.lng], 13);
       instanceRef.current = map;
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
+      // Add scale control for real-world distance reference
+      try { L.control.scale({ metric: true, imperial: false }).addTo(map); } catch {}
 
       markerRef.current = L.marker([initial.lat, initial.lng], { draggable: true }).addTo(map);
       if (typeof radiusKm === 'number' && !Number.isNaN(radiusKm)) {
         circleRef.current = L.circle([initial.lat, initial.lng], { radius: radiusKm * 1000, color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.15 }).addTo(map);
+        try { map.fitBounds(circleRef.current.getBounds(), { padding: [16, 16] }); } catch {}
       }
       markerRef.current.on("dragend", (e: any) => {
         const ll = e.target.getLatLng();
@@ -136,8 +140,10 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
     if (typeof radiusKm === 'number' && !Number.isNaN(radiusKm)) {
       if (!circleRef.current) {
         circleRef.current = L.circle([pos.lat, pos.lng], { radius: radiusKm * 1000, color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.15 }).addTo(instanceRef.current);
+        try { instanceRef.current.fitBounds(circleRef.current.getBounds(), { padding: [16, 16] }); } catch {}
       } else {
         circleRef.current.setRadius(radiusKm * 1000);
+        try { instanceRef.current.fitBounds(circleRef.current.getBounds(), { padding: [16, 16] }); } catch {}
       }
     } else if (circleRef.current) {
       circleRef.current.remove();
