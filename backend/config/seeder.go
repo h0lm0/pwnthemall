@@ -194,6 +194,7 @@ func seedChallengeType() {
 		{Name: "standard"},
 		{Name: "docker"},
 		{Name: "compose"},
+		{Name: "geo"},
 	}
 	for _, challengeType := range challengeTypes {
 		var existing models.ChallengeType

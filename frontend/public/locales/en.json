@@ -124,6 +124,7 @@
   "notification_message": "Message",
   "notification_type": "Type",
   "target_user": "Target User (Optional)",
+  "incorrect_location": "Incorrect location",
   "target_user_placeholder": "Leave empty to send to all users",
   "send_to_specific_user": "Send to specific user (ID: {id})",
   "send_to_all_users": "Send to all users",

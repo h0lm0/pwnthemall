@@ -266,6 +266,7 @@
   "notification_title": "Titre",
   "notification_message": "Message",
   "notification_type": "Type",
+  "incorrect_location": "L'emplacement est incorrect",
   "target_user": "Utilisateur cible (Optionnel)",
   "target_user_placeholder": "Laissez vide pour envoyer à tous les utilisateurs",
   "send_to_specific_user": "Envoyer à l'utilisateur spécifique (ID: {id})",

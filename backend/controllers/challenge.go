@@ -94,7 +94,8 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	// Create response with solved status
 	type ChallengeWithSolved struct {
 		models.Challenge
-		Solved bool `json:"solved"`
+		Solved      bool     `json:"solved"`
+		GeoRadiusKm *float64 `json:"geoRadiusKm,omitempty"`
 	}
 
 	var challengesWithSolved []ChallengeWithSolved
@@ -106,10 +107,15 @@ func GetChallengesByCategoryName(c *gin.Context) {
 				break
 			}
 		}
-		challengesWithSolved = append(challengesWithSolved, ChallengeWithSolved{
-			Challenge: challenge,
-			Solved:    solved,
-		})
+		item := ChallengeWithSolved{Challenge: challenge, Solved: solved}
+		if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
+			var spec models.GeoSpec
+			if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&spec).Error; err == nil {
+				r := spec.RadiusKm
+				item.GeoRadiusKm = &r
+			}
+		}
+		challengesWithSolved = append(challengesWithSolved, item)
 	}
 
 	c.JSON(http.StatusOK, challengesWithSolved)
@@ -218,17 +224,23 @@ type FlagInput struct {
 	Flag string `json:"flag" binding:"required"`
 }
 
+// GeoFlagInput allows geo submissions: { lat, lng }
+type GeoFlagInput struct {
+	Lat float64 `json:"lat"`
+	Lng float64 `json:"lng"`
+}
+
 func SubmitChallenge(c *gin.Context) {
 	var challenge models.Challenge
 
 	challengeId := c.Param("id")
-	if err := config.DB.Preload("Flags").Where("id = ?", challengeId).First(&challenge).Error; err != nil {
+	if err := config.DB.Preload("Flags").Preload("ChallengeType").Where("id = ?", challengeId).First(&challenge).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
 	}
 
-	var input FlagInput
-	if err := c.ShouldBindJSON(&input); err != nil {
+	var inputRaw map[string]interface{}
+	if err := c.ShouldBindJSON(&inputRaw); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_input"})
 		return
 	}
@@ -268,16 +280,61 @@ func SubmitChallenge(c *gin.Context) {
 		return
 	}
 
+	submittedValue := ""
+	if v, ok := inputRaw["flag"]; ok {
+		if s, ok := v.(string); ok {
+			submittedValue = s
+		}
+	}
+	if submittedValue == "" {
+		// Maybe geo submission
+		if latV, ok := inputRaw["lat"].(float64); ok {
+			if lngV, ok2 := inputRaw["lng"].(float64); ok2 {
+				submittedValue = fmt.Sprintf("geo:%f,%f", latV, lngV)
+			}
+		}
+	}
+
 	var submission models.Submission
-	if err := config.DB.FirstOrCreate(&submission, models.Submission{Value: input.Flag, UserID: user.ID, ChallengeID: challenge.ID}).Error; err != nil {
+	if err := config.DB.FirstOrCreate(&submission, models.Submission{Value: submittedValue, UserID: user.ID, ChallengeID: challenge.ID}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "submission_create_failed"})
 	}
 
 	found := false
+	// Standard flag check and geo check
 	for _, flag := range challenge.Flags {
-		if flag.Value == utils.HashFlag(input.Flag) {
+		if utils.IsGeoFlag(flag.Value) {
+			// Compare against a geo submission
+			if lat, lng, rad, ok := utils.ParseGeoSpecFromHashed(flag.Value); ok {
+				if v, ok := inputRaw["lat"].(float64); ok {
+					if w, ok2 := inputRaw["lng"].(float64); ok2 {
+						if utils.IsWithinRadiusKm(lat, lng, v, w, rad) {
+							found = true
+							break
+						}
+					}
+				}
+			}
+		} else if submittedValue != "" && flag.Value == utils.HashFlag(submittedValue) {
 			found = true
 			break
+		} else if v, ok := inputRaw["flag"].(string); ok && flag.Value == utils.HashFlag(v) {
+			found = true
+			break
+		}
+	}
+
+	// If not found yet and challenge is geo, validate against stored GeoSpec
+	if !found && challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
+		if v, ok := inputRaw["lat"].(float64); ok {
+			if w, ok2 := inputRaw["lng"].(float64); ok2 {
+				var spec models.GeoSpec
+				if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&spec).Error; err == nil {
+					if utils.IsWithinRadiusKm(spec.TargetLat, spec.TargetLng, v, w, spec.RadiusKm) {
+						found = true
+					}
+				}
+			}
 		}
 	}
 	if found {
@@ -364,7 +421,11 @@ func SubmitChallenge(c *gin.Context) {
 			return
 		}
 	} else {
-		c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
+		if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
+			c.JSON(http.StatusForbidden, gin.H{"result": "incorrect_location"})
+		} else {
+			c.JSON(http.StatusForbidden, gin.H{"result": "wrong_flag"})
+		}
 	}
 }
 

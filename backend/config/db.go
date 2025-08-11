@@ -25,7 +25,7 @@ func ConnectDB() *gorm.DB {
 		&models.User{}, &models.ChallengeCategory{},
 		&models.ChallengeType{}, &models.ChallengeDifficulty{},
 		&models.Challenge{}, &models.Flag{},
-		&models.Submission{}, &models.Instance{}, &models.InstanceCooldown{}, &models.DynamicFlag{},
+		&models.Submission{}, &models.Instance{}, &models.InstanceCooldown{}, &models.DynamicFlag{}, &models.GeoSpec{},
 		&models.Notification{},
 	)
 	if err != nil {

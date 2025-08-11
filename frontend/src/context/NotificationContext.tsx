@@ -21,7 +21,7 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { loggedIn } = useAuth();
+  const { loggedIn, authChecked } = useAuth();
   const router = useRouter();
   const [recentlySentNotifications, setRecentlySentNotifications] = useState<Map<string, number>>(new Map());
   
@@ -33,7 +33,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     markAsRead,
     markAllAsRead,
     refreshNotifications,
-  } = useNotifications(loggedIn);
+  } = useNotifications(loggedIn && authChecked);
 
   // Wrapper for sendNotification that tracks recently sent notifications
   const sendNotification = async (notification: any) => {
