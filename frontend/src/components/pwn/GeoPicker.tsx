@@ -20,6 +20,7 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
   const [results, setResults] = React.useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
   const [searching, setSearching] = React.useState(false);
   const debounceRef = React.useRef<any>(null);
+  const ignoreSearchOnceRef = React.useRef(false);
   const resizeObserverRef = React.useRef<ResizeObserver | null>(null);
 
   React.useEffect(() => {
@@ -133,6 +134,11 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
 
   // Debounced search using Nominatim
   React.useEffect(() => {
+    if (ignoreSearchOnceRef.current) {
+      // Skip one search cycle after selecting a suggestion programmatically
+      ignoreSearchOnceRef.current = false;
+      return;
+    }
     if (!query || query.trim().length < 3) {
       setResults([]);
       return;
@@ -227,6 +233,8 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
                     const lat = parseFloat(r.lat);
                     const lon = parseFloat(r.lon);
                     moveTo(lat, lon);
+                    // Set the input text but suppress the next search effect
+                    ignoreSearchOnceRef.current = true;
                     setQuery(r.display_name);
                     setResults([]);
                   }}
