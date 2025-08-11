@@ -30,6 +30,8 @@ import GeoPicker from "./GeoPicker";
 import { useInstances } from "@/hooks/use-instances";
 import { debugError } from "@/lib/debug";
 import type { User } from "@/models/User";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface CategoryContentProps {
   cat: string;
@@ -518,8 +520,63 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     
                     <div className="flex-1 min-h-0">
                       <TabsContent value="description" className="h-full overflow-y-auto">
-                        <div className="text-left whitespace-pre-wrap text-foreground leading-relaxed min-h-full">
-                          {selectedChallenge?.description || 'No description available'}
+                        <div className="text-left text-foreground leading-relaxed min-h-full">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              a: (props: any) => (
+                                <a
+                                  {...props}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline text-cyan-700 dark:text-cyan-300 hover:text-cyan-800 dark:hover:text-cyan-200"
+                                />
+                              ),
+                              code: (props: any) => (
+                                <code
+                                  className={`rounded px-1.5 py-0.5 bg-muted text-foreground ${props.className || ''}`}
+                                  {...props}
+                                >
+                                  {props.children}
+                                </code>
+                              ),
+                              pre: (props: any) => (
+                                <pre className="p-3 rounded-md bg-muted overflow-x-auto border">
+                                  {props.children}
+                                </pre>
+                              ),
+                              ul: (props: any) => (
+                                <ul className="list-disc ml-6 space-y-1" {...props}>{props.children}</ul>
+                              ),
+                              ol: (props: any) => (
+                                <ol className="list-decimal ml-6 space-y-1" {...props}>{props.children}</ol>
+                              ),
+                              h1: (props: any) => <h1 className="text-2xl font-bold mt-2 mb-2" {...props} />,
+                              h2: (props: any) => <h2 className="text-xl font-semibold mt-2 mb-2" {...props} />,
+                              h3: (props: any) => <h3 className="text-lg font-semibold mt-2 mb-2" {...props} />,
+                              p: (props: any) => <p className="mb-2" {...props} />,
+                              table: (props: any) => (
+                                <div className="overflow-x-auto my-3">
+                                  <table className="w-full text-sm border border-border rounded-md" {...props} />
+                                </div>
+                              ),
+                              thead: (props: any) => (
+                                <thead className="bg-muted/50" {...props} />
+                              ),
+                              tbody: (props: any) => <tbody {...props} />,
+                              tr: (props: any) => (
+                                <tr className="border-b last:border-0" {...props} />
+                              ),
+                              th: (props: any) => (
+                                <th className="text-left font-semibold px-3 py-2 border-r last:border-r-0" {...props} />
+                              ),
+                              td: (props: any) => (
+                                <td className="px-3 py-2 align-top border-r last:border-r-0" {...props} />
+                              ),
+                            }}
+                          >
+                            {selectedChallenge?.description || 'No description available'}
+                          </ReactMarkdown>
                         </div>
                       </TabsContent>
                       
