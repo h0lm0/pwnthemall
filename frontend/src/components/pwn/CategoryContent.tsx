@@ -518,8 +518,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   )}
                 </TabsList>
                     
-                    <div className="flex-1 min-h-0">
-                      <TabsContent value="description" className="h-full overflow-y-auto">
+                    <div className="flex-1 min-h-0 relative overflow-hidden">
+                      {/* Tab Panels: absolutely positioned & independently scrollable */}
+                      <TabsContent value="description" className="absolute inset-0 overflow-y-auto mt-0 pr-2">
                         <div className="text-left text-foreground leading-relaxed min-h-full">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
@@ -580,7 +581,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                         </div>
                       </TabsContent>
                       
-                      <TabsContent value="solves" className="h-full overflow-y-auto">
+                      <TabsContent value="solves" className="absolute inset-0 overflow-y-auto mt-0 pr-2">
                         <div className="min-h-full">
                           {solvesLoading ? (
                             <div className="text-center py-8">
@@ -647,7 +648,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                       </TabsContent>
 
                       {selectedChallenge && isDockerChallenge(selectedChallenge) && (
-                        <TabsContent value="instance" className="h-full overflow-y-auto">
+                        <TabsContent value="instance" className="absolute inset-0 overflow-y-auto mt-0 pr-2">
                           <div className="min-h-full">
                             <div className="space-y-4">
                               <div className="p-4 rounded-lg border bg-card">
