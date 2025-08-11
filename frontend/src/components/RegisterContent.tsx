@@ -58,7 +58,7 @@ const RegisterContent: React.FC<RegisterContentProps> = ({
                     <CardContent>
                         <form onSubmit={onSubmit} className="grid gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="identifier">{t('username')}</Label>
+                                <Label htmlFor="username">{t('username')}</Label>
                                 <Input
                                     type="text"
                                     name="username"

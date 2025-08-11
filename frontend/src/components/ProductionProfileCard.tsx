@@ -78,6 +78,9 @@ export default function ProductionProfileCard() {
   const [teamLoading, setTeamLoading] = useState(true);
   const [teamError, setTeamError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // Points state (per-user, sourced from team memberPoints like TeamManagementSection)
+  const [userPoints, setUserPoints] = useState<number | null>(null);
+  const [teamTotalPoints, setTeamTotalPoints] = useState<number | null>(null);
 
   useEffect(() => {
     // Handle toast messages from localStorage
@@ -95,7 +98,7 @@ export default function ProductionProfileCard() {
     }
 
     setLoading(true);
-    axios.get("/api/me").then((res: AxiosResponse<any>) => {
+  axios.get("/api/me").then((res: AxiosResponse<any>) => {
       // Use real backend data - no mock values
       const realUser: ExtendedUser = {
         id: res.data.id,
@@ -132,10 +135,37 @@ export default function ProductionProfileCard() {
         setMembers(res.data.team.members as User[]);
         setTeamError(null);
         setTeamLoading(false);
+        // Fetch per-member points for accurate user score (like TeamManagementSection)
+        const uid: number | undefined = res.data?.id;
+        const tid: number | undefined = res.data?.team?.id || res.data?.teamId;
+        if (typeof uid === 'number' && typeof tid === 'number') {
+          axios.get(`/api/teams/${tid}`).then((teamRes: AxiosResponse<any>) => {
+            const rawMp = teamRes.data?.memberPoints as Record<string, number> | undefined;
+            const totalPts = typeof teamRes.data?.totalPoints === 'number' ? teamRes.data.totalPoints : undefined;
+            if (rawMp) {
+              // Normalize keys to numbers
+              const normalized: Record<number, number> = {};
+              for (const [k, v] of Object.entries(rawMp)) {
+                const id = Number(k);
+                if (!Number.isNaN(id)) normalized[id] = typeof v === 'number' ? v : 0;
+              }
+              setUserPoints(normalized[uid] ?? 0);
+            } else {
+              setUserPoints(0);
+            }
+            if (typeof totalPts === 'number') setTeamTotalPoints(totalPts);
+          }).catch(() => {
+            setUserPoints(0);
+          });
+        } else {
+          setUserPoints(0);
+        }
       } else {
         setTeam(null);
         setMembers([]);
         setTeamLoading(false);
+        // No team: default to 0 for own points since per-member mapping is team-based
+        setUserPoints(0);
       }
     }).catch(() => {
       setUser(null);
@@ -145,6 +175,7 @@ export default function ProductionProfileCard() {
       setTeam(null);
       setMembers([]);
       setTeamLoading(false);
+      setUserPoints(0);
     }).finally(() => setLoading(false));
   }, [t]);
 
@@ -325,7 +356,7 @@ export default function ProductionProfileCard() {
                     {t('points')}
                   </div>
                   <div className="text-3xl font-bold text-foreground">
-                    {user.points !== null ? user.points : "N/A"}
+                    {userPoints !== null ? userPoints : 0}
                   </div>
                 </div>
                 
@@ -355,7 +386,7 @@ export default function ProductionProfileCard() {
               {/* User Info Footer */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-4 border-t border-border">
                 <div className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{user.role}</span> • {user.email}
+                  <span className="font-medium text-foreground">{user.role}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {t('member_since')}: {formatDate(user.memberSince)}

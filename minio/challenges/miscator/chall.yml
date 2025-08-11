@@ -8,4 +8,5 @@ author: swinowz
 flags: ["flag"]
 hidden: false
 points: 50
-ports: [8080, 22]
+ports: [22]
+connection_info: ["http://$ip:22"] 

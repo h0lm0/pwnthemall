@@ -386,7 +386,7 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
     // 2. Login via API
     const loginResponse = await page.request.post('https://pwnthemall.local/api/login', {
       data: {
-        identifier: email,
+        username: email,
         password: password
       }
     });
@@ -469,7 +469,7 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
 
 
   } catch (error) {
-    console.log(`Error processing account ${accountNumber}`);
+    debugError(`Error processing account ${accountNumber}:`, error);
   }
 }
 

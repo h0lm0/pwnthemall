@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +38,37 @@ func GetTeam(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"team": team, "members": members})
+	// Compute per-member points by attributing each team solve to the user whose submission led to it
+	// IMPORTANT: JSON only supports string keys for maps; use string keys to avoid marshal errors
+	memberPoints := map[string]int{}
+	var totalPoints int
+
+	// Fetch all solves for this team
+	var solves []models.Solve
+	if err := config.DB.Where("team_id = ?", team.ID).Order("created_at ASC").Find(&solves).Error; err == nil {
+		for _, solve := range solves {
+			// Find the submission that led to this solve: the latest submission for this challenge
+			// by a member of the team at or before the solve time
+			var submission models.Submission
+			subRes := config.DB.
+				Where("challenge_id = ? AND user_id IN (SELECT id FROM users WHERE team_id = ?) AND created_at <= ?",
+					solve.ChallengeID, team.ID, solve.CreatedAt).
+				Order("created_at DESC").
+				First(&submission)
+			if subRes.Error == nil && submission.UserID != 0 {
+				key := fmt.Sprintf("%d", submission.UserID)
+				memberPoints[key] += solve.Points
+			}
+			totalPoints += solve.Points
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"team":         team,
+		"members":      members,
+		"memberPoints": memberPoints,
+		"totalPoints":  totalPoints,
+	})
 }
 
 // CreateTeam : crée une équipe et assigne l'utilisateur courant
@@ -362,4 +394,123 @@ func KickTeamMember(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"message": "kicked"})
+}
+
+// GetLeaderboard : calculates and returns team rankings with current points
+func GetLeaderboard(c *gin.Context) {
+	type TeamScore struct {
+		Team       models.Team `json:"team"`
+		TotalScore int         `json:"totalScore"`
+		SolveCount int         `json:"solveCount"`
+	}
+
+	var teams []models.Team
+	if err := config.DB.Preload("Users").Find(&teams).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_fetch_teams"})
+		return
+	}
+
+	decayService := utils.NewDecay()
+	var leaderboard []TeamScore
+
+	for _, team := range teams {
+		var solves []models.Solve
+		if err := config.DB.Where("team_id = ?", team.ID).Find(&solves).Error; err != nil {
+			continue
+		}
+
+		totalScore := 0
+		for _, solve := range solves {
+			// Get challenge details for current point calculation
+			var challenge models.Challenge
+			if err := config.DB.First(&challenge, solve.ChallengeID).Error; err != nil {
+				continue
+			}
+
+			// Calculate current solve count for this challenge
+			var solveCount int64
+			config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&solveCount)
+
+			// Get the position of this particular solve (0-based)
+			var position int64
+			config.DB.Model(&models.Solve{}).
+				Where("challenge_id = ? AND created_at < ?", challenge.ID, solve.CreatedAt).
+				Count(&position)
+
+			// Calculate points for this solve with current decay settings
+			currentPoints := decayService.CalculateDecayedPoints(&challenge, int(position))
+			totalScore += currentPoints
+
+			// Add FirstBlood bonus if applicable
+			if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+				pos := int(position)
+				if pos < len(challenge.FirstBloodBonuses) {
+					bonusValue := int(challenge.FirstBloodBonuses[pos])
+					totalScore += bonusValue
+				}
+			}
+		}
+
+		leaderboard = append(leaderboard, TeamScore{
+			Team:       team,
+			TotalScore: totalScore,
+			SolveCount: len(solves),
+		})
+	}
+
+	// Sort by total score (descending)
+	for i := 0; i < len(leaderboard)-1; i++ {
+		for j := i + 1; j < len(leaderboard); j++ {
+			if leaderboard[j].TotalScore > leaderboard[i].TotalScore {
+				leaderboard[i], leaderboard[j] = leaderboard[j], leaderboard[i]
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, leaderboard)
+}
+
+// RecalculateTeamPoints : recalculates all solve points for all teams based on current challenge values
+func RecalculateTeamPoints(c *gin.Context) {
+	decayService := utils.NewDecay()
+
+	// Get all solves
+	var solves []models.Solve
+	if err := config.DB.Find(&solves).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_fetch_solves"})
+		return
+	}
+
+	updatedCount := 0
+	for _, solve := range solves {
+		// Get challenge details
+		var challenge models.Challenge
+		if err := config.DB.First(&challenge, solve.ChallengeID).Error; err != nil {
+			continue
+		}
+
+		// Calculate the position of this solve (0-based)
+		var position int64
+		config.DB.Model(&models.Solve{}).
+			Where("challenge_id = ? AND created_at < ?", challenge.ID, solve.CreatedAt).
+			Count(&position)
+
+		// Calculate new points with current decay settings
+		newPoints := decayService.CalculateDecayedPoints(&challenge, int(position))
+
+		// Update if points have changed
+		if solve.Points != newPoints {
+			solve.Points = newPoints
+			if err := config.DB.Save(&solve).Error; err != nil {
+				log.Printf("Failed to update solve for team %d, challenge %d: %v", solve.TeamID, solve.ChallengeID, err)
+				continue
+			}
+			updatedCount++
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":        "points_recalculated",
+		"updated_solves": updatedCount,
+	})
 }

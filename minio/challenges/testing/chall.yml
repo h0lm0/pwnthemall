@@ -1,0 +1,15 @@
+name: "aled"
+description: |
+  Hi the flag is flag
+category: "pwn"
+difficulty: "medium"
+type: "standard"
+author: "crypto-master"
+hidden: false
+flags:
+  - "flag"
+points: 300
+enableFirstBlood: true
+firstBlood:
+  bonuses: [200]
+  badges: ["a"]

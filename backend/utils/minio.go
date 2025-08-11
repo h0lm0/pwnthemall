@@ -22,12 +22,14 @@ import (
 
 func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	const bucketName = "challenges"
+	// Key can be in two forms depending on MinIO webhook config:
+	// 1) "challenges/<slug>/chall.yml" (includes bucket)
+	// 2) "<slug>/chall.yml" (object key only)
+	objectKey := key
 	parts := strings.SplitN(key, "/", 2)
-	if len(parts) < 2 {
-		log.Printf("Invalid key format: %s", key)
-		return nil
+	if len(parts) == 2 && parts[0] == bucketName {
+		objectKey = parts[1]
 	}
-	objectKey := parts[1]
 	log.Printf("SyncChallengesFromMinIO begin for bucket: %s, key: %s", bucketName, objectKey)
 
 	time.Sleep(500 * time.Millisecond)
@@ -74,6 +76,30 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 		ports = dockerMeta.Ports
 
 	case "compose":
+	case "geo":
+		var geoMeta meta.GeoChallengeMetadata
+		if err := yaml.Unmarshal(buf.Bytes(), &geoMeta); err != nil {
+			log.Printf("Invalid Geo YAML for %s: %v", objectKey, err)
+			return err
+		}
+		metaData = geoMeta.Base
+		// Save or update GeoSpec separately
+		defer func(slug string, g meta.GeoChallengeMetadata) {
+			// after challenge record is saved below, persist GeoSpec
+			var challenge models.Challenge
+			if err := config.DB.Where("slug = ?", slug).First(&challenge).Error; err == nil {
+				var existing models.GeoSpec
+				if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&existing).Error; err == nil {
+					existing.TargetLat = g.TargetLat
+					existing.TargetLng = g.TargetLng
+					existing.RadiusKm = g.RadiusKm
+					_ = config.DB.Save(&existing).Error
+				} else {
+					gs := models.GeoSpec{ChallengeID: challenge.ID, TargetLat: g.TargetLat, TargetLng: g.TargetLng, RadiusKm: g.RadiusKm}
+					_ = config.DB.Create(&gs).Error
+				}
+			}
+		}(strings.Split(objectKey, "/")[0], geoMeta)
 		var composeMeta meta.ComposeChallengeMetadata
 		if err := yaml.Unmarshal(buf.Bytes(), &composeMeta); err != nil {
 			log.Printf("Invalid Compose YAML for %s: %v", objectKey, err)
@@ -84,7 +110,6 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	default: // standard
 		metaData = base
 	}
-
 	// Update or create the challenge in the database
 	slug := strings.Split(objectKey, "/")[0]
 	if err := updateOrCreateChallengeInDB(metaData, slug, ports); err != nil {
@@ -120,6 +145,10 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		return err
 	}
 
+	var cDecayFormula models.DecayFormula
+	if err := config.DB.FirstOrCreate(&cDecayFormula, models.DecayFormula{Name: cDecayFormula.Name, Step: cDecayFormula.Step, MinPoints: cDecayFormula.MinPoints}).Error; err != nil {
+		return err
+	}
 	var challenge models.Challenge
 	if err := config.DB.Where("slug = ?", slug).First(&challenge).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
@@ -135,6 +164,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
+	challenge.DecayFormula = &cDecayFormula
 	ports64 := make(pq.Int64Array, len(ports))
 	for i, p := range ports {
 		ports64[i] = int64(p)
@@ -143,13 +173,36 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 
 	// Handle connection_info
 	if len(metaData.ConnectionInfo) > 0 {
-		connectionInfo := make(pq.StringArray, len(metaData.ConnectionInfo))
-		for i, info := range metaData.ConnectionInfo {
-			connectionInfo[i] = info
-		}
-		challenge.ConnectionInfo = connectionInfo
+		connInfo := make(pq.StringArray, len(metaData.ConnectionInfo))
+		copy(connInfo, metaData.ConnectionInfo)
+		challenge.ConnectionInfo = connInfo
 	} else {
 		challenge.ConnectionInfo = pq.StringArray{}
+	}
+
+	// Handle First Blood configuration
+	challenge.EnableFirstBlood = metaData.EnableFirstBlood
+	if metaData.FirstBlood != nil {
+		if len(metaData.FirstBlood.Bonuses) > 0 {
+			bonuses64 := make(pq.Int64Array, len(metaData.FirstBlood.Bonuses))
+			for i, bonus := range metaData.FirstBlood.Bonuses {
+				bonuses64[i] = int64(bonus)
+			}
+			challenge.FirstBloodBonuses = bonuses64
+		} else {
+			challenge.FirstBloodBonuses = pq.Int64Array{}
+		}
+
+		if len(metaData.FirstBlood.Badges) > 0 {
+			badgesArray := make(pq.StringArray, len(metaData.FirstBlood.Badges))
+			copy(badgesArray, metaData.FirstBlood.Badges)
+			challenge.FirstBloodBadges = badgesArray
+		} else {
+			challenge.FirstBloodBadges = pq.StringArray{}
+		}
+	} else {
+		challenge.FirstBloodBonuses = pq.Int64Array{}
+		challenge.FirstBloodBadges = pq.StringArray{}
 	}
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
@@ -168,6 +221,27 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		}
 		if err := config.DB.Create(&newFlag).Error; err != nil {
 			return err
+		}
+	}
+
+	// Handle hints from YAML
+	if len(metaData.Hints) > 0 {
+		// Delete existing hints to replace them with YAML configuration
+		if err := config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.Hint{}).Error; err != nil {
+			return err
+		}
+
+		// Create hints from YAML metadata
+		for _, hintMeta := range metaData.Hints {
+			hint := models.Hint{
+				ChallengeID: challenge.ID,
+				Content:     hintMeta.Content,
+				Cost:        hintMeta.Cost,
+				IsActive:    hintMeta.IsActive,
+			}
+			if err := config.DB.Create(&hint).Error; err != nil {
+				return err
+			}
 		}
 	}
 

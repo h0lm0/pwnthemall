@@ -126,11 +126,14 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
     const toWs = (httpUrl: string) => httpUrl.replace(/^https/, 'wss').replace(/^http/, 'ws');
 
     const candidates: string[] = [];
+    // Prefer proxied API path first so cookies are forwarded consistently via the same origin
+    candidates.push(toWs(origin + '/api/ws/notifications'));
+    // Then try direct frontend-origin path (if backend mounted at same host)
+    candidates.push(toWs(origin + '/ws/notifications'));
+    // Finally, try explicit backend origin if provided
     if (envBackend) {
       candidates.push(toWs(envBackend.replace(/\/$/, '') + '/ws/notifications'));
     }
-    candidates.push(toWs(origin + '/api/ws/notifications'));
-    candidates.push(toWs(origin + '/ws/notifications'));
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       const proto = origin.startsWith('https') ? 'wss' : 'ws';
       candidates.push(`${proto}://localhost:8080/ws/notifications`);
@@ -245,8 +248,16 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
   useEffect(() => {
     // Only connect if we're in the browser and authenticated
     if (typeof window !== 'undefined' && isAuthenticated) {
-      fetchNotifications();
-      connectWebSocket();
+      // Ensure cookies/session are applied by first fetching notifications,
+      // then connect to WebSocket after the request resolves.
+      (async () => {
+        try {
+          await fetchNotifications();
+        } finally {
+          // Small defer to let the browser commit cookies if needed
+          setTimeout(() => connectWebSocket(), 50);
+        }
+      })();
     } else if (wsRef.current) {
       // Close connection if not authenticated
       wsRef.current.close();
