@@ -126,11 +126,14 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
     const toWs = (httpUrl: string) => httpUrl.replace(/^https/, 'wss').replace(/^http/, 'ws');
 
     const candidates: string[] = [];
+    // Prefer proxied API path first so cookies are forwarded consistently via the same origin
+    candidates.push(toWs(origin + '/api/ws/notifications'));
+    // Then try direct frontend-origin path (if backend mounted at same host)
+    candidates.push(toWs(origin + '/ws/notifications'));
+    // Finally, try explicit backend origin if provided
     if (envBackend) {
       candidates.push(toWs(envBackend.replace(/\/$/, '') + '/ws/notifications'));
     }
-    candidates.push(toWs(origin + '/api/ws/notifications'));
-    candidates.push(toWs(origin + '/ws/notifications'));
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       const proto = origin.startsWith('https') ? 'wss' : 'ws';
       candidates.push(`${proto}://localhost:8080/ws/notifications`);

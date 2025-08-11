@@ -3,6 +3,12 @@ demo.pwnthemall.com {
         reverse_proxy backend:8080
     }
 
+    # WebSocket endpoint should be proxied to backend
+    @ws path /ws/*
+    handle @ws {
+        reverse_proxy backend:8080
+    }
+
     handle {
         reverse_proxy frontend:3000
     }
