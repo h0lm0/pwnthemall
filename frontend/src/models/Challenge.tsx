@@ -23,6 +23,24 @@ export interface Challenge {
   solved?: boolean
   ports?: number[]
   connectionInfo?: string[]
+  points?: number
+  enableFirstBlood?: boolean
+  firstBloodBonuses?: number[]
+  firstBloodBadges?: string[]
+  decayFormula?: {
+    id: number
+    name: string
+    type: string
+    step: number
+    minPoints: number
+  }
+  decayFormulaId?: number
+  hints?: {
+    id: number
+    content: string
+    cost: number
+    challengeId: number
+  }[]
 }
 
 export interface Solve {
@@ -35,4 +53,3 @@ export interface Solve {
   userId?: number
   username?: string
 }
-

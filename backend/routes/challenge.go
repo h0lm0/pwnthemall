@@ -21,8 +21,18 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.GET("/:id/instance-status", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/instance-status", "read"), controllers.GetInstanceStatus)
 		challenges.POST("/:id/start", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
 		challenges.POST("/:id/stop", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/stop", "write"), controllers.StopChallengeInstance)
-		challenges.POST("/:id/kill", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/kill", "write"), controllers.KillChallengeInstance)
+		// challenges.POST("/:id/kill", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/kill", "write"), controllers.KillChallengeInstance)
 		// challenges.PUT("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.UpdateUser)
 		// challenges.DELETE("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.DeleteUser)
+
+	}
+
+	adminChallenges := router.Group("/admin/challenges")
+	{
+		adminChallenges.GET("", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges", "read"), controllers.GetAllChallengesAdmin)
+		adminChallenges.GET("/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges/:id", "read"), controllers.GetChallengeAdmin)
+		adminChallenges.PUT("/:id", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges/:id", "write"), controllers.UpdateChallengeAdmin)
+		adminChallenges.PUT("/:id/general", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges/:id", "write"), controllers.UpdateChallengeGeneralAdmin)
+		adminChallenges.DELETE("/hints/:hintId", middleware.AuthRequired(true), middleware.CheckPolicy("/admin/challenges/hints/:hintId", "write"), controllers.DeleteHint)
 	}
 }

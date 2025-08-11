@@ -469,7 +469,7 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
 
 
   } catch (error) {
-    console.log(`Error processing account ${accountNumber}`);
+    debugError(`Error processing account ${accountNumber}:`, error);
   }
 }
 

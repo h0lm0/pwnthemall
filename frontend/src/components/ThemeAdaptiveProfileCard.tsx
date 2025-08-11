@@ -5,6 +5,7 @@ import { User } from "@/models/User";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 
 interface GameProfileData extends User {
   points?: number;
@@ -61,7 +62,7 @@ export default function ThemeAdaptiveProfileCard() {
             {/* Avatar */}
             <div className="flex-shrink-0 relative">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent p-1 shadow-lg shadow-primary/30">
-                <img
+                <Image
                   src="/logo-no-text.png"
                   alt="Profile Avatar"
                   className="w-full h-full rounded-full object-cover border-2 border-background/20"
