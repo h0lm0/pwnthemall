@@ -1,4 +1,5 @@
 import React from "react";
+import { Input } from "@/components/ui/input";
 
 type GeoPickerProps = {
   value?: { lat: number; lng: number } | null;
@@ -14,6 +15,12 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
   const instanceRef = React.useRef<any>(null);
   const markerRef = React.useRef<any>(null);
   const circleRef = React.useRef<any>(null);
+
+  const [query, setQuery] = React.useState("");
+  const [results, setResults] = React.useState<Array<{ place_id?: number | string; display_name: string; lat: string; lon: string }>>([]);
+  const [searching, setSearching] = React.useState(false);
+  const debounceRef = React.useRef<any>(null);
+  const ignoreSearchOnceRef = React.useRef(false);
   const resizeObserverRef = React.useRef<ResizeObserver | null>(null);
 
   React.useEffect(() => {
@@ -58,17 +65,21 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
       const L = (window as any).L;
       leafletReadyRef.current = true;
 
-      const initial = value || { lat: 48.85837, lng: 2.294481 }; // Eiffel Tower default
+      // Default to Deux-Verges (Cantal)
+      const initial = value || { lat: 44.8067, lng: 3.0236 };
       const map = L.map(mapRef.current).setView([initial.lat, initial.lng], 13);
       instanceRef.current = map;
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
+      // Add scale control for real-world distance reference
+      try { L.control.scale({ metric: true, imperial: false }).addTo(map); } catch {}
 
       markerRef.current = L.marker([initial.lat, initial.lng], { draggable: true }).addTo(map);
       if (typeof radiusKm === 'number' && !Number.isNaN(radiusKm)) {
         circleRef.current = L.circle([initial.lat, initial.lng], { radius: radiusKm * 1000, color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.15 }).addTo(map);
+        try { map.fitBounds(circleRef.current.getBounds(), { padding: [16, 16] }); } catch {}
       }
       markerRef.current.on("dragend", (e: any) => {
         const ll = e.target.getLatLng();
@@ -121,6 +132,60 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
     };
   }, []);
 
+  // Debounced search using Nominatim
+  React.useEffect(() => {
+    if (ignoreSearchOnceRef.current) {
+      // Skip one search cycle after selecting a suggestion programmatically
+      ignoreSearchOnceRef.current = false;
+      return;
+    }
+    if (!query || query.trim().length < 3) {
+      setResults([]);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setSearching(true);
+        const params = new URLSearchParams({ q: query.trim(), format: "json", addressdetails: "0", limit: "8", dedupe: "1" });
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
+          headers: { "Accept-Language": (typeof navigator !== 'undefined' ? navigator.language : 'en') as string },
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const seenByName: Record<string, boolean> = {};
+          const seenByRoundedCoords: Record<string, boolean> = {};
+          const unique = [] as Array<{ place_id?: number | string; display_name: string; lat: string; lon: string }>;
+          for (const r of data) {
+            const nameKey = (r.display_name || '').toLowerCase();
+            const latNum = parseFloat(r.lat);
+            const lonNum = parseFloat(r.lon);
+            const coordKey = `${isFinite(latNum) ? latNum.toFixed(3) : r.lat}|${isFinite(lonNum) ? lonNum.toFixed(3) : r.lon}`;
+            if (seenByName[nameKey] || seenByRoundedCoords[coordKey]) continue;
+            seenByName[nameKey] = true;
+            seenByRoundedCoords[coordKey] = true;
+            unique.push(r);
+          }
+          setResults(unique.slice(0, 5));
+        }
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+    return () => debounceRef.current && clearTimeout(debounceRef.current);
+  }, [query]);
+
+  const moveTo = (lat: number, lng: number) => {
+    onChange({ lat, lng });
+    try {
+      if (markerRef.current) markerRef.current.setLatLng([lat, lng]);
+      if (circleRef.current) circleRef.current.setLatLng([lat, lng]);
+      if (instanceRef.current) instanceRef.current.setView([lat, lng]);
+    } catch {}
+  };
+
   // When value changes externally, move marker
   React.useEffect(() => {
     if (!leafletReadyRef.current || !value || !markerRef.current || !instanceRef.current) return;
@@ -136,8 +201,10 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
     if (typeof radiusKm === 'number' && !Number.isNaN(radiusKm)) {
       if (!circleRef.current) {
         circleRef.current = L.circle([pos.lat, pos.lng], { radius: radiusKm * 1000, color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.15 }).addTo(instanceRef.current);
+        try { instanceRef.current.fitBounds(circleRef.current.getBounds(), { padding: [16, 16] }); } catch {}
       } else {
         circleRef.current.setRadius(radiusKm * 1000);
+        try { instanceRef.current.fitBounds(circleRef.current.getBounds(), { padding: [16, 16] }); } catch {}
       }
     } else if (circleRef.current) {
       circleRef.current.remove();
@@ -146,10 +213,59 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
   }, [radiusKm]);
 
   return (
-    <div
-      ref={mapRef}
-      style={{ height, width: "100%", borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)" }}
-    />
+    <div style={{ width: "100%" }}>
+      <div style={{ marginBottom: 8 }}>
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={"Search a place (min 3 chars)"}
+          disabled={searching}
+        />
+        {results.length > 0 && (
+          <div
+            style={{
+              position: "relative",
+              zIndex: 10,
+            }}
+          >
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: "6px 0 0 0",
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                background: "var(--card)",
+                maxHeight: 220,
+                overflowY: "auto",
+              }}
+            >
+              {results.map((r, i) => (
+                <li
+                  key={`${r.lat}-${r.lon}-${i}`}
+                  style={{ padding: "8px 10px", cursor: "pointer" }}
+                  onClick={() => {
+                    const lat = parseFloat(r.lat);
+                    const lon = parseFloat(r.lon);
+                    moveTo(lat, lon);
+                    // Set the input text but suppress the next search effect
+                    ignoreSearchOnceRef.current = true;
+                    setQuery(r.display_name);
+                    setResults([]);
+                  }}
+                >
+                  {r.display_name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      <div
+        ref={mapRef}
+        style={{ height, width: "100%", borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)" }}
+      />
+    </div>
   );
 }
 
