@@ -40,6 +40,9 @@ CMD ["sh", "/entrypoint.sh"]
 #region Prod stage
 FROM alpine:latest AS prod
 
+ARG DOCKER_GID
+ENV DOCKER_GID=${DOCKER_GID}
+
 WORKDIR /app
 
 RUN apk --no-cache add ca-certificates openssh-client
@@ -50,7 +53,14 @@ RUN adduser -D -u 1000 -s /sbin/nologin app && \
     mkdir -p /home/app/.ssh && \
     chown -R app:app /home/app/.ssh && \
     chmod 700 /home/app/.ssh && \
-    chown -R app:app /app
+    EXISTING_GROUP=$(getent group ${DOCKER_GID} | cut -d: -f1) && \
+    if [ -z "$EXISTING_GROUP" ]; then \
+      addgroup -g ${DOCKER_GID} docker; \
+      GROUP_TO_USE=docker; \
+    else \
+      GROUP_TO_USE=$EXISTING_GROUP; \
+    fi && \
+    adduser app $GROUP_TO_USE
 
 USER app
 

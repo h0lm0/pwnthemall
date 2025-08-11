@@ -6,12 +6,11 @@ services:
       dockerfile: Dockerfile
       target: prod
     environment:
-      - NEXT_PUBLIC_API_URL=https://pwnthemall.local
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NODE_ENV=production
+      - PTA_DEBUG_ENABLED=${PTA_DEBUG_ENABLED}
     depends_on:
       - backend
-    ports:
-      - "3000:3000"
     networks:
       public:
 
@@ -21,6 +20,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: prod
+      args:
+        DOCKER_GID: ${DOCKER_GID}
     depends_on:
       db:
         condition: service_healthy
@@ -33,21 +34,26 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
-      SEED_DATABASE: ${SEED_DATABASE}
-      SEED_CASBIN_CSV: ${SEED_CASBIN_CSV}
-      SEED_CASBIN: ${SEED_CASBIN}
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC: ${MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC}
+      PTA_SEED_DATABASE: ${PTA_SEED_DATABASE}
+      PTA_PTA_SEED_CASBIN_CSV: ${PTA_PTA_SEED_CASBIN_CSV}
+      PTA_SEED_CASBIN: ${PTA_SEED_CASBIN}
       JWT_SECRET: ${JWT_SECRET}
       REFRESH_SECRET: ${REFRESH_SECRET}
+      PTA_DEMO: ${PTA_DEMO}
       PTA_SITE_NAME: ${PTA_SITE_NAME}
       PTA_REGISTRATION_ENABLED: ${PTA_REGISTRATION_ENABLED}
+      PTA_PUBLIC_IP: ${PTA_PUBLIC_IP}
       PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
       PTA_DOCKER_IMAGE_PREFIX: ${PTA_DOCKER_IMAGE_PREFIX}
       PTA_DOCKER_MAXMEM_PER_INSTANCE: ${PTA_DOCKER_MAXMEM_PER_INSTANCE}
       PTA_DOCKER_MAXCPU_PER_INSTANCE: ${PTA_DOCKER_MAXCPU_PER_INSTANCE}
       PTA_DOCKER_INSTANCES_BY_USER: ${PTA_DOCKER_INSTANCES_BY_USER}
       PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
+      PTA_DEBUG_ENABLED: ${PTA_DEBUG_ENABLED}
     volumes:
       - ./shared/worker:/home/app/.ssh/worker
+      # - /var/run/docker.sock:/var/run/docker.sock
     networks:
       public:
       private:
@@ -83,10 +89,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    # ports:
-      # - "5432:5432"
-    # volumes:
-      # - postgres_data:/var/lib/postgresql/data
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -101,9 +105,11 @@ services:
     build:
       context: caddy/
       dockerfile: Dockerfile
+      args:
+        CADDY_ENV: ${CADDY_ENV}  
     ports:
-      - "8080:80"
-      - "127.0.0.1:443:443"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
     networks:
       public:
 

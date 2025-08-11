@@ -3,6 +3,18 @@ package meta
 import "time"
 
 type BaseChallengeMetadata struct {
+<<<<<<< HEAD
+	Name           string   `yaml:"name"`
+	Description    string   `yaml:"description"`
+	Category       string   `yaml:"category"`
+	Difficulty     string   `yaml:"difficulty"`
+	Type           string   `yaml:"type"`
+	Author         string   `yaml:"author"`
+	Hidden         bool     `yaml:"hidden"`
+	Flags          []string `yaml:"flags"`
+	Points         int      `yaml:"points"`
+	ConnectionInfo []string `yaml:"connection_info"`
+=======
 	Name        	 string   			 `yaml:"name"`
 	Description 	 string   			 `yaml:"description"`
 	Category    	 string   			 `yaml:"category"`
@@ -28,4 +40,5 @@ type HintMetadata struct {
 type FirstBloodMetadata struct {
     Bonuses     []int      `yaml:"bonuses"`
     Badges      []string   `yaml:"badges"`
+>>>>>>> feature/hint-firstblood
 }

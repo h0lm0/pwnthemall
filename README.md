@@ -1,53 +1,53 @@
 ![logo no text](frontend/public/logo-no-text.png)
 
-## Kesako
+# pwnthemall
 
-Open source CTF platform to host challenges & boxes.
-The final goal is to have only one plateform on which you can securely host all challenges you made.
+[![License](https://img.shields.io/github/license/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/blob/main/LICENSE)
+[![Docker](https://img.shields.io/badge/docker-ready-blue?style=flat-square&logo=docker)](https://www.docker.com/)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/h0lm0/pwnthemall/build.yml?style=flat-square)](https://github.com/h0lm0/pwnthemall/actions)
+[![Stars](https://img.shields.io/github/stars/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/stargazers)
+[![Issues](https://img.shields.io/github/issues/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/issues)
 
-## Installation
+> Open-source **Capture The Flag (CTF)** platform to host, manage, and deploy your own cybersecurity challenges.  
+> Designed for self-hosted events and built with modern tools, it makes running CTFs fun and efficient.
 
-cp .env.example .env
+---
 
-### Edit /etc/hosts to add entry
+## 🚀 Features
 
-127.0.0.1 pwnthemall.local 
+- 🐳 Runs with **Docker** & **Docker Compose**
+- 📦 Deploy **Dockerfile-based** challenges easily
+- 📁 **GitOps-style** challenge management with a universal folder structure
+- 🔄 **Real-time synchronization** of challenge metadata
+- 👯 Team support with **badges & awards**
+- ✍️ **Fully customizable** front-end and back-end
+- 🔥 Support for **Docker Compose-based challenges** *(WIP)*
 
-### Start environment
+---
 
-   ```bash
-   bash pta-cli.sh compose up -b -e prod
-   bash pta-cli.sh compose up -b -e dev
-   ```
+## 📚 Installation & Usage
 
-### Navigate to the platform
+![vhs tape run](docs/run.gif)
 
-Open https://pwnthemall.local/ & accept the certificate
+Check out the official documentation:
 
-### Windows Support
-Can run the same way as Linux if executed directly in the WSL terminal.
-#### Requirements:
-   - Windows Subsystem for Linux (WSL)
-   - Alternatively, Git Bash (if WSL is not available)
+- 🔧 [Installation Guide](https://github.com/h0lm0/pwnthemall/wiki/I-%E2%80%90-Installation)
+- 🕹️ [Usage Guide](https://github.com/h0lm0/pwnthemall/wiki/II-%E2%80%90-Usage)
 
-Use the provided `pta-cli.cmd` wrapper, which will automatically detect and use WSL if available, or fall back to Git Bash. 
-   ```shell
-   pta-cli.cmd compose up -b -e prod
-   pta-cli.cmd compose up -b -e dev
-   ```
+---
 
-## Troubleshoot
+## 🧠 Credits & Inspiration
 
-## License
+The project is inspired by the amazing work of the following open-source projects:
 
-## Credits
+- [FrancescoXX/go-fullstack-app](https://github.com/FrancescoXX/go-fullstack-app)
+- [CTFd/CTFd](https://github.com/CTFd/CTFd)
+- [TheFlash2k/CTFd-CLI](https://github.com/TheFlash2k/CTFd-CLI)
 
-Some works that inspired this project:
+---
 
-- https://github.com/FrancescoXX/go-fullstack-app
-- https://github.com/CTFd/CTFd
+## ❤️ Contribute
 
-|Username|Password|Role|
-|:----------:|:---------:|:------:|
-|user|user|member|
-|admin|admin|admin|
+Issues and pull requests are welcome!  
+If you want to help shape the future of CTF hosting, join us!
+

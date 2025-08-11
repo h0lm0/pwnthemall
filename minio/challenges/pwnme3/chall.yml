@@ -5,9 +5,14 @@ difficulty: easy
 type: standard
 author: swinowz
 flags: ["flag"]
+<<<<<<< HEAD
+hidden: false
+points: 50
+=======
 hidden: true
 points: 50
 
 name: "hmmm"
 description: |
   Hi the flag is flag
+>>>>>>> feature/hint-firstblood

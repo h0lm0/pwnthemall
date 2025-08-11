@@ -1,7 +1,12 @@
 "use client"
 
+import * as React from "react"
 import { ChevronRight, type LucideIcon } from "lucide-react"
 import Link from "next/link"
+
+import { cn } from "@/lib/utils"
+import { ChallengeCategory } from "@/models/ChallengeCategory"
+import { DraggableCategoryList } from "./draggable-category-list"
 
 import {
   Collapsible,
@@ -15,14 +20,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar"
 
@@ -38,78 +35,142 @@ export function NavMain({
       title: string
       url: string
     }[]
+    draggableItems?: ChallengeCategory[]
+    onReorderItems?: (items: ChallengeCategory[]) => void
   }[]
 }) {
-  const { state, isMobile } = useSidebar()
-  const collapsed = state === "collapsed" && !isMobile
+  const { open } = useSidebar()
+  
+  // Track which collapsible items are open (independent of sidebar state)
+  const [openItems, setOpenItems] = React.useState<Set<string>>(new Set())
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-      <SidebarMenu>
+    <div className="p-2">
+      <div className="space-y-1">
         {items.map((item) =>
           item.items && item.items.length > 0 ? (
-            collapsed ? (
-              <SidebarMenuItem key={item.title}>
+            !open ? (
+              <div key={item.title}>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton tooltip={item.title} isActive={item.isActive}>
-                      {item.icon && <item.icon />}
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
+                    <button
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        item.isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                      )}
+                    >
+                      {item.icon && <item.icon className="w-4 h-4" />}
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent side="right" align="start" className="min-w-48">
-                    {item.items.map((subItem) => (
-                      <DropdownMenuItem asChild key={subItem.title}>
-                        <Link href={subItem.url}>{subItem.title}</Link>
-                      </DropdownMenuItem>
-                    ))}
+                    {item.draggableItems ? (
+                      item.draggableItems.map((cat) => (
+                        <DropdownMenuItem asChild key={cat.name}>
+                          <Link href={`/pwn/${cat.name}`}>{cat.name}</Link>
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      item.items?.map((subItem) => (
+                        <DropdownMenuItem asChild key={subItem.title}>
+                          <Link href={subItem.url}>{subItem.title}</Link>
+                        </DropdownMenuItem>
+                      ))
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </SidebarMenuItem>
-            ) :
+              </div>
+            ) : (
               <Collapsible
                 key={item.title}
-                asChild
-                defaultOpen={item.isActive}
+                open={openItems.has(item.title)}
+                onOpenChange={(isOpen) => {
+                  const newOpenItems = new Set(openItems)
+                  if (isOpen) {
+                    newOpenItems.add(item.title)
+                  } else {
+                    newOpenItems.delete(item.title)
+                  }
+                  setOpenItems(newOpenItems)
+                }}
                 className="group/collapsible"
               >
-                <SidebarMenuItem>
+                <div>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip={item.title} isActive={item.isActive}>
-                      {item.icon && <item.icon />}
-                      <span>{item.title}</span>
-                      <ChevronRight className="ml-auto transition-transform duration-400 ease-in-out group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
+                    <button
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200",
+                        item.isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                      )}
+                    >
+                      {item.icon && <item.icon className="w-4 h-4 flex-shrink-0" />}
+                      <span className={cn(
+                        "truncate transition-all duration-200",
+                        open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
+                      )}>
+                        {item.title}
+                      </span>
+                      <ChevronRight className={cn(
+                        "w-4 h-4 transition-all duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-90",
+                        open ? "opacity-100 ml-auto" : "opacity-0 w-0 overflow-hidden"
+                      )} />
+                    </button>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <Link href={subItem.url}>
-                              <span>{subItem.title}</span>
+                    <div className="ml-6 mt-1">
+                      {item.draggableItems && item.onReorderItems ? (
+                        <DraggableCategoryList
+                          items={item.draggableItems.map(cat => ({
+                            id: cat.id,
+                            title: cat.name,
+                            url: `/pwn/${cat.name}`,
+                          }))}
+                          onReorder={(newItems) => {
+                            // Map back to ChallengeCategory objects
+                            const reorderedCategories = newItems.map(newItem => 
+                              item.draggableItems!.find(cat => cat.id === newItem.id)!
+                            );
+                            item.onReorderItems!(reorderedCategories);
+                          }}
+                        />
+                      ) : (
+                        <div className="space-y-1">
+                          {item.items?.map((subItem) => (
+                            <Link
+                              key={subItem.title}
+                              href={subItem.url}
+                              className="block rounded-lg p-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            >
+                              {subItem.title}
                             </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </CollapsibleContent>
-                </SidebarMenuItem>
+                </div>
               </Collapsible>
             )
-          : (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title} isActive={item.isActive}>
-                <Link href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
+          ) : (
+            <div key={item.title}>
+              <Link
+                href={item.url}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200",
+                  item.isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                )}
+              >
+                {item.icon && <item.icon className="w-4 h-4 flex-shrink-0" />}
+                <span className={cn(
+                  "truncate transition-all duration-200",
+                  open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
+                )}>
+                  {item.title}
+                </span>
                 </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            </div>
           )
         )}
-      </SidebarMenu>
-    </SidebarGroup>
+      </div>
+    </div>
   )
 }

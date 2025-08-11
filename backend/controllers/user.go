@@ -6,6 +6,7 @@ import (
 	"pwnthemall/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,7 +21,7 @@ type UserInput struct {
 
 func GetUsers(c *gin.Context) {
 	var users []models.User
-	result := config.DB.Find(&users)
+	result := config.DB.Preload("Team").Find(&users)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
@@ -131,32 +132,61 @@ func GetCurrentUser(c *gin.Context) {
 		var members []models.User
 		if err := config.DB.Where("team_id = ?", user.TeamID).Find(&members).Error; err == nil {
 			safeMembers = make([]models.SafeUser, len(members))
-			for i, member := range members {
-				safeMembers[i] = models.SafeUser{
-					ID:       member.ID,
-					Username: member.Username,
-					Role:     member.Role,
-				}
-			}
+			copier.Copy(&safeMembers, &members)
 		}
 	}
 
+	// Compute team-based points and number of solved challenges
+	var totalPoints int64 = 0
+	var solvesCount int64 = 0
+	if user.TeamID != nil {
+		// Count of solves for the team
+		config.DB.Model(&models.Solve{}).Where("team_id = ?", *user.TeamID).Count(&solvesCount)
+		// Sum of points from solves for the team
+		config.DB.Model(&models.Solve{}).
+			Where("team_id = ?", *user.TeamID).
+			Select("COALESCE(SUM(points), 0)").
+			Scan(&totalPoints)
+	}
+
+	// Compute total number of challenges available to solve (challenges with at least one flag)
+	var totalChallenges int64 = 0
+	if user.Role == "admin" {
+		// Admins: all challenges that have at least one flag
+		config.DB.
+			Model(&models.Flag{}).
+			Select("DISTINCT challenge_id").
+			Count(&totalChallenges)
+	} else {
+		// Members: only non-hidden challenges that have at least one flag
+		config.DB.
+			Table("flags").
+			Joins("JOIN challenges ON challenges.id = flags.challenge_id").
+			Where("challenges.hidden = ?", false).
+			Select("DISTINCT flags.challenge_id").
+			Count(&totalChallenges)
+	}
+
 	response := gin.H{
-		"id":       user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"role":     user.Role,
-		"banned":   user.Banned,
-		"teamId":   user.TeamID,
-		"team":     gin.H{},
+		"id":                  user.ID,
+		"username":            user.Username,
+		"email":               user.Email,
+		"role":                user.Role,
+		"banned":              user.Banned,
+		"teamId":              user.TeamID,
+		"memberSince":         user.MemberSince,
+		"team":                gin.H{},
+		"points":              totalPoints,
+		"challengesCompleted": solvesCount,
+		"totalChallenges":     totalChallenges,
 	}
 
 	if user.Team != nil {
 		response["team"] = gin.H{
-			"id":      user.Team.ID,
-			"name":    user.Team.Name,
+			"id":        user.Team.ID,
+			"name":      user.Team.Name,
 			"creatorId": user.Team.CreatorID,
-			"members": safeMembers,
+			"members":   safeMembers,
 		}
 	}
 
@@ -176,4 +206,36 @@ func BanOrUnbanUser(c *gin.Context) {
 	config.DB.Save(&user)
 
 	c.JSON(http.StatusOK, gin.H{"banned": user.Banned})
+}
+
+// GetUserByIP searches for users by IP address (admin only)
+func GetUserByIP(c *gin.Context) {
+	ip := c.Query("ip")
+	if ip == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "IP address is required"})
+		return
+	}
+
+	var users []models.User
+	// Search for users whose IP addresses contain the specified IP
+	// Using JSON_EXTRACT or JSON_SEARCH for MySQL/SQLite compatibility
+	result := config.DB.Preload("Team").Where("ip_addresses LIKE ?", "%\""+ip+"\"%").Find(&users)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search users by IP"})
+		return
+	}
+
+	// Filter results to ensure exact IP match (since LIKE might have false positives)
+	var filteredUsers []models.User
+	for _, user := range users {
+		for _, userIP := range user.IPAddresses {
+			if userIP == ip {
+				filteredUsers = append(filteredUsers, user)
+				break
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, filteredUsers)
 }

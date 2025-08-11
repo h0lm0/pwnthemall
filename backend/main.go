@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	"pwnthemall/config"
 	"pwnthemall/controllers"
+	"pwnthemall/debug"
 	"pwnthemall/routes"
 
 	"github.com/gin-contrib/cors"
@@ -54,7 +54,7 @@ func main() {
 	router.Use(sessions.Sessions("pwnthemall", store))
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://pwnthemall.local"},
+		AllowOrigins:     []string{"https://pwnthemall.local", "https://demo.pwnthemall.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -75,12 +75,18 @@ func main() {
 	routes.RegisterDockerConfigRoutes(router)
 	routes.RegisterInstanceRoutes(router)
 	routes.RegisterNotificationRoutes(router)
+<<<<<<< HEAD
+	// Badges routes removed
+=======
 	routes.RegisterDecayFormulaRoutes(router)
+>>>>>>> feature/hint-firstblood
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
+	debug.Log("Starting server on port %s", port)
+	log.Printf("Server starting on port %s", port)
 	router.Run(":" + port)
 }

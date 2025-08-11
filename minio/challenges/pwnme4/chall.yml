@@ -6,6 +6,11 @@ difficulty: "medium"
 type: "standard"
 author: "crypto-master"
 hidden: false
+<<<<<<< HEAD
+points: 10
+ports: [8080, 22]
+connection_info: ["http://$ip:8080", "ssh -p 22 user@$ip"]
+=======
 flags:
   - "flag"
 points: 300
@@ -15,3 +20,4 @@ decayFormula:
   type: "linear"
   decayStep: 5
   minPoints: 50
+>>>>>>> feature/hint-firstblood

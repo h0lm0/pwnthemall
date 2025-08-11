@@ -37,11 +37,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useTheme } from "next-themes"
 import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from '@/context/LanguageContext'
 import { NotificationBell } from './NotificationBell'
@@ -57,33 +55,38 @@ export function NavUser({
   }
   onLogout: () => void
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile, open } = useSidebar()
   const { setTheme } = useTheme()
   const { loggedIn } = useAuth()
   const { t, language, setLanguage } = useLanguage();
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <AlertDialog>
+    <div className="p-2">
+      <AlertDialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            <button
+              className={cn(
+                "flex w-full items-center rounded-lg p-2 text-left text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground transition-all duration-200",
+                open ? "gap-2" : "justify-center"
+              )}
             >
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="h-8 w-8 rounded-lg flex-shrink-0">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback delayMs={600} className="rounded-lg">CN</AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                {loggedIn && user.email && (
-                  <span className="truncate text-xs">{user.email}</span>
-                )}
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
+              {open && (
+                <>
+                  <div className="grid flex-1 text-left text-sm leading-tight transition-all duration-200">
+                    <span className="truncate font-medium">{user.name}</span>
+                    {loggedIn && user.email && (
+                      <span className="truncate text-xs">{user.email}</span>
+                    )}
+                  </div>
+                  <ChevronsUpDown className="size-4 ml-auto transition-all duration-200" />
+                </>
+              )}
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
@@ -166,8 +169,7 @@ export function NavUser({
             <AlertDialogAction onClick={onLogout}>{t('logout')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-        </AlertDialog>
-      </SidebarMenuItem>
-    </SidebarMenu>
+      </AlertDialog>
+    </div>
   )
-}
+} 

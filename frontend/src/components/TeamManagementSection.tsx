@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Team } from "@/models/Team";
 import { User } from "@/models/User";
 import { Button } from "@/components/ui/button";
+// Removed style selector UI to keep only the classic table view
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -19,11 +20,8 @@ import axios from "@/lib/axios";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TrashIcon, UserCircleIcon, StarIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { CheckCircle } from 'lucide-react';
-import { Tooltip } from "@/components/ui/tooltip";
-import {
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+// import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface TeamManagementSectionProps {
   team: Team;
@@ -32,11 +30,8 @@ interface TeamManagementSectionProps {
   onTeamChange?: () => void;
 }
 
-export const TEAM_STYLES = [
-  { key: "classic", label: "Classic" },
-];
+// Only the classic view is kept. All themed variations removed.
 
-// Update TeamStyleViewProps to accept all handlers and dialog state
 interface TeamStyleViewProps {
   team: Team;
   members: User[];
@@ -69,186 +64,100 @@ interface TeamStyleViewProps {
   handleDisbandClick: () => void;
   onConfirmLeave: () => void;
   onConfirmDisband: () => void;
+  memberPointsMap?: Record<number, number>;
+  totalPoints?: number;
 }
 
 // --- TEAM STYLE COMPONENTS ---
 
-// Classic: Table style
+// Classic: Traditional table style
 function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, setTransferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
-  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband
+  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband, memberPointsMap, totalPoints
 }: TeamStyleViewProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border bg-background p-4">
-      <div className="font-bold mb-2">{team.name}</div>
-      {/* Global Disband Button for Leader */}
-      {isCreator && (
-        <div className="mb-4">
-          <Button
-            variant="destructive"
-            onClick={handleDisbandClick}
-            disabled={disbanding}
-          >
-            {t('disband_team')}
-          </Button>
+    <div className="rounded-lg border bg-background">
+      <div className="p-4 border-b">
+        <div className="flex justify-between items-center gap-3 flex-wrap">
+          <h3 className="font-bold text-lg">{team.name}</h3>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-full border bg-muted px-3 py-1">
+              <StarIcon className="w-4 h-4 text-yellow-400" />
+              <span className="font-semibold">{typeof totalPoints === 'number' ? totalPoints : 0}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">{t('points') || 'Points'}</span>
+            </div>
+            {isCreator && (
+              <Button variant="destructive" size="sm" onClick={handleDisbandClick} disabled={disbanding}>
+                {t('disband_team')}
+              </Button>
+            )}
+          </div>
         </div>
-      )}
-      <table className="min-w-full text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="py-2 px-3 text-left">Username</th>
-            <th className="py-2 px-3 text-left">Role</th>
-            <th className="py-2 px-3 text-left">Score</th>
-            <th className="py-2 px-3 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((m) => (
-            <tr key={m.id} className="border-b hover:bg-muted group">
-              <td className="py-2 px-3 flex items-center gap-2">
-                <Avatar className="transition-shadow group-hover:shadow-lg group-hover:ring-2 group-hover:ring-primary">
-                  <AvatarFallback>{m.username[0]}</AvatarFallback>
-                </Avatar>
-                <span>{m.username}</span>
-              </td>
-              <td className="py-2 px-3">
-                {m.id === team.creatorId ? <span className="text-yellow-500 font-bold">Creator</span> : "Member"}
-              </td>
-              <td className="py-2 px-3">
-                <span className="inline-flex items-center gap-1"><StarIcon className="w-4 h-4 text-yellow-400 inline" />0</span>
-              </td>
-              <td className="py-2 px-3 flex gap-2">
-                {isCreator && m.id !== currentUser.id && m.id !== team.creatorId && (
-                  <Button size="icon" variant="destructive" onClick={() => onKick(m)} disabled={kickLoading}>
-                    <TrashIcon className="w-5 h-5" />
-                  </Button>
-                )}
-                {isCreator && m.id !== team.creatorId && (
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="bg-white border border-gray-300 text-blue-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400"
-                    onClick={() => onTransfer(m)}
-                    disabled={transferring}
-                  >
-                    <UserGroupIcon className="w-5 h-5" />
-                  </Button>
-                )}
-                {/* Leave or Disband actions */}
-                {m.id === currentUser.id && (
-                  isCreator ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="bg-white border border-gray-300 text-red-600 opacity-50 cursor-not-allowed"
-                      disabled
-                      title={t('leader_cannot_leave')}
-                    >
-                      {t('leave')}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="bg-white border border-gray-300 text-red-600 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-400"
-                      onClick={handleLeaveClick}
-                      disabled={leaving}
-                    >
-                      {t('leave')}
-                    </Button>
-                  )
-                )}
-              </td>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-muted/50">
+            <tr>
+              <th className="py-3 px-4 text-left font-medium">Member</th>
+              <th className="py-3 px-4 text-left font-medium">Role</th>
+              <th className="py-3 px-4 text-left font-medium">Score</th>
+              <th className="py-3 px-4 text-right font-medium">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {/* Kick Dialog */}
-      <AlertDialog open={showKickDialog} onOpenChange={setShowKickDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('kick')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {kickTarget && t('team_kick_confirm', { username: kickTarget.username })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={onCancelKick}>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={onConfirmKick}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={kickLoading}
-            >
-              {t('kick')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {/* Transfer Dialog */}
-      <AlertDialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('transfer_ownership')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {transferTarget && t('choose_new_owner', { username: transferTarget.username })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={onCancelTransfer}>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={onConfirmTransfer}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={transferring}
-            >
-              {t('confirm')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {/* Leave Dialog */}
-      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('leave_team')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('team_leave_confirm')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowLeaveDialog(false)}>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={onConfirmLeave}
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-              disabled={leaving}
-            >
-              {t('leave')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {/* Disband Dialog */}
-      <AlertDialog open={showDisbandDialog} onOpenChange={setShowDisbandDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('disband_team')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('team_disband_confirm')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDisbandDialog(false)}>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={onConfirmDisband}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={disbanding}
-            >
-              {t('disband')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </thead>
+          <tbody>
+            {members.map((m, index) => (
+              <tr key={m.id} className={`border-b hover:bg-muted/30 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="text-sm">{m.username[0].toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{m.username}</span>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  {m.id === team.creatorId ? (
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                      Creator
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">Member</span>
+                  )}
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-1">
+                    <StarIcon className="w-4 h-4 text-yellow-400" />
+                    <span>{memberPointsMap?.[m.id] ?? m.points ?? 0}</span>
+                  </div>
+                </td>
+                <td className="py-3 px-4 text-right">
+                  <div className="flex gap-1 justify-end">
+                    {isCreator && m.id !== currentUser.id && m.id !== team.creatorId && (
+                      <Button size="icon" variant="destructive" onClick={() => onKick(m)} disabled={kickLoading}>
+                        <TrashIcon className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {isCreator && m.id !== team.creatorId && (
+                      <Button size="icon" variant="outline" onClick={() => onTransfer(m)} disabled={transferring}>
+                        <UserGroupIcon className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {m.id === currentUser.id && !isCreator && (
+                      <Button size="sm" variant="outline" onClick={handleLeaveClick} disabled={leaving}>
+                        {t('leave')}
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
+
+// All other themed views removed.
 
 export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ team, members, currentUser, onTeamChange }) => {
   const { t } = useLanguage();
@@ -267,7 +176,9 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const [showKickDialog, setShowKickDialog] = useState(false);
   const [kickTarget, setKickTarget] = useState<User | null>(null);
   const [transferTarget, setTransferTarget] = useState<User | null>(null);
-  const [activeStyle, setActiveStyle] = useState("classic");
+  // Points map fetched from backend; defaults to empty
+  const [memberPointsMap, setMemberPointsMap] = useState<Record<number, number>>({});
+  const [totalPoints, setTotalPoints] = useState<number>(0);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDisbandDialog, setShowDisbandDialog] = useState(false);
   const [showCreatorLeaveChoice, setShowCreatorLeaveChoice] = useState(false);
@@ -275,6 +186,53 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const isCreator = team.creatorId === currentUser.id;
   const otherMembers = members.filter(m => m.id !== currentUser.id);
   const isAlone = otherMembers.length === 0;
+
+  // Fetch enriched team info to get memberPoints (if available)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await axios.get(`/api/teams/${team.id}`);
+        const rawMp = res.data?.memberPoints as Record<string, number> | undefined;
+        if (!cancelled && rawMp) {
+          const normalized: Record<number, number> = {};
+          for (const [k, v] of Object.entries(rawMp)) {
+            const id = Number(k);
+            if (!Number.isNaN(id)) normalized[id] = typeof v === 'number' ? v : 0;
+          }
+          setMemberPointsMap(normalized);
+          const tp = typeof res.data?.totalPoints === 'number'
+            ? res.data.totalPoints
+            : Object.values(normalized).reduce((a, b) => a + (b || 0), 0);
+          setTotalPoints(tp);
+        } else if (!cancelled) {
+          setMemberPointsMap({});
+          setTotalPoints(0);
+        }
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [team.id]);
+
+  // Live update on team_solve websocket events
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (evt: Event) => {
+      const e = evt as CustomEvent;
+      const detail = e.detail || {};
+      const eventTeamId = detail.teamId as number | undefined;
+      const eventUserId = detail.userId as number | undefined;
+      const eventPoints = detail.points as number | undefined;
+      if (!eventTeamId || eventTeamId !== team.id) return;
+      if (typeof eventPoints !== 'number') return;
+      setTotalPoints((prev) => (prev || 0) + eventPoints);
+      if (typeof eventUserId === 'number') {
+        setMemberPointsMap((prev) => ({ ...prev, [eventUserId]: (prev?.[eventUserId] || 0) + eventPoints }));
+      }
+    };
+    window.addEventListener('team-solve' as any, handler as any);
+    return () => window.removeEventListener('team-solve' as any, handler as any);
+  }, [team.id]);
 
   const handleLeaveClick = () => {
     if (isCreator && otherMembers.length > 0) {
@@ -462,44 +420,134 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   const onConfirmTransfer = () => { if (transferTarget) handleTransferOnly(transferTarget.id); };
   const onCancelTransfer = () => { setTransferTarget(null); setShowTransferOnly(false); };
 
+  const renderTeamView = () => (
+    <ClassicTeamView
+      team={team}
+      members={members}
+      currentUser={currentUser}
+      isCreator={isCreator}
+      otherMembers={otherMembers}
+      onKick={onKick}
+      onTransfer={onTransfer}
+      kickTarget={kickTarget}
+      showKickDialog={showKickDialog}
+      setShowKickDialog={setShowKickDialog}
+      onConfirmKick={onConfirmKick}
+      onCancelKick={onCancelKick}
+      transferTarget={transferTarget}
+      setTransferTarget={setTransferTarget}
+      showTransferDialog={showTransferOnly}
+      setShowTransferDialog={setShowTransferOnly}
+      onConfirmTransfer={onConfirmTransfer}
+      onCancelTransfer={onCancelTransfer}
+      kickLoading={kickLoading}
+      transferring={transferring}
+      t={t}
+      showLeaveDialog={showLeaveDialog}
+      setShowLeaveDialog={setShowLeaveDialog}
+      showDisbandDialog={showDisbandDialog}
+      setShowDisbandDialog={setShowDisbandDialog}
+      leaving={leaving}
+      disbanding={disbanding}
+      handleLeaveClick={handleLeaveClick}
+      handleDisbandClick={handleDisbandClick}
+      onConfirmLeave={onConfirmLeave}
+      onConfirmDisband={onConfirmDisband}
+      memberPointsMap={memberPointsMap}
+  totalPoints={totalPoints}
+    />
+  );
+
   return (
     <div className="space-y-4">
-      {/* Removed style toggle button */}
-      {/* Only render ClassicTeamView */}
-      <ClassicTeamView
-        team={team}
-        members={members}
-        currentUser={currentUser}
-        isCreator={isCreator}
-        otherMembers={otherMembers}
-        onKick={onKick}
-        onTransfer={onTransfer}
-        kickTarget={kickTarget}
-        showKickDialog={showKickDialog}
-        setShowKickDialog={setShowKickDialog}
-        onConfirmKick={onConfirmKick}
-        onCancelKick={onCancelKick}
-        transferTarget={transferTarget}
-        setTransferTarget={setTransferTarget}
-        showTransferDialog={showTransferOnly}
-        setShowTransferDialog={setShowTransferOnly}
-        onConfirmTransfer={onConfirmTransfer}
-        onCancelTransfer={onCancelTransfer}
-        kickLoading={kickLoading}
-        transferring={transferring}
-        t={t}
-        showLeaveDialog={showLeaveDialog}
-        setShowLeaveDialog={setShowLeaveDialog}
-        showDisbandDialog={showDisbandDialog}
-        setShowDisbandDialog={setShowDisbandDialog}
-        leaving={leaving}
-        disbanding={disbanding}
-        handleLeaveClick={handleLeaveClick}
-        handleDisbandClick={handleDisbandClick}
-        onConfirmLeave={onConfirmLeave}
-        onConfirmDisband={onConfirmDisband}
-      />
-      {/* Creator leave choice dialog */}
+      {/* Team View */}
+      {renderTeamView()}
+
+      {/* All the dialogs */}
+      <AlertDialog open={showKickDialog} onOpenChange={setShowKickDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('kick')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {kickTarget && t('team_kick_confirm', { username: kickTarget.username })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={onCancelKick}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onConfirmKick}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={kickLoading}
+            >
+              {t('kick')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showTransferOnly} onOpenChange={setShowTransferOnly}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('transfer_ownership')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {transferTarget && t('choose_new_owner', { username: transferTarget.username })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={onCancelTransfer}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onConfirmTransfer}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={transferring}
+            >
+              {t('confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('leave_team')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('team_leave_confirm')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowLeaveDialog(false)}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onConfirmLeave}
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              disabled={leaving}
+            >
+              {t('leave')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDisbandDialog} onOpenChange={setShowDisbandDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('disband_team')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('team_disband_confirm')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDisbandDialog(false)}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onConfirmDisband}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={disbanding}
+            >
+              {t('disband')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={showCreatorLeaveChoice} onOpenChange={setShowCreatorLeaveChoice}>
         <AlertDialogContent>
           <AlertDialogHeader>

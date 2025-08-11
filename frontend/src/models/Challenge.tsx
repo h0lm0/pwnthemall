@@ -21,6 +21,10 @@ export interface Challenge {
   author: string
   hidden?: boolean
   solved?: boolean
+<<<<<<< HEAD
+  ports?: number[]
+  connectionInfo?: string[]
+=======
   points?: number
   enableFirstBlood?: boolean
   firstBloodBonus?: number
@@ -38,6 +42,7 @@ export interface Challenge {
     cost: number
     challengeId: number
   }[]
+>>>>>>> feature/hint-firstblood
 }
 
 export interface Solve {

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
+import { CTFStatus } from "@/hooks/use-ctf-status";
 import { Challenge, Solve } from "@/models/Challenge";
-import { BadgeCheck, Trophy, Play, Square, Settings } from "lucide-react";
+import { BadgeCheck, Trophy, Play, Square, Settings, Clock } from "lucide-react";
+import ConnectionInfo from "@/components/ConnectionInfo";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
 import Head from "next/head";
@@ -25,14 +27,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInstances } from "@/hooks/use-instances";
+import { debugError } from "@/lib/debug";
+import type { User } from "@/models/User";
 
 interface CategoryContentProps {
   cat: string;
   challenges: Challenge[];
   onChallengeUpdate?: () => void;
+  ctfStatus: CTFStatus;
+  ctfLoading: boolean;
 }
 
-const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryContentProps) => {
+const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, ctfLoading }: CategoryContentProps) => {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [flag, setFlag] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,6 +48,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const [activeTab, setActiveTab] = useState("description");
   const [instanceStatus, setInstanceStatus] = useState<{[key: number]: 'running' | 'stopped' | 'building' | 'expired'}>({});
   const [instanceDetails, setInstanceDetails] = useState<{[key: number]: any}>({});
+  const [connectionInfo, setConnectionInfo] = useState<{[key: number]: string[]}>({});
+  const [instanceOwner, setInstanceOwner] = useState<{[key: number]: { userId: number; username?: string } }>({});
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { getSiteName } = useSiteConfig();
   const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
 
@@ -56,7 +65,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
       
       for (const challenge of dockerChallenges) {
         try {
-          const status = await fetchInstanceStatus(challenge.id);
+          const status = await fetchInstanceStatus(challenge.id.toString());
           if (status) {
             // Map API status to local status
             let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
@@ -75,9 +84,22 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
               ...prev,
               [challenge.id]: localStatus
             }));
+
+            // Store connection info if available
+            if (status.connection_info && status.connection_info.length > 0) {
+              setConnectionInfo(prev => ({
+                ...prev,
+                [challenge.id]: status.connection_info
+              }));
+            } else {
+              setConnectionInfo(prev => ({
+                ...prev,
+                [challenge.id]: []
+              }));
+            }
           }
         } catch (error) {
-          console.error(`Failed to fetch status for challenge ${challenge.id}:`, error);
+          debugError(`Failed to fetch status for challenge ${challenge.id}:`, error);
         }
       }
       setStatusFetched(true);
@@ -86,6 +108,57 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
     fetchAllInstanceStatuses();
   }, [challenges.length, statusFetched]); // Only run once when challenges load
 
+  // Real-time: listen to instance updates over WebSocket
+  useEffect(() => {
+    const handler = (e: any) => {
+      const data = e?.detail || e?.data;
+      if (!data || data.event !== 'instance_update') return;
+
+      const challengeId = Number(data.challengeId);
+      if (!challengeId) return;
+
+      // Update status
+      let newStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+      if (data.status === 'running') newStatus = 'running';
+      else if (data.status === 'building') newStatus = 'building';
+      else if (data.status === 'expired') newStatus = 'expired';
+
+      setInstanceStatus(prev => ({ ...prev, [challengeId]: newStatus }));
+
+      // Update connection info when running
+      if (newStatus === 'running' && Array.isArray(data.connectionInfo)) {
+        setConnectionInfo(prev => ({ ...prev, [challengeId]: data.connectionInfo }));
+      }
+      if (newStatus !== 'running') {
+        setConnectionInfo(prev => ({ ...prev, [challengeId]: [] }));
+      }
+
+      // Track instance owner from event payload
+      if (newStatus === 'running' && (typeof data.userId === 'number' || typeof data.userId === 'string')) {
+        const ownerId = Number(data.userId);
+        setInstanceOwner(prev => ({
+          ...prev,
+          [challengeId]: { userId: ownerId, username: data.username }
+        }));
+      } else if (newStatus !== 'running') {
+        setInstanceOwner(prev => {
+          const copy = { ...prev } as any;
+          delete copy[challengeId];
+          return copy;
+        });
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('instance-update', handler as EventListener);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('instance-update', handler as EventListener);
+      }
+    };
+  }, []);
+
   // Clear solves data when dialog opens/closes
   useEffect(() => {
     if (!open) {
@@ -93,6 +166,17 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
       setSolvesLoading(false);
     }
   }, [open]);
+
+  // Fetch current user (for ownership checks)
+  useEffect(() => {
+    let mounted = true;
+    axios.get<User>("/api/me").then((res) => {
+      if (mounted) setCurrentUser(res.data as User);
+    }).catch(() => {
+      // ignore
+    });
+    return () => { mounted = false };
+  }, []);
 
   const handleSubmit = async () => {
     if (!selectedChallenge) return;
@@ -108,6 +192,15 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
       // Refresh solves after successful submission
       if (selectedChallenge) {
         fetchSolves(selectedChallenge.id);
+        // Also stop any running instance for this challenge (best-effort UX)
+        try {
+          if (getLocalInstanceStatus(selectedChallenge.id) === 'running') {
+            await stopInstance(selectedChallenge.id.toString());
+            setInstanceStatus(prev => ({ ...prev, [selectedChallenge.id]: 'stopped' }));
+            // Show a local toast only to the solver about the instance being stopped
+            toast.success(t('instance_stopped_success') || 'Instance stopped successfully');
+          }
+        } catch {}
       }
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;
@@ -120,7 +213,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
   const fetchSolves = async (challengeId: number) => {
     if (!Number.isInteger(challengeId) || challengeId <= 0) {
-      console.error('Invalid challenge ID provided to fetchSolves');
+      debugError('Invalid challenge ID provided to fetchSolves');
       setSolves([]);
       setSolvesLoading(false);
       return;
@@ -136,7 +229,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
       });
       setSolves(response.data || []);
     } catch (err: any) {
-      console.error('Failed to fetch solves:', err);
+      debugError('Failed to fetch solves:', err);
       setSolves([]);
     } finally {
       setSolvesLoading(false);
@@ -165,7 +258,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
         minute: '2-digit'
       });
     } catch (error) {
-      console.error('Error formatting date:', error);
+      debugError('Error formatting date:', error);
       return 'Invalid date';
     }
   };
@@ -173,9 +266,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
   const handleStartInstance = async (challengeId: number) => {
     try {
       setInstanceStatus(prev => ({ ...prev, [challengeId]: 'building' }));
-      await startInstance(challengeId);
+      await startInstance(challengeId.toString());
       // Fetch the actual status from backend after starting
-      const status = await fetchInstanceStatus(challengeId);
+      const status = await fetchInstanceStatus(challengeId.toString());
       if (status) {
         let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'running';
         if (status.status === 'running') {
@@ -188,6 +281,19 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
           localStatus = 'stopped';
         }
         setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
+
+        // Store connection info if available
+        if (status.connection_info && status.connection_info.length > 0) {
+          setConnectionInfo(prev => ({
+            ...prev,
+            [challengeId]: status.connection_info
+          }));
+        } else {
+          setConnectionInfo(prev => ({
+            ...prev,
+            [challengeId]: []
+          }));
+        }
       } else {
         setInstanceStatus(prev => ({ ...prev, [challengeId]: 'running' }));
       }
@@ -198,14 +304,24 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
   const handleStopInstance = async (challengeId: number) => {
     try {
-      await stopInstance(challengeId);
+      // If we know the owner and it's not the current user (and not admin), show localized toast and abort
+      const owner = instanceOwner[challengeId];
+      if (owner && currentUser && owner.userId !== currentUser.id && currentUser.role !== 'admin') {
+        const ownerName = owner.username || t('a_teammate');
+        const key = 'cannot_stop_instance_not_owner';
+        const translated = t(key, { username: ownerName });
+        toast.error(translated !== key ? translated : `You can't stop this instance because it was started by ${ownerName}.`);
+        return;
+      }
+
+      await stopInstance(challengeId.toString());
       // Immediately set status to stopped for better UX
       setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
       
       // Wait a moment for backend to process, then verify status
       setTimeout(async () => {
         try {
-          const status = await fetchInstanceStatus(challengeId);
+          const status = await fetchInstanceStatus(challengeId.toString());
           if (status) {
             let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
             if (status.status === 'running') {
@@ -220,11 +336,24 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
             setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
           }
         } catch (error) {
-          console.error('Failed to verify status after stopping:', error);
+          debugError('Failed to verify status after stopping:', error);
         }
       }, 1000); // Wait 1 second before verifying
-    } catch (error) {
-      // Keep current status on error
+    } catch (error: any) {
+      // If backend denies or not found while we think it's running, assume non-owner attempt
+      const errCode = error?.response?.data?.error;
+      const httpStatus = error?.response?.status;
+      if (
+        (errCode === 'not_authorized' || errCode === 'forbidden' || errCode === 'instance_not_found') &&
+        getLocalInstanceStatus(challengeId) === 'running'
+      ) {
+        const owner = instanceOwner[challengeId];
+        const ownerName = owner?.username || t('a_teammate');
+        const key = 'cannot_stop_instance_not_owner';
+        const translated = t(key, { username: ownerName });
+        toast.error(translated !== key ? translated : `You can't stop this instance because it was started by ${ownerName}.`);
+      }
+      // Keep current status on error otherwise
     }
   };
 
@@ -358,7 +487,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
 
             <div className="flex-1 flex flex-col min-h-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-                <TabsList className={`grid w-full mb-4 flex-shrink-0 ${
+                <TabsList className={`grid w-full mb-4 flex-shrink-0 bg-card border rounded-lg p-1 ${
                   selectedChallenge && isDockerChallenge(selectedChallenge) 
                     ? 'grid-cols-3' 
                     : 'grid-cols-2'
@@ -447,70 +576,51 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                         <TabsContent value="instance" className="h-full overflow-y-auto">
                           <div className="min-h-full">
                             <div className="space-y-4">
-                              <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-foreground">
-                                  {t('docker_instance')}
-                                </h3>
-                                <Badge 
-                                  variant="secondary" 
-                                  className={`${
-                                                                getLocalInstanceStatus(selectedChallenge.id) === 'running'
-                              ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400'
-                              : getLocalInstanceStatus(selectedChallenge.id) === 'building'
-                                      ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
-                                      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
-                                  }`}
-                                >
-                                                            {getLocalInstanceStatus(selectedChallenge.id) === 'running' ? t('running') :
-                           getLocalInstanceStatus(selectedChallenge.id) === 'building' ? t('building') : t('stopped')}
-                                </Badge>
-                              </div>
-                              
                               <div className="p-4 rounded-lg border bg-card">
                                 <div className="space-y-3">
                                   <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium text-foreground">{t('instance_status')}:</span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {getLocalInstanceStatus(selectedChallenge.id) === 'running' ? t('instance_running') : 
-                                       getLocalInstanceStatus(selectedChallenge.id) === 'building' ? t('instance_building') : 
-                                       t('instance_stopped')}
-                                    </span>
-                                                                    </div>
-                                  
-                                  {getLocalInstanceStatus(selectedChallenge.id) === 'running' && (
-                                     <div className="p-3 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg">
-                                       <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
-                                         <Play className="w-4 h-4" />
-                                         <span className="font-medium">{t('instance_active')}</span>
-                                       </div>
-                                       <p className="text-sm text-green-600 dark:text-green-400">
-                                         {t('instance_active_description')}
-                                       </p>
-                                     </div>
-                                                                     )}
-                                  
-                                  {getLocalInstanceStatus(selectedChallenge.id) === 'building' && (
-                                     <div className="p-3 bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                       <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300 mb-2">
-                                         <Settings className="w-4 h-4 animate-spin" />
-                                         <span className="font-medium">{t('building_image')}</span>
-                                       </div>
-                                       <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                                         {t('building_image_description')}
-                                       </p>
-                                     </div>
-                                                                     )}
-                                  
-                                  {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
-                                     <div className="p-3 bg-gray-50 dark:bg-gray-950/50 border border-gray-200 dark:border-gray-800 rounded-lg">
-                                       <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-2">
-                                         <Square className="w-4 h-4" />
-                                         <span className="font-medium">{t('instance_stopped_title')}</span>
-                                       </div>
-                                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                                         {t('instance_stopped_description')}
-                                       </p>
-                                     </div>
+                                    <div className="flex items-center gap-2">
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'running' && (
+                                        <>
+                                          <Play className="w-4 h-4 text-green-600" />
+                                          <span className="text-sm font-medium text-green-600">{t('running')}</span>
+                                        </>
+                                      )}
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'building' && (
+                                        <>
+                                          <Settings className="w-4 h-4 text-yellow-600 animate-spin" />
+                                          <span className="text-sm font-medium text-yellow-600">{t('building')}</span>
+                                        </>
+                                      )}
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'expired' && (
+                                        <>
+                                          <Square className="w-4 h-4 text-red-600" />
+                                          <span className="text-sm font-medium text-red-600">{t('expired')}</span>
+                                        </>
+                                      )}
+                                      {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
+                                        <>
+                                          <Square className="w-4 h-4 text-gray-600" />
+                                          <span className="text-sm font-medium text-gray-600">{t('stopped')}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Connection Info Section */}
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'running' && instanceOwner[selectedChallenge.id] && (
+                                    <div className="text-sm text-muted-foreground">
+                                      {t('instance_started_by_user', { username: instanceOwner[selectedChallenge.id]?.username || t('a_teammate') })}
+                                    </div>
+                                  )}
+                                  {getLocalInstanceStatus(selectedChallenge.id) === 'running' && 
+                                   connectionInfo[selectedChallenge.id] && 
+                                   connectionInfo[selectedChallenge.id].length > 0 && (
+                                     <ConnectionInfo 
+                                       challengeId={selectedChallenge.id} 
+                                       connectionInfo={connectionInfo[selectedChallenge.id]} 
+                                     />
                                    )}
                                 </div>
                               </div>
@@ -573,6 +683,24 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate }: CategoryCo
                       </div>
                       <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                         {t('challenge_already_solved')}
+                      </p>
+                    </div>
+                  ) : !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') ? (
+                    <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-lg flex-shrink-0">
+                      <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
+                        <Clock className="w-5 h-5" />
+                        <span className="font-medium">
+                          {ctfStatus.status === 'not_started' 
+                            ? (t('ctf_not_started') || 'CTF Not Started')
+                            : (t('ctf_ended') || 'CTF Ended')
+                          }
+                        </span>
+                      </div>
+                      <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                        {ctfStatus.status === 'not_started' 
+                          ? (t('flag_submission_not_available_yet') || 'Flag submission is not available yet. Please wait for the CTF to start.')
+                          : (t('flag_submission_no_longer_available') || 'Flag submission is no longer available. The CTF has ended.')
+                        }
                       </p>
                     </div>
                   ) : (

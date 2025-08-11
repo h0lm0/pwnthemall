@@ -6,10 +6,16 @@ meta {
 
 post {
   url: {{URL}}/api/challenges/:id/submit
-  body: none
+  body: json
   auth: inherit
 }
 
 params:path {
-  id: 
+  id: 6
+}
+
+body:json {
+  {
+    "flag": "flag"
+  }
 }

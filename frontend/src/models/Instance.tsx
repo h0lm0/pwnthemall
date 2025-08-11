@@ -16,4 +16,5 @@ export interface InstanceResponse {
   status: string
   image_name: string
   container_name: string
+  connection_info?: string[]
 } 

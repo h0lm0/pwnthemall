@@ -12,10 +12,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -24,7 +20,10 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
+
 import { useChallengeCategories } from "@/hooks/use-challenge-categories";
+import { useDraggableCategories } from "@/hooks/use-draggable-categories";
+import { useCTFStatus } from "@/hooks/use-ctf-status";
 import type { NavItem } from "@/models/NavItem";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
@@ -33,7 +32,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { getSiteName, siteConfig } = useSiteConfig();
   const router = useRouter();
   const { isMobile } = useSidebar();
-  const { categories, loading } = useChallengeCategories(loggedIn);
+  const { categories, loading, reorderCategories } = useDraggableCategories(loggedIn);
+  const { ctfStatus, loading: ctfLoading } = useCTFStatus();
 
   const [userData, setUserData] = React.useState({
     name: "",
@@ -83,6 +83,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const navItems = React.useMemo(() => {
     if (!authChecked) return [];
     const items: NavItem[] = [];
+    
+    // Only show pwn section if CTF has started (active, ended, no timing, or still loading CTF status)
+    const shouldShowPwn = ctfLoading || ctfStatus.status !== 'not_started';
+    
+    if (loggedIn && shouldShowPwn) {
     let pwnSubItems;
     if (loading) {
       pwnSubItems = [{ title: t('loading'), url: "#" }];
@@ -94,20 +99,30 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         url: `/pwn/${cat.name}`,
       }));
     }
-    if (loggedIn) {
+      
       items.push({
         title: t('pwn'),
         url: "/pwn",
         icon: Swords,
         isActive: router.pathname.startsWith("/pwn"),
         items: pwnSubItems,
+        draggableItems: loading ? undefined : categories,
+        onReorderItems: reorderCategories,
       });
+    }
+    
+    if (loggedIn) {
+      // Only show scoreboard if CTF has started (active, ended, or no timing)
+      const shouldShowScoreboard = ctfLoading || ctfStatus.status !== 'not_started';
+      
+      if (shouldShowScoreboard) {
       items.push({
         title: t('scoreboard'),
         url: "/scoreboard",
         icon: List,
         isActive: router.pathname === "/scoreboard",
       });
+      }
       if (userData.role === "admin") {
         items.push({
           title: t('administration'),
@@ -149,7 +164,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       }
     }
     return items;
-  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, t, siteConfig.REGISTRATION_ENABLED]);
+  }, [authChecked, loggedIn, router.pathname, userData.role, categories, loading, reorderCategories, t, siteConfig.REGISTRATION_ENABLED, ctfLoading, ctfStatus.status]);
 
   return (
     <Sidebar
