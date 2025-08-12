@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { FirstBloodManager } from "./FirstBloodManager"
+import { ChallengeCategory } from "@/models/ChallengeCategory"
 
 interface ChallengeAdminFormProps {
   challenge: Challenge
@@ -47,6 +48,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const [loading, setLoading] = useState(false)
   const [generalLoading, setGeneralLoading] = useState(false)
   const [decayFormulas, setDecayFormulas] = useState<DecayFormula[]>([])
+  const [challengeCategories, setChallengeCategories] = useState<ChallengeCategory[]>([])
   const [formData, setFormData] = useState({
     points: challenge.points || 0,
     enableFirstBlood: challenge.enableFirstBlood || false,
@@ -73,11 +75,13 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     description: challenge.description || "",
     author: challenge.author || "",
     hidden: challenge.hidden || false,
+    categoryId: challenge.categoryId || 1,
   })
   const [newHint, setNewHint] = useState({ content: "", cost: 0 })
 
   useEffect(() => {
     fetchDecayFormulas()
+    fetchChallengeCategories()
   }, [])
 
   const fetchDecayFormulas = async () => {
@@ -96,6 +100,15 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       setDecayFormulas(validFormulas)
     } catch (error) {
       console.error("Failed to fetch decay formulas:", error)
+    }
+  }
+
+  const fetchChallengeCategories = async () => {
+    try {
+      const response = await axios.get("/api/challenge-categories")
+      setChallengeCategories(response.data)
+    } catch (error) {
+      console.error("Failed to fetch challenge categories:", error)
     }
   }
 
@@ -229,6 +242,25 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                   onChange={(e) => setGeneralData(prev => ({ ...prev, author: e.target.value }))}
                   placeholder="Enter author name"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={generalData.categoryId?.toString() || ""}
+                  onValueChange={(value) => setGeneralData(prev => ({ ...prev, categoryId: parseInt(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {challengeCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center justify-between">

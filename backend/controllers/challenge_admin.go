@@ -24,6 +24,7 @@ type ChallengeGeneralUpdateRequest struct {
 	Description string `json:"description"`
 	Author      string `json:"author"`
 	Hidden      bool   `json:"hidden"`
+	CategoryID  uint   `json:"categoryId"`
 }
 
 type HintRequest struct {
@@ -163,6 +164,7 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	challenge.Description = req.Description
 	challenge.Author = req.Author
 	challenge.Hidden = req.Hidden
+	challenge.ChallengeCategoryID = req.CategoryID
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update challenge"})
