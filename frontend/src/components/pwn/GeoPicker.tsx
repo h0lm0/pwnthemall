@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 type GeoPickerProps = {
   value?: { lat: number; lng: number } | null;
   onChange: (coords: { lat: number; lng: number }) => void;
-  height?: number;
+  height?: number | string;
   radiusKm?: number | null;
 };
 
@@ -213,7 +213,14 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
   }, [radiusKm]);
 
   return (
-    <div style={{ width: "100%" }}>
+    <div
+      style={{
+        width: "100%",
+        height: typeof height === 'number' ? `${height}px` : height,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <div style={{ marginBottom: 8 }}>
         <Input
           value={query}
@@ -261,9 +268,18 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
           </div>
         )}
       </div>
-      <div
+    <div
         ref={mapRef}
-        style={{ height, width: "100%", borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)" }}
+        style={{
+      flex: 1,
+      minHeight: 200,
+          width: "100%",
+          borderRadius: 8,
+          overflow: "hidden",
+          border: "1px solid var(--border)",
+          position: "relative",
+          zIndex: 0, // isolate Leaflet panes under sibling overlays
+        }}
       />
     </div>
   );

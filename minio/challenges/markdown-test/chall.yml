@@ -1,0 +1,52 @@
+name: "Markdown Test"
+description: |
+  # Titre
+  le **markdown** c'est bien.
+
+  ## Sous-titre
+
+  - listes
+  - `coucou c'est moi le code`
+
+  ```bash
+  echo "hello"
+  ```
+  # Titre
+  le **markdown** c'est bien.
+
+  ## Sous-titre
+
+  - listes
+  - `coucou c'est moi le code`
+
+  ```bash
+  echo "hello"
+  ```
+  # Titre
+  le **markdown** c'est bien.
+
+  ## Sous-titre
+
+  - listes
+  - `coucou c'est moi le code`
+
+  ```bash
+  echo "hello"
+  ```
+
+  Lien -> [GitHub](https://github.com)
+
+  | test | **test** |
+  |---------|--------|
+  | Sympa     | Yes    |
+  | Cool  | Yes    |
+
+  GLHF
+category: "misc"
+difficulty: "easy"
+type: "standard"
+author: "swinowz"
+hidden: false
+flags: ["flag"]
+points: 123
+
