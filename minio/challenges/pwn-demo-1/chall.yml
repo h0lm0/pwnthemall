@@ -1,0 +1,12 @@
+touch name: "Demo 01"
+description: |
+  Standard challenge example
+
+  Make a team and enter the flag "PwnThatDemo" to solve it !
+category: "pwn"
+difficulty: "easy"
+type: "standard"
+author: "H0lm0"
+hidden: false
+flags: ["PwnThatDemo"]
+points: 123
