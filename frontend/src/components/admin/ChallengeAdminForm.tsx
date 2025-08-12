@@ -29,7 +29,6 @@ interface DecayFormula {
   name: string
   step: number
   minPoints: number
-  maxDecay: number
 }
 
 interface Hint {
