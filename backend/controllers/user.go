@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -95,6 +96,15 @@ func UpdateUser(c *gin.Context) {
 	user.Username = input.Username
 	user.Email = input.Email
 	user.Role = input.Role
+	// Update password only if provided, and hash it
+	if strings.TrimSpace(input.Password) != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+		user.Password = string(hashedPassword)
+	}
 	config.DB.Save(&user)
 
 	c.JSON(http.StatusOK, user)

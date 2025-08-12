@@ -3,7 +3,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { CTFStatus } from "@/hooks/use-ctf-status";
 import { Challenge, Solve } from "@/models/Challenge";
-import { BadgeCheck, Trophy, Play, Square, Settings, Clock } from "lucide-react";
+import { BadgeCheck, Trophy, Play, Square, Settings, Clock, Star } from "lucide-react";
 import ConnectionInfo from "@/components/ConnectionInfo";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
@@ -30,6 +30,8 @@ import GeoPicker from "./GeoPicker";
 import { useInstances } from "@/hooks/use-instances";
 import { debugError } from "@/lib/debug";
 import type { User } from "@/models/User";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface CategoryContentProps {
   cat: string;
@@ -423,12 +425,26 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   : ''
               }`}
             >
+              {/* Solved check (moved to top-left to avoid overlap with points badge) */}
               {challenge.solved && (
-                <div className="absolute top-2 right-2">
+                <div className="absolute top-2 left-2">
                   <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
               )}
-              <CardHeader>
+
+              {/* Points badge at top-right, compact so it doesn't overlap the title */}
+              {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
+                <div className="absolute top-2 right-2 z-10 pointer-events-none select-none">
+                  <div className="flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 shadow-sm">
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    <span className="text-sm font-semibold leading-none">
+                      {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points}
+                    </span>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide leading-none">{t('points') || 'Points'}</span>
+                  </div>
+                </div>
+              )}
+              <CardHeader className="px-4 pt-10 pb-2">
                 <CardTitle className={`${
                   challenge.solved 
                     ? 'text-green-700 dark:text-green-200' 
@@ -437,12 +453,18 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-left">
+              <CardContent className="text-left p-4 pt-10 pb-3">
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
+                  >
                     {challenge.type?.name || 'Unknown Type'}
                   </Badge>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
+                  >
                     {challenge.difficulty?.name || 'Unknown Difficulty'}
                   </Badge>
                   {isDockerChallenge(challenge) && (
@@ -464,17 +486,26 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     </Badge>
                   )}
                   {challenge.hints && challenge.hints.length > 0 && (
-                    <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-blue-200 dark:bg-blue-900 text-blue-900 dark:text-blue-200 border border-blue-400 dark:border-blue-600 pointer-events-none select-none"
+                    >
                       {challenge.hints.length} {challenge.hints.length === 1 ? t('hint') : t('hints')}
                     </Badge>
                   )}
                   {challenge.solved && (
-                    <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none"
+                    >
                       {t('solved')}
                     </Badge>
                   )}
                   {!challenge.solved && (
-                    <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
+                    >
                       {t('unsolved')}
                     </Badge>
                   )}
@@ -504,7 +535,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
 
             <div className="flex-1 flex flex-col min-h-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-                <TabsList className={`grid w-full mb-4 flex-shrink-0 bg-card border rounded-lg p-1 ${
+                <TabsList className={`grid w-full mb-4 flex-shrink-0 bg-card border rounded-lg p-1 relative z-[1200] ${
                   selectedChallenge && isDockerChallenge(selectedChallenge) 
                     ? 'grid-cols-3' 
                     : 'grid-cols-2'
@@ -516,14 +547,127 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   )}
                 </TabsList>
                     
-                    <div className="flex-1 min-h-0">
-                      <TabsContent value="description" className="h-full overflow-y-auto">
-                        <div className="text-left whitespace-pre-wrap text-foreground leading-relaxed min-h-full">
-                          {selectedChallenge?.description || 'No description available'}
+                    <div className="flex-1 min-h-0 relative overflow-hidden z-[1100] min-h-[30vh]">
+                      {/* Tab Panels: absolutely positioned & independently scrollable */}
+                      <TabsContent value="description" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
+                        <div className="text-left text-foreground leading-relaxed min-h-full">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              a: (props: any) => (
+                                <a
+                                  {...props}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline text-cyan-700 dark:text-cyan-300 hover:text-cyan-800 dark:hover:text-cyan-200"
+                                />
+                              ),
+                              code: (props: any) => (
+                                <code
+                                  className={`rounded px-1.5 py-0.5 bg-muted text-foreground ${props.className || ''}`}
+                                  {...props}
+                                >
+                                  {props.children}
+                                </code>
+                              ),
+                              pre: (props: any) => (
+                                <pre className="p-3 rounded-md bg-muted overflow-x-auto border">
+                                  {props.children}
+                                </pre>
+                              ),
+                              ul: (props: any) => (
+                                <ul className="list-disc ml-6 space-y-1" {...props}>{props.children}</ul>
+                              ),
+                              ol: (props: any) => (
+                                <ol className="list-decimal ml-6 space-y-1" {...props}>{props.children}</ol>
+                              ),
+                              h1: (props: any) => <h1 className="text-2xl font-bold mt-2 mb-2" {...props} />,
+                              h2: (props: any) => <h2 className="text-xl font-semibold mt-2 mb-2" {...props} />,
+                              h3: (props: any) => <h3 className="text-lg font-semibold mt-2 mb-2" {...props} />,
+                              p: (props: any) => <p className="mb-2" {...props} />,
+                              table: (props: any) => (
+                                <div className="overflow-x-auto my-3">
+                                  <table className="w-full text-sm border border-border rounded-md" {...props} />
+                                </div>
+                              ),
+                              thead: (props: any) => (
+                                <thead className="bg-muted/50" {...props} />
+                              ),
+                              tbody: (props: any) => <tbody {...props} />,
+                              tr: (props: any) => (
+                                <tr className="border-b last:border-0" {...props} />
+                              ),
+                              th: (props: any) => (
+                                <th className="text-left font-semibold px-3 py-2 border-r last:border-r-0" {...props} />
+                              ),
+                              td: (props: any) => (
+                                <td className="px-3 py-2 align-top border-r last:border-r-0" {...props} />
+                              ),
+                            }}
+                          >
+                            {selectedChallenge?.description || 'No description available'}
+                          </ReactMarkdown>
+
+                          {/* Submission / Interaction area within Description tab */}
+                          {selectedChallenge?.solved ? (
+                            <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg">
+                              <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                                <BadgeCheck className="w-5 h-5" />
+                                <span className="font-medium">{t('already_solved')}</span>
+                              </div>
+                              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                                {t('challenge_already_solved')}
+                              </p>
+                            </div>
+                          ) : !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') ? (
+                            <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-lg">
+                              <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
+                                <Clock className="w-5 h-5" />
+                                <span className="font-medium">
+                                  {ctfStatus.status === 'not_started' 
+                                    ? (t('ctf_not_started') || 'CTF Not Started')
+                                    : (t('ctf_ended') || 'CTF Ended')}
+                                </span>
+                              </div>
+                              <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                                {ctfStatus.status === 'not_started' 
+                                  ? (t('flag_submission_not_available_yet') || 'Flag submission is not available yet. Please wait for the CTF to start.')
+                                  : (t('flag_submission_no_longer_available') || 'Flag submission is no longer available. The CTF has ended.')}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="mt-4 flex flex-col gap-4 pb-2">
+                              {selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? (
+                                <div className="w-full" style={{ height: '40vh', maxHeight: 420 }}>
+                                  <GeoPicker value={geoCoords} onChange={setGeoCoords} height={'100%'} radiusKm={selectedChallenge?.geoRadiusKm ?? null} />
+                                </div>
+                              ) : (
+                                <Input
+                                  placeholder={t('enter_your_flag')}
+                                  value={flag}
+                                  onChange={(e) => setFlag(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && flag.trim()) {
+                                      handleSubmit();
+                                    }
+                                  }}
+                                  className="w-full"
+                                  disabled={loading}
+                                />
+                              )}
+                              <Button
+                                onClick={handleSubmit}
+                                disabled={loading || (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim())}
+                                className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
+                              >
+                                {loading ? t('submitting') : t('submit')}
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </TabsContent>
                       
-                      <TabsContent value="solves" className="h-full overflow-y-auto">
+                      <TabsContent value="solves" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
                         <div className="min-h-full">
                           {solvesLoading ? (
                             <div className="text-center py-8">
@@ -590,7 +734,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                       </TabsContent>
 
                       {selectedChallenge && isDockerChallenge(selectedChallenge) && (
-                        <TabsContent value="instance" className="h-full overflow-y-auto">
+                        <TabsContent value="instance" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
                           <div className="min-h-full">
                             <div className="space-y-4">
                               <div className="p-4 rounded-lg border bg-card">
@@ -691,65 +835,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   </Tabs>
                 </div>
 
-                {activeTab === "description" && (
-                  selectedChallenge?.solved ? (
-                    <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg flex-shrink-0">
-                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                        <BadgeCheck className="w-5 h-5" />
-                        <span className="font-medium">{t('already_solved')}</span>
-                      </div>
-                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                        {t('challenge_already_solved')}
-                      </p>
-                    </div>
-                  ) : !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') ? (
-                    <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-lg flex-shrink-0">
-                      <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
-                        <Clock className="w-5 h-5" />
-                        <span className="font-medium">
-                          {ctfStatus.status === 'not_started' 
-                            ? (t('ctf_not_started') || 'CTF Not Started')
-                            : (t('ctf_ended') || 'CTF Ended')
-                          }
-                        </span>
-                      </div>
-                      <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
-                        {ctfStatus.status === 'not_started' 
-                          ? (t('flag_submission_not_available_yet') || 'Flag submission is not available yet. Please wait for the CTF to start.')
-                          : (t('flag_submission_no_longer_available') || 'Flag submission is no longer available. The CTF has ended.')
-                        }
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="mt-4 flex flex-col gap-4 flex-shrink-0 pb-2">
-                       {selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? (
-                         <div className="w-full" style={{ height: '380px' }}>
-                           <GeoPicker value={geoCoords} onChange={setGeoCoords} height={380} radiusKm={selectedChallenge?.geoRadiusKm ?? null} />
-                         </div>
-                       ) : (
-                        <Input
-                          placeholder={t('enter_your_flag')}
-                          value={flag}
-                          onChange={(e) => setFlag(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && flag.trim()) {
-                              handleSubmit();
-                            }
-                          }}
-                          className="w-full"
-                          disabled={loading}
-                        />
-                      )}
-                      <Button
-                        onClick={handleSubmit}
-                        disabled={loading || (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim())}
-                        className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
-                      >
-                        {loading ? t('submitting') : t('submit')}
-                      </Button>
-                    </div>
-                  )
-                )}
+                {/* Submission UI is now shown inside the Description tab content above */}
               </DialogContent>
             </Dialog>
           </main>

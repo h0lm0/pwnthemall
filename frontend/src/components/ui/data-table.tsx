@@ -17,6 +17,7 @@ interface DataTableProps<TData, TValue> {
   enableRowSelection?: boolean
   rowSelection?: RowSelectionState
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
+  equalizeColumnWidths?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -25,6 +26,7 @@ export function DataTable<TData, TValue>({
   enableRowSelection,
   rowSelection: externalRowSelection,
   onRowSelectionChange,
+  equalizeColumnWidths,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
@@ -39,10 +41,16 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
   })
 
+  const nonSelectableColumnCount = columns.length
+  const selectionColWidthPx = enableRowSelection ? 48 : 0
+  const equalWidthStyle = equalizeColumnWidths
+    ? { width: `calc((100% - ${selectionColWidthPx}px) / ${Math.max(nonSelectableColumnCount, 1)})` }
+    : undefined
+
   return (
     <div className="rounded-md border bg-background w-full">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className={`w-full text-sm ${equalizeColumnWidths ? 'table-fixed' : ''}`}>
           <thead className="border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -63,8 +71,8 @@ export function DataTable<TData, TValue>({
                   />
                 </th>
               )}
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="px-3 py-2 text-left font-medium align-middle">
+                {headerGroup.headers.map((header) => (
+                <th key={header.id} className="px-3 py-2 text-left font-medium align-middle" style={equalWidthStyle}>
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -95,7 +103,7 @@ export function DataTable<TData, TValue>({
                 </td>
               )}
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-3 py-2 align-middle">
+                <td key={cell.id} className="px-3 py-2 align-middle" style={equalWidthStyle}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}

@@ -1,9 +1,9 @@
-name: Deploy on tag
+name: Deploy on merge to main
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -22,7 +22,5 @@ jobs:
           ssh-keyscan -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy demo
-        env:
-          TAG: ${{ github.ref_name }}
         run: |
           ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash demo.sh &>>/var/log/pwnthemall/demo.log"

@@ -18,6 +18,7 @@ type BaseChallengeMetadata struct {
 }
 
 type HintMetadata struct {
+	Title	 string `yaml:"title"`
 	Content  string `yaml:"content"`
 	Cost     int    `yaml:"cost"`
 	IsActive bool   `yaml:"is_active"`

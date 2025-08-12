@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { FirstBloodManager } from "./FirstBloodManager"
+import { ChallengeCategory } from "@/models/ChallengeCategory"
+import { ChallengeDifficulty } from "@/models/ChallengeDifficulty"
 
 interface ChallengeAdminFormProps {
   challenge: Challenge
@@ -29,7 +31,6 @@ interface DecayFormula {
   name: string
   step: number
   minPoints: number
-  maxDecay: number
 }
 
 interface Hint {
@@ -48,6 +49,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const [loading, setLoading] = useState(false)
   const [generalLoading, setGeneralLoading] = useState(false)
   const [decayFormulas, setDecayFormulas] = useState<DecayFormula[]>([])
+  const [challengeCategories, setChallengeCategories] = useState<ChallengeCategory[]>([])
+  const [challengeDifficulties, setChallengeDifficulties] = useState<ChallengeDifficulty[]>([])
   const [formData, setFormData] = useState({
     points: challenge.points || 0,
     enableFirstBlood: challenge.enableFirstBlood || false,
@@ -74,11 +77,15 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     description: challenge.description || "",
     author: challenge.author || "",
     hidden: challenge.hidden || false,
+    categoryId: challenge.categoryId || 1,
+    difficultyId: challenge.difficultyId || 1,
   })
   const [newHint, setNewHint] = useState({ content: "", cost: 0 })
 
   useEffect(() => {
     fetchDecayFormulas()
+    fetchChallengeCategories()
+    fetchChallengeDifficulties()
   }, [])
 
   const fetchDecayFormulas = async () => {
@@ -97,6 +104,26 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       setDecayFormulas(validFormulas)
     } catch (error) {
       console.error("Failed to fetch decay formulas:", error)
+    }
+  }
+
+  const fetchChallengeCategories = async () => {
+    try {
+      const response = await axios.get("/api/challenge-categories")
+      setChallengeCategories(response.data)
+    } catch (error) {
+      console.error("Failed to fetch challenge categories:", error)
+    }
+  }
+
+  const fetchChallengeDifficulties = async () => {
+    try {
+      const response = await axios.get(`/api/admin/challenges/${challenge.id}`)
+      if (response.data.challengeDifficulties) {
+        setChallengeDifficulties(response.data.challengeDifficulties)
+      }
+    } catch (error) {
+      console.error("Failed to fetch challenge difficulties:", error)
     }
   }
 
@@ -232,6 +259,44 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                 />
               </div>
 
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={generalData.categoryId?.toString() || ""}
+                  onValueChange={(value) => setGeneralData(prev => ({ ...prev, categoryId: parseInt(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {challengeCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="difficulty">Difficulty</Label>
+                <Select
+                  value={generalData.difficultyId?.toString() || ""}
+                  onValueChange={(value) => setGeneralData(prev => ({ ...prev, difficultyId: parseInt(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {challengeDifficulties.map((difficulty) => (
+                      <SelectItem key={difficulty.id} value={difficulty.id.toString()}>
+                        {difficulty.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex items-center justify-between">
                 <Label htmlFor="hidden">Hidden</Label>
                 <Switch
@@ -283,7 +348,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     <SelectItem value="none">None</SelectItem>
                     {decayFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id.toString()}>
-                        {formula.name} - Step: {formula.step}, Min: {formula.minPoints}, Max: {formula.maxDecay}%
+                        {formula.name} - Step: {formula.step}, Min: {formula.minPoints}
                       </SelectItem>
                     ))}
                   </SelectContent>
