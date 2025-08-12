@@ -282,7 +282,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     <SelectItem value="none">None</SelectItem>
                     {decayFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id.toString()}>
-                        {formula.name} - Step: {formula.step}, Min: {formula.minPoints}, Max: {formula.maxDecay}%
+                        {formula.name} - Step: {formula.step}, Min: {formula.minPoints}
                       </SelectItem>
                     ))}
                   </SelectContent>
