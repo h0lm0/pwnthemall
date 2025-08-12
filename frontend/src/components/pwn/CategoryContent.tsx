@@ -444,7 +444,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   </div>
                 </div>
               )}
-              <CardHeader>
+              <CardHeader className="p-4 pb-2">
                 <CardTitle className={`${
                   challenge.solved 
                     ? 'text-green-700 dark:text-green-200' 
@@ -453,8 +453,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-left">
-                <div className="flex flex-wrap gap-2 mt-2">
+              <CardContent className="text-left p-4 pt-0 pb-3">
+                <div className="flex flex-wrap gap-2 mt-1">
                   <Badge
                     variant="secondary"
                     className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
