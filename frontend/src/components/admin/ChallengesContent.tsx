@@ -1,3 +1,4 @@
+import Head from "next/head"
 import { useState } from "react"
 import { Challenge } from "@/models/Challenge"
 import { Button } from "@/components/ui/button"
@@ -52,19 +53,26 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Challenge Management</h1>
-      </div>
+    <>
+      <Head>
+        <title>Challenge Management</title>
+      </Head>
+      <div className="bg-muted min-h-screen p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Challenge Management</h1>
+          <div className="flex items-center gap-2">
+            {/* Placeholder for future actions to mirror admin pages layout */}
+          </div>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Challenges</CardTitle>
-          <CardDescription>
-            Manage challenge configurations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Challenges</CardTitle>
+            <CardDescription>
+              Manage challenge configurations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
@@ -113,25 +121,26 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Challenge Configuration</DialogTitle>
-            <DialogDescription>
-              Configure points, decay formula, first blood bonus, and hints for this challenge
-            </DialogDescription>
-          </DialogHeader>
-          {selectedChallenge && (
-            <ChallengeAdminForm
-              challenge={selectedChallenge}
-              onClose={handleClose}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Challenge Configuration</DialogTitle>
+              <DialogDescription>
+                Configure points, decay formula, first blood bonus, and hints for this challenge
+              </DialogDescription>
+            </DialogHeader>
+            {selectedChallenge && (
+              <ChallengeAdminForm
+                challenge={selectedChallenge}
+                onClose={handleClose}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
   )
 }
