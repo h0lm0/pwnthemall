@@ -3,7 +3,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { CTFStatus } from "@/hooks/use-ctf-status";
 import { Challenge, Solve } from "@/models/Challenge";
-import { BadgeCheck, Trophy, Play, Square, Settings, Clock } from "lucide-react";
+import { BadgeCheck, Trophy, Play, Square, Settings, Clock, Star } from "lucide-react";
 import ConnectionInfo from "@/components/ConnectionInfo";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
@@ -425,9 +425,23 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   : ''
               }`}
             >
+              {/* Solved check (moved to top-left to avoid overlap with points badge) */}
               {challenge.solved && (
-                <div className="absolute top-2 right-2">
+                <div className="absolute top-2 left-2">
                   <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+              )}
+
+              {/* Points badge at top-right, compact so it doesn't overlap the title */}
+              {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
+                <div className="absolute top-1 right-2 z-10 pointer-events-none select-none">
+                  <div className="flex items-center gap-1 rounded-full border bg-muted px-1.5 py-0.5 shadow-sm">
+                    <Star className="w-2 h-2 text-yellow-400" />
+                    <span className="text-xs font-semibold leading-none">
+                      {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide leading-none">{t('points') || 'Points'}</span>
+                  </div>
                 </div>
               )}
               <CardHeader>
@@ -437,11 +451,6 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     : 'text-cyan-700 dark:text-cyan-300'
                 }`}>
                   {challenge.name || 'Unnamed Challenge'}
-                  {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
-                    <span className="ml-2 text-sm font-semibold text-muted-foreground">
-                      {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points} pts
-                    </span>
-                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-left">
