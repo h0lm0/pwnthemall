@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { FirstBloodManager } from "./FirstBloodManager"
 import { ChallengeCategory } from "@/models/ChallengeCategory"
+import { ChallengeDifficulty } from "@/models/ChallengeDifficulty"
 
 interface ChallengeAdminFormProps {
   challenge: Challenge
@@ -49,6 +50,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const [generalLoading, setGeneralLoading] = useState(false)
   const [decayFormulas, setDecayFormulas] = useState<DecayFormula[]>([])
   const [challengeCategories, setChallengeCategories] = useState<ChallengeCategory[]>([])
+  const [challengeDifficulties, setChallengeDifficulties] = useState<ChallengeDifficulty[]>([])
   const [formData, setFormData] = useState({
     points: challenge.points || 0,
     enableFirstBlood: challenge.enableFirstBlood || false,
@@ -76,12 +78,14 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     author: challenge.author || "",
     hidden: challenge.hidden || false,
     categoryId: challenge.categoryId || 1,
+    difficultyId: challenge.difficultyId || 1,
   })
   const [newHint, setNewHint] = useState({ content: "", cost: 0 })
 
   useEffect(() => {
     fetchDecayFormulas()
     fetchChallengeCategories()
+    fetchChallengeDifficulties()
   }, [])
 
   const fetchDecayFormulas = async () => {
@@ -109,6 +113,17 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       setChallengeCategories(response.data)
     } catch (error) {
       console.error("Failed to fetch challenge categories:", error)
+    }
+  }
+
+  const fetchChallengeDifficulties = async () => {
+    try {
+      const response = await axios.get(`/api/admin/challenges/${challenge.id}`)
+      if (response.data.challengeDifficulties) {
+        setChallengeDifficulties(response.data.challengeDifficulties)
+      }
+    } catch (error) {
+      console.error("Failed to fetch challenge difficulties:", error)
     }
   }
 
@@ -257,6 +272,25 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     {challengeCategories.map((category) => (
                       <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="difficulty">Difficulty</Label>
+                <Select
+                  value={generalData.difficultyId?.toString() || ""}
+                  onValueChange={(value) => setGeneralData(prev => ({ ...prev, difficultyId: parseInt(value) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {challengeDifficulties.map((difficulty) => (
+                      <SelectItem key={difficulty.id} value={difficulty.id.toString()}>
+                        {difficulty.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

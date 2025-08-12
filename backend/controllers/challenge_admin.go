@@ -20,11 +20,12 @@ type ChallengeAdminUpdateRequest struct {
 }
 
 type ChallengeGeneralUpdateRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Author      string `json:"author"`
-	Hidden      bool   `json:"hidden"`
-	CategoryID  uint   `json:"categoryId"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Author       string `json:"author"`
+	Hidden       bool   `json:"hidden"`
+	CategoryID   uint   `json:"categoryId"`
+	DifficultyID uint   `json:"difficultyId"`
 }
 
 type HintRequest struct {
@@ -165,6 +166,7 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	challenge.Author = req.Author
 	challenge.Hidden = req.Hidden
 	challenge.ChallengeCategoryID = req.CategoryID
+	challenge.ChallengeDifficultyID = req.DifficultyID
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update challenge"})
@@ -186,9 +188,13 @@ func GetChallengeAdmin(c *gin.Context) {
 	var decayFormulas []models.DecayFormula
 	config.DB.Find(&decayFormulas)
 
+	var challengeDifficulties []models.ChallengeDifficulty
+	config.DB.Find(&challengeDifficulties)
+
 	response := gin.H{
-		"challenge":     challenge,
-		"decayFormulas": decayFormulas,
+		"challenge":             challenge,
+		"decayFormulas":         decayFormulas,
+		"challengeDifficulties": challengeDifficulties,
 	}
 
 	c.JSON(http.StatusOK, response)
