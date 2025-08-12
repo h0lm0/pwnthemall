@@ -99,6 +99,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	}
 
 	var challengesWithSolved []ChallengeWithSolved
+	decayService := utils.NewDecay()
 	for _, challenge := range challenges {
 		solved := false
 		for _, solvedId := range solvedChallengeIds {
@@ -107,6 +108,9 @@ func GetChallengesByCategoryName(c *gin.Context) {
 				break
 			}
 		}
+		// Compute current points (decay-aware) for display
+		challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
+
 		item := ChallengeWithSolved{Challenge: challenge, Solved: solved}
 		if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
 			var spec models.GeoSpec

@@ -130,6 +130,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
           enableRowSelection
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
+          equalizeColumnWidths
         />
       </div>
       <Sheet open={!!editingChallengeCategory} onOpenChange={(o) => !o && setEditingChallengeCategory(null)}>

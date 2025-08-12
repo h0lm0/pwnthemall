@@ -3,7 +3,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { CTFStatus } from "@/hooks/use-ctf-status";
 import { Challenge, Solve } from "@/models/Challenge";
-import { BadgeCheck, Trophy, Play, Square, Settings, Clock } from "lucide-react";
+import { BadgeCheck, Trophy, Play, Square, Settings, Clock, Star } from "lucide-react";
 import ConnectionInfo from "@/components/ConnectionInfo";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
@@ -425,12 +425,26 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   : ''
               }`}
             >
+              {/* Solved check (moved to top-left to avoid overlap with points badge) */}
               {challenge.solved && (
-                <div className="absolute top-2 right-2">
+                <div className="absolute top-2 left-2">
                   <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
               )}
-              <CardHeader>
+
+              {/* Points badge at top-right, compact so it doesn't overlap the title */}
+              {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
+                <div className="absolute top-2 right-2 z-10 pointer-events-none select-none">
+                  <div className="flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 shadow-sm">
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    <span className="text-sm font-semibold leading-none">
+                      {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points}
+                    </span>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide leading-none">{t('points') || 'Points'}</span>
+                  </div>
+                </div>
+              )}
+              <CardHeader className="px-4 pt-10 pb-2">
                 <CardTitle className={`${
                   challenge.solved 
                     ? 'text-green-700 dark:text-green-200' 
@@ -439,12 +453,18 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-left">
+              <CardContent className="text-left p-4 pt-10 pb-3">
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
+                  >
                     {challenge.type?.name || 'Unknown Type'}
                   </Badge>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
+                  >
                     {challenge.difficulty?.name || 'Unknown Difficulty'}
                   </Badge>
                   {isDockerChallenge(challenge) && (
@@ -466,17 +486,26 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     </Badge>
                   )}
                   {challenge.hints && challenge.hints.length > 0 && (
-                    <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-600">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-blue-200 dark:bg-blue-900 text-blue-900 dark:text-blue-200 border border-blue-400 dark:border-blue-600 pointer-events-none select-none"
+                    >
                       {challenge.hints.length} {challenge.hints.length === 1 ? t('hint') : t('hints')}
                     </Badge>
                   )}
                   {challenge.solved && (
-                    <Badge variant="secondary" className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none"
+                    >
                       {t('solved')}
                     </Badge>
                   )}
                   {!challenge.solved && (
-                    <Badge variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
+                    >
                       {t('unsolved')}
                     </Badge>
                   )}

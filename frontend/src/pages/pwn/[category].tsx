@@ -101,6 +101,9 @@ export default function CategoryPage() {
             // Not in this category, ignore. If you prefer, you could trigger a lightweight refresh here.
             return;
           }
+
+          // Refresh to update dynamic points (decay)
+          fetchChallenges();
         }
       } catch (err) {
         console.warn('[TeamSolve] failed to parse event', err);
