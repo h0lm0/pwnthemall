@@ -434,17 +434,17 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
 
               {/* Points badge at top-right, compact so it doesn't overlap the title */}
               {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
-                <div className="absolute top-1 right-2 z-10 pointer-events-none select-none">
-                  <div className="flex items-center gap-1 rounded-full border bg-muted px-1.5 py-0.5 shadow-sm">
-                    <Star className="w-2 h-2 text-yellow-400" />
-                    <span className="text-xs font-semibold leading-none">
+                <div className="absolute top-2 right-2 z-10 pointer-events-none select-none">
+                  <div className="flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 shadow-sm">
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    <span className="text-sm font-semibold leading-none">
                       {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points}
                     </span>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide leading-none">{t('points') || 'Points'}</span>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide leading-none">{t('points') || 'Points'}</span>
                   </div>
                 </div>
               )}
-              <CardHeader className="p-4 pb-2">
+              <CardHeader className="px-4 pt-10 pb-2">
                 <CardTitle className={`${
                   challenge.solved 
                     ? 'text-green-700 dark:text-green-200' 
@@ -453,8 +453,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-left p-4 pt-0 pb-3">
-                <div className="flex flex-wrap gap-2 mt-1">
+              <CardContent className="text-left p-4 pt-10 pb-3">
+                <div className="flex flex-wrap gap-2 mt-2">
                   <Badge
                     variant="secondary"
                     className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
