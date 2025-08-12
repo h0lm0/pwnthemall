@@ -437,6 +437,11 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     : 'text-cyan-700 dark:text-cyan-300'
                 }`}>
                   {challenge.name || 'Unnamed Challenge'}
+                  {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
+                    <span className="ml-2 text-sm font-semibold text-muted-foreground">
+                      {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points} pts
+                    </span>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-left">
