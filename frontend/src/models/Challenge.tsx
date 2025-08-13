@@ -39,6 +39,7 @@ export interface Challenge {
   decayFormulaId?: number
   hints?: {
     id: number
+    title?: string
     content: string
     cost: number
     challengeId: number

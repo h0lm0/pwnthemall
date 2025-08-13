@@ -51,12 +51,8 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		return
 	}
 
-	// Update challenge basic fields
 	challenge.Points = req.Points
-
-	// Gérer le DecayFormulaID - si 0 ou nil, on met à nil pour désactiver le decay
 	challenge.DecayFormulaID = req.DecayFormulaID
-
 	challenge.EnableFirstBlood = req.EnableFirstBlood
 
 	// Convert []int to pq.Int64Array
@@ -87,39 +83,16 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	// Recalculate points for all solves of this challenge with new values
 	recalculateChallengePoints(challenge.ID)
 
-	// Pour FirstBlood, on sauvegarde juste l'état "enabled" et le bonus
-	// L'enregistrement FirstBlood sera créé quand une équipe résoudra le challenge
 	if !req.EnableFirstBlood {
-		// Si FirstBlood est désactivé, supprimer l'enregistrement existant
 		config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.FirstBlood{})
 	}
 
-	// Gestion des hints - approche complète de synchronisation
-	// 1. Récupérer tous les hints existants pour ce challenge
-	var existingHints []models.Hint
-	config.DB.Where("challenge_id = ?", challenge.ID).Find(&existingHints)
-
-	// 2. Créer une map des IDs des hints dans la requête
-	requestHintIDs := make(map[uint]bool)
+	// Process hints from request
 	for _, hintReq := range req.Hints {
-		if hintReq.ID > 0 {
-			requestHintIDs[hintReq.ID] = true
-		}
-	}
+		log.Printf("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
 
-	// 3. Supprimer les hints qui ne sont plus dans la liste
-	for _, existingHint := range existingHints {
-		if !requestHintIDs[existingHint.ID] {
-			if err := config.DB.Delete(&existingHint).Error; err != nil {
-				log.Printf("Failed to delete hint %d: %v", existingHint.ID, err)
-			}
-		}
-	}
-
-	// 4. Créer ou mettre à jour les hints de la requête
-	for _, hintReq := range req.Hints {
 		if hintReq.ID > 0 {
-			// Mettre à jour un hint existant
+			// Update existing hint
 			var hint models.Hint
 			if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
 				hint.Title = hintReq.Title
@@ -128,10 +101,12 @@ func UpdateChallengeAdmin(c *gin.Context) {
 				hint.IsActive = hintReq.IsActive
 				if err := config.DB.Save(&hint).Error; err != nil {
 					log.Printf("Failed to update hint %d: %v", hint.ID, err)
+				} else {
+					log.Printf("Successfully updated hint %d", hint.ID)
 				}
 			}
 		} else if hintReq.Content != "" {
-			// Créer un nouveau hint
+			// Create new hint
 			hint := models.Hint{
 				ChallengeID: challenge.ID,
 				Title:       hintReq.Title,
@@ -141,7 +116,18 @@ func UpdateChallengeAdmin(c *gin.Context) {
 			}
 			if err := config.DB.Create(&hint).Error; err != nil {
 				log.Printf("Failed to create hint: %v", err)
+			} else {
+				log.Printf("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
 			}
+		}
+	}
+
+	if err := config.DB.Preload("DecayFormula").Preload("Hints").Preload("FirstBlood").First(&challenge, challenge.ID).Error; err != nil {
+		log.Printf("Failed to reload challenge: %v", err)
+	} else {
+		log.Printf("Reloaded challenge %d with %d hints", challenge.ID, len(challenge.Hints))
+		for i, hint := range challenge.Hints {
+			log.Printf("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
 		}
 	}
 
@@ -186,6 +172,11 @@ func GetChallengeAdmin(c *gin.Context) {
 	if err := config.DB.Preload("DecayFormula").Preload("Hints").Preload("FirstBlood").First(&challenge, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
 		return
+	}
+
+	log.Printf("GetChallengeAdmin: Challenge %d has %d hints", challenge.ID, len(challenge.Hints))
+	for i, hint := range challenge.Hints {
+		log.Printf("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
 	}
 
 	var decayFormulas []models.DecayFormula
@@ -244,11 +235,8 @@ func recalculateChallengePoints(challengeID uint) {
 
 	// Recalculate points for each solve based on its position
 	for i, solve := range solves {
-		// Position is 0-based (first solve = position 0)
 		position := i
 		newPoints := decayService.CalculateDecayedPoints(&challenge, position)
-
-		// Update if points have changed
 		if solve.Points != newPoints {
 			solve.Points = newPoints
 			if err := config.DB.Save(&solve).Error; err != nil {
