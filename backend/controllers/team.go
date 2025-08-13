@@ -514,3 +514,47 @@ func RecalculateTeamPoints(c *gin.Context) {
 		"updated_solves": updatedCount,
 	})
 }
+
+func GetTeamScore(c *gin.Context) {
+	userI, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user, ok := userI.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
+	if user.TeamID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no_team"})
+		return
+	}
+
+	// Get team with solves
+	var team models.Team
+	if err := config.DB.Preload("Solves").First(&team, *user.TeamID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_not_found"})
+		return
+	}
+
+	// Calculate total score
+	totalScore := 0
+	for _, solve := range team.Solves {
+		totalScore += solve.Points
+	}
+
+	// Get total spent on hints
+	var totalSpent int64
+	config.DB.Model(&models.HintPurchase{}).
+		Where("team_id = ?", *user.TeamID).
+		Select("COALESCE(SUM(cost), 0)").
+		Scan(&totalSpent)
+
+	c.JSON(http.StatusOK, gin.H{
+		"totalScore":     totalScore,
+		"availableScore": totalScore - int(totalSpent),
+		"spentOnHints":   int(totalSpent),
+	})
+}

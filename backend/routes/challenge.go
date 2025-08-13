@@ -21,6 +21,9 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.GET("/:id/instance-status", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/instance-status", "read"), controllers.GetInstanceStatus)
 		challenges.POST("/:id/start", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
 		challenges.POST("/:id/stop", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/stop", "write"), controllers.StopChallengeInstance)
+
+		// Hint routes
+		challenges.POST("/hints/:id/purchase", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/hints/:id/purchase", "write"), controllers.PurchaseHint)
 		// challenges.POST("/:id/kill", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/kill", "write"), controllers.KillChallengeInstance)
 		// challenges.PUT("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.UpdateUser)
 		// challenges.DELETE("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.DeleteUser)

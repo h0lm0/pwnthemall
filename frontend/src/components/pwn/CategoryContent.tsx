@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeoPicker from "./GeoPicker";
 import { useInstances } from "@/hooks/use-instances";
+import { useHints } from "@/hooks/use-hints";
 import { debugError } from "@/lib/debug";
 import type { User } from "@/models/User";
 import ReactMarkdown from "react-markdown";
@@ -57,6 +58,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { getSiteName } = useSiteConfig();
   const { loading: instanceLoading, startInstance, stopInstance, killInstance, getInstanceStatus: fetchInstanceStatus } = useInstances();
+  const { teamScore, loading: hintsLoading, purchaseHint, refreshTeamScore } = useHints();
 
   // Fetch instance status for all Docker challenges when challenges are loaded
   const [statusFetched, setStatusFetched] = useState(false);
@@ -268,6 +270,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     setSolves([]);
     setSolvesLoading(false);
     fetchSolves(challenge.id);
+    // Refresh team score when opening challenge
+    refreshTeamScore();
   };
 
   const formatDate = (dateString: string) => {
@@ -556,7 +560,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     
                     <div className="flex-1 min-h-0 relative overflow-hidden z-[1100] min-h-[30vh]">
                       {/* Tab Panels: absolutely positioned & independently scrollable */}
-                      <TabsContent value="description" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
+                      <TabsContent value="description" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100]">
                         <div className="text-left text-foreground leading-relaxed min-h-full">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
@@ -675,9 +679,33 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                       </TabsContent>
 
                       {selectedChallenge?.hints && selectedChallenge.hints.length > 0 && (
-                        <TabsContent value="hints" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
+                        <TabsContent value="hints" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100]">
                           <div className="min-h-full">
                             <div className="space-y-4">
+                              {/* Team Score Display */}
+                              {teamScore && (
+                                <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                                  <h3 className="font-semibold text-lg text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+                                    <Trophy className="w-5 h-5" />
+                                    Score de l&apos;équipe
+                                  </h3>
+                                  <div className="grid grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                      <span className="text-blue-600 dark:text-blue-400 font-medium">Total:</span>
+                                      <div className="font-bold text-blue-800 dark:text-blue-200">{teamScore.totalScore} pts</div>
+                                    </div>
+                                    <div>
+                                      <span className="text-green-600 dark:text-green-400 font-medium">Disponible:</span>
+                                      <div className="font-bold text-green-800 dark:text-green-200">{teamScore.availableScore} pts</div>
+                                    </div>
+                                    <div>
+                                      <span className="text-orange-600 dark:text-orange-400 font-medium">Dépensé:</span>
+                                      <div className="font-bold text-orange-800 dark:text-orange-200">{teamScore.spentOnHints} pts</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="p-4 rounded-lg border bg-card">
                                 <h3 className="font-semibold text-lg text-foreground mb-4 flex items-center gap-2">
                                   <Star className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -687,19 +715,96 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                   {selectedChallenge.hints.map((hint, index) => (
                                     <div 
                                       key={hint.id} 
-                                      className="p-4 rounded-lg border bg-muted/50 hover:bg-muted transition-colors duration-200"
+                                      className={`p-4 rounded-lg border transition-colors duration-200 ${
+                                        hint.purchased 
+                                          ? 'bg-background/50 border-green-300 dark:border-green-700' 
+                                          : 'bg-background/30 hover:bg-background/50 border-border'
+                                      }`}
                                     >
-                                      <div className="flex items-start justify-between mb-2">
-                                        <h4 className="font-medium text-foreground">
+                                      <div className="flex items-start justify-between mb-3">
+                                        <h4 className={`font-medium ${hint.purchased ? 'text-green-800 dark:text-green-200' : 'text-foreground'}`}>
                                           {hint.title || `${t('hint') || 'Hint'} ${index + 1}`}
                                         </h4>
-                                        <div className="text-sm text-muted-foreground bg-background px-2 py-1 rounded border">
-                                          {hint.cost} {t('points') || 'points'}
+                                        <div className="flex items-center gap-2">
+                                          <div className={`text-sm px-2 py-1 rounded border font-medium ${
+                                            hint.purchased 
+                                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600'
+                                              : 'bg-background text-muted-foreground'
+                                          }`}>
+                                            {hint.cost} {t('points') || 'points'}
+                                          </div>
+                                          {hint.purchased && (
+                                            <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-600">
+                                              ✓ Acheté
+                                            </Badge>
+                                          )}
                                         </div>
                                       </div>
-                                      <p className="text-sm text-muted-foreground leading-relaxed">
-                                        {hint.content}
-                                      </p>
+                                      
+                                      {hint.purchased ? (
+                                        <div className="text-sm leading-relaxed p-3 rounded border bg-background/30 text-foreground border-green-200 dark:border-green-700">
+                                          {hint.content}
+                                        </div>
+                                      ) : (
+                                        <div className="space-y-3">
+                                          <div className="text-sm text-muted-foreground leading-relaxed italic">
+                                            Cet indice est verrouillé. Achetez-le pour révéler son contenu.
+                                          </div>
+                                          <Button
+                                            onClick={async () => {
+                                              try {
+                                                const result = await purchaseHint(hint.id);
+                                                if (result.success && selectedChallenge) {
+                                                  // Mettre à jour l'état local immédiatement pour un feedback instantané
+                                                  const updatedHints = selectedChallenge.hints?.map(h => 
+                                                    h.id === hint.id ? { ...h, purchased: true } : h
+                                                  ) || [];
+                                                  
+                                                  setSelectedChallenge({
+                                                    ...selectedChallenge,
+                                                    hints: updatedHints
+                                                  });
+                                                  
+                                                  // Ensuite, recharger les données du serveur en arrière-plan
+                                                  try {
+                                                    const response = await axios.get(`/api/challenges/category/${selectedChallenge.category?.name || cat}`);
+                                                    const updatedChallenges = response.data;
+                                                    const updatedChallenge = updatedChallenges.find((c: any) => c.id === selectedChallenge.id);
+                                                    
+                                                    if (updatedChallenge) {
+                                                      // Mettre à jour avec les données du serveur
+                                                      setSelectedChallenge(updatedChallenge);
+                                                    }
+                                                  } catch (error) {
+                                                    console.error('Failed to refresh challenge data:', error);
+                                                    // La mise à jour locale est déjà faite, donc pas de problème
+                                                  }
+                                                }
+                                              } catch (error) {
+                                                // Error handling is done in the hook
+                                              }
+                                            }}
+                                            disabled={hintsLoading || (teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost)}
+                                            size="sm"
+                                            className={`w-full ${
+                                              teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost
+                                                ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed'
+                                                : 'bg-blue-600 hover:bg-blue-700'
+                                            }`}
+                                          >
+                                            {hintsLoading ? (
+                                              <>
+                                                <Settings className="w-4 h-4 mr-2 animate-spin" />
+                                                Achat en cours...
+                                              </>
+                                            ) : teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost ? (
+                                              `Points insuffisants (${hint.cost} requis)`
+                                            ) : (
+                                              `Acheter pour ${hint.cost} points`
+                                            )}
+                                          </Button>
+                                        </div>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
@@ -709,7 +814,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                         </TabsContent>
                       )}
                       
-                      <TabsContent value="solves" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
+                      <TabsContent value="solves" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100]">
                         <div className="min-h-full">
                           {solvesLoading ? (
                             <div className="text-center py-8">
@@ -776,7 +881,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                       </TabsContent>
 
                       {selectedChallenge && isDockerChallenge(selectedChallenge) && (
-                        <TabsContent value="instance" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
+                        <TabsContent value="instance" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100]">
                           <div className="min-h-full">
                             <div className="space-y-4">
                               <div className="p-4 rounded-lg border bg-card">

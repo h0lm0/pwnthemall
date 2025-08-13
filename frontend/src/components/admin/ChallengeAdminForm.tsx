@@ -566,7 +566,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                 <div className="space-y-2">
                   <h4 className="font-medium">Existing Hints</h4>
                   {formData.hints.map((hint) => (
-                    <div key={hint.id} className="p-3 border rounded-lg space-y-3">
+                    <div key={hint.id} className="p-3 border rounded-lg space-y-3 bg-background/50 hover:bg-background/80 transition-colors">
                       {editingHints[hint.id] ? (
                         // Mode édition
                         <>
