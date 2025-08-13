@@ -30,6 +30,7 @@ type ChallengeGeneralUpdateRequest struct {
 
 type HintRequest struct {
 	ID       uint   `json:"id,omitempty"`
+	Title    string `json:"title"`
 	Content  string `json:"content"`
 	Cost     int    `json:"cost"`
 	IsActive bool   `json:"isActive"`
@@ -121,6 +122,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 			// Mettre à jour un hint existant
 			var hint models.Hint
 			if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
+				hint.Title = hintReq.Title
 				hint.Content = hintReq.Content
 				hint.Cost = hintReq.Cost
 				hint.IsActive = hintReq.IsActive
@@ -132,6 +134,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 			// Créer un nouveau hint
 			hint := models.Hint{
 				ChallengeID: challenge.ID,
+				Title:       hintReq.Title,
 				Content:     hintReq.Content,
 				Cost:        hintReq.Cost,
 				IsActive:    hintReq.IsActive,

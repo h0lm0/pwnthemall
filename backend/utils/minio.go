@@ -235,6 +235,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		for _, hintMeta := range metaData.Hints {
 			hint := models.Hint{
 				ChallengeID: challenge.ID,
+				Title:       hintMeta.Title,
 				Content:     hintMeta.Content,
 				Cost:        hintMeta.Cost,
 				IsActive:    hintMeta.IsActive,
