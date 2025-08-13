@@ -256,6 +256,10 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
   };
 
   const handleChallengeSelect = (challenge: Challenge) => {
+    console.log("Selected challenge:", challenge);
+    console.log("Challenge hints:", challenge.hints);
+    console.log("Hints length:", challenge.hints?.length);
+    
     setSelectedChallenge(challenge);
     setFlag("");
     setOpen(true);
@@ -537,10 +541,13 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
                 <TabsList className={`grid w-full mb-4 flex-shrink-0 bg-card border rounded-lg p-1 relative z-[1200] ${
                   selectedChallenge && isDockerChallenge(selectedChallenge) 
-                    ? 'grid-cols-3' 
-                    : 'grid-cols-2'
+                    ? (selectedChallenge.hints && selectedChallenge.hints.length > 0 ? 'grid-cols-4' : 'grid-cols-3')
+                    : (selectedChallenge?.hints && selectedChallenge.hints.length > 0 ? 'grid-cols-3' : 'grid-cols-2')
                 }`}>
                   <TabsTrigger value="description">{t('description')}</TabsTrigger>
+                  {selectedChallenge?.hints && selectedChallenge.hints.length > 0 && (
+                    <TabsTrigger value="hints">{t('hints') || 'Hints'}</TabsTrigger>
+                  )}
                   <TabsTrigger value="solves">{t('solves')}</TabsTrigger>
                   {selectedChallenge && isDockerChallenge(selectedChallenge) && (
                     <TabsTrigger value="instance">{t('docker_instance')}</TabsTrigger>
@@ -666,6 +673,41 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                           )}
                         </div>
                       </TabsContent>
+
+                      {selectedChallenge?.hints && selectedChallenge.hints.length > 0 && (
+                        <TabsContent value="hints" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
+                          <div className="min-h-full">
+                            <div className="space-y-4">
+                              <div className="p-4 rounded-lg border bg-card">
+                                <h3 className="font-semibold text-lg text-foreground mb-4 flex items-center gap-2">
+                                  <Star className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                  {t('available_hints') || 'Available Hints'} ({selectedChallenge.hints.length})
+                                </h3>
+                                <div className="space-y-3">
+                                  {selectedChallenge.hints.map((hint, index) => (
+                                    <div 
+                                      key={hint.id} 
+                                      className="p-4 rounded-lg border bg-muted/50 hover:bg-muted transition-colors duration-200"
+                                    >
+                                      <div className="flex items-start justify-between mb-2">
+                                        <h4 className="font-medium text-foreground">
+                                          {hint.title || `${t('hint') || 'Hint'} ${index + 1}`}
+                                        </h4>
+                                        <div className="text-sm text-muted-foreground bg-background px-2 py-1 rounded border">
+                                          {hint.cost} {t('points') || 'points'}
+                                        </div>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground leading-relaxed">
+                                        {hint.content}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+                      )}
                       
                       <TabsContent value="solves" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100] bg-card">
                         <div className="min-h-full">
