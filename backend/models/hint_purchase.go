@@ -18,8 +18,8 @@ type HintPurchase struct {
 	HintID uint `json:"hintId" gorm:"not null"`
 	Hint   Hint `json:"hint" gorm:"foreignKey:HintID"`
 
-	UserID uint `json:"userId" gorm:"not null"` // User who purchased the hint
+	UserID uint `json:"userId" gorm:"not null"`
 	User   User `json:"user" gorm:"foreignKey:UserID"`
 
-	Cost int `json:"cost" gorm:"not null"` // Cost at time of purchase (for history)
+	Cost int `json:"cost" gorm:"not null"`
 }

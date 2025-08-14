@@ -63,11 +63,19 @@ func GetTeam(c *gin.Context) {
 		}
 	}
 
+	// Get total spent on hints
+	var totalSpent int64
+	config.DB.Model(&models.HintPurchase{}).
+		Where("team_id = ?", team.ID).
+		Select("COALESCE(SUM(cost), 0)").
+		Scan(&totalSpent)
+
 	c.JSON(http.StatusOK, gin.H{
 		"team":         team,
 		"members":      members,
 		"memberPoints": memberPoints,
-		"totalPoints":  totalPoints,
+		"totalPoints":  totalPoints - int(totalSpent),
+		"spentOnHints": int(totalSpent),
 	})
 }
 
@@ -451,9 +459,18 @@ func GetLeaderboard(c *gin.Context) {
 			}
 		}
 
+		// Subtract hints cost from total score
+		var totalSpent int64
+		config.DB.Model(&models.HintPurchase{}).
+			Where("team_id = ?", team.ID).
+			Select("COALESCE(SUM(cost), 0)").
+			Scan(&totalSpent)
+
+		finalScore := totalScore - int(totalSpent)
+
 		leaderboard = append(leaderboard, TeamScore{
 			Team:       team,
-			TotalScore: totalScore,
+			TotalScore: finalScore,
 			SolveCount: len(solves),
 		})
 	}

@@ -384,5 +384,7 @@
   "team_solved_title": "Team solved a challenge",
   "team_solved_message": "{username} solved {label} (+{points} pts)",
   "instance_started_by_user": "Started by {username}",
-  "demo_restriction": "This page or action is restricted in demo environment"
+  "demo_restriction": "This page or action is restricted in demo environment",
+  "points": "Points",
+  "spent": "Spent"
 }
