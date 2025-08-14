@@ -39,6 +39,8 @@ interface Hint {
   content: string
   cost: number
   challengeId: number
+  isActive?: boolean
+  autoActiveAt?: string | null
 }
 
 interface FirstBloodBonus {
@@ -49,6 +51,37 @@ interface FirstBloodBonus {
 export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdminFormProps) {
   const [loading, setLoading] = useState(false)
   const [generalLoading, setGeneralLoading] = useState(false)
+
+  // Helper function to format datetime for backend
+  const formatDateTimeForBackend = (dateString: string | null): string | null => {
+    if (!dateString) return null
+    // Convert datetime-local format to ISO string
+    try {
+      const date = new Date(dateString)
+      return date.toISOString()
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return null
+    }
+  }
+
+  // Helper function to format datetime from backend for frontend
+  const formatDateTimeForFrontend = (isoString: string | null): string => {
+    if (!isoString) return ""
+    try {
+      const date = new Date(isoString)
+      // Format to datetime-local format (YYYY-MM-DDTHH:mm)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}`
+    } catch (error) {
+      console.error('Error parsing date:', error)
+      return ""
+    }
+  }
   const [decayFormulas, setDecayFormulas] = useState<DecayFormula[]>([])
   const [challengeCategories, setChallengeCategories] = useState<ChallengeCategory[]>([])
   const [challengeDifficulties, setChallengeDifficulties] = useState<ChallengeDifficulty[]>([])
@@ -80,8 +113,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     categoryId: challenge.categoryId || 1,
     difficultyId: challenge.difficultyId || 1,
   })
-  const [newHint, setNewHint] = useState({ title: "", content: "", cost: 0 })
-  const [editingHints, setEditingHints] = useState<{[key: number]: {title: string, content: string, cost: number}}>({})
+  const [newHint, setNewHint] = useState({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null as string | null })
+  const [editingHints, setEditingHints] = useState<{[key: number]: {title: string, content: string, cost: number, isActive: boolean, autoActiveAt: string | null}}>({})
 
   useEffect(() => {
     fetchDecayFormulas()
@@ -174,7 +207,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           title: hint.title || "Hint",
           content: hint.content,
           cost: hint.cost,
-          isActive: true
+          isActive: (hint as Hint).isActive ?? true,
+          autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
         }))
       })
       toast.success("Challenge configuration updated successfully")
@@ -212,7 +246,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       title: newHint.title,
       content: newHint.content,
       cost: newHint.cost,
-      challengeId: challenge.id
+      challengeId: challenge.id,
+      isActive: newHint.isActive,
+      autoActiveAt: newHint.autoActiveAt
     }
     
     const updatedHints = [...formData.hints, newHintData]
@@ -234,7 +270,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           title: hint.title || "Hint",
           content: hint.content,
           cost: hint.cost,
-          isActive: true
+          isActive: (hint as Hint).isActive ?? true,
+          autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
         }))
       })
       
@@ -257,7 +294,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       return
     }
     
-    setNewHint({ title: "", content: "", cost: 0 })
+    setNewHint({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null })
   }
 
   const handleDeleteHint = async (hintId: number) => {
@@ -276,11 +313,11 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     }
   }
 
-  const handleSaveHint = async (hintId: number, updatedHint: { title: string; content: string; cost: number }) => {
+  const handleSaveHint = async (hintId: number, updatedHint: { title: string; content: string; cost: number; isActive: boolean; autoActiveAt: string | null }) => {
     const originalHints = [...formData.hints]
     const updatedHints = formData.hints.map(h => 
       h.id === hintId 
-        ? { ...h, title: updatedHint.title, content: updatedHint.content, cost: updatedHint.cost }
+        ? { ...h, title: updatedHint.title, content: updatedHint.content, cost: updatedHint.cost, isActive: updatedHint.isActive, autoActiveAt: updatedHint.autoActiveAt }
         : h
     )
     
@@ -305,7 +342,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           title: hint.title || "Hint",
           content: hint.content,
           cost: hint.cost,
-          isActive: true
+          isActive: (hint as Hint).isActive ?? true,
+          autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
         }))
       })
 
@@ -521,10 +559,37 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
         <TabsContent value="hints" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Challenge Hints</CardTitle>
-              <CardDescription>
-                Manage hints for this challenge
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Challenge Hints</CardTitle>
+                  <CardDescription>
+                    Manage hints for this challenge
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      await axios.post('/api/admin/challenges/hints/activate-scheduled')
+                      toast.success('Hint activation check completed')
+                      // Refresh the challenge data to show updated hint statuses
+                      const response = await axios.get(`/api/admin/challenges/${challenge.id}`)
+                      const updatedChallenge = response.data.challenge
+                      if (updatedChallenge.hints) {
+                        setFormData(prev => ({
+                          ...prev,
+                          hints: updatedChallenge.hints
+                        }))
+                      }
+                    } catch (error) {
+                      toast.error('Failed to activate scheduled hints')
+                    }
+                  }}
+                >
+                  Activate Scheduled Hints
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
@@ -556,6 +621,31 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     onChange={(e) => setNewHint(prev => ({ ...prev, cost: parseInt(e.target.value) || 0 }))}
                   />
                 </div>
+                
+                {/* New hint auto-activation fields */}
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="newHintActive"
+                    checked={newHint.isActive}
+                    onCheckedChange={(checked) => setNewHint(prev => ({ ...prev, isActive: checked }))}
+                  />
+                  <Label htmlFor="newHintActive">Active</Label>
+                </div>
+                
+                <div>
+                  <Label htmlFor="newHintAutoActive">Auto-activation date/time (optional)</Label>
+                  <Input
+                    id="newHintAutoActive"
+                    type="datetime-local"
+                    value={newHint.autoActiveAt || ""}
+                    onChange={(e) => setNewHint(prev => ({ ...prev, autoActiveAt: e.target.value || null }))}
+                    placeholder="Set auto-activation time"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Leave empty to disable auto-activation. The hint will become visible at this exact time.
+                  </p>
+                </div>
+                
                 <Button onClick={handleAddHint} className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Hint
@@ -618,6 +708,47 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                               rows={2}
                             />
                           </div>
+                          
+                          {/* New auto-activation fields */}
+                          <div className="grid grid-cols-1 gap-3">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`hint-active-${hint.id}`}
+                                checked={editingHints[hint.id].isActive}
+                                onCheckedChange={(checked) => setEditingHints(prev => ({
+                                  ...prev,
+                                  [hint.id]: { 
+                                    ...prev[hint.id],
+                                    isActive: checked,
+                                    // Clear auto-activation when manually disabling
+                                    autoActiveAt: checked ? prev[hint.id].autoActiveAt : null
+                                  }
+                                }))}
+                              />
+                              <Label htmlFor={`hint-active-${hint.id}`}>Active</Label>
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`hint-auto-active-${hint.id}`}>Auto-activation date/time (optional)</Label>
+                              <Input
+                                id={`hint-auto-active-${hint.id}`}
+                                type="datetime-local"
+                                value={formatDateTimeForFrontend(editingHints[hint.id].autoActiveAt)}
+                                onChange={(e) => setEditingHints(prev => ({
+                                  ...prev,
+                                  [hint.id]: { 
+                                    ...prev[hint.id],
+                                    autoActiveAt: e.target.value || null
+                                  }
+                                }))}
+                                placeholder="Set auto-activation time"
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Leave empty to disable auto-activation. The hint will become visible at this exact time.
+                              </p>
+                            </div>
+                          </div>
+                          
                           <div className="flex justify-between">
                             <div className="flex space-x-2">
                               <Button
@@ -657,6 +788,18 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                               <h5 className="font-medium text-sm">{hint.title || "Hint"}</h5>
                               <p className="text-sm text-muted-foreground mt-1">{hint.content}</p>
                               <p className="text-xs text-muted-foreground mt-1">Cost: {hint.cost} points</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Status: {(hint as Hint).isActive ? (
+                                  <span className="text-green-600">Active</span>
+                                ) : (
+                                  <span className="text-red-600">Inactive</span>
+                                )}
+                              </p>
+                              {(hint as Hint).autoActiveAt && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Auto-activation: {new Date((hint as Hint).autoActiveAt!).toLocaleString()}
+                                </p>
+                              )}
                             </div>
                             <div className="flex space-x-2">
                               <Button
@@ -667,7 +810,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                   [hint.id]: {
                                     title: hint.title || "",
                                     content: hint.content,
-                                    cost: hint.cost
+                                    cost: hint.cost,
+                                    isActive: (hint as Hint).isActive ?? true,
+                                    autoActiveAt: (hint as Hint).autoActiveAt ? formatDateTimeForFrontend((hint as Hint).autoActiveAt!) : null
                                   }
                                 }))}
                               >

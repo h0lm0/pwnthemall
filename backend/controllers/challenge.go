@@ -116,6 +116,10 @@ func GetChallengesByCategoryName(c *gin.Context) {
 
 	var challengesWithSolved []ChallengeWithSolved
 	decayService := utils.NewDecay()
+
+	// Check and activate scheduled hints before processing
+	utils.CheckAndActivateHintsForChallenges(challenges)
+
 	for _, challenge := range challenges {
 		solved := false
 		for _, solvedId := range solvedChallengeIds {
@@ -127,9 +131,16 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		// Compute current points (decay-aware) for display
 		challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
 
-		// Process hints with purchase status
+		// Process hints with purchase status - only include active hints
 		var hintsWithPurchased []HintWithPurchased
 		for _, hint := range challenge.Hints {
+			log.Printf("Hint ID %d: IsActive=%t, User Role=%s", hint.ID, hint.IsActive, user.Role)
+			// Skip inactive hints unless user is admin
+			if !hint.IsActive && user.Role != "admin" {
+				log.Printf("Skipping inactive hint ID %d for non-admin user", hint.ID)
+				continue
+			}
+
 			purchased := false
 			for _, purchasedId := range purchasedHintIds {
 				if hint.ID == purchasedId {
@@ -1172,6 +1183,13 @@ func PurchaseHint(c *gin.Context) {
 	if err := tx.First(&hint, hintID).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusNotFound, gin.H{"error": "hint_not_found"})
+		return
+	}
+
+	// Check if hint is active (can't purchase inactive hints)
+	if !hint.IsActive {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "hint_not_active"})
 		return
 	}
 

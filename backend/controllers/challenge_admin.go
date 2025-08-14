@@ -6,6 +6,7 @@ import (
 	"pwnthemall/config"
 	"pwnthemall/models"
 	"pwnthemall/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,11 +30,12 @@ type ChallengeGeneralUpdateRequest struct {
 }
 
 type HintRequest struct {
-	ID       uint   `json:"id,omitempty"`
-	Title    string `json:"title"`
-	Content  string `json:"content"`
-	Cost     int    `json:"cost"`
-	IsActive bool   `json:"isActive"`
+	ID           uint       `json:"id,omitempty"`
+	Title        string     `json:"title"`
+	Content      string     `json:"content"`
+	Cost         int        `json:"cost"`
+	IsActive     bool       `json:"isActive"`
+	AutoActiveAt *time.Time `json:"autoActiveAt,omitempty"`
 }
 
 func UpdateChallengeAdmin(c *gin.Context) {
@@ -99,6 +101,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 				hint.Content = hintReq.Content
 				hint.Cost = hintReq.Cost
 				hint.IsActive = hintReq.IsActive
+				hint.AutoActiveAt = hintReq.AutoActiveAt
 				if err := config.DB.Save(&hint).Error; err != nil {
 					log.Printf("Failed to update hint %d: %v", hint.ID, err)
 				} else {
@@ -108,11 +111,12 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		} else if hintReq.Content != "" {
 			// Create new hint
 			hint := models.Hint{
-				ChallengeID: challenge.ID,
-				Title:       hintReq.Title,
-				Content:     hintReq.Content,
-				Cost:        hintReq.Cost,
-				IsActive:    hintReq.IsActive,
+				ChallengeID:  challenge.ID,
+				Title:        hintReq.Title,
+				Content:      hintReq.Content,
+				Cost:         hintReq.Cost,
+				IsActive:     hintReq.IsActive,
+				AutoActiveAt: hintReq.AutoActiveAt,
 			}
 			if err := config.DB.Create(&hint).Error; err != nil {
 				log.Printf("Failed to create hint: %v", err)
@@ -281,4 +285,15 @@ func recalculateChallengePoints(challengeID uint) {
 			}
 		}
 	}
+}
+
+// ActivateScheduledHints activates hints that should be auto-activated based on their AutoActiveAt time
+func ActivateScheduledHints() {
+	utils.ActivateScheduledHints()
+}
+
+// CheckAndActivateHints endpoint to manually trigger hint activation check (for admin)
+func CheckAndActivateHints(c *gin.Context) {
+	utils.ActivateScheduledHints()
+	c.JSON(http.StatusOK, gin.H{"message": "Hint activation check completed"})
 }
