@@ -378,17 +378,60 @@ func SubmitChallenge(c *gin.Context) {
 		}
 	}
 	if found {
+		// Calculate solve position and first blood bonus before creating solve
+		var position int64
+		config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&position)
+
+		log.Printf("DEBUG FirstBlood: Challenge %d, Position %d, EnableFirstBlood: %v, Bonuses count: %d",
+			challenge.ID, position, challenge.EnableFirstBlood, len(challenge.FirstBloodBonuses))
+
+		firstBloodBonus := 0
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			pos := int(position)
+			if pos < len(challenge.FirstBloodBonuses) {
+				firstBloodBonus = int(challenge.FirstBloodBonuses[pos])
+				log.Printf("DEBUG FirstBlood: Position %d gets bonus %d points", pos, firstBloodBonus)
+			} else {
+				log.Printf("DEBUG FirstBlood: Position %d beyond configured bonuses (%d available)", pos, len(challenge.FirstBloodBonuses))
+			}
+		} else {
+			log.Printf("DEBUG FirstBlood: FirstBlood not enabled or no bonuses configured")
+		}
+
 		var solve models.Solve
 		if err := config.DB.FirstOrCreate(&solve,
 			models.Solve{
 				TeamID:      user.Team.ID,
 				ChallengeID: challenge.ID,
 				UserID:      user.ID,
-				Points:      challenge.Points,
+				Points:      challenge.Points + firstBloodBonus, // Include first blood bonus in solve points
 			}).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
 			return
 		} else {
+			// Create FirstBlood entry if applicable
+			if firstBloodBonus > 0 {
+				// Get badge for this position if available
+				badge := "trophy" // default badge
+				if int(position) < len(challenge.FirstBloodBadges) {
+					badge = challenge.FirstBloodBadges[position]
+				}
+
+				firstBlood := models.FirstBlood{
+					ChallengeID: challenge.ID,
+					TeamID:      user.Team.ID,
+					UserID:      user.ID,
+					Bonuses:     []int64{int64(firstBloodBonus)},
+					Badges:      []string{badge},
+				}
+
+				if err := config.DB.Create(&firstBlood).Error; err != nil {
+					log.Printf("Failed to create FirstBlood entry: %v", err)
+				} else {
+					log.Printf("Created FirstBlood entry for user %d, challenge %d, position %d, bonus %d points",
+						user.ID, challenge.ID, position, firstBloodBonus)
+				}
+			}
 			// Broadcast team solve event over WebSocket
 			type TeamSolveEvent struct {
 				Event         string    `json:"event"`
@@ -405,7 +448,7 @@ func SubmitChallenge(c *gin.Context) {
 				TeamID:        user.Team.ID,
 				ChallengeID:   challenge.ID,
 				ChallengeName: challenge.Name,
-				Points:        challenge.Points,
+				Points:        challenge.Points + firstBloodBonus, // Include first blood bonus in event
 				UserID:        user.ID,
 				Username:      user.Username,
 				Timestamp:     time.Now().UTC(),
@@ -493,11 +536,12 @@ func GetChallengeSolves(c *gin.Context) {
 		return
 	}
 
-	// Create response with user information
+	// Create response with user information and first blood details
 	type SolveWithUser struct {
 		models.Solve
-		UserID   uint   `json:"userId"`
-		Username string `json:"username"`
+		UserID     uint               `json:"userId"`
+		Username   string             `json:"username"`
+		FirstBlood *models.FirstBlood `json:"firstBlood,omitempty"`
 	}
 
 	var solvesWithUsers []SolveWithUser
@@ -519,6 +563,13 @@ func GetChallengeSolves(c *gin.Context) {
 		if submissionResult.Error == nil && submission.User != nil {
 			solveWithUser.UserID = submission.UserID
 			solveWithUser.Username = submission.User.Username
+		}
+
+		// Check if this solve has a FirstBlood entry
+		var firstBlood models.FirstBlood
+		if err := config.DB.Where("challenge_id = ? AND team_id = ? AND user_id = ?",
+			challenge.ID, solve.TeamID, solve.UserID).First(&firstBlood).Error; err == nil {
+			solveWithUser.FirstBlood = &firstBlood
 		}
 
 		solvesWithUsers = append(solvesWithUsers, solveWithUser)
@@ -1178,4 +1229,23 @@ func PurchaseHint(c *gin.Context) {
 		"hint":    hint,
 		"cost":    hint.Cost,
 	})
+}
+
+// GetChallengeFirstBloods returns all first blood entries for a specific challenge
+func GetChallengeFirstBloods(c *gin.Context) {
+	challengeID := c.Param("id")
+
+	var firstBloods []models.FirstBlood
+	if err := config.DB.
+		Preload("User").
+		Preload("Team").
+		Preload("Challenge").
+		Where("challenge_id = ?", challengeID).
+		Order("created_at ASC").
+		Find(&firstBloods).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_fetch_first_bloods"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"firstBloods": firstBloods})
 }

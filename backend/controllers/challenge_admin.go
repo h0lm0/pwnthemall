@@ -226,6 +226,11 @@ func recalculateChallengePoints(challengeID uint) {
 		return
 	}
 
+	// Delete existing FirstBlood entries for this challenge and recreate them
+	if err := config.DB.Where("challenge_id = ?", challengeID).Delete(&models.FirstBlood{}).Error; err != nil {
+		log.Printf("Failed to delete existing FirstBlood entries: %v", err)
+	}
+
 	// Get all solves for this challenge, ordered by creation time
 	var solves []models.Solve
 	if err := config.DB.Where("challenge_id = ?", challengeID).Order("created_at ASC").Find(&solves).Error; err != nil {
@@ -237,12 +242,42 @@ func recalculateChallengePoints(challengeID uint) {
 	for i, solve := range solves {
 		position := i
 		newPoints := decayService.CalculateDecayedPoints(&challenge, position)
-		if solve.Points != newPoints {
-			solve.Points = newPoints
+
+		// Add FirstBlood bonus if applicable
+		firstBloodBonus := 0
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			if position < len(challenge.FirstBloodBonuses) {
+				firstBloodBonus = int(challenge.FirstBloodBonuses[position])
+
+				// Create FirstBlood entry
+				badge := "trophy" // default badge
+				if position < len(challenge.FirstBloodBadges) {
+					badge = challenge.FirstBloodBadges[position]
+				}
+
+				firstBlood := models.FirstBlood{
+					ChallengeID: challengeID,
+					TeamID:      solve.TeamID,
+					UserID:      solve.UserID,
+					Bonuses:     []int64{int64(firstBloodBonus)},
+					Badges:      []string{badge},
+				}
+
+				if err := config.DB.Create(&firstBlood).Error; err != nil {
+					log.Printf("Failed to recreate FirstBlood entry: %v", err)
+				}
+			}
+		}
+
+		newPointsWithBonus := newPoints + firstBloodBonus
+
+		if solve.Points != newPointsWithBonus {
+			solve.Points = newPointsWithBonus
 			if err := config.DB.Save(&solve).Error; err != nil {
 				log.Printf("Failed to update solve for team %d, challenge %d: %v", solve.TeamID, solve.ChallengeID, err)
 			} else {
-				log.Printf("Updated solve points for team %d, challenge %d: %d -> %d", solve.TeamID, solve.ChallengeID, solve.Points, newPoints)
+				log.Printf("Updated solve points for team %d, challenge %d: %d -> %d (decay: %d, firstblood: %d)",
+					solve.TeamID, solve.ChallengeID, solve.Points, newPointsWithBonus, newPoints, firstBloodBonus)
 			}
 		}
 	}
