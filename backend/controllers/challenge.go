@@ -71,6 +71,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("ChallengeCategory").
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
+		Preload("Hints").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ? and hidden = false", categoryName).
 		Find(&challenges)
@@ -82,6 +83,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 
 	// Get solved challenges for the user's team
 	var solvedChallengeIds []uint
+	var purchasedHintIds []uint
 	if user.Team != nil {
 		var solves []models.Solve
 		if err := config.DB.Where("team_id = ?", user.Team.ID).Find(&solves).Error; err == nil {
@@ -89,13 +91,27 @@ func GetChallengesByCategoryName(c *gin.Context) {
 				solvedChallengeIds = append(solvedChallengeIds, solve.ChallengeID)
 			}
 		}
+
+		// Get purchased hints for the team
+		var purchases []models.HintPurchase
+		if err := config.DB.Where("team_id = ?", user.Team.ID).Find(&purchases).Error; err == nil {
+			for _, purchase := range purchases {
+				purchasedHintIds = append(purchasedHintIds, purchase.HintID)
+			}
+		}
 	}
 
-	// Create response with solved status
+	// Create response with solved status and hint purchase info
+	type HintWithPurchased struct {
+		models.Hint
+		Purchased bool `json:"purchased"`
+	}
+
 	type ChallengeWithSolved struct {
 		models.Challenge
-		Solved      bool     `json:"solved"`
-		GeoRadiusKm *float64 `json:"geoRadiusKm,omitempty"`
+		Solved      bool                `json:"solved"`
+		GeoRadiusKm *float64            `json:"geoRadiusKm,omitempty"`
+		Hints       []HintWithPurchased `json:"hints"`
 	}
 
 	var challengesWithSolved []ChallengeWithSolved
@@ -111,7 +127,27 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		// Compute current points (decay-aware) for display
 		challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
 
-		item := ChallengeWithSolved{Challenge: challenge, Solved: solved}
+		// Process hints with purchase status
+		var hintsWithPurchased []HintWithPurchased
+		for _, hint := range challenge.Hints {
+			purchased := false
+			for _, purchasedId := range purchasedHintIds {
+				if hint.ID == purchasedId {
+					purchased = true
+					break
+				}
+			}
+			hintsWithPurchased = append(hintsWithPurchased, HintWithPurchased{
+				Hint:      hint,
+				Purchased: purchased,
+			})
+		}
+
+		item := ChallengeWithSolved{
+			Challenge: challenge,
+			Solved:    solved,
+			Hints:     hintsWithPurchased,
+		}
 		if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
 			var spec models.GeoSpec
 			if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&spec).Error; err == nil {
@@ -1050,5 +1086,96 @@ func StopChallengeInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "instance_stopping",
 		"container": instance.Container,
+	})
+}
+
+func PurchaseHint(c *gin.Context) {
+	hintID := c.Param("id")
+
+	userI, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user, ok := userI.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
+	if user.TeamID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no_team"})
+		return
+	}
+
+	// Start transaction
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Check if hint exists
+	var hint models.Hint
+	if err := tx.First(&hint, hintID).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusNotFound, gin.H{"error": "hint_not_found"})
+		return
+	}
+
+	// Check if team already purchased this hint
+	var existingPurchase models.HintPurchase
+	if err := tx.Where("team_id = ? AND hint_id = ?", *user.TeamID, hint.ID).First(&existingPurchase).Error; err == nil {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "hint_already_purchased"})
+		return
+	}
+
+	// Get team with current score
+	var team models.Team
+	if err := tx.Preload("Solves").First(&team, *user.TeamID).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_not_found"})
+		return
+	}
+
+	// Calculate team score
+	totalScore := 0
+	for _, solve := range team.Solves {
+		totalScore += solve.Points
+	}
+
+	// Check if team has enough points
+	if totalScore < hint.Cost {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient_points", "required": hint.Cost, "available": totalScore})
+		return
+	}
+
+	// Create hint purchase record
+	purchase := models.HintPurchase{
+		TeamID: *user.TeamID,
+		HintID: hint.ID,
+		UserID: user.ID,
+		Cost:   hint.Cost,
+	}
+
+	if err := tx.Create(&purchase).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_purchase_hint"})
+		return
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_commit_transaction"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "hint_purchased",
+		"hint":    hint,
+		"cost":    hint.Cost,
 	})
 }

@@ -20,6 +20,7 @@ func RegisterTeamRoutes(router *gin.Engine) {
 		teams.POST("/disband", middleware.CheckPolicy("/teams", "write"), controllers.DisbandTeam)
 		teams.POST("/kick", middleware.CheckPolicy("/teams", "write"), controllers.KickTeamMember)
 		teams.POST("/recalculate-points", middleware.CheckPolicy("/teams", "write"), controllers.RecalculateTeamPoints)
+		teams.GET("/score", middleware.CheckPolicy("/teams", "read"), controllers.GetTeamScore)
 		teams.PUT("/:id", middleware.CheckPolicy("/teams/:id", "write"), controllers.UpdateTeam)
 		teams.DELETE("/:id", middleware.CheckPolicy("/teams/:id", "write"), controllers.DeleteTeam)
 	}

@@ -10,6 +10,7 @@ p, member, /challenges/category/:category, read
 p, member, /challenges/:id/start, write
 p, member, /challenges/:id/stop, write
 p, member, /challenges/:id/instance-status, read
+p, member, /challenges/hints/:id/purchase, write
 p, member, /challenges-categories, read
 p, member, /instances, read
 p, member, /instances/:id, read
@@ -17,6 +18,7 @@ p, member, /challenges-categories/:id, read
 p, member, /teams, read
 p, member, /teams/:id, read
 p, member, /teams, write
+p, member, /teams/score, read
 p, member, /teams/join, write
 p, member, /teams/leave, write
 p, member, /teams/transfer-owner, write

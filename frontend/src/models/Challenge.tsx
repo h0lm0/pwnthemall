@@ -43,6 +43,7 @@ export interface Challenge {
     content: string
     cost: number
     challengeId: number
+    purchased?: boolean
   }[]
 }
 
