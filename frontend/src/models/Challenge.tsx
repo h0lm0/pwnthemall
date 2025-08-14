@@ -47,6 +47,17 @@ export interface Challenge {
   }[]
 }
 
+export interface FirstBlood {
+  id: number
+  challengeId: number
+  teamId: number
+  userId: number
+  bonuses: number[]
+  badges: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Solve {
   teamId: number
   team: Team
@@ -56,4 +67,5 @@ export interface Solve {
   createdAt: string
   userId?: number
   username?: string
+  firstBlood?: FirstBlood
 }
