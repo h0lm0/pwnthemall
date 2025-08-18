@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -134,10 +133,10 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		// Process hints with purchase status - only include active hints
 		var hintsWithPurchased []HintWithPurchased
 		for _, hint := range challenge.Hints {
-			log.Printf("Hint ID %d: IsActive=%t, User Role=%s", hint.ID, hint.IsActive, user.Role)
+			debug.Log("Hint ID %d: IsActive=%t, User Role=%s", hint.ID, hint.IsActive, user.Role)
 			// Skip inactive hints unless user is admin
 			if !hint.IsActive && user.Role != "admin" {
-				log.Printf("Skipping inactive hint ID %d for non-admin user", hint.ID)
+				debug.Log("Skipping inactive hint ID %d for non-admin user", hint.ID)
 				continue
 			}
 
@@ -262,7 +261,7 @@ func CreateChallenge(c *gin.Context) {
 		})
 
 		if err != nil {
-			log.Printf("Failed to upload %s: %v", objectPath, err)
+			debug.Log("Failed to upload %s: %v", objectPath, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to MinIO"})
 			return
 		}
@@ -382,6 +381,8 @@ func SubmitChallenge(c *gin.Context) {
 				var spec models.GeoSpec
 				if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&spec).Error; err == nil {
 					if utils.IsWithinRadiusKm(spec.TargetLat, spec.TargetLng, v, w, spec.RadiusKm) {
+						debug.Log("Geo submission within radius for challenge %d (lat=%f,lng=%f) target(%f,%f) radius=%f",
+							challenge.ID, v, w, spec.TargetLat, spec.TargetLng, spec.RadiusKm)
 						found = true
 					}
 				}
@@ -393,7 +394,7 @@ func SubmitChallenge(c *gin.Context) {
 		var position int64
 		config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&position)
 
-		log.Printf("DEBUG FirstBlood: Challenge %d, Position %d, EnableFirstBlood: %v, Bonuses count: %d",
+		debug.Log("DEBUG FirstBlood: Challenge %d, Position %d, EnableFirstBlood: %v, Bonuses count: %d",
 			challenge.ID, position, challenge.EnableFirstBlood, len(challenge.FirstBloodBonuses))
 
 		firstBloodBonus := 0
@@ -401,12 +402,12 @@ func SubmitChallenge(c *gin.Context) {
 			pos := int(position)
 			if pos < len(challenge.FirstBloodBonuses) {
 				firstBloodBonus = int(challenge.FirstBloodBonuses[pos])
-				log.Printf("DEBUG FirstBlood: Position %d gets bonus %d points", pos, firstBloodBonus)
+				debug.Log("DEBUG FirstBlood: Position %d gets bonus %d points", pos, firstBloodBonus)
 			} else {
-				log.Printf("DEBUG FirstBlood: Position %d beyond configured bonuses (%d available)", pos, len(challenge.FirstBloodBonuses))
+				debug.Log("DEBUG FirstBlood: Position %d beyond configured bonuses (%d available)", pos, len(challenge.FirstBloodBonuses))
 			}
 		} else {
-			log.Printf("DEBUG FirstBlood: FirstBlood not enabled or no bonuses configured")
+			debug.Log("DEBUG FirstBlood: FirstBlood not enabled or no bonuses configured")
 		}
 
 		var solve models.Solve
@@ -437,9 +438,9 @@ func SubmitChallenge(c *gin.Context) {
 				}
 
 				if err := config.DB.Create(&firstBlood).Error; err != nil {
-					log.Printf("Failed to create FirstBlood entry: %v", err)
+					debug.Log("Failed to create FirstBlood entry: %v", err)
 				} else {
-					log.Printf("Created FirstBlood entry for user %d, challenge %d, position %d, bonus %d points",
+					debug.Log("Created FirstBlood entry for user %d, challenge %d, position %d, bonus %d points",
 						user.ID, challenge.ID, position, firstBloodBonus)
 				}
 			}
@@ -477,12 +478,12 @@ func SubmitChallenge(c *gin.Context) {
 					// Try stopping the container
 					if instance.Container != "" {
 						if err := utils.StopDockerInstance(instance.Container); err != nil {
-							log.Printf("Failed to stop Docker instance on solve: %v", err)
+							debug.Log("Failed to stop Docker instance on solve: %v", err)
 						}
 					}
 					// Remove instance record to free the slot
 					if err := config.DB.Delete(&instance).Error; err != nil {
-						log.Printf("Failed to delete instance on solve: %v", err)
+						debug.Log("Failed to delete instance on solve: %v", err)
 					}
 
 					// Notify team listeners that instance stopped
@@ -754,7 +755,7 @@ func StartChallengeInstance(c *gin.Context) {
 
 	containerID, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, ports)
 	if err != nil {
-		log.Printf("DEBUG: Error starting Docker instance: %v", err)
+		debug.Log("DEBUG: Error starting Docker instance: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -858,62 +859,62 @@ func KillChallengeInstance(c *gin.Context) {
 	challengeID := c.Param("id")
 	userID, ok := c.Get("user_id")
 	if !ok {
-		log.Printf("DEBUG: No user_id in context for kill request")
+		debug.Log("DEBUG: No user_id in context for kill request")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	log.Printf("DEBUG: Killing instance for challenge ID: %s by user ID: %v", challengeID, userID)
+	debug.Log("DEBUG: Killing instance for challenge ID: %s by user ID: %v", challengeID, userID)
 
 	var user models.User
 	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
-		log.Printf("DEBUG: User not found with ID %v: %v", userID, err)
+		debug.Log("DEBUG: User not found with ID %v: %v", userID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
-	log.Printf("DEBUG: Found user: %s, TeamID: %v", user.Username, user.TeamID)
+	debug.Log("DEBUG: Found user: %s, TeamID: %v", user.Username, user.TeamID)
 
 	if user.Team == nil || user.TeamID == nil {
-		log.Printf("DEBUG: User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
+		debug.Log("DEBUG: User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
 		return
 	}
-	log.Printf("DEBUG: User team: %s (ID: %d)", user.Team.Name, user.Team.ID)
+	debug.Log("DEBUG: User team: %s (ID: %d)", user.Team.Name, user.Team.ID)
 
 	// Find the instance for this user/team and challenge
 	var instance models.Instance
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
-		log.Printf("DEBUG: Instance not found for team %d, challenge %s: %v", user.Team.ID, challengeID, err)
+		debug.Log("DEBUG: Instance not found for team %d, challenge %s: %v", user.Team.ID, challengeID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
 		return
 	}
-	log.Printf("DEBUG: Found instance: ID=%d, Container=%s, Status=%s", instance.ID, instance.Container, instance.Status)
+	debug.Log("DEBUG: Found instance: ID=%d, Container=%s, Status=%s", instance.ID, instance.Container, instance.Status)
 
 	// Check if user owns this instance or is admin
 	if instance.UserID != user.ID && user.Role != "admin" {
-		log.Printf("DEBUG: User %d not authorized to kill instance owned by user %d (user role: %s)", user.ID, instance.UserID, user.Role)
+		debug.Log("DEBUG: User %d not authorized to kill instance owned by user %d (user role: %s)", user.ID, instance.UserID, user.Role)
 		c.JSON(http.StatusForbidden, gin.H{"error": "not_authorized"})
 		return
 	}
-	log.Printf("DEBUG: User authorized to kill instance")
+	debug.Log("DEBUG: User authorized to kill instance")
 
 	// Stop the Docker container
-	log.Printf("DEBUG: Stopping Docker container: %s", instance.Container)
+	debug.Log("DEBUG: Stopping Docker container: %s", instance.Container)
 	if err := utils.StopDockerInstance(instance.Container); err != nil {
-		log.Printf("DEBUG: Error stopping Docker instance: %v", err)
+		debug.Log("DEBUG: Error stopping Docker instance: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_stop_instance"})
 		return
 	}
-	log.Printf("DEBUG: Docker container stopped successfully: %s", instance.Container)
+	debug.Log("DEBUG: Docker container stopped successfully: %s", instance.Container)
 
 	// Update instance status
-	log.Printf("DEBUG: Updating instance status to 'stopped'")
+	debug.Log("DEBUG: Updating instance status to 'stopped'")
 	instance.Status = "stopped"
 	if err := config.DB.Save(&instance).Error; err != nil {
-		log.Printf("DEBUG: Error updating instance status: %v", err)
+		debug.Log("DEBUG: Error updating instance status: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_instance"})
 		return
 	}
-	log.Printf("DEBUG: Instance status updated successfully")
+	debug.Log("DEBUG: Instance status updated successfully")
 
 	// Record cooldown immediately before kill to prevent rapid restarts
 	if instance.TeamID != 0 {
@@ -956,7 +957,7 @@ func KillChallengeInstance(c *gin.Context) {
 		"status":  "instance_stopped",
 		"message": "Instance stopped successfully",
 	})
-	log.Printf("DEBUG: Kill instance request completed successfully for challenge %s", challengeID)
+	debug.Log("DEBUG: Kill instance request completed successfully for challenge %s", challengeID)
 }
 
 func GetInstanceStatus(c *gin.Context) {
@@ -1106,11 +1107,11 @@ func StopChallengeInstance(c *gin.Context) {
 
 	go func() {
 		if err := utils.StopDockerInstance(instance.Container); err != nil {
-			log.Printf("Failed to stop Docker instance: %v", err)
+			debug.Log("Failed to stop Docker instance: %v", err)
 		}
 
 		if err := config.DB.Delete(&instance).Error; err != nil {
-			log.Printf("Failed to delete instance from database: %v", err)
+			debug.Log("Failed to delete instance from database: %v", err)
 		}
 
 		// Cooldown already recorded synchronously above
