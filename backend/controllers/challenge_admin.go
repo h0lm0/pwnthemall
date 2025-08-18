@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/debug"
 	"pwnthemall/models"
 	"pwnthemall/utils"
 
@@ -89,7 +89,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 
 	// Process hints from request
 	for _, hintReq := range req.Hints {
-		log.Printf("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
+		debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
 
 		if hintReq.ID > 0 {
 			// Update existing hint
@@ -100,9 +100,9 @@ func UpdateChallengeAdmin(c *gin.Context) {
 				hint.Cost = hintReq.Cost
 				hint.IsActive = hintReq.IsActive
 				if err := config.DB.Save(&hint).Error; err != nil {
-					log.Printf("Failed to update hint %d: %v", hint.ID, err)
+					debug.Log("Failed to update hint %d: %v", hint.ID, err)
 				} else {
-					log.Printf("Successfully updated hint %d", hint.ID)
+					debug.Log("Successfully updated hint %d", hint.ID)
 				}
 			}
 		} else if hintReq.Content != "" {
@@ -115,19 +115,19 @@ func UpdateChallengeAdmin(c *gin.Context) {
 				IsActive:    hintReq.IsActive,
 			}
 			if err := config.DB.Create(&hint).Error; err != nil {
-				log.Printf("Failed to create hint: %v", err)
+				debug.Log("Failed to create hint: %v", err)
 			} else {
-				log.Printf("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
+				debug.Log("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
 			}
 		}
 	}
 
 	if err := config.DB.Preload("DecayFormula").Preload("Hints").Preload("FirstBlood").First(&challenge, challenge.ID).Error; err != nil {
-		log.Printf("Failed to reload challenge: %v", err)
+		debug.Log("Failed to reload challenge: %v", err)
 	} else {
-		log.Printf("Reloaded challenge %d with %d hints", challenge.ID, len(challenge.Hints))
+		debug.Log("Reloaded challenge %d with %d hints", challenge.ID, len(challenge.Hints))
 		for i, hint := range challenge.Hints {
-			log.Printf("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
+			debug.Log("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
 		}
 	}
 
@@ -174,9 +174,9 @@ func GetChallengeAdmin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("GetChallengeAdmin: Challenge %d has %d hints", challenge.ID, len(challenge.Hints))
+	debug.Log("GetChallengeAdmin: Challenge %d has %d hints", challenge.ID, len(challenge.Hints))
 	for i, hint := range challenge.Hints {
-		log.Printf("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
+		debug.Log("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
 	}
 
 	var decayFormulas []models.DecayFormula
@@ -222,19 +222,19 @@ func recalculateChallengePoints(challengeID uint) {
 	// Get the challenge details
 	var challenge models.Challenge
 	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
-		log.Printf("Failed to fetch challenge %d for recalculation: %v", challengeID, err)
+		debug.Log("Failed to fetch challenge %d for recalculation: %v", challengeID, err)
 		return
 	}
 
 	// Delete existing FirstBlood entries for this challenge and recreate them
 	if err := config.DB.Where("challenge_id = ?", challengeID).Delete(&models.FirstBlood{}).Error; err != nil {
-		log.Printf("Failed to delete existing FirstBlood entries: %v", err)
+		debug.Log("Failed to delete existing FirstBlood entries: %v", err)
 	}
 
 	// Get all solves for this challenge, ordered by creation time
 	var solves []models.Solve
 	if err := config.DB.Where("challenge_id = ?", challengeID).Order("created_at ASC").Find(&solves).Error; err != nil {
-		log.Printf("Failed to fetch solves for challenge %d: %v", challengeID, err)
+		debug.Log("Failed to fetch solves for challenge %d: %v", challengeID, err)
 		return
 	}
 
@@ -264,7 +264,7 @@ func recalculateChallengePoints(challengeID uint) {
 				}
 
 				if err := config.DB.Create(&firstBlood).Error; err != nil {
-					log.Printf("Failed to recreate FirstBlood entry: %v", err)
+					debug.Log("Failed to recreate FirstBlood entry: %v", err)
 				}
 			}
 		}
@@ -274,9 +274,9 @@ func recalculateChallengePoints(challengeID uint) {
 		if solve.Points != newPointsWithBonus {
 			solve.Points = newPointsWithBonus
 			if err := config.DB.Save(&solve).Error; err != nil {
-				log.Printf("Failed to update solve for team %d, challenge %d: %v", solve.TeamID, solve.ChallengeID, err)
+				debug.Log("Failed to update solve for team %d, challenge %d: %v", solve.TeamID, solve.ChallengeID, err)
 			} else {
-				log.Printf("Updated solve points for team %d, challenge %d: %d -> %d (decay: %d, firstblood: %d)",
+				debug.Log("Updated solve points for team %d, challenge %d: %d -> %d (decay: %d, firstblood: %d)",
 					solve.TeamID, solve.ChallengeID, solve.Points, newPointsWithBonus, newPoints, firstBloodBonus)
 			}
 		}
