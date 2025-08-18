@@ -207,7 +207,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           title: hint.title || "Hint",
           content: hint.content,
           cost: hint.cost,
-          isActive: (hint as Hint).isActive ?? true,
+          isActive: !!(hint as Hint).isActive,
           autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
         }))
       })
@@ -270,7 +270,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           title: hint.title || "Hint",
           content: hint.content,
           cost: hint.cost,
-          isActive: (hint as Hint).isActive ?? true,
+          isActive: !!(hint as Hint).isActive,
           autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
         }))
       })
@@ -342,7 +342,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           title: hint.title || "Hint",
           content: hint.content,
           cost: hint.cost,
-          isActive: (hint as Hint).isActive ?? true,
+          isActive: !!(hint as Hint).isActive,
           autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
         }))
       })
@@ -811,7 +811,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                     title: hint.title || "",
                                     content: hint.content,
                                     cost: hint.cost,
-                                    isActive: (hint as Hint).isActive ?? true,
+                                    isActive: !!(hint as Hint).isActive,
                                     autoActiveAt: (hint as Hint).autoActiveAt ? formatDateTimeForFrontend((hint as Hint).autoActiveAt!) : null
                                   }
                                 }))}

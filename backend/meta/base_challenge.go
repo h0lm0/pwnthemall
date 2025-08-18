@@ -21,7 +21,7 @@ type HintMetadata struct {
 	Title        string  `yaml:"title"`
 	Content      string  `yaml:"content"`
 	Cost         int     `yaml:"cost"`
-	IsActive     bool    `yaml:"is_active"`
+	IsActive     *bool   `yaml:"is_active"`
 	AutoActiveAt *string `yaml:"auto_activate_at,omitempty"`
 }
 

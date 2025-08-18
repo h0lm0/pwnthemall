@@ -1,6 +1,6 @@
 name: Hintator
 description: |
-  El famoso Hintator update
+  El famoso Hintator update - final test uwu
 category: misc
 difficulty: easy
 type: standard
@@ -9,12 +9,12 @@ flags: ["flag"]
 hidden: false
 points: 500
 hints:
-  - title: "Indice basique"
+  - title: "Indice"
     content: "Un indice basique pour commencer."
     cost: 5
     is_active: true
 
-  - title: "Indice désactivé"
+  - title: "Indice désactivé normalement"
     content: "Cet indice est désactivé et ne doit pas être visible immédiatement."
     cost: 15
     is_active: false
