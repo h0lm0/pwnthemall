@@ -6,6 +6,7 @@ import (
 	"pwnthemall/debug"
 	"pwnthemall/models"
 	"pwnthemall/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,11 +30,12 @@ type ChallengeGeneralUpdateRequest struct {
 }
 
 type HintRequest struct {
-	ID       uint   `json:"id,omitempty"`
-	Title    string `json:"title"`
-	Content  string `json:"content"`
-	Cost     int    `json:"cost"`
-	IsActive bool   `json:"isActive"`
+	ID           uint       `json:"id,omitempty"`
+	Title        string     `json:"title"`
+	Content      string     `json:"content"`
+	Cost         int        `json:"cost"`
+	IsActive     bool       `json:"isActive"`
+	AutoActiveAt *time.Time `json:"autoActiveAt,omitempty"`
 }
 
 func UpdateChallengeAdmin(c *gin.Context) {
@@ -90,7 +92,6 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	// Process hints from request
 	for _, hintReq := range req.Hints {
 		debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
-
 		if hintReq.ID > 0 {
 			// Update existing hint
 			var hint models.Hint
@@ -99,6 +100,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 				hint.Content = hintReq.Content
 				hint.Cost = hintReq.Cost
 				hint.IsActive = hintReq.IsActive
+				hint.AutoActiveAt = hintReq.AutoActiveAt
 				if err := config.DB.Save(&hint).Error; err != nil {
 					debug.Log("Failed to update hint %d: %v", hint.ID, err)
 				} else {
@@ -108,11 +110,12 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		} else if hintReq.Content != "" {
 			// Create new hint
 			hint := models.Hint{
-				ChallengeID: challenge.ID,
-				Title:       hintReq.Title,
-				Content:     hintReq.Content,
-				Cost:        hintReq.Cost,
-				IsActive:    hintReq.IsActive,
+				ChallengeID:  challenge.ID,
+				Title:        hintReq.Title,
+				Content:      hintReq.Content,
+				Cost:         hintReq.Cost,
+				IsActive:     hintReq.IsActive,
+				AutoActiveAt: hintReq.AutoActiveAt,
 			}
 			if err := config.DB.Create(&hint).Error; err != nil {
 				debug.Log("Failed to create hint: %v", err)
@@ -281,4 +284,37 @@ func recalculateChallengePoints(challengeID uint) {
 			}
 		}
 	}
+}
+
+// CheckAndActivateHints endpoint to manually activate ALL hints for admin
+func CheckAndActivateHints(c *gin.Context) {
+	var hints []models.Hint
+	if err := config.DB.Find(&hints).Error; err != nil {
+		debug.Log("Failed to fetch all hints: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch hints"})
+		return
+	}
+
+	activatedCount := 0
+	totalHints := len(hints)
+
+	for _, hint := range hints {
+		if !hint.IsActive {
+			hint.IsActive = true
+			if err := config.DB.Save(&hint).Error; err != nil {
+				debug.Log("Failed to activate hint %d: %v", hint.ID, err)
+			} else {
+				debug.Log("Manually activated hint %d (%s) for challenge %d", hint.ID, hint.Title, hint.ChallengeID)
+				activatedCount++
+			}
+		}
+	}
+
+	debug.Log("Manual activation completed: activated %d hints out of %d total hints", activatedCount, totalHints)
+	c.JSON(http.StatusOK, gin.H{
+		"message":         "All hints activation completed",
+		"activated_count": activatedCount,
+		"total_hints":     totalHints,
+		"already_active":  totalHints - activatedCount,
+	})
 }
