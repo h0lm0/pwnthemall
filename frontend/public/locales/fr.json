@@ -382,5 +382,7 @@
   "team_solved_title": "L'équipe a résolu un challenge",
   "team_solved_message": "{username} a résolu {label} (+{points} pts)",
   "instance_started_by_user": "Démarrée par {username}",
-  "demo_restriction": "Cette page/action est désactivée en environnement de démo"
+  "demo_restriction": "Cette page/action est désactivée en environnement de démo",
+  "points": "Points",
+  "spent": "Dépensé"
 }

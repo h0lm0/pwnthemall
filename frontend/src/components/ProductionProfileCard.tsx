@@ -356,7 +356,7 @@ export default function ProductionProfileCard() {
                     {t('points')}
                   </div>
                   <div className="text-3xl font-bold text-foreground">
-                    {userPoints !== null ? userPoints : 0}
+                    {teamTotalPoints !== null ? teamTotalPoints : 0}
                   </div>
                 </div>
                 

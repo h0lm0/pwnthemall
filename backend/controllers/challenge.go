@@ -1198,10 +1198,19 @@ func PurchaseHint(c *gin.Context) {
 		totalScore += solve.Points
 	}
 
+	// Get total spent on hints
+	var totalSpent int64
+	tx.Model(&models.HintPurchase{}).
+		Where("team_id = ?", *user.TeamID).
+		Select("COALESCE(SUM(cost), 0)").
+		Scan(&totalSpent)
+
+	availableScore := totalScore - int(totalSpent)
+
 	// Check if team has enough points
-	if totalScore < hint.Cost {
+	if availableScore < hint.Cost {
 		tx.Rollback()
-		c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient_points", "required": hint.Cost, "available": totalScore})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient_points", "required": hint.Cost, "available": availableScore})
 		return
 	}
 
