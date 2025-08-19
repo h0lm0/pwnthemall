@@ -288,13 +288,35 @@ func recalculateChallengePoints(challengeID uint) {
 	}
 }
 
-// ActivateScheduledHints activates hints that should be auto-activated based on their AutoActiveAt time
-func ActivateScheduledHints() {
-	utils.ActivateScheduledHints()
-}
-
-// CheckAndActivateHints endpoint to manually trigger hint activation check (for admin)
+// CheckAndActivateHints endpoint to manually activate ALL hints for admin
 func CheckAndActivateHints(c *gin.Context) {
-	utils.ActivateScheduledHints()
-	c.JSON(http.StatusOK, gin.H{"message": "Hint activation check completed"})
+	var hints []models.Hint
+	if err := config.DB.Find(&hints).Error; err != nil {
+		debug.Log("Failed to fetch all hints: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch hints"})
+		return
+	}
+
+	activatedCount := 0
+	totalHints := len(hints)
+
+	for _, hint := range hints {
+		if !hint.IsActive {
+			hint.IsActive = true
+			if err := config.DB.Save(&hint).Error; err != nil {
+				debug.Log("Failed to activate hint %d: %v", hint.ID, err)
+			} else {
+				debug.Log("Manually activated hint %d (%s) for challenge %d", hint.ID, hint.Title, hint.ChallengeID)
+				activatedCount++
+			}
+		}
+	}
+
+	debug.Log("Manual activation completed: activated %d hints out of %d total hints", activatedCount, totalHints)
+	c.JSON(http.StatusOK, gin.H{
+		"message":         "All hints activation completed",
+		"activated_count": activatedCount,
+		"total_hints":     totalHints,
+		"already_active":  totalHints - activatedCount,
+	})
 }

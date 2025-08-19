@@ -587,7 +587,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     }
                   }}
                 >
-                  Activate Scheduled Hints
+                  Activate all Hints
                 </Button>
               </div>
             </CardHeader>
