@@ -10,6 +10,7 @@ p, member, /challenges/category/:category, read
 p, member, /challenges/:id/start, write
 p, member, /challenges/:id/stop, write
 p, member, /challenges/:id/instance-status, read
+p, member, /challenges/:id/firstbloods, read
 p, member, /challenges/hints/:id/purchase, write
 p, member, /challenges-categories, read
 p, member, /instances, read
@@ -28,4 +29,5 @@ p, member, /notifications/unread-count, read
 p, member, /notifications/:id/read, write
 p, member, /notifications/read-all, write
 p, member, /ws/notifications, read
+
 p, admin, /*, *
