@@ -474,14 +474,21 @@ func GetLeaderboard(c *gin.Context) {
 func RecalculateTeamPoints(c *gin.Context) {
 	decayService := utils.NewDecay()
 
-	// Get all solves
+	// Delete all existing FirstBlood entries and recreate them
+	if err := config.DB.Delete(&models.FirstBlood{}, "1=1").Error; err != nil {
+		log.Printf("Failed to delete existing FirstBlood entries: %v", err)
+	}
+
+	// Get all solves grouped by challenge and ordered by creation time
 	var solves []models.Solve
-	if err := config.DB.Find(&solves).Error; err != nil {
+	if err := config.DB.Order("challenge_id ASC, created_at ASC").Find(&solves).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_fetch_solves"})
 		return
 	}
 
 	updatedCount := 0
+	challengePositions := make(map[uint]int) // Track position per challenge
+
 	for _, solve := range solves {
 		// Get challenge details
 		var challenge models.Challenge
@@ -489,18 +496,44 @@ func RecalculateTeamPoints(c *gin.Context) {
 			continue
 		}
 
-		// Calculate the position of this solve (0-based)
-		var position int64
-		config.DB.Model(&models.Solve{}).
-			Where("challenge_id = ? AND created_at < ?", challenge.ID, solve.CreatedAt).
-			Count(&position)
+		// Get current position for this challenge
+		position := challengePositions[solve.ChallengeID]
+		challengePositions[solve.ChallengeID]++
 
 		// Calculate new points with current decay settings
-		newPoints := decayService.CalculateDecayedPoints(&challenge, int(position))
+		newPoints := decayService.CalculateDecayedPoints(&challenge, position)
+
+		// Add FirstBlood bonus if applicable
+		firstBloodBonus := 0
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			if position < len(challenge.FirstBloodBonuses) {
+				firstBloodBonus = int(challenge.FirstBloodBonuses[position])
+
+				// Create FirstBlood entry
+				badge := "trophy" // default badge
+				if position < len(challenge.FirstBloodBadges) {
+					badge = challenge.FirstBloodBadges[position]
+				}
+
+				firstBlood := models.FirstBlood{
+					ChallengeID: challenge.ID,
+					TeamID:      solve.TeamID,
+					UserID:      solve.UserID,
+					Bonuses:     []int64{int64(firstBloodBonus)},
+					Badges:      []string{badge},
+				}
+
+				if err := config.DB.Create(&firstBlood).Error; err != nil {
+					log.Printf("Failed to recreate FirstBlood entry: %v", err)
+				}
+			}
+		}
+
+		newPointsWithBonus := newPoints + firstBloodBonus
 
 		// Update if points have changed
-		if solve.Points != newPoints {
-			solve.Points = newPoints
+		if solve.Points != newPointsWithBonus {
+			solve.Points = newPointsWithBonus
 			if err := config.DB.Save(&solve).Error; err != nil {
 				log.Printf("Failed to update solve for team %d, challenge %d: %v", solve.TeamID, solve.ChallengeID, err)
 				continue
