@@ -12,12 +12,14 @@ import (
 	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/debug"
+	"pwnthemall/dto"
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"github.com/lib/pq"
 	"github.com/minio/minio-go/v7"
 	"gorm.io/gorm"
@@ -1246,35 +1248,12 @@ func GetChallengeFirstBloods(c *gin.Context) {
 		return
 	}
 
-	type FirstBloodDTO struct {
-		ID        uint     `json:"id"`
-		UserID    uint     `json:"userId"`
-		Username  string   `json:"username"`
-		TeamID    uint     `json:"teamId"`
-		TeamName  string   `json:"teamName"`
-		Bonuses   []int64  `json:"bonuses"`
-		Badges    []string `json:"badges"`
-		CreatedAt time.Time `json:"createdAt"`
-	}
-
-	var dtoList []FirstBloodDTO
+	var firstbloodDTOs []dto.FirstBloodDTO
 	for _, fb := range firstBloods {
-		dto := FirstBloodDTO{
-			ID:        fb.ID,
-			UserID:    fb.UserID,
-			TeamID:    fb.TeamID,
-			Bonuses:   fb.Bonuses,
-			Badges:    fb.Badges,
-			CreatedAt: fb.CreatedAt,
-		}
-		if fb.User != nil {
-			dto.Username = fb.User.Username
-		}
-		if fb.Team != nil {
-			dto.TeamName = fb.Team.Name
-		}
-		dtoList = append(dtoList, dto)
+		firstbloodDTO := dto.FirstBloodDTO{}
+		copier.Copy(&firstbloodDTO, &fb)
+		firstbloodDTOs = append(firstbloodDTOs, firstbloodDTO)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"firstBloods": dtoList})
+	c.JSON(http.StatusOK, gin.H{"firstBloods": firstbloodDTOs})
 }
