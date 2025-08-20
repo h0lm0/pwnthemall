@@ -269,19 +269,19 @@ func seedChallengeDifficulty() {
 func seedDecayFormulas() {
 	decayFormulas := []models.DecayFormula{
 		{
-			Name:      "Linear Decay",
-			Step:      10,
-			MinPoints: 50,
+			Name:        "Linear Decay",
+			DecayFactor: 10,
+			MinPoints:   50,
 		},
 		{
-			Name:      "Exponential Decay",
-			Step:      15,
-			MinPoints: 25,
+			Name:        "Exponential Decay",
+			DecayFactor: 15,
+			MinPoints:   25,
 		},
 		{
-			Name:      "Logarithmic Decay",
-			Step:      20,
-			MinPoints: 30,
+			Name:        "Décroissance linéaire",
+			DecayFactor: 20,
+			MinPoints:   10,
 		},
 	}
 

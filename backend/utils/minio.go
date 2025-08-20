@@ -146,7 +146,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	}
 
 	var cDecayFormula models.DecayFormula
-	if err := config.DB.FirstOrCreate(&cDecayFormula, models.DecayFormula{Name: cDecayFormula.Name, Step: cDecayFormula.Step, MinPoints: cDecayFormula.MinPoints}).Error; err != nil {
+	if err := config.DB.FirstOrCreate(&cDecayFormula, models.DecayFormula{Name: cDecayFormula.Name, DecayFactor: cDecayFormula.DecayFactor, MinPoints: cDecayFormula.MinPoints}).Error; err != nil {
 		return err
 	}
 	var challenge models.Challenge

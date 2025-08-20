@@ -29,7 +29,7 @@ interface ChallengeAdminFormProps {
 interface DecayFormula {
   id: number
   name: string
-  step: number
+  decay_factor: number
   minPoints: number
 }
 
@@ -121,9 +121,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const [editingDecayFormula, setEditingDecayFormula] = useState<DecayFormula | null>(null)
   const [deletingDecayFormula, setDeletingDecayFormula] = useState<DecayFormula | null>(null)
   const [decayFormulaData, setDecayFormulaData] = useState({
-    type: 'Linear' as 'Linear' | 'Exponential' | 'Logarithmic',
+    type: 'Linear' as 'Linear' | 'Exponential' | 'Décroissance linéaire',
     name: '',
-    step: 10,
+    decay_factor: 10,
     minPoints: 10
   })
 
@@ -164,7 +164,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       ).map((formula: any) => ({
         id: formula.id,
         name: formula.name,
-        step: formula.step || 10,
+        decay_factor: formula.decay_factor || 10,
         minPoints: formula.minPoints || 10,
       }))
       setDecayFormulas(validFormulas)
@@ -247,8 +247,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
 
   // Decay Formula Handlers
   const handleCreateDecayFormula = async () => {
-    if (!decayFormulaData.name || decayFormulaData.step <= 0) {
-      toast.error("Please provide valid formula name and step value")
+    if (!decayFormulaData.name || decayFormulaData.decay_factor <= 0) {
+      toast.error("Please provide valid formula name and decay factor value")
       return
     }
 
@@ -261,12 +261,12 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     try {
       await axios.post("/api/decay-formulas", {
         name: formulaName,
-        step: decayFormulaData.step,
+        decay_factor: decayFormulaData.decay_factor,
         minPoints: decayFormulaData.minPoints
       })
       toast.success("Decay formula created successfully")
       setShowDecayFormulaForm(false)
-      setDecayFormulaData({ type: 'Linear', name: '', step: 10, minPoints: 10 })
+      setDecayFormulaData({ type: 'Linear', name: '', decay_factor: 10, minPoints: 10 })
       fetchDecayFormulas()
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to create decay formula")
@@ -274,8 +274,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   }
 
   const handleUpdateDecayFormula = async () => {
-    if (!editingDecayFormula || !decayFormulaData.name || decayFormulaData.step <= 0) {
-      toast.error("Please provide valid formula name and step value")
+    if (!editingDecayFormula || !decayFormulaData.name || decayFormulaData.decay_factor <= 0) {
+      toast.error("Please provide valid formula name and decay factor value")
       return
     }
 
@@ -288,12 +288,12 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     try {
       await axios.put(`/api/decay-formulas/${editingDecayFormula.id}`, {
         name: formulaName,
-        step: decayFormulaData.step,
+        decay_factor: decayFormulaData.decay_factor,
         minPoints: decayFormulaData.minPoints
       })
       toast.success("Decay formula updated successfully")
       setEditingDecayFormula(null)
-      setDecayFormulaData({ type: 'Linear', name: '', step: 10, minPoints: 10 })
+      setDecayFormulaData({ type: 'Linear', name: '', decay_factor: 10, minPoints: 10 })
       fetchDecayFormulas()
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to update decay formula")
@@ -588,7 +588,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     <SelectItem value="none">None</SelectItem>
                     {decayFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id.toString()}>
-                        {formula.name} - Step: {formula.step}, Min: {formula.minPoints}
+                        {formula.name} - Factor: {formula.decay_factor}, Min: {formula.minPoints}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -628,7 +628,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                         <div>
                           <p className="font-medium">{formula.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            Step: {formula.step} points • Min: {formula.minPoints} points
+                            Factor: {formula.decay_factor} • Min: {formula.minPoints} points
                           </p>
                         </div>
                         <div className="flex gap-2">
@@ -637,17 +637,17 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                             size="sm"
                             onClick={() => {
                               // Détecter le type à partir du nom
-                              let detectedType: 'Linear' | 'Exponential' | 'Logarithmic' = 'Linear'
+                              let detectedType: 'Linear' | 'Exponential' | 'Décroissance linéaire' = 'Linear'
                               const name = formula.name.toLowerCase()
                               if (name.includes('exponential')) {
                                 detectedType = 'Exponential'
-                              } else if (name.includes('logarithmic')) {
-                                detectedType = 'Logarithmic'
+                              } else if (name.includes('décroissance linéaire')) {
+                                detectedType = 'Décroissance linéaire'
                               }
 
                               // Enlever le type du nom pour l'édition
                               let cleanName = formula.name
-                              const typeWords = ['Linear', 'Exponential', 'Logarithmic']
+                              const typeWords = ['Linear', 'Exponential', 'Décroissance linéaire']
                               typeWords.forEach(type => {
                                 cleanName = cleanName.replace(new RegExp(`^${type}\\s+`, 'i'), '')
                               })
@@ -656,7 +656,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                               setDecayFormulaData({
                                 type: detectedType,
                                 name: cleanName,
-                                step: formula.step,
+                                decay_factor: formula.decay_factor,
                                 minPoints: formula.minPoints
                               })
                             }}
@@ -693,7 +693,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                         setDecayFormulaData({
                           type: 'Linear',
                           name: '',
-                          step: 10,
+                          decay_factor: 10,
                           minPoints: 10
                         })
                       }}
@@ -707,7 +707,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                       <Label htmlFor="formulaType">Decay Type</Label>
                       <Select
                         value={decayFormulaData.type}
-                        onValueChange={(value: 'Linear' | 'Exponential' | 'Logarithmic') => setDecayFormulaData(prev => ({ ...prev, type: value }))}
+                        onValueChange={(value: 'Linear' | 'Exponential' | 'Décroissance linéaire') => setDecayFormulaData(prev => ({ ...prev, type: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select decay type" />
@@ -715,7 +715,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                         <SelectContent>
                           <SelectItem value="Linear">Linear - Points decrease linearly per solve</SelectItem>
                           <SelectItem value="Exponential">Exponential - Points decrease faster with each solve</SelectItem>
-                          <SelectItem value="Logarithmic">Logarithmic - Points decrease slower with each solve</SelectItem>
+                          <SelectItem value="Décroissance linéaire">Décroissance linéaire - Reach minimum after N solves</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -735,13 +735,16 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="formulaStep">Step (points lost per solve)</Label>
+                        <Label htmlFor="formulaDecayFactor">
+                          Decay Factor 
+                          {decayFormulaData.type === 'Décroissance linéaire' && ' (solves to reach minimum)'}
+                        </Label>
                         <Input
-                          id="formulaStep"
+                          id="formulaDecayFactor"
                           type="number"
                           min="1"
-                          value={decayFormulaData.step}
-                          onChange={(e) => setDecayFormulaData(prev => ({ ...prev, step: parseInt(e.target.value) || 0 }))}
+                          value={decayFormulaData.decay_factor}
+                          onChange={(e) => setDecayFormulaData(prev => ({ ...prev, decay_factor: parseInt(e.target.value) || 0 }))}
                         />
                       </div>
 
@@ -758,7 +761,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     </div>
 
                     {/* Preview */}
-                    {decayFormulaData.step > 0 && (
+                    {decayFormulaData.decay_factor > 0 && (
                       <div className="mt-4">
                         <Label className="text-sm font-medium">
                           Preview ({decayFormulaData.type} decay with {formData.points} base points)
@@ -776,23 +779,26 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                   // Points perdus augmentent à chaque solve
                                   let exponentialLoss = 0
                                   for (let j = 2; j <= solve; j++) {
-                                    exponentialLoss += decayFormulaData.step * (j - 1)
+                                    exponentialLoss += decayFormulaData.decay_factor * (j - 1)
                                   }
                                   points = formData.points - exponentialLoss
                                   break
                                 
-                                case 'Logarithmic':
-                                  // Points perdus diminuent à chaque solve
-                                  if (solve <= 2) {
-                                    points = formData.points - decayFormulaData.step
+                                case 'Décroissance linéaire':
+                                  // Formule: points = maximum - (maximum - minimum) * (solves / decay_factor)
+                                  const maximum = formData.points
+                                  const minimum = decayFormulaData.minPoints
+                                  const solveRatio = solve / decayFormulaData.decay_factor
+                                  
+                                  if (solveRatio >= 1.0) {
+                                    points = minimum
                                   } else {
-                                    const logarithmicFactor = decayFormulaData.step / (1.5 * (solve - 1))
-                                    points = formData.points - Math.floor(logarithmicFactor * (solve - 1))
+                                    points = Math.floor(maximum - (maximum - minimum) * solveRatio)
                                   }
                                   break
                                 
                                 default: // Linear
-                                  points = formData.points - (decayFormulaData.step * (solve - 1))
+                                  points = formData.points - (decayFormulaData.decay_factor * (solve - 1))
                                   break
                               }
                             }
@@ -808,9 +814,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                           })}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">
-                          {decayFormulaData.type === 'Linear' && "Linear: Points decrease by the same amount each solve"}
-                          {decayFormulaData.type === 'Exponential' && "Exponential: Point reduction increases with each solve"}
-                          {decayFormulaData.type === 'Logarithmic' && "Logarithmic: Point reduction decreases with each solve"}
+                          {decayFormulaData.type === 'Linear' && `Linear: Points decrease by ${decayFormulaData.decay_factor} each solve - Minimum reached after ${Math.ceil((formData.points - decayFormulaData.minPoints) / decayFormulaData.decay_factor)} solves`}
+                          {decayFormulaData.type === 'Exponential' && `Exponential: Rapid decay - Minimum (${(0.01 * formData.points).toFixed(1)} points) reached after ~${Math.ceil(Math.log(0.01) / -decayFormulaData.decay_factor)} solves`}
+                          {decayFormulaData.type === 'Décroissance linéaire' && `Décroissance linéaire: Linear decrease - Minimum (${decayFormulaData.minPoints} points) reached after ${decayFormulaData.decay_factor} solves`}
                         </p>
                       </div>
                     )}
@@ -825,7 +831,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                           setDecayFormulaData({
                             type: 'Linear',
                             name: '',
-                            step: 10,
+                            decay_factor: 10,
                             minPoints: 10
                           })
                         }}
@@ -835,7 +841,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                       <Button
                         size="sm"
                         onClick={editingDecayFormula ? handleUpdateDecayFormula : handleCreateDecayFormula}
-                        disabled={!decayFormulaData.name || decayFormulaData.step <= 0}
+                        disabled={!decayFormulaData.name || decayFormulaData.decay_factor <= 0}
                       >
                         {editingDecayFormula ? 'Update' : 'Create'}
                       </Button>
