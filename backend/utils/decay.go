@@ -3,6 +3,7 @@ package utils
 import (
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"strings"
 )
 
 type DecayService struct{}
@@ -50,6 +51,7 @@ func (ds *DecayService) CalculateDecayedPoints(challenge *models.Challenge, solv
 
 // calculateSolveBasedDecay calcule le decay basé sur le nombre de solves
 func (ds *DecayService) calculateSolveBasedDecay(challenge *models.Challenge, decay *models.DecayFormula, solvePosition int) int {
+	// Utiliser les points du challenge comme points de base
 	basePoints := challenge.Points
 
 	// La position est 0-based, donc on ajoute 1 pour avoir le numéro de solve (1-based)
@@ -60,8 +62,42 @@ func (ds *DecayService) calculateSolveBasedDecay(challenge *models.Challenge, de
 		return basePoints
 	}
 
-	pointsLost := (solveNumber - 1) * decay.Step
-	currentPoints := basePoints - pointsLost
+	// Déterminer le type de decay à partir du nom
+	decayType := "linear"
+	name := strings.ToLower(decay.Name)
+	if strings.Contains(name, "exponential") {
+		decayType = "exponential"
+	} else if strings.Contains(name, "logarithmic") {
+		decayType = "logarithmic"
+	}
+
+	// Calculer les points selon le type de decay
+	var currentPoints int
+	switch decayType {
+	case "exponential":
+		// Pour exponentiel : points perdus augmentent à chaque solve
+		exponentialLoss := 0
+		for i := 2; i <= solveNumber; i++ {
+			exponentialLoss += decay.Step * (i - 1)
+		}
+		currentPoints = basePoints - exponentialLoss
+
+	case "logarithmic":
+		// Pour logarithmique : points perdus diminuent à chaque solve (moins de perte)
+		// Utilise une formule logarithmique simplifiée
+		if solveNumber <= 2 {
+			currentPoints = basePoints - decay.Step
+		} else {
+			// Réduction logarithmique de la perte
+			logarithmicFactor := float64(decay.Step) / (1.5 * float64(solveNumber-1))
+			currentPoints = basePoints - int(logarithmicFactor*float64(solveNumber-1))
+		}
+
+	default: // "linear" ou autre
+		// Perte linéaire standard
+		pointsLost := (solveNumber - 1) * decay.Step
+		currentPoints = basePoints - pointsLost
+	}
 
 	// S'assurer qu'on ne descend pas en dessous du minimum
 	if currentPoints < decay.MinPoints {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Challenge } from "@/models/Challenge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -116,14 +116,18 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const [newHint, setNewHint] = useState({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null as string | null })
   const [editingHints, setEditingHints] = useState<{[key: number]: {title: string, content: string, cost: number, isActive: boolean, autoActiveAt: string | null}}>({})
 
-  useEffect(() => {
-    fetchDecayFormulas()
-    fetchChallengeCategories()
-    fetchChallengeDifficulties()
-    fetchChallengeData()
-  }, [])
+  // Decay Formula Management States
+  const [showDecayFormulaForm, setShowDecayFormulaForm] = useState(false)
+  const [editingDecayFormula, setEditingDecayFormula] = useState<DecayFormula | null>(null)
+  const [deletingDecayFormula, setDeletingDecayFormula] = useState<DecayFormula | null>(null)
+  const [decayFormulaData, setDecayFormulaData] = useState({
+    type: 'Linear' as 'Linear' | 'Exponential' | 'Logarithmic',
+    name: '',
+    step: 10,
+    minPoints: 10
+  })
 
-  const fetchChallengeData = async () => {
+  const fetchChallengeData = useCallback(async () => {
     try {
       const response = await axios.get(`/api/admin/challenges/${challenge.id}`)
       const challengeData = response.data.challenge
@@ -150,7 +154,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     } catch (error) {
       console.error("Failed to fetch challenge data:", error)
     }
-  }
+  }, [challenge.id])
 
   const fetchDecayFormulas = async () => {
     try {
@@ -162,7 +166,6 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
         name: formula.name,
         step: formula.step || 10,
         minPoints: formula.minPoints || 10,
-        maxDecay: formula.maxDecay || 90.0
       }))
       setDecayFormulas(validFormulas)
     } catch (error) {
@@ -179,7 +182,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     }
   }
 
-  const fetchChallengeDifficulties = async () => {
+  const fetchChallengeDifficulties = useCallback(async () => {
     try {
       const response = await axios.get(`/api/admin/challenges/${challenge.id}`)
       if (response.data.challengeDifficulties) {
@@ -188,7 +191,14 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     } catch (error) {
       console.error("Failed to fetch challenge difficulties:", error)
     }
-  }
+  }, [challenge.id])
+
+  useEffect(() => {
+    fetchDecayFormulas()
+    fetchChallengeCategories()
+    fetchChallengeDifficulties()
+    fetchChallengeData()
+  }, [fetchChallengeData, fetchChallengeDifficulties])
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -232,6 +242,74 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       console.error(error)
     } finally {
       setGeneralLoading(false)
+    }
+  }
+
+  // Decay Formula Handlers
+  const handleCreateDecayFormula = async () => {
+    if (!decayFormulaData.name || decayFormulaData.step <= 0) {
+      toast.error("Please provide valid formula name and step value")
+      return
+    }
+
+    // Générer le nom avec le type si ce n'est pas déjà inclus
+    let formulaName = decayFormulaData.name
+    if (!formulaName.toLowerCase().includes(decayFormulaData.type.toLowerCase())) {
+      formulaName = `${decayFormulaData.type} ${formulaName}`
+    }
+
+    try {
+      await axios.post("/api/decay-formulas", {
+        name: formulaName,
+        step: decayFormulaData.step,
+        minPoints: decayFormulaData.minPoints
+      })
+      toast.success("Decay formula created successfully")
+      setShowDecayFormulaForm(false)
+      setDecayFormulaData({ type: 'Linear', name: '', step: 10, minPoints: 10 })
+      fetchDecayFormulas()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to create decay formula")
+    }
+  }
+
+  const handleUpdateDecayFormula = async () => {
+    if (!editingDecayFormula || !decayFormulaData.name || decayFormulaData.step <= 0) {
+      toast.error("Please provide valid formula name and step value")
+      return
+    }
+
+    // Générer le nom avec le type si ce n'est pas déjà inclus
+    let formulaName = decayFormulaData.name
+    if (!formulaName.toLowerCase().includes(decayFormulaData.type.toLowerCase())) {
+      formulaName = `${decayFormulaData.type} ${formulaName}`
+    }
+
+    try {
+      await axios.put(`/api/decay-formulas/${editingDecayFormula.id}`, {
+        name: formulaName,
+        step: decayFormulaData.step,
+        minPoints: decayFormulaData.minPoints
+      })
+      toast.success("Decay formula updated successfully")
+      setEditingDecayFormula(null)
+      setDecayFormulaData({ type: 'Linear', name: '', step: 10, minPoints: 10 })
+      fetchDecayFormulas()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to update decay formula")
+    }
+  }
+
+  const handleDeleteDecayFormula = async () => {
+    if (!deletingDecayFormula) return
+
+    try {
+      await axios.delete(`/api/decay-formulas/${deletingDecayFormula.id}`)
+      toast.success("Decay formula deleted successfully")
+      setDeletingDecayFormula(null)
+      fetchDecayFormulas()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to delete decay formula")
     }
   }
 
@@ -516,6 +594,255 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                   </SelectContent>
                 </Select>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Decay Formula Management Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Decay Formula Management</CardTitle>
+                  <CardDescription>
+                    Create and manage decay formulas for your challenges
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDecayFormulaForm(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Formula
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Existing Formulas List */}
+              {decayFormulas.length > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Existing Formulas</Label>
+                  <div className="grid gap-2">
+                    {decayFormulas.map((formula) => (
+                      <div key={formula.id} className="flex items-center justify-between p-3 border rounded-lg bg-background/50">
+                        <div>
+                          <p className="font-medium">{formula.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Step: {formula.step} points • Min: {formula.minPoints} points
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              // Détecter le type à partir du nom
+                              let detectedType: 'Linear' | 'Exponential' | 'Logarithmic' = 'Linear'
+                              const name = formula.name.toLowerCase()
+                              if (name.includes('exponential')) {
+                                detectedType = 'Exponential'
+                              } else if (name.includes('logarithmic')) {
+                                detectedType = 'Logarithmic'
+                              }
+
+                              // Enlever le type du nom pour l'édition
+                              let cleanName = formula.name
+                              const typeWords = ['Linear', 'Exponential', 'Logarithmic']
+                              typeWords.forEach(type => {
+                                cleanName = cleanName.replace(new RegExp(`^${type}\\s+`, 'i'), '')
+                              })
+
+                              setEditingDecayFormula(formula)
+                              setDecayFormulaData({
+                                type: detectedType,
+                                name: cleanName,
+                                step: formula.step,
+                                minPoints: formula.minPoints
+                              })
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeletingDecayFormula(formula)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Decay Formula Form */}
+              {(showDecayFormulaForm || editingDecayFormula) && (
+                <div className="mt-6 p-4 border rounded-lg bg-muted/50">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-sm font-medium">
+                      {editingDecayFormula ? 'Edit Decay Formula' : 'New Decay Formula'}
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowDecayFormulaForm(false)
+                        setEditingDecayFormula(null)
+                        setDecayFormulaData({
+                          type: 'Linear',
+                          name: '',
+                          step: 10,
+                          minPoints: 10
+                        })
+                      }}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                  
+                  <div className="grid gap-4">
+                    <div>
+                      <Label htmlFor="formulaType">Decay Type</Label>
+                      <Select
+                        value={decayFormulaData.type}
+                        onValueChange={(value: 'Linear' | 'Exponential' | 'Logarithmic') => setDecayFormulaData(prev => ({ ...prev, type: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select decay type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Linear">Linear - Points decrease linearly per solve</SelectItem>
+                          <SelectItem value="Exponential">Exponential - Points decrease faster with each solve</SelectItem>
+                          <SelectItem value="Logarithmic">Logarithmic - Points decrease slower with each solve</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="formulaName">Formula Name</Label>
+                      <Input
+                        id="formulaName"
+                        value={decayFormulaData.name}
+                        onChange={(e) => setDecayFormulaData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder={`e.g., ${decayFormulaData.type} Standard, ${decayFormulaData.type} Aggressive`}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        The decay type will be automatically added to the name
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="formulaStep">Step (points lost per solve)</Label>
+                        <Input
+                          id="formulaStep"
+                          type="number"
+                          min="1"
+                          value={decayFormulaData.step}
+                          onChange={(e) => setDecayFormulaData(prev => ({ ...prev, step: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="formulaMinPoints">Minimum Points</Label>
+                        <Input
+                          id="formulaMinPoints"
+                          type="number"
+                          min="0"
+                          value={decayFormulaData.minPoints}
+                          onChange={(e) => setDecayFormulaData(prev => ({ ...prev, minPoints: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    {decayFormulaData.step > 0 && (
+                      <div className="mt-4">
+                        <Label className="text-sm font-medium">
+                          Preview ({decayFormulaData.type} decay with {formData.points} base points)
+                        </Label>
+                        <div className="grid grid-cols-5 gap-2 mt-2 text-center text-sm">
+                          {Array.from({ length: 5 }, (_, i) => {
+                            const solve = i + 1
+                            let points: number
+
+                            if (solve === 1) {
+                              points = formData.points
+                            } else {
+                              switch (decayFormulaData.type) {
+                                case 'Exponential':
+                                  // Points perdus augmentent à chaque solve
+                                  let exponentialLoss = 0
+                                  for (let j = 2; j <= solve; j++) {
+                                    exponentialLoss += decayFormulaData.step * (j - 1)
+                                  }
+                                  points = formData.points - exponentialLoss
+                                  break
+                                
+                                case 'Logarithmic':
+                                  // Points perdus diminuent à chaque solve
+                                  if (solve <= 2) {
+                                    points = formData.points - decayFormulaData.step
+                                  } else {
+                                    const logarithmicFactor = decayFormulaData.step / (1.5 * (solve - 1))
+                                    points = formData.points - Math.floor(logarithmicFactor * (solve - 1))
+                                  }
+                                  break
+                                
+                                default: // Linear
+                                  points = formData.points - (decayFormulaData.step * (solve - 1))
+                                  break
+                              }
+                            }
+
+                            if (points < decayFormulaData.minPoints) points = decayFormulaData.minPoints
+                            
+                            return (
+                              <div key={solve} className="p-2 border rounded">
+                                <div className="font-medium">Solve {solve}</div>
+                                <div className="text-muted-foreground">{points} pts</div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {decayFormulaData.type === 'Linear' && "Linear: Points decrease by the same amount each solve"}
+                          {decayFormulaData.type === 'Exponential' && "Exponential: Point reduction increases with each solve"}
+                          {decayFormulaData.type === 'Logarithmic' && "Logarithmic: Point reduction decreases with each solve"}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowDecayFormulaForm(false)
+                          setEditingDecayFormula(null)
+                          setDecayFormulaData({
+                            type: 'Linear',
+                            name: '',
+                            step: 10,
+                            minPoints: 10
+                          })
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={editingDecayFormula ? handleUpdateDecayFormula : handleCreateDecayFormula}
+                        disabled={!decayFormulaData.name || decayFormulaData.step <= 0}
+                      >
+                        {editingDecayFormula ? 'Update' : 'Create'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -847,6 +1174,32 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      {deletingDecayFormula && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-6 rounded-lg border shadow-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-2">Delete Decay Formula</h3>
+            <p className="text-muted-foreground mb-4">
+              Are you sure you want to delete the formula "{deletingDecayFormula.name}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setDeletingDecayFormula(null)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteDecayFormula}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
