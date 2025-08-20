@@ -1181,7 +1181,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           <div className="bg-background p-6 rounded-lg border shadow-lg max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-2">Delete Decay Formula</h3>
             <p className="text-muted-foreground mb-4">
-              Are you sure you want to delete the formula "{deletingDecayFormula.name}"? This action cannot be undone.
+              Are you sure you want to delete the formula &quot;{deletingDecayFormula.name}&quot;? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-2">
               <Button 
