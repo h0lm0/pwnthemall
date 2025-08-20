@@ -6,13 +6,36 @@ echo Searching for valid WSL or Git Bash interpreter...
 rem Store arguments
 set "args=%*"
 
-rem Try to find Ubuntu specifically first
+rem Try to find any Ubuntu distribution first
 if not "%WSL_WRAPPER_ACTIVE%"=="1" (
-    wsl -d Ubuntu --version >nul 2>&1
-    if %ERRORLEVEL% equ 0 (
-        echo Using Ubuntu WSL
+    set "ubuntu_distro="
+    
+    rem Parse WSL distributions to find any Ubuntu variant
+    for /f "usebackq skip=1" %%i in (`wsl -l -v 2^>nul`) do (
+        set "line=%%i"
+        
+        rem Extract distribution name (handle both with and without asterisk)
+        if "!line:~0,1!"=="*" (
+            rem Line starts with asterisk, get name from position 2
+            for /f "tokens=1" %%j in ("!line:~2!") do set "distro=%%j"
+        ) else (
+            rem No asterisk, get first token
+            for /f "tokens=1" %%j in ("!line!") do set "distro=%%j"
+        )
+        
+        rem Check if distribution name contains "Ubuntu" (case insensitive)
+        echo !distro! | findstr /i "ubuntu" >nul
+        if not errorlevel 1 (
+            set "ubuntu_distro=!distro!"
+            goto :found_ubuntu
+        )
+    )
+    
+    :found_ubuntu
+    if defined ubuntu_distro (
+        echo Using Ubuntu WSL distribution: !ubuntu_distro!
         set WSL_WRAPPER_ACTIVE=1
-        wsl -d Ubuntu bash -c "export WSL_WRAPPER_ACTIVE=1 && ./pta-cli.sh %args%"
+        wsl -d "!ubuntu_distro!" bash -c "export WSL_WRAPPER_ACTIVE=1 && ./pta-cli.sh %args%"
         exit /b %ERRORLEVEL%
     )
 ) else (
@@ -20,8 +43,8 @@ if not "%WSL_WRAPPER_ACTIVE%"=="1" (
     exit /b 1
 )
 
-rem If Ubuntu not found, try other distributions
-echo Ubuntu not found, searching for other distributions...
+rem If no Ubuntu found, try other distributions
+echo No Ubuntu distribution found, searching for other distributions...
 set "found_distro="
 
 rem Parse WSL distributions

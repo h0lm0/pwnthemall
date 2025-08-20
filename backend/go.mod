@@ -10,6 +10,7 @@ require (
 	github.com/docker/cli v28.3.2+incompatible
 	github.com/docker/docker v25.0.6+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/expr-lang/expr v1.17.6
 	github.com/gin-contrib/sessions v0.0.4
 	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-jwt/jwt/v5 v5.2.2

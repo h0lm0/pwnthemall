@@ -2,8 +2,10 @@ package utils
 
 import (
 	"pwnthemall/config"
+	"pwnthemall/debug"
 	"pwnthemall/models"
-	"strings"
+
+	"github.com/expr-lang/expr"
 )
 
 type DecayService struct{}
@@ -40,50 +42,50 @@ func (ds *DecayService) CalculateDecayedPoints(challenge *models.Challenge, solv
 
 	return ds.calculateSolveBasedDecay(challenge, &decay, solvePosition)
 }
+
 func (ds *DecayService) calculateSolveBasedDecay(challenge *models.Challenge, decay *models.DecayFormula, solvePosition int) int {
 	basePoints := challenge.Points
-
 	solveNumber := solvePosition + 1
 
 	if solveNumber <= 1 {
 		return basePoints
 	}
 
-	decayType := "linear"
-	name := strings.ToLower(decay.Name)
-	if strings.Contains(name, "exponential") {
-		decayType = "exponential"
-	} else if strings.Contains(name, "décroissance linéaire") {
-		decayType = "decroissance_lineaire"
-	}
-
-	var currentPoints int
-	switch decayType {
-	case "exponential":
-		exponentialLoss := 0
-		for i := 2; i <= solveNumber; i++ {
-			exponentialLoss += decay.DecayFactor * (i - 1)
-		}
-		currentPoints = basePoints - exponentialLoss
-
-	case "decroissance_lineaire":
-		maximum := float64(basePoints)
-		minimum := float64(decay.MinPoints)
-		solveRatio := float64(solveNumber) / float64(decay.DecayFactor)
-
-		if solveRatio >= 1.0 {
-			currentPoints = int(minimum)
-		} else {
-			currentPoints = int(maximum - (maximum-minimum)*solveRatio)
-		}
-
-	default:
+	if decay.Formula == "" {
+		// by default we put linear
 		pointsLost := (solveNumber - 1) * decay.DecayFactor
-		currentPoints = basePoints - pointsLost
-	}
-	if currentPoints < decay.MinPoints {
-		currentPoints = decay.MinPoints
+		currentPoints := basePoints - pointsLost
+		if currentPoints < decay.MinPoints {
+			return decay.MinPoints
+		}
+		return currentPoints
 	}
 
-	return currentPoints
+	env := map[string]interface{}{
+		"points":       basePoints,
+		"solveNumber":  solveNumber,
+		"decay_factor": decay.DecayFactor,
+		"min_points":   decay.MinPoints,
+	}
+
+	prog, err := expr.Compile(decay.Formula, expr.Env(env))
+	if err != nil {
+		debug.Log("Error compiling decay formula '%s': %v", decay.Name, err)
+		return basePoints
+	}
+
+	output, err := expr.Run(prog, env)
+	if err != nil {
+		debug.Log("Error running decay formula '%s': %v", decay.Name, err)
+		return basePoints
+	}
+
+	switch val := output.(type) {
+	case int:
+		return val
+	case float64:
+		return int(val)
+	default:
+		return basePoints
+	}
 }

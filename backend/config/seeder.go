@@ -272,16 +272,19 @@ func seedDecayFormulas() {
 			Name:        "Linear Decay",
 			DecayFactor: 10,
 			MinPoints:   50,
+			Formula:     "max(points - (solveNumber - 1) * decay_factor, min_points)",
 		},
 		{
 			Name:        "Exponential Decay",
 			DecayFactor: 15,
 			MinPoints:   25,
+			Formula:     "max(points - (solveNumber - 1) * decay_factor * (solveNumber - 1), min_points)",
 		},
 		{
-			Name:        "Décroissance linéaire",
+			Name:        "Linear decrease",
 			DecayFactor: 20,
 			MinPoints:   10,
+			Formula:     "max(points - ((points - min_points) * solveNumber / decay_factor), min_points)",
 		},
 	}
 
