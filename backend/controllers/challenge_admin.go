@@ -91,8 +91,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 
 	// Process hints from request
 	for _, hintReq := range req.Hints {
-		debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d, IsActive=%v, AutoActiveAt=%v", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost, hintReq.IsActive, hintReq.AutoActiveAt)
-
+		debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
 		if hintReq.ID > 0 {
 			// Update existing hint
 			var hint models.Hint
@@ -118,11 +117,10 @@ func UpdateChallengeAdmin(c *gin.Context) {
 				IsActive:     hintReq.IsActive,
 				AutoActiveAt: hintReq.AutoActiveAt,
 			}
-			// Ensure IsActive/AutoActiveAt are explicitly included in the INSERT
-			if err := config.DB.Select("ChallengeID", "Title", "Content", "Cost", "IsActive", "AutoActiveAt").Create(&hint).Error; err != nil {
+			if err := config.DB.Create(&hint).Error; err != nil {
 				debug.Log("Failed to create hint: %v", err)
 			} else {
-				debug.Log("Successfully created hint: ID=%d, Title=%s, IsActive=%v, AutoActiveAt=%v", hint.ID, hint.Title, hint.IsActive, hint.AutoActiveAt)
+				debug.Log("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
 			}
 		}
 	}
