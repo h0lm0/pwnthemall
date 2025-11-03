@@ -32,8 +32,7 @@ export interface Challenge {
   decayFormula?: {
     id: number
     name: string
-    type: string
-    step: number
+    decay_factor: number
     minPoints: number
   }
   decayFormulaId?: number

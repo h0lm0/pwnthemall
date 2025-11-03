@@ -31,7 +31,7 @@ type FirstBloodMetadata struct {
 }
 
 type DecayFormula struct {
-	Name      string `yaml:"name"`
-	Step      int    `yaml:"step"`
-	MinPoints int    `yaml:"min_points"`
+	Name        string `yaml:"name"`
+	DecayFactor int    `yaml:"decay_factor"`
+	MinPoints   int    `yaml:"min_points"`
 }
