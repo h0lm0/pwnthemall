@@ -1,7 +1,5 @@
 # Page d'accueil
 
-![pwnthemall-logo](frontend/public/logo-no-text.png)
-
 > **pwnthemall** est une plateforme open-source qui simplifie l’organisation et la gestion de compétitions de cybersécurité de type Capture The Flag (CTF).
 
 Conçue pour les écoles, associations et passionnés, elle permet d’héberger facilement vos challenges, de gérer les équipes et de suivre la progression des joueurs — le tout depuis une interface moderne et intuitive.
