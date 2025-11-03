@@ -1,6 +1,6 @@
-![pwnthemall-logo](frontend/public/logo-no-text.png)
+# Homepage
 
-# pwnthemall
+![pwnthemall-logo](frontend/public/logo-no-text.png)
 
 > **pwnthemall** is an open-source platform designed to make running Capture The Flag (CTF) cybersecurity events simple, fun, and efficient.
 
