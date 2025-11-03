@@ -1,0 +1,15 @@
+name: "Demo 03 (Geo)"
+description: |
+  This challenge is a 'geo' challenge. The goal is to find a location on the earth's map.
+
+  Place your pin at the correct location (Eiffel Tower)
+category: misc
+difficulty: easy
+type: geo
+author: "Kevin'MITGeo"
+hidden: false
+flags: []
+points: 200
+target_lat: 48.85837
+target_lng: 2.294481
+radius_km: 1.0
