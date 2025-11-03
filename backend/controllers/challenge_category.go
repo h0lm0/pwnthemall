@@ -24,9 +24,8 @@ func GetChallengeCategories(c *gin.Context) {
 		return
 	}
 
-	// Check CTF timing - only allow access if CTF has started or user is admin
 	if !config.IsCTFStarted() && user.Role != "admin" {
-		c.JSON(http.StatusOK, []interface{}{}) // Return empty array instead of error
+		c.JSON(http.StatusOK, []interface{}{}) 
 		return
 	}
 
@@ -105,4 +104,45 @@ func DeleteChallengeCategory(c *gin.Context) {
 
 	config.DB.Delete(&challengeCategory)
 	c.JSON(http.StatusOK, gin.H{"message": "Challenge category deleted"})
+}
+
+type ReorderChallengesRequest struct {
+	ChallengeIds []uint `json:"challengeIds" binding:"required"`
+}
+
+func ReorderChallenges(c *gin.Context) {
+	categoryId := c.Param("id")
+
+	var category models.ChallengeCategory
+	if err := config.DB.First(&category, categoryId).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge category not found"})
+		return
+	}
+
+	var req ReorderChallengesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	for index, challengeId := range req.ChallengeIds {
+		var challenge models.Challenge
+		if err := config.DB.First(&challenge, challengeId).Error; err != nil {
+			continue 
+		}
+
+	
+		if challenge.ChallengeCategoryID != category.ID {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Challenge does not belong to this category"})
+			return
+		}
+
+		challenge.Order = index
+		if err := config.DB.Save(&challenge).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update challenge order"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Challenges reordered successfully"})
 }

@@ -26,6 +26,7 @@ type Challenge struct {
 	ConnectionInfo        pq.StringArray       `gorm:"type:text[]" json:"connectionInfo"`
 	Points                int                  `json:"points"` // maybe rename it basePoints
 	CurrentPoints         int                  `gorm:"-" json:"currentPoints"`
+	Order                 int                  `json:"order" gorm:"default:0"`
 	DecayFormulaID        uint                 `json:"decayFormulaId,omitempty"`
 	DecayFormula          *DecayFormula        `gorm:"foreignKey:DecayFormulaID" json:"decayFormula,omitempty"`
 	Hints                 []Hint               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"hints,omitempty"`
