@@ -12,7 +12,7 @@ minio/challenges/[challenge_name]
 
 Inside `[challenge_name]`, there **must** be a file called `chall.yml`. This file defines the challenge.  
 
-Examples of YAML files can be found in [docs/challenges/](docs/challenges)
+Examples of YAML files can be found in [docs/challenges/](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges)
 
 ### Types of Challenges
 
