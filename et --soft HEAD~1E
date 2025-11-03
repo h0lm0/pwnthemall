@@ -1,0 +1,1004 @@
+* [33m14bd152[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/reorder-challenges[m[33m)[m feature push
+[31m|[m *   [33m9fb0a6f[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #288 from h0lm0/dev
+[31m|[m [32m|[m[31m\[m  
+[31m|[m [32m|[m[31m/[m  
+[31m|[m[31m/[m[32m|[m   
+* [32m|[m [33m4063313[m[33m ([m[1;31morigin/feature/reorder-challenges[m[33m, [m[1;31morigin/dev[m[33m, [m[1;32mdev[m[33m)[m fix docs usage
+[33m|[m *   [33me848ed4[m Merge pull request #287 from h0lm0/dev
+[33m|[m [34m|[m[33m\[m  
+[33m|[m [34m|[m[33m/[m  
+[33m|[m[33m/[m[34m|[m   
+* [34m|[m [33m8ad7a3b[m docs fix logo
+[35m|[m *   [33m1529684[m Merge pull request #286 from h0lm0/dev
+[35m|[m [36m|[m[35m\[m  
+[35m|[m [36m|[m[35m/[m  
+[35m|[m[35m/[m[36m|[m   
+* [36m|[m [33md073d5a[m docs fix
+* [36m|[m [33m3a44a91[m docs update
+* [36m|[m [33m2c6abc3[m docs update
+[1;31m|[m *   [33mda3b39b[m[33m ([m[1;32mmain[m[33m)[m Merge pull request #285 from h0lm0/dev
+[1;31m|[m [1;32m|[m[1;31m\[m  
+[1;31m|[m [1;32m|[m[1;31m/[m  
+[1;31m|[m[1;31m/[m[1;32m|[m   
+* [1;32m|[m [33m18f98f8[m Documentations fix
+[1;33m|[m *   [33mee89542[m Merge pull request #284 from h0lm0/dev
+[1;33m|[m [1;34m|[m[1;33m\[m  
+[1;33m|[m [1;34m|[m[1;33m/[m  
+[1;33m|[m[1;33m/[m[1;34m|[m   
+* [1;34m|[m [33m88c836c[m cosmetic removed
+[1;35m|[m *   [33md5a46f6[m Merge pull request #283 from h0lm0/dev
+[1;35m|[m [1;36m|[m[1;35m\[m  
+[1;35m|[m [1;36m|[m[1;35m/[m  
+[1;35m|[m[1;35m/[m[1;36m|[m   
+* [1;36m|[m [33m6d8aba7[m docs added
+* [1;36m|[m [33m6e339ab[m Fix translate files
+* [1;36m|[m   [33m5f4285d[m Merge pull request #269 from h0lm0/feature/chall_sort
+[32m|[m[33m\[m [1;36m\[m  
+[32m|[m * [1;36m|[m [33m3ee27f5[m Add sorting tab to challenges list
+[32m|[m [33m|[m *   [33m7b43828[m Merge pull request #282 from h0lm0/dev
+[32m|[m [33m|[m [34m|[m[32m\[m  
+[32m|[m [33m|[m[32m_[m[34m|[m[32m/[m  
+[32m|[m[32m/[m[33m|[m [34m|[m   
+* [33m|[m [34m|[m [33mf3d1da7[m readme update
+[35m|[m [33m|[m *   [33m72b1d45[m[33m ([m[1;33mtag: [m[1;33m0.0.3-demo[m[33m)[m Merge pull request #280 from h0lm0/dev
+[35m|[m [33m|[m [36m|[m[35m\[m  
+[35m|[m [33m|[m[35m_[m[36m|[m[35m/[m  
+[35m|[m[35m/[m[33m|[m [36m|[m   
+* [33m|[m [36m|[m   [33ma58fafb[m Merge pull request #281 from h0lm0/fix/geopicker
+[1;32m|[m[1;33m\[m [33m\[m [36m\[m  
+[1;32m|[m * [33m|[m [36m|[m [33m414d8fc[m integrity check
+* [1;33m|[m [33m|[m [36m|[m   [33m371f768[m Merge pull request #277 from h0lm0/dependabot/npm_and_yarn/test/multi-a50d7f32cf
+[1;34m|[m[1;35m\[m [1;33m\[m [33m\[m [36m\[m  
+[1;34m|[m * [1;33m|[m [33m|[m [36m|[m [33m84f54d9[m Bump playwright and @playwright/test in /test
+[1;34m|[m [36m|[m [1;33m|[m[36m_[m[33m|[m[36m/[m  
+[1;34m|[m [36m|[m[36m/[m[1;33m|[m [33m|[m   
+* [36m|[m [1;33m|[m [33m|[m   [33m486feac[m Merge pull request #276 from h0lm0/dependabot/npm_and_yarn/frontend/axios-1.12.0
+[1;33m|[m[31m\[m [36m\[m [1;33m\[m [33m\[m  
+[1;33m|[m [31m|[m[1;33m_[m[36m|[m[1;33m/[m [33m/[m  
+[1;33m|[m[1;33m/[m[31m|[m [36m|[m [33m|[m   
+[1;33m|[m * [36m|[m [33m|[m [33m20303ea[m Bump axios from 1.11.0 to 1.12.0 in /frontend
+[1;33m|[m [36m|[m[36m/[m [33m/[m  
+[1;33m|[m [36m|[m [33m|[m * [33me097373[m[33m ([m[1;31morigin/feature/compose[m[33m)[m Fix log fatal
+[1;33m|[m [36m|[m [33m|[m * [33m770e2ad[m compose begin
+[1;33m|[m [36m|[m[1;33m_[m[33m|[m[1;33m/[m  
+[1;33m|[m[1;33m/[m[36m|[m [33m|[m   
+* [36m|[m [33m|[m   [33m28c9ce9[m Merge pull request #279 from h0lm0/fix-278
+[33m|[m[34m\[m [36m\[m [33m\[m  
+[33m|[m * [36m|[m [33m|[m [33md1fd1b2[m fix 278
+[33m|[m [36m|[m[36m/[m [33m/[m  
+* [36m|[m [33m|[m   [33mfef0d80[m Merge pull request #274 from h0lm0/dependabot/npm_and_yarn/frontend/axios-1.12.0
+[35m|[m[36m\[m [36m\[m [33m\[m  
+[35m|[m * [36m|[m [33m|[m [33m2388f47[m Bump axios from 1.11.0 to 1.12.0 in /frontend
+[35m|[m [36m|[m[36m/[m [33m/[m  
+* [36m|[m [33m|[m   [33mac88295[m Merge pull request #273 from h0lm0/dependabot/npm_and_yarn/frontend/next-14.2.32
+[33m|[m[1;32m\[m [36m\[m [33m\[m  
+[33m|[m [1;32m|[m[33m_[m[36m|[m[33m/[m  
+[33m|[m[33m/[m[1;32m|[m [36m|[m   
+[33m|[m * [36m|[m [33md542ca1[m Bump next from 14.2.30 to 14.2.32 in /frontend
+[33m|[m [36m|[m[36m/[m  
+[33m|[m *   [33mecea545[m Merge pull request #255 from h0lm0/dev
+[33m|[m [1;33m|[m[1;34m\[m  
+[33m|[m * [1;34m\[m   [33m5b0773a[m[33m ([m[1;33mtag: [m[1;33m0.0.2-demo[m[33m)[m Merge pull request #238 from h0lm0/dev
+[33m|[m [1;35m|[m[1;36m\[m [1;34m\[m  
+[33m|[m * [1;36m\[m [1;34m\[m   [33md696e02[m[33m ([m[1;33mtag: [m[1;33m0.0.1-demo[m[33m)[m Merge pull request #225 from h0lm0/dev
+[33m|[m [31m|[m[32m\[m [1;36m\[m [1;34m\[m  
+[33m|[m * [32m\[m [1;36m\[m [1;34m\[m   [33m754e1ed[m Merge pull request #223 from h0lm0/dev
+[33m|[m [33m|[m[34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[33m|[m * [34m\[m [32m\[m [1;36m\[m [1;34m\[m   [33md8eafa2[m Merge pull request #219 from h0lm0/dev
+[33m|[m [35m|[m[36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[33m|[m * [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m   [33mfc68f90[m Merge pull request #218 from h0lm0/dev
+[33m|[m [1;31m|[m[1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[33m|[m * [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m   [33mb41f598[m Merge pull request #215 from h0lm0/dev
+[33m|[m [1;33m|[m[1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[33m|[m * [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m   [33m4a2afa5[m Merge pull request #214 from h0lm0/dev
+[33m|[m [1;35m|[m[1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m *   [33mb643c0d[m[33m ([m[1;31morigin/feature/decay-expr[m[33m)[m Merge branch 'feature/decay-expr' of github.com:h0lm0/pwnthemall into feature/decay-expr
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [31m|[m[32m\[m  
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [31m|[m *   [33m3b96eaa[m Merge pull request #270 from h0lm0/dev
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [31m|[m [33m|[m[33m\[m  
+[33m|[m [1;35m|[m[33m_[m[1;36m|[m[33m_[m[1;34m|[m[33m_[m[1;32m|[m[33m_[m[36m|[m[33m_[m[34m|[m[33m_[m[32m|[m[33m_[m[1;36m|[m[33m_[m[1;34m|[m[33m_[m[31m|[m[33m_[m[33m|[m[33m/[m  
+[33m|[m[33m/[m[1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [31m|[m [33m|[m   
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m * [33m|[m [33m3944b14[m using expr to make dynamic decay formulas
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m|[m[33m/[m  
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m * [33md65e4a6[m[33m ([m[1;31morigin/feature/decay[m[33m)[m New Decay method + better QOL
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m * [33m59223b0[m adapt decay modification depending of the method
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m * [33mad52a22[m i need to swap branch
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m * [33me134ba4[m undo change to made it elsewhere
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m * [33m8ed5378[m fix cli.cmd
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [34m|[m * [33m5437d3d[m[33m ([m[1;31morigin/feature/auto-active_hint[m[33m)[m Merge pull request #267 from h0lm0/dev
+[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [34m|[m[34m/[m[33m|[m 
+[33m|[m [1;35m|[m[33m_[m[1;36m|[m[33m_[m[1;34m|[m[33m_[m[1;32m|[m[33m_[m[36m|[m[33m_[m[34m|[m[33m_[m[32m|[m[33m_[m[1;36m|[m[33m_[m[1;34m|[m[33m_[m[34m|[m[33m/[m  
+[33m|[m[33m/[m[1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [34m|[m   
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [34m|[m   [33m4084ed3[m Merge branch 'feature/auto-active_hint' into dev
+[1;31m|[m[34m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m [34m\[m  
+[1;31m|[m [34m|[m [1;35m|[m[34m_[m[1;36m|[m[34m_[m[1;34m|[m[34m_[m[1;32m|[m[34m_[m[36m|[m[34m_[m[34m|[m[34m_[m[32m|[m[34m_[m[1;36m|[m[34m_[m[1;34m|[m[34m/[m  
+[1;31m|[m [34m|[m[34m/[m[1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m   
+[1;31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m0c1e1d1[m patch Active hints button
+[1;31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m4dac43d[m patching default hint always true
+[1;31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m05aadb1[m new test chall for hint
+[1;31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m311ef15[m patch debug.log
+[1;31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33mf2edcea[m Hint can now be hidden or auto activate
+* [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m   [33mf5018cf[m Merge pull request #262 from h0lm0/issue/257
+[1;33m|[m[1;34m\[m [1;32m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[1;33m|[m * [1;32m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m   [33m19f673e[m Merge pull request #266 from h0lm0/dev
+[1;33m|[m [1;32m|[m[1;33m\[m [1;32m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[1;33m|[m [1;32m|[m[1;33m/[m [1;32m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m [1;36m/[m [1;34m/[m  
+[1;33m|[m[1;33m/[m[1;32m|[m [1;32m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m [1;36m/[m [1;34m/[m   
+[1;33m|[m [1;32m|[m[1;32m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m [1;36m/[m [1;34m/[m    
+* [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m   [33mbbcef56[m Merge pull request #260 from h0lm0/feature/fb
+[31m|[m[32m\[m [1;32m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[31m|[m * [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33me630c7b[m dto in models folder + useing copier to convert model to dto
+[31m|[m * [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m8bb6f9c[m casbin policies
+[31m|[m * [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m5b03417[m patch pta/debug
+[31m|[m * [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33mf8d4202[m patch pta/debug
+* [32m|[m [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33mbdd2877[m Update pta-cli.cmd
+* [32m|[m [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m   [33mcd38b83[m Merge pull request #258 from h0lm0/feature/hint
+[33m|[m[34m\[m [32m\[m [1;32m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m [1;34m\[m  
+[33m|[m [34m|[m [32m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m05238b7[m Real point + points used now displayed (todo: better display)
+[33m|[m [34m|[m [32m|[m[32m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m [1;36m/[m [1;34m/[m  
+[33m|[m [34m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m3d3d5ea[m adding visual indicator of FB (need better visual)
+[33m|[m [34m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m66a36d2[m fb point are now added to total and are retroactive
+[33m|[m [34m|[m[34m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m [1;36m/[m [1;34m/[m  
+[33m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33mc92aa23[m Hint now working
+[33m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33mef5350d[m Hint are now displayed in challenges
+[33m|[m[33m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m [1;36m/[m [1;34m/[m  
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m432a350[m Patch Hint
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m012997f[m patch hint
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33md7e9931[m dimichall
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [1;34m|[m [33m0c0e767[m Update README.md
+[1;34m|[m [1;35m|[m[1;34m_[m[1;36m|[m[1;34m_[m[1;34m|[m[1;34m_[m[1;32m|[m[1;34m_[m[36m|[m[1;34m_[m[34m|[m[1;34m_[m[32m|[m[1;34m_[m[1;36m|[m[1;34m/[m  
+[1;34m|[m[1;34m/[m[1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m   
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33mddcf317[m CI workflow update
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m8f72bdf[m add hint title
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m9aedf95[m Difficulty can now be update
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m9ac79f4[m Change challenges category
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m   [33m86e2cb4[m Merge pull request #252 from h0lm0/fix/warnings-and-features
+[35m|[m[36m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m  
+[35m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m52628ff[m /admin/chall-cat equal size for each cols
+[35m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33md022eae[m Admin/challenges style changed to match othr pages
+[35m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m55b673e[m Admin/challenge access w/o a team
+[35m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33mb5f3d3f[m Size and margins fixes
+[35m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m4db8c87[m ?
+[35m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33me44f9e0[m theme fix
+[35m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33mac066eb[m Point chall crad
+[35m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m024218a[m Points in chall card
+* [36m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m5ad32d4[m remove old artefact part 2
+* [36m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33med73d8e[m Remove old artefact
+* [36m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m5d838f7[m Merge pull request #243 from h0lm0/fix/changing-user-password-not-working
+[1;31m|[m[36m\[m[36m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m 
+[1;31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m75f87e5[m Fixed
+* [1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33mbf6c243[m Merge pull request #241 from h0lm0/feature/description-markdown
+[1;33m|[m[1;32m\[m[1;32m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m 
+[1;33m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m579ce6c[m Fixed
+[1;33m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33mb82b532[m Overflow, scrollbar etc fixed
+[1;33m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m [33m5f470e5[m Markdown support in description
+[1;33m|[m[1;33m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m [1;36m/[m  
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [1;36m|[m   [33me160a16[m Merge pull request #239 from h0lm0/feature/geoint-misc-enhancements
+[1;36m|[m[1;36m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m [1;36m\[m  
+[1;36m|[m [1;36m|[m[1;36m_[m[1;35m|[m[1;36m_[m[1;36m|[m[1;36m_[m[1;34m|[m[1;36m_[m[1;32m|[m[1;36m_[m[36m|[m[1;36m_[m[34m|[m[1;36m_[m[32m|[m[1;36m/[m  
+[1;36m|[m[1;36m/[m[1;36m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   
+[1;36m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m2c3d04c[m Fix search having duplicate reslts
+[1;36m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m242d325[m Fix search being triggered again after clicking a suggestion
+[1;36m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m754e100[m Search feature
+[1;36m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m24dd477[m Added map scale + default pin location
+[1;36m|[m[1;36m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m  
+* [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   [33md2e2b1f[m Merge pull request #237 from h0lm0/fix/infinite_build+feature/cooldown_on_instances
+[31m|[m[32m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[31m|[m * [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m   [33m6e5d703[m Merge branch 'dev' into fix/infinite_build+feature/cooldown_on_instances
+[31m|[m [33m|[m[31m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[31m|[m [33m|[m[31m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m  
+[31m|[m[31m/[m[33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   
+* [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   [33m2711502[m Merge pull request #236 from h0lm0/feature/hint-firstblood
+[35m|[m[36m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mf010144[m mini fix front
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m6914e63[m removed unused fct
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m3537bad[m fix demo
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m835c780[m fix
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m07b27a6[m WIP
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m056a34b[m Firstblood menu now working WIP for badge
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33me745d20[m adding general meta update
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m0be1e81[m BRANCH FIXED
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mf8f2980[m verbose
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m58cad1a[m patch my shitty merge
+[35m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   [33mefa7940[m Merge pull request #228 from h0lm0/dev
+[35m|[m [1;31m|[m[1;32m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[35m|[m [1;31m|[m * [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m   [33me42f578[m Merge branch 'feature/hint-firstblood' into dev
+[35m|[m [1;31m|[m [1;33m|[m[1;31m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[35m|[m [1;31m|[m [1;33m|[m[1;31m/[m [33m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m  
+[35m|[m [1;31m|[m[1;31m/[m[1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m699688e[m fix instances + decay
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m3337f75[m auto update point on modif + patch no decay
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mbc9fce9[m BIG FIX + auto update point on submit
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mf1ffca1[m remove useless addition of foreign key
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m2ea772e[m patch solve
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m8098dee[m patch invalid value
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m0f18065[m patch formula route
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mc340255[m decay test
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m608522e[m make decay optionnal
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m90eb68f[m more exemples
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m013f032[m remove useless comment
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m57dcd04[m create valid challenges & adapt minio
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mce53e33[m minio handle decay (auto linear, may change to None)
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m14f204f[m add frontend challenge model
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m75d41da[m addapt decay model
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m0a9bb18[m challenges interface
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m96d2135[m adding routes to main.go
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m939b597[m adding routes
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mde8d9fb[m add default config to seeder
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m0e05a46[m adding decay linear exponential and logarithmic (why, cuz why not) also decay_test is a mess but it work
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m7e66044[m test decay (/services will be moved in utils etc..)
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mb655c1b[m fix foreignkey for hint&team
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m64b0e14[m Update base_challenge.go
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mac466b5[m minor fix after merge
+[35m|[m * [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   [33mff8fc11[m Merge pull request #200 from h0lm0/dev
+[35m|[m [1;35m|[m[1;36m\[m [1;33m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[35m|[m [1;35m|[m * [1;33m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m   [33m279582c[m Merge branch 'feature/hint-firstblood' into dev
+[35m|[m [1;35m|[m [31m|[m[1;35m\[m [1;33m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[35m|[m [1;35m|[m [31m|[m[1;35m/[m [1;33m/[m [33m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m  
+[35m|[m [1;35m|[m[1;35m/[m[31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   
+[35m|[m * [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m3763769[m review logic of min point
+[35m|[m * [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33md503ab3[m adding decay model
+[35m|[m * [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m77001e3[m rename scaleformula by decayformula
+[35m|[m * [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m1c41d8d[m small change to fb badge to enable different badge rewarded
+[35m|[m * [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m502edd5[m add []hint to team model
+[35m|[m * [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   [33mc6dc6a5[m Merge branch 'feature/hint-firstblood' of https://github.com/h0lm0/pwnthemall into feature/hint-firstblood
+[35m|[m [33m|[m[34m\[m [31m\[m [1;33m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[35m|[m [33m|[m * [31m\[m [1;33m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m   [33m265d7b2[m Merge pull request #182 from h0lm0/dev
+[35m|[m [33m|[m [35m|[m[36m\[m [31m\[m [1;33m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[35m|[m * [35m|[m [36m|[m [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m3cf4f65[m fix
+[35m|[m * [35m|[m [36m|[m [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m1db2d0c[m better again
+[35m|[m * [35m|[m [36m|[m [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mbbb51c8[m More logic structure for meta & models
+[35m|[m * [35m|[m [36m|[m [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33ma19c96c[m adapt model + meta
+[35m|[m * [35m|[m [36m|[m [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mef26271[m yes
+[35m|[m [35m|[m[35m/[m [36m/[m [31m/[m [1;33m/[m [33m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m  
+[35m|[m * [36m|[m [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   [33m96fb45a[m Merge pull request #173 from h0lm0/dev
+[35m|[m [1;31m|[m[1;32m\[m [36m\[m [31m\[m [1;33m\[m [33m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[35m|[m * [1;32m|[m [36m|[m [31m|[m [1;33m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m9de626e[m Modify challenge/solve model and add model for fb and hint
+[35m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m97b73e1[m Update test/tests/auth.spec.ts
+* [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;32m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33ma3d6045[m Verbose by default
+[1;32m|[m [1;32m|[m[1;32m_[m[1;32m|[m[1;32m_[m[36m|[m[1;32m_[m[31m|[m[1;32m/[m [33m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m  
+[1;32m|[m[1;32m/[m[1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mee95626[m bigger map
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mee8ae18[m last fix for ws warning
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m47ba32b[m geoint ok + demo chall
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m1849fd1[m Changed Identifier to Username + sending nothing in the request is now handled
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m4650e1b[m revert front dockerfile, idk why it didnt work yesterday..
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33mddc5523[m Fixed websocket warnings
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m92b4986[m Fix/Points in profile card not beign personnal points
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m139b6f0[m Cooldown restrictions on instances
+[1;32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m * [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m [33m502e2c1[m Fix build taking too much time because of a recursive chown
+[1;32m|[m [1;32m|[m[1;32m_[m[1;32m|[m[1;32m_[m[36m|[m[1;32m_[m[31m|[m[1;32m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m [34m/[m [32m/[m  
+[1;32m|[m[1;32m/[m[1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   
+* [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [32m|[m   [33m0cc48e5[m Merge pull request #226 from h0lm0/feature/points-in-team-tab
+[32m|[m[1;34m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m [34m\[m [32m\[m  
+[32m|[m [1;34m|[m[32m_[m[1;32m|[m[32m_[m[1;32m|[m[32m_[m[36m|[m[32m_[m[31m|[m[32m_[m[1;35m|[m[32m_[m[1;36m|[m[32m_[m[1;34m|[m[32m_[m[1;32m|[m[32m_[m[36m|[m[32m_[m[34m|[m[32m/[m  
+[32m|[m[32m/[m[1;34m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m   
+[32m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [33md83e742[m Points are now written in the team tab
+* [1;34m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [34m|[m [33m2294935[m enhance security demo (ip)
+[34m|[m [1;34m|[m[34m_[m[1;32m|[m[34m_[m[1;32m|[m[34m_[m[36m|[m[34m_[m[31m|[m[34m_[m[1;35m|[m[34m_[m[1;36m|[m[34m_[m[1;34m|[m[34m_[m[1;32m|[m[34m_[m[36m|[m[34m/[m  
+[34m|[m[34m/[m[1;34m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m   
+* [1;34m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [33m5ff5cd5[m Fix caddy port on 80 for demo env
+* [1;34m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m   [33me828ac5[m Merge pull request #222 from h0lm0/feature/demo-env
+[1;34m|[m[1;36m\[m [1;34m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m  
+[1;34m|[m [1;36m|[m[1;34m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m  
+[1;34m|[m[1;34m/[m[1;36m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m   
+[1;34m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [33m3792bd5[m demo env
+[1;34m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m [33mec8479f[m env update (2 vars added) + caddyfile for default & demo
+[1;34m|[m[1;34m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m [1;35m/[m [1;36m/[m [1;34m/[m [1;32m/[m [36m/[m  
+* [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [36m|[m   [33m4c0fd88[m Merge pull request #220 from h0lm0/feature/Profile
+[36m|[m[32m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m [1;35m\[m [1;36m\[m [1;34m\[m [1;32m\[m [36m\[m  
+[36m|[m [32m|[m[36m_[m[1;32m|[m[36m_[m[1;32m|[m[36m_[m[36m|[m[36m_[m[31m|[m[36m_[m[1;35m|[m[36m_[m[1;36m|[m[36m_[m[1;34m|[m[36m_[m[1;32m|[m[36m/[m  
+[36m|[m[36m/[m[32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m   
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33md42f24f[m Removed mock data for badges to start again from a clean state
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33ma8b34b1[m Kill instances when chall is solved, locales fixes, Fix stop instance button not synced ( needed a f5 to appear )
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m7d53578[m fixed some issues with instance and challenge cards sync
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m9c218c5[m Instances are now synced between all members
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m6142c12[m Instantly make the solved challenge card green when someone from the team flag a chall
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m6282446[m Toast now uses the real chall name
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m7bc5e1e[m fix/ solver won't receive toast anymore
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m4d106be[m Hid debug
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m278c62a[m Feature/ when one eprson solves a chall, evryone in the team will get a toast
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m7dff46c[m Fixed max challs
+[36m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33mc9130ac[m Added points, challenge solved and fix locale
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m456404f[m Fix ci job
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33md9d187a[m Fix ci encore
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33mae3d93f[m Fix ci
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m [1;32m|[m [33m389b394[m Fix CI
+[1;32m|[m [32m|[m[1;32m_[m[1;32m|[m[1;32m_[m[1;32m|[m[1;32m_[m[36m|[m[1;32m_[m[31m|[m[1;32m_[m[1;35m|[m[1;32m_[m[1;36m|[m[1;32m_[m[1;34m|[m[1;32m/[m  
+[1;32m|[m[1;32m/[m[32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m   
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [1;34m|[m   [33m0ef73fc[m Merge pull request #217 from h0lm0/feature/demo-deploy
+[1;34m|[m[34m\[m [32m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m [1;35m\[m [1;36m\[m [1;34m\[m  
+[1;34m|[m [34m|[m[1;34m_[m[32m|[m[1;34m_[m[1;32m|[m[1;34m_[m[1;32m|[m[1;34m_[m[36m|[m[1;34m_[m[31m|[m[1;34m_[m[1;35m|[m[1;34m_[m[1;36m|[m[1;34m/[m  
+[1;34m|[m[1;34m/[m[34m|[m [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m   
+[1;34m|[m * [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [33m2ee40f4[m deploy port added to ci
+[1;34m|[m * [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [33mf637272[m demo ci + pta cli sh update + env update
+[1;34m|[m[1;34m/[m [32m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m [1;35m/[m [1;36m/[m  
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [33m394f939[m Update README.md
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [1;36m|[m [33mc5755fa[m fix alt name readme
+[1;36m|[m [32m|[m[1;36m_[m[1;32m|[m[1;36m_[m[1;32m|[m[1;36m_[m[36m|[m[1;36m_[m[31m|[m[1;36m_[m[1;35m|[m[1;36m/[m  
+[1;36m|[m[1;36m/[m[32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m   
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m [33m790a7a0[m readme fix + pta cli upd
+* [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [1;35m|[m   [33m65d2cf5[m Merge pull request #213 from h0lm0/main
+[35m|[m[1;35m\[m [32m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m [1;35m\[m  
+[35m|[m [1;35m|[m [32m|[m[1;35m_[m[1;32m|[m[1;35m_[m[1;32m|[m[1;35m_[m[36m|[m[1;35m_[m[31m|[m[1;35m/[m  
+[35m|[m [1;35m|[m[1;35m/[m[32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   
+[35m|[m * [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33me4f62e1[m cosmetics for repo
+[35m|[m * [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   [33mde9bba2[m Merge pull request #212 from h0lm0/dev
+[35m|[m [1;31m|[m[35m\[m [32m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[35m|[m [1;31m|[m[35m/[m [32m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m  
+[35m|[m[35m/[m[1;31m|[m [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   
+* [1;31m|[m [32m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33md0071e1[m readme enhance
+[32m|[m [1;31m|[m[32m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m  
+[32m|[m[32m/[m[1;31m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   
+[32m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m   [33m431c10b[m Merge pull request #211 from h0lm0/dev
+[32m|[m [1;33m|[m[32m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[32m|[m [1;33m|[m[32m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m  
+[32m|[m[32m/[m[1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   
+* [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33ma41b816[m readme upd & caddy on 0.0.0.0 instead of local loop
+* [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33mb88f6cc[m bruno fix some requests & cosmetics fix backend
+* [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   [33m6d2b167[m Merge pull request #209 from h0lm0/feature/profile-and-sidebar-revamp
+[1;35m|[m[1;36m\[m [1;33m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m972395c[m start+end remade and global ctf status in the config page
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m537297e[m fix member since
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33ma1dc8fc[m locales + member_since functionnal in profile card
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33md7ab052[m Make categories draggable to change their order
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m17cd371[m added team to /admin/users page + fixed table width
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33mf7009d5[m fix-toast
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m7c10e26[m sidebar
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33md2b43fa[m sidebar
+[1;35m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   [33m6d1f908[m sidebar
+[1;35m|[m [31m|[m[1;35m\[m [1;33m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[1;35m|[m [31m|[m[1;35m/[m [1;33m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m  
+[1;35m|[m[1;35m/[m[31m|[m [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   
+* [31m|[m [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   [33m5f86a99[m Merge pull request #203 from h0lm0/startend
+[33m|[m[34m\[m [31m\[m [1;33m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[33m|[m * [31m|[m [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m8027d04[m Update seeder.go
+[33m|[m [34m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m6a302bc[m Scrolling for main content ok
+[33m|[m [34m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33me38e92b[m instant drag to resize OK
+[33m|[m [34m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33me883c03[m Sidebar Revamp - fix for profile not being at the bottom
+[33m|[m [34m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m5df9779[m profile revamp
+[33m|[m [34m|[m[34m/[m [1;33m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m  
+[33m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m412d1c7[m when ctf is finished, keep the scoreboard + challs but block submissions
+[33m|[m * [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33mbe1e188[m feature
+[33m|[m[33m/[m [1;33m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m  
+* [1;33m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m [33m911a188[m fix build error
+[34m|[m * [1;32m|[m [1;32m|[m [36m|[m [31m|[m   [33m9b5bca4[m Merge pull request #202 from h0lm0/dev
+[34m|[m [35m|[m[34m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[34m|[m [35m|[m[34m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m  
+[34m|[m[34m/[m[35m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   
+* [35m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   [33m59a473c[m Merge pull request #189 from h0lm0/fixdev_containerclean
+[1;31m|[m[1;32m\[m [35m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[1;31m|[m * [35m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m   [33m761ade1[m Merge branch 'dev' into fixdev_containerclean
+[1;31m|[m [1;33m|[m[1;31m\[m [35m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[1;31m|[m [1;33m|[m[1;31m/[m [35m/[m [1;32m/[m [1;32m/[m [36m/[m [31m/[m  
+[1;31m|[m[1;31m/[m[1;33m|[m [35m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   
+* [1;33m|[m [35m|[m [1;32m|[m [1;32m|[m [36m|[m [31m|[m   [33m1950513[m Merge pull request #188 from h0lm0/feature/debug
+[31m|[m[1;36m\[m [1;33m\[m [35m\[m [1;32m\[m [1;32m\[m [36m\[m [31m\[m  
+[31m|[m [1;36m|[m[31m_[m[1;33m|[m[31m_[m[35m|[m[31m_[m[1;32m|[m[31m_[m[1;32m|[m[31m_[m[36m|[m[31m/[m  
+[31m|[m[31m/[m[1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [1;32m|[m [36m|[m   
+[31m|[m * [1;33m|[m [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m2ea5c77[m cherrypick
+[31m|[m * [1;33m|[m [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m71f927b[m debugenv
+[31m|[m[31m/[m [1;33m/[m [35m/[m [1;32m/[m [1;32m/[m [36m/[m  
+[31m|[m * [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m4c32dcf[m Instance - less text + copy button with anim
+[31m|[m * [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m2c46db9[m fix pta cli mkdir -p  shared
+[31m|[m * [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m9e84680[m Frontend fix + docker compose fix
+[31m|[m * [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m1f3f18b[m connection info + frontend ok
+[31m|[m * [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m4db3276[m Update pta-cli.sh
+[31m|[m * [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m2b13546[m stop intances
+[31m|[m * [35m|[m [1;32m|[m [1;32m|[m [36m|[m [33m3c4bfbf[m newchall + fix instances not working
+[31m|[m[31m/[m [35m/[m [1;32m/[m [1;32m/[m [36m/[m  
+* [35m|[m [1;32m|[m [1;32m|[m [36m|[m   [33m988765f[m Merge pull request #185 from h0lm0/feature/front-back_CreateRunInstances
+[31m|[m[32m\[m [35m\[m [1;32m\[m [1;32m\[m [36m\[m  
+[31m|[m * [35m\[m [1;32m\[m [1;32m\[m [36m\[m   [33m05b383f[m Merge branch 'dev' into feature/front-back_CreateRunInstances
+[31m|[m [33m|[m[31m\[m [35m\[m [1;32m\[m [1;32m\[m [36m\[m  
+[31m|[m [33m|[m[31m/[m [35m/[m [1;32m/[m [1;32m/[m [36m/[m  
+[31m|[m[31m/[m[33m|[m [35m|[m [1;32m|[m [1;32m|[m [36m|[m   
+* [33m|[m [35m|[m [1;32m|[m [1;32m|[m [36m|[m   [33m442eba3[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into dev
+[35m|[m[36m\[m [33m\[m [35m\[m [1;32m\[m [1;32m\[m [36m\[m  
+[35m|[m * [33m\[m [35m\[m [1;32m\[m [1;32m\[m [36m\[m   [33m1062df5[m Merge pull request #183 from h0lm0/feature/notif
+[35m|[m [36m|[m[1;32m\[m [33m\[m [35m\[m [1;32m\[m [1;32m\[m [36m\[m  
+[35m|[m [36m|[m [1;32m|[m[36m_[m[33m|[m[36m_[m[35m|[m[36m_[m[1;32m|[m[36m_[m[1;32m|[m[36m/[m  
+[35m|[m [36m|[m[36m/[m[1;32m|[m [33m|[m [35m|[m [1;32m|[m [1;32m|[m   
+* [36m/[m [1;32m|[m [33m|[m [35m|[m [1;32m|[m [1;32m|[m [33mf1f8629[m Docker dynamic port allocations + models fixing
+[36m|[m[36m/[m [1;32m/[m [33m/[m [35m/[m [1;32m/[m [1;32m/[m  
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33mf247c49[m Delete
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33me816581[m Delete test/tests/docker-instances.spec.ts
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33m3aaa5bd[m translations up
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33mecaf205[m Fix/When killing an instance you needed to refresh to see the Start Instance button again, now instantly updates
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33m0375c95[m Fix/Creating an instance and then doing a refresh shows no instance created ( can start infinite instances without being able to destroy old ones..
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33mabf9f33[m Removed instances status from index + made tags aligned and not on top of eachothers
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33ma7ac360[m Cleaned locales + fix aria-hidden warning
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33m7a74bc8[m Instance expiration + kill instance from front ui
+[36m|[m [1;32m|[m * [35m|[m [1;32m|[m [1;32m|[m [33me492d26[m Feature/Build-run containers from frontend
+[36m|[m [1;32m|[m[1;32m/[m [35m/[m [1;32m/[m [1;32m/[m  
+[36m|[m * [35m|[m [1;32m|[m [1;32m|[m   [33ma01951b[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into feature/notif
+[36m|[m [1;33m|[m[36m\[m [35m\[m [1;32m\[m [1;32m\[m  
+[36m|[m [1;33m|[m[36m/[m [35m/[m [1;32m/[m [1;32m/[m  
+[36m|[m[36m/[m[1;33m|[m [35m|[m [1;32m|[m [1;32m|[m   
+* [1;33m|[m [35m|[m [1;32m|[m [1;32m|[m   [33mc78b78d[m Merge branch 'feature/notif' into dev
+[1;35m|[m[1;36m\[m [1;33m\[m [35m\[m [1;32m\[m [1;32m\[m  
+* [1;36m\[m [1;33m\[m [35m\[m [1;32m\[m [1;32m\[m   [33m0149dc6[m Merge pull request #178 from h0lm0/feature/docker-run
+[1;32m|[m[32m\[m [1;36m\[m [1;33m\[m [35m\[m [1;32m\[m [1;32m\[m  
+[1;32m|[m [32m|[m[1;32m_[m[1;36m|[m[1;32m_[m[1;33m|[m[1;32m_[m[35m|[m[1;32m_[m[1;32m|[m[1;32m/[m  
+[1;32m|[m[1;32m/[m[32m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m   
+[1;32m|[m * [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33m1f5b902[m Instances system Start & stop ok, need to solve the container expiration pb Resources alloc ok
+[1;32m|[m * [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33mc0c5ddb[m Start instance ok in backend
+[1;32m|[m * [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33mb288f1e[m Docker config model + controller + routes (get,put)
+[1;32m|[m * [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m   [33m83cbeac[m Merge pull request #176 from h0lm0/dev
+[1;32m|[m [33m|[m[1;32m\[m [1;36m\[m [1;33m\[m [35m\[m [1;32m\[m  
+[1;32m|[m [33m|[m[1;32m/[m [1;36m/[m [1;33m/[m [35m/[m [1;32m/[m  
+[1;32m|[m[1;32m/[m[33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m   
+* [33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33m5e357c8[m Fix .env for windows host
+* [33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m   [33m7552bee[m Merge pull request #171 from h0lm0/feature/FlaggedByTab
+[35m|[m[36m\[m [33m\[m [1;36m\[m [1;33m\[m [35m\[m [1;32m\[m  
+[35m|[m * [33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33ma52d230[m revert last commit for challenge.go controller
+[35m|[m * [33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33mbd19a7b[m Update backend/controllers/challenge.go
+[35m|[m * [33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33mf286a50[m Update frontend/src/components/pwn/CategoryContent.tsx
+[35m|[m * [33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33m94822b3[m Fixed submit appearing in the wrong tab, fixed all old playwright tests
+[35m|[m * [33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33m272a9e7[m Added playwright test for flagging
+[35m|[m * [33m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33mb5d3148[m fix height
+[35m|[m [36m|[m * [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m [33m6e18023[m More checks on objects in config/docker
+[35m|[m [36m|[m[35m/[m [1;36m/[m [1;33m/[m [35m/[m [1;32m/[m  
+[35m|[m[35m/[m[36m|[m [1;36m|[m [1;33m|[m [35m|[m [1;32m|[m   
+[35m|[m [36m|[m [1;36m|[m * [35m|[m [1;32m|[m [33mc93ff2f[m Notifications page, mark as read
+[35m|[m [36m|[m [1;36m|[m * [35m|[m [1;32m|[m [33m367e89f[m From BELL to bell
+[35m|[m [36m|[m [1;36m|[m[1;36m/[m [35m/[m [1;32m/[m  
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33m86630a6[m Feature - Send toast to a specific user only + added more users to the seeder because yes
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33mb7da89e[m Team + everyone buttons fully functionnal - toasts sent in real time via websockets
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33mc703eeb[m Minor UI fixes ( colors etc )
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33m629111a[m fix gradiant colors in notif, sender won't receive the toast anymore
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33m65beddf[m fixed theme color overriding toast colors
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33mae9442e[m Added 3 buttons for targets of the toast
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33m3584734[m ok
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33mbb13889[m translations
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33ma1e4f87[m theme fixed in /admin/notif page
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33m38de299[m frontend
+[35m|[m [36m|[m * [35m|[m [1;32m|[m [33m728f8a6[m backend
+[35m|[m [36m|[m[36m/[m [35m/[m [1;32m/[m  
+[35m|[m * [35m|[m [1;32m|[m [33m69b89a6[m Solved chall fixed + blur effect when inside a chall
+[35m|[m * [35m|[m [1;32m|[m [33m0c275f6[m idk'
+[35m|[m * [35m|[m [1;32m|[m [33m0eb7af7[m Added the solved tab in each challs
+[35m|[m[35m/[m [35m/[m [1;32m/[m  
+* [35m|[m [1;32m|[m   [33mc48decd[m Merge pull request #147 from h0lm0/dependabot/go_modules/backend/github.com/docker/docker-25.0.6incompatible
+[1;31m|[m[1;32m\[m [35m\[m [1;32m\[m  
+[1;31m|[m * [35m\[m [1;32m\[m   [33mc5bb1f9[m Merge branch 'dev' into dependabot/go_modules/backend/github.com/docker/docker-25.0.6incompatible
+[1;31m|[m [1;33m|[m[1;31m\[m [35m\[m [1;32m\[m  
+[1;31m|[m [1;33m|[m[1;31m/[m [35m/[m [1;32m/[m  
+[1;31m|[m[1;31m/[m[1;33m|[m [35m|[m [1;32m|[m   
+* [1;33m|[m [35m|[m [1;32m|[m   [33m133732c[m Merge pull request #146 from h0lm0/dependabot/go_modules/backend/github.com/docker/distribution-2.8.2incompatible
+[1;35m|[m[1;36m\[m [1;33m\[m [35m\[m [1;32m\[m  
+[1;35m|[m * [1;33m|[m [35m|[m [1;32m|[m [33m9ef7562[m Bump github.com/docker/distribution in /backend
+[1;35m|[m [35m|[m [1;33m|[m[35m/[m [1;32m/[m  
+[1;35m|[m [35m|[m[35m/[m[1;33m|[m [1;32m|[m   
+* [35m|[m [1;33m|[m [1;32m|[m   [33mc26d5b9[m Merge pull request #163 from h0lm0/feature/Windows-support
+[1;32m|[m[32m\[m [35m\[m [1;33m\[m [1;32m\[m  
+[1;32m|[m [32m|[m[1;32m_[m[35m|[m[1;32m_[m[1;33m|[m[1;32m/[m  
+[1;32m|[m[1;32m/[m[32m|[m [35m|[m [1;33m|[m   
+[1;32m|[m * [35m|[m [1;33m|[m [33m089b0a1[m Undo change
+[1;32m|[m * [35m|[m [1;33m|[m [33macecea9[m Update pta-cli.cmd
+[1;32m|[m * [35m|[m [1;33m|[m [33m7348e58[m Update pta-cli.cmd
+[1;32m|[m * [35m|[m [1;33m|[m [33m24b2a47[m Update README.md
+[1;32m|[m * [35m|[m [1;33m|[m [33m3d70bda[m The readme is still ugly
+[1;32m|[m * [35m|[m [1;33m|[m [33m26bd0ca[m Handle compatible WSL even if not defaulted
+[1;32m|[m * [35m|[m [1;33m|[m [33m55f9b3a[m Add a little precisition in the readme
+[1;32m|[m * [35m|[m [1;33m|[m [33m11f219a[m Windows Support
+* [32m|[m [35m|[m [1;33m|[m   [33mbf8a24a[m Merge pull request #162 from h0lm0/config
+[33m|[m[34m\[m [32m\[m [35m\[m [1;33m\[m  
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33m49bc2a1[m Config model fix + locale fix + sync update
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33mbca4f87[m locale fix
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33m391a3d3[m Update frontend/src/components/admin/ConfigurationContent.tsx
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33mb465d3c[m tversion
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33m7af957a[m Revert
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33m99f0d3d[m Made docker host a private config
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33m509d65a[m Fix : when spamming f5 you can still see the registration form
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33m827a5c7[m disable registration
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33m3be6f83[m SITE_NAME ok
+[33m|[m * [32m|[m [35m|[m [1;33m|[m [33m871721a[m Config page + public & priv configs
+[33m|[m[33m/[m [32m/[m [35m/[m [1;33m/[m  
+* [32m|[m [35m|[m [1;33m|[m [33m0e0e4b5[m Remove unused code (backen)
+* [32m|[m [35m|[m [1;33m|[m [33m0cb996f[m Fix docker build image errors
+* [32m|[m [35m|[m [1;33m|[m   [33m68f4d7a[m Merge pull request #157 from h0lm0/cleaning
+[35m|[m[36m\[m [32m\[m [35m\[m [1;33m\[m  
+[35m|[m * [32m|[m [35m|[m [1;33m|[m [33m860df1d[m fix: sidebar refresh and ban handling
+[35m|[m * [32m|[m [35m|[m [1;33m|[m [33m7c8dc8c[m cleaning unused files/functions etc
+[35m|[m[35m/[m [32m/[m [35m/[m [1;33m/[m  
+* [32m|[m [35m|[m [1;33m|[m   [33m14ac83d[m Merge pull request #155 from h0lm0/admin-bypass-team-req
+[1;31m|[m[1;32m\[m [32m\[m [35m\[m [1;33m\[m  
+[1;31m|[m * [32m|[m [35m|[m [1;33m|[m [33ma3e7dba[m Update frontend/src/context/LanguageContext.tsx
+[1;31m|[m * [32m|[m [35m|[m [1;33m|[m   [33m9177aa3[m Merge pull request #148 from h0lm0/dependabot/go_modules/backend/github.com/golang-jwt/jwt/v5-5.2.2
+[1;31m|[m [1;33m|[m[1;34m\[m [32m\[m [35m\[m [1;33m\[m  
+[1;31m|[m [1;33m|[m * [32m|[m [35m|[m [1;33m|[m [33m2ebea43[m Bump github.com/golang-jwt/jwt/v5 from 5.0.0 to 5.2.2 in /backend
+[1;31m|[m [1;33m|[m [35m|[m [32m|[m[35m/[m [1;33m/[m  
+[1;31m|[m [1;33m|[m [35m|[m[35m/[m[32m|[m [1;33m|[m   
+[1;31m|[m * [35m|[m [32m|[m [1;33m|[m   [33mb1762a8[m Merge pull request #126 from h0lm0/dependabot/npm_and_yarn/frontend/axios-1.11.0
+[1;31m|[m [1;35m|[m[1;36m\[m [35m\[m [32m\[m [1;33m\[m  
+[1;31m|[m [1;35m|[m * [35m|[m [32m|[m [1;33m|[m [33mc0e559e[m Bump axios from 1.10.0 to 1.11.0 in /frontend
+[1;31m|[m * [1;36m|[m [35m|[m [32m|[m [1;33m|[m [33ma0994ab[m fixes
+[1;31m|[m * [1;36m|[m [35m|[m [32m|[m [1;33m|[m [33m44115d0[m Admins can bypass the team req and see challs ( but they can't flag unless they're in one) + chanegd all flags to "flag"
+* [1;36m|[m [1;36m|[m [35m|[m [32m|[m [1;33m|[m   [33m0cdbdf9[m Merge pull request #156 from h0lm0/feature/docker
+[1;36m|[m[32m\[m [1;36m\[m [1;36m\[m [35m\[m [32m\[m [1;33m\[m  
+[1;36m|[m [32m|[m[1;36m/[m [1;36m/[m [35m/[m [32m/[m [1;33m/[m  
+[1;36m|[m[1;36m/[m[32m|[m [1;36m|[m [35m|[m [32m|[m [1;33m|[m   
+[1;36m|[m * [1;36m|[m [35m|[m [32m|[m [1;33m|[m [33mac93de4[m Docker build image ok + image prefix in env var for
+[1;36m|[m[1;36m/[m [1;36m/[m [35m/[m [32m/[m [1;33m/[m  
+* [1;36m|[m [35m|[m [32m|[m [1;33m|[m   [33m93955b5[m Merge pull request #150 from h0lm0/language-cache-fix
+[33m|[m[34m\[m [1;36m\[m [35m\[m [32m\[m [1;33m\[m  
+[33m|[m * [1;36m\[m [35m\[m [32m\[m [1;33m\[m   [33m88011ee[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into language-cache-fix
+[33m|[m [35m|[m[33m\[m [1;36m\[m [35m\[m [32m\[m [1;33m\[m  
+[33m|[m [35m|[m[33m/[m [1;36m/[m [35m/[m [32m/[m [1;33m/[m  
+[33m|[m[33m/[m[35m|[m [1;36m|[m [35m|[m [32m|[m [1;33m|[m   
+* [35m|[m [1;36m|[m [35m|[m [32m|[m [1;33m|[m   [33mb978bbd[m Merge pull request #149 from h0lm0/docs/bruno
+[1;31m|[m[1;32m\[m [35m\[m [1;36m\[m [35m\[m [32m\[m [1;33m\[m  
+[1;31m|[m * [35m|[m [1;36m|[m [35m|[m [32m|[m [1;33m|[m [33m8f63403[m bruno collection
+[1;31m|[m[1;31m/[m [35m/[m [1;36m/[m [35m/[m [32m/[m [1;33m/[m  
+[1;31m|[m * [1;36m|[m [35m|[m [32m|[m [1;33m|[m [33m93771e3[m fix : /login -> choose french -> f5 -> loads english back
+[1;31m|[m * [1;36m|[m [35m|[m [32m|[m [1;33m|[m [33m3fe6bd4[m Clear translation cache after a logout
+[1;31m|[m[1;31m/[m [1;36m/[m [35m/[m [32m/[m [1;33m/[m  
+[1;31m|[m [1;36m|[m [35m|[m [32m|[m * [33mfde3efc[m Bump github.com/docker/docker in /backend
+[1;31m|[m [1;36m|[m [35m|[m [32m|[m[35m/[m  
+[1;31m|[m [1;36m|[m [35m|[m[35m/[m[32m|[m   
+[1;31m|[m [1;36m|[m * [32m|[m [33ma5ad2d8[m Merge pull request #145 from h0lm0/dev
+[1;31m|[m [1;36m|[m[1;36m/[m[1;31m|[m [32m|[m 
+[1;31m|[m [1;36m|[m[1;31m/[m [32m/[m  
+[1;31m|[m[1;31m/[m[1;36m|[m [32m|[m   
+* [1;36m|[m [32m|[m   [33m50b18c2[m Merge pull request #144 from h0lm0/profile
+[1;35m|[m[1;36m\[m [1;36m\[m [32m\[m  
+[1;35m|[m * [1;36m|[m [32m|[m [33me9a3289[m refresh team disband
+[1;35m|[m * [1;36m|[m [32m|[m [33mba31944[m oui
+[1;35m|[m * [1;36m|[m [32m|[m [33mf9672db[m Fix session dropping when refreshign the page
+[1;35m|[m[1;35m/[m [1;36m/[m [32m/[m  
+* [1;36m|[m [32m|[m   [33m8580bbc[m Merge pull request #143 from h0lm0/fix/misc
+[31m|[m[32m\[m [1;36m\[m [32m\[m  
+[31m|[m * [1;36m|[m [32m|[m [33m952dbdf[m j'ai oublie de push
+* [32m|[m [1;36m|[m [32m|[m   [33m73bf288[m Merge pull request #140 from h0lm0/featre/docker-implement
+[33m|[m[34m\[m [32m\[m [1;36m\[m [32m\[m  
+[33m|[m * [32m|[m [1;36m|[m [32m|[m [33m74d858c[m Retrieve Dockerfile from mino OK + try to build image KO
+* [34m|[m [32m|[m [1;36m|[m [32m|[m   [33m8fbb112[m Merge pull request #141 from h0lm0/fix/misc
+[35m|[m[32m\[m [34m\[m [32m\[m [1;36m\[m [32m\[m  
+[35m|[m [32m|[m [34m|[m[32m/[m [1;36m/[m [32m/[m  
+[35m|[m [32m|[m[32m/[m[34m|[m [1;36m|[m [32m|[m   
+[35m|[m * [34m|[m [1;36m|[m [32m|[m [33mabbd3e0[m Fix isLoaded always being true which skipped loadign translation files when switching (translations not switchign lang)
+[35m|[m * [34m|[m [1;36m|[m [32m|[m   [33m9a8270d[m Merge pull request #142 from h0lm0/dev
+[35m|[m [1;31m|[m[35m\[m [34m\[m [1;36m\[m [32m\[m  
+[35m|[m [1;31m|[m[35m/[m [34m/[m [1;36m/[m [32m/[m  
+[35m|[m[35m/[m[1;31m|[m [34m|[m [1;36m|[m [32m|[m   
+* [1;31m|[m [34m|[m [1;36m|[m [32m|[m   [33m8ad5277[m Merge pull request #137 from h0lm0/feature/jwt-implement
+[1;33m|[m[1;34m\[m [1;31m\[m [34m\[m [1;36m\[m [32m\[m  
+[1;33m|[m * [1;31m\[m [34m\[m [1;36m\[m [32m\[m   [33m834bf24[m Merge branch 'dev' into feature/jwt-implement
+[1;33m|[m [32m|[m[1;33m\[m [1;31m\[m [34m\[m [1;36m\[m [32m\[m  
+[1;33m|[m [32m|[m[1;33m/[m [1;31m/[m [34m/[m [1;36m/[m [32m/[m  
+[1;33m|[m[1;33m/[m[32m|[m [1;31m|[m [34m|[m [1;36m|[m [32m/[m   
+[1;33m|[m [32m|[m [1;31m|[m[32m_[m[34m|[m[32m_[m[1;36m|[m[32m/[m    
+[1;33m|[m [32m|[m[32m/[m[1;31m|[m [34m|[m [1;36m|[m     
+[1;33m|[m * [1;31m|[m [34m|[m [1;36m|[m [33mcf21fce[m tjrdespbs
+[1;33m|[m * [1;31m|[m [34m|[m [1;36m|[m [33mdc16ce9[m Casbin fix
+[1;33m|[m * [1;31m|[m [34m|[m [1;36m|[m [33m0e219e9[m que31fichiers: JWT implement (back + front); .env.example update for jwt related secrets
+[1;33m|[m [1;36m|[m * [34m|[m [1;36m|[m [33m9d98eaf[m prevent React hydration errors
+[1;33m|[m [1;36m|[m * [34m|[m [1;36m|[m [33mcc9f441[m Cached the translatipon into localstorage to avoid reloading themm when spamming f5 which show the text key instead of the translated text
+[1;33m|[m [1;36m|[m * [34m|[m [1;36m|[m [33mea21a9a[m unban button when banned
+[1;33m|[m [1;36m|[m * [34m|[m [1;36m|[m [33m6d9342c[m Translation for /admin/user 'new user' option
+[1;33m|[m [1;36m|[m[1;33m/[m [34m/[m [1;36m/[m  
+[1;33m|[m[1;33m/[m[1;36m|[m [34m|[m [1;36m|[m   
+* [1;36m|[m [34m|[m [1;36m|[m   [33m79c5426[m Merge pull request #135 from h0lm0/kick-members
+[1;36m|[m[32m\[m [1;36m\[m [34m\[m [1;36m\[m  
+[1;36m|[m [32m|[m[1;36m/[m [34m/[m [1;36m/[m  
+[1;36m|[m[1;36m/[m[32m|[m [34m|[m [1;36m|[m   
+[1;36m|[m * [34m|[m [1;36m|[m [33m0b784a9[m Persistant tab in /profile after a f5 + fix boutons et d'autres trucs jcrois je sais pas franchement j'ai oublié je suis réellement terriblement désolé l'équipe franchement je suis décu de moi même
+[1;36m|[m * [34m|[m [1;36m|[m [33m4f15541[m restyled the team tab in /profile
+[1;36m|[m * [34m|[m [1;36m|[m [33m6534c8d[m feature
+[1;36m|[m[1;36m/[m [34m/[m [1;36m/[m  
+* [34m|[m [1;36m|[m   [33m3bdb822[m Merge pull request #134 from h0lm0/toast-join-team
+[33m|[m[34m\[m [34m\[m [1;36m\[m  
+[33m|[m * [34m|[m [1;36m|[m [33m485616c[m forgot toast
+[33m|[m[33m/[m [34m/[m [1;36m/[m  
+* [34m|[m [1;36m|[m   [33m701a24b[m Merge pull request #133 from h0lm0/error-handling-register
+[35m|[m[36m\[m [34m\[m [1;36m\[m  
+[35m|[m * [34m\[m [1;36m\[m   [33m4108ae1[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into error-handling-register
+[35m|[m [1;31m|[m[35m\[m [34m\[m [1;36m\[m  
+[35m|[m [1;31m|[m[35m/[m [34m/[m [1;36m/[m  
+[35m|[m[35m/[m[1;31m|[m [34m|[m [1;36m|[m   
+* [1;31m|[m [34m|[m [1;36m|[m [33ma0a5893[m Update Dockerfile
+[34m|[m [1;31m|[m[34m/[m [1;36m/[m  
+[34m|[m[34m/[m[1;31m|[m [1;36m|[m   
+[34m|[m * [1;36m|[m [33m45b4895[m Migration to toast popups for /Admin/account page (edit|delete|ban|new)
+[34m|[m * [1;36m|[m [33m33ecd84[m toast for /profile account|security|teams + translations
+[34m|[m * [1;36m|[m [33maf37700[m fix dockerfile
+[34m|[m * [1;36m|[m [33m06f4875[m revert + fix + idk giving up for today
+[34m|[m * [1;36m|[m [33m9d77aee[m Fixed double toast when failing once, going to register, going back to login
+[34m|[m * [1;36m|[m [33m02b7110[m Toast for /login, teams
+[34m|[m * [1;36m|[m [33mb7739de[m switched error messages to sonner toast
+[34m|[m * [1;36m|[m [33m504a569[m done
+[34m|[m[34m/[m [1;36m/[m  
+* [1;36m|[m   [33mf9545f6[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into dev
+[1;33m|[m[1;34m\[m [1;36m\[m  
+[1;33m|[m * [1;36m|[m [33ma782b4b[m docs (db schema)
+* [1;34m|[m [1;36m|[m [33m38ba86f[m fix
+[1;34m|[m[1;34m/[m [1;36m/[m  
+* [1;36m|[m [33mf38d195[m added -v to compose down
+* [1;36m|[m   [33m755cd05[m Merge pull request #127 from h0lm0/feature/50-ban
+[1;35m|[m[1;36m\[m [1;36m\[m  
+[1;35m|[m * [1;36m|[m [33m3c92839[m Ban system
+* [1;36m|[m [1;36m|[m   [33mfb2770a[m Merge pull request #121 from h0lm0/fix/teams-handle-creator-leaving-transfer-ownership
+[1;36m|[m[32m\[m [1;36m\[m [1;36m\[m  
+[1;36m|[m [32m|[m[1;36m/[m [1;36m/[m  
+[1;36m|[m[1;36m/[m[32m|[m [1;36m|[m   
+[1;36m|[m * [1;36m|[m   [33m0ba4a5d[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into fix/teams-handle-creator-leaving-transfer-ownership
+[1;36m|[m [33m|[m[1;36m\[m [1;36m\[m  
+[1;36m|[m [33m|[m[1;36m/[m [1;36m/[m  
+[1;36m|[m[1;36m/[m[33m|[m [1;36m|[m   
+* [33m|[m [1;36m|[m   [33m6b695a7[m Merge pull request #116 from h0lm0/dependabot/npm_and_yarn/frontend/form-data-4.0.4
+[35m|[m[36m\[m [33m\[m [1;36m\[m  
+[35m|[m * [33m|[m [1;36m|[m [33m90a8b97[m Bump form-data from 4.0.0 to 4.0.4 in /frontend
+[35m|[m [1;36m|[m [33m|[m[1;36m/[m  
+[35m|[m [1;36m|[m[1;36m/[m[33m|[m   
+[35m|[m * [33m|[m   [33m7e178da[m Merge pull request #113 from h0lm0/dev
+[35m|[m [1;31m|[m[1;32m\[m [33m\[m  
+* [1;31m|[m [1;32m\[m [33m\[m   [33m379009a[m Merge pull request #118 from h0lm0/feature/10-compose
+[1;33m|[m[1;34m\[m [1;31m\[m [1;32m\[m [33m\[m  
+[1;33m|[m * [1;31m|[m [1;32m|[m [33m|[m [33m3d3a074[m glhf2: Backend access to worker's Docker daemon through ssh ok
+[1;33m|[m [1;34m|[m [1;31m|[m [1;32m|[m * [33m8984d41[m removed useless text
+[1;33m|[m [1;34m|[m [1;31m|[m [1;32m|[m * [33m8d49563[m removed console logs
+[1;33m|[m [1;34m|[m [1;31m|[m [1;32m|[m * [33m00d633e[m removed old dev file which isnt useful anymore
+[1;33m|[m [1;34m|[m [1;31m|[m [1;32m|[m * [33m7653cf3[m fix locale file
+[1;33m|[m [1;34m|[m [1;31m|[m [1;32m|[m * [33m6e022f1[m Feature : leave & disband a team / being able to recreate the team using the same name, solves arent carried over the new team
+[1;33m|[m [1;34m|[m [1;31m|[m [1;32m|[m *   [33me5aa571[m merge
+[1;33m|[m [1;34m|[m [1;31m|[m [1;32m|[m [1;35m|[m[1;33m\[m  
+[1;33m|[m [1;34m|[m[1;33m_[m[1;31m|[m[1;33m_[m[1;32m|[m[1;33m_[m[1;35m|[m[1;33m/[m  
+[1;33m|[m[1;33m/[m[1;34m|[m [1;31m|[m [1;32m|[m [1;35m|[m   
+* [1;34m|[m [1;31m|[m [1;32m|[m [1;35m|[m   [33m8e787da[m Merge pull request #117 from h0lm0/feature/106-solved
+[1;34m|[m[32m\[m [1;34m\[m [1;31m\[m [1;32m\[m [1;35m\[m  
+[1;34m|[m [32m|[m[1;34m/[m [1;31m/[m [1;32m/[m [1;35m/[m  
+[1;34m|[m[1;34m/[m[32m|[m [1;31m|[m [1;32m|[m [1;35m|[m   
+[1;34m|[m * [1;31m|[m [1;32m|[m [1;35m|[m [33ma7325aa[m Fix PR (locale fix)
+[1;34m|[m * [1;31m|[m [1;32m|[m [1;35m|[m [33m7eb8dc1[m going to /pwn/xxx without being logged redirects to /login
+[1;34m|[m * [1;31m|[m [1;32m|[m [1;35m|[m [33m4611333[m Removed hover effect on tags + added missing translation
+[1;34m|[m * [1;31m|[m [1;32m|[m [1;35m|[m [33m2a9dee9[m fix translation
+[1;34m|[m * [1;31m|[m [1;32m|[m [1;35m|[m [33m0bd41ba[m tag for unsolved challs
+[1;34m|[m * [1;31m|[m [1;32m|[m [1;35m|[m [33mce0e597[m Backend for solve check + frontend solve check
+[1;34m|[m[1;34m/[m [1;31m/[m [1;32m/[m [1;35m/[m  
+[1;34m|[m [1;31m|[m [1;32m|[m * [33m5d20e3b[m Teams upgrade - Creator controls ( disand, transfer ownership etc)
+[1;34m|[m [1;31m|[m[1;34m_[m[1;32m|[m[1;34m/[m  
+[1;34m|[m[1;34m/[m[1;31m|[m [1;32m|[m   
+* [1;31m|[m [1;32m|[m   [33me48f52b[m Merge pull request #115 from h0lm0/feature/101-security
+[33m|[m[34m\[m [1;31m\[m [1;32m\[m  
+[33m|[m * [1;31m|[m [1;32m|[m [33mc58bf36[m Fix dockerfile app user shell
+[33m|[m[33m/[m [1;31m/[m [1;32m/[m  
+* [1;31m|[m [1;32m|[m   [33m9b9ba2f[m Merge pull request #114 from h0lm0/feature/107-fix
+[35m|[m[36m\[m [1;31m\[m [1;32m\[m  
+[35m|[m * [1;31m|[m [1;32m|[m [33m9ad538b[m Fix models
+[35m|[m[35m/[m [1;31m/[m [1;32m/[m  
+* [1;31m|[m [1;32m|[m [33m8c81f29[m Fix case member
+* [1;31m|[m [1;32m|[m [33m0e0904c[m fix user -> member role user admin
+* [1;31m|[m [1;32m|[m   [33m70fe99f[m Merge pull request #105 from h0lm0/dependabot/npm_and_yarn/frontend/form-data-4.0.4
+[1;32m|[m[1;32m\[m [1;31m\[m [1;32m\[m  
+[1;32m|[m [1;32m|[m[1;32m_[m[1;31m|[m[1;32m/[m  
+[1;32m|[m[1;32m/[m[1;32m|[m [1;31m|[m   
+[1;32m|[m * [1;31m|[m [33mfa2fbe1[m Bump form-data from 4.0.0 to 4.0.4 in /frontend
+[1;32m|[m [1;31m|[m[1;31m/[m  
+* [1;31m|[m   [33md49d387[m Merge pull request #111 from h0lm0/team-error-handling
+[1;33m|[m[1;34m\[m [1;31m\[m  
+[1;33m|[m * [1;31m|[m [33mb698778[m Fixed error handling for teams + errors translation
+[1;33m|[m * [1;31m|[m   [33m03174c4[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into fix-profile-access
+[1;33m|[m [1;35m|[m[1;33m\[m [1;31m\[m  
+[1;33m|[m [1;35m|[m[1;33m/[m [1;31m/[m  
+[1;33m|[m[1;33m/[m[1;35m|[m [1;31m|[m   
+* [1;35m|[m [1;31m|[m [33me583a6e[m TabIndex review for login page
+[1;36m|[m * [1;31m|[m [33m4228a0e[m Translations for challenge.go
+[1;36m|[m * [1;31m|[m [33m916c947[m Fixed solve model
+[1;36m|[m * [1;31m|[m [33mb554923[m Merge branch 'fix-profile-access' of github.com:h0lm0/pwnthemall into fix-profile-access
+[1;36m|[m[1;36m/[m[32m|[m [1;31m|[m 
+[1;36m|[m * [1;31m|[m [33ma385ae1[m Translation for chall part
+[1;36m|[m * [1;31m|[m [33m2006a01[m Translation for team part
+[1;36m|[m * [1;31m|[m [33m46eabd4[m Profile is now accessible even without a team
+* [32m|[m [1;31m|[m [33m00dd73a[m Update README.md
+* [32m|[m [1;31m|[m [33meaa9c22[m Update README.md
+* [32m|[m [1;31m|[m [33m6965b0a[m challs changed
+* [32m|[m [1;31m|[m [33mebdc62a[m Update README.md
+* [32m|[m [1;31m|[m [33m445ae17[m Update README.md
+* [32m|[m [1;31m|[m [33m5989776[m Update README.md
+[32m|[m[32m/[m [1;31m/[m  
+* [1;31m|[m   [33m0d531f9[m Merge pull request #104 from h0lm0/feature/glhf
+[33m|[m[34m\[m [1;31m\[m  
+[33m|[m * [1;31m|[m [33mbb15057[m glhf le commit: composes update, standard challs submit ok, solves system, submissions system, team points, static flags ok (hashed in db)
+[33m|[m[33m/[m [1;31m/[m  
+* [1;31m|[m [33md5d6f1b[m Merge pull request #102 from h0lm0/main
+[35m|[m[1;31m\[m[1;31m|[m 
+[35m|[m * [33m72af0fa[m Update README.md
+[35m|[m * [33md99541d[m Merge branch 'main' of github.com:h0lm0/pwnthemall
+[35m|[m [1;31m|[m[1;31m\[m
+[35m|[m *   [33m0e83659[m Merge pull request #100 from h0lm0/dev
+[35m|[m [1;33m|[m[35m\[m  
+[35m|[m [1;33m|[m[35m/[m  
+[35m|[m[35m/[m[1;33m|[m   
+* [1;33m|[m   [33md891b43[m Merge pull request #98 from h0lm0/teams
+[1;35m|[m[1;36m\[m [1;33m\[m  
+[1;35m|[m * [1;33m|[m [33m7d6b073[m Fix security /api/teams
+[1;35m|[m * [1;33m|[m [33mbf14b08[m Team system version1 - create,join,leave - team info in /api/me
+* [1;36m|[m [1;33m|[m [33meaf391a[m Merge pull request #96 from h0lm0/fix-no-max-len-for-user-data
+[31m|[m[1;36m\[m[1;36m|[m [1;33m|[m 
+[31m|[m * [1;33m|[m [33mdcec14a[m forgot translation
+[31m|[m * [1;33m|[m [33m8ab51d5[m fixed error handling
+* [32m|[m [1;33m|[m [33m73bb438[m Merge pull request #94 from h0lm0/fix-no-max-len-for-user-data
+[33m|[m[32m\[m[32m|[m [1;33m|[m 
+[33m|[m * [1;33m|[m   [33m4899e85[m Merge branch 'dev' into fix-no-max-len-for-user-data
+[33m|[m [35m|[m[33m\[m [1;33m\[m  
+[33m|[m [35m|[m[33m/[m [1;33m/[m  
+[33m|[m[33m/[m[35m|[m [1;33m|[m   
+* [35m|[m [1;33m|[m   [33ma0ad45f[m Merge pull request #93 from h0lm0/feature/challenge-process
+[1;31m|[m[1;32m\[m [35m\[m [1;33m\[m  
+[1;31m|[m * [35m|[m [1;33m|[m [33ma412518[m Team routes definition
+[1;31m|[m * [35m|[m [1;33m|[m [33m3f495a7[m Instance model + gorm migration fix
+[1;31m|[m * [35m|[m [1;33m|[m [33m1d7f648[m New backend models
+[1;31m|[m [1;32m|[m * [1;33m|[m [33ma8386e3[m push
+[1;31m|[m [1;32m|[m[1;31m/[m [1;33m/[m  
+[1;31m|[m[1;31m/[m[1;32m|[m [1;33m|[m   
+* [1;32m|[m [1;33m|[m [33m1b9d873[m removed the < to collapse, kept the > to expend
+* [1;32m|[m [1;33m|[m   [33m2c7e025[m Merge pull request #92 from h0lm0/sidebar-resize-and-collapse
+[1;33m|[m[1;34m\[m [1;32m\[m [1;33m\[m  
+[1;33m|[m * [1;32m|[m [1;33m|[m [33m45245d3[m fixed profile not being at the bottom, feature push
+[1;33m|[m * [1;32m|[m [1;33m|[m [33ma63f937[m feature
+* [1;34m|[m [1;32m|[m [1;33m|[m   [33m564e545[m Merge pull request #91 from h0lm0/feature/challenge-process
+[1;34m|[m[1;32m\[m [1;34m\[m [1;32m\[m [1;33m\[m  
+[1;34m|[m [1;32m|[m[1;34m/[m [1;32m/[m [1;33m/[m  
+[1;34m|[m[1;34m/[m[1;32m|[m [1;32m/[m [1;33m/[m   
+[1;34m|[m [1;32m|[m[1;32m/[m [1;33m/[m    
+[1;34m|[m * [1;33m|[m [33m723f814[m Locales fix & Author prop backend + frontend
+[1;34m|[m * [1;33m|[m [33me0332c1[m lot of changes: all props of challenge in db, frontend update, clickable challenges + modal + toast (sonner)
+[1;34m|[m[1;34m/[m [1;33m/[m  
+* [1;33m|[m   [33m07afd38[m Merge pull request #87 from h0lm0/backendjson
+[31m|[m[32m\[m [1;33m\[m  
+[31m|[m * [1;33m|[m [33m6708c69[m Frontend Dockerfile fix (perms) + sharp install
+[31m|[m * [1;33m|[m [33mbbcbb32[m Fix not being able to create an admin user in /admin/user
+[31m|[m * [1;33m|[m [33mb39a5d6[m Backend
+* [32m|[m [1;33m|[m   [33m8e5339f[m Merge pull request #86 from h0lm0/Playwright-tests
+[33m|[m[34m\[m [32m\[m [1;33m\[m  
+[33m|[m * [32m|[m [1;33m|[m [33mef6cd84[m new test
+[33m|[m[33m/[m [32m/[m [1;33m/[m  
+* [32m|[m [1;33m|[m   [33m318d3d9[m Merge pull request #85 from h0lm0/Playwright-tests
+[32m|[m[36m\[m [32m\[m [1;33m\[m  
+[32m|[m [36m|[m[32m/[m [1;33m/[m  
+[32m|[m[32m/[m[36m|[m [1;33m|[m   
+[32m|[m * [1;33m|[m [33m081837c[m Playwright tests
+[32m|[m[32m/[m [1;33m/[m  
+* [1;33m|[m [33m5efe7ef[m fix prod frontend container
+* [1;33m|[m   [33mc1dd0a5[m Merge pull request #83 from h0lm0/feature/adding-themes
+[1;31m|[m[1;32m\[m [1;33m\[m  
+[1;31m|[m * [1;33m|[m [33m5724f1a[m pta-cli fix
+[1;31m|[m * [1;33m|[m [33me70ecda[m remove old topbar component
+[1;31m|[m * [1;33m|[m [33m8dbb3b2[m Fixed not being able to create admin user from /admin/user, implemented english/french language + switcher in the profile popup (sidebar)
+[1;31m|[m * [1;33m|[m [33mfdc869e[m l
+[1;31m|[m[1;31m/[m [1;33m/[m  
+* [1;33m|[m   [33m176339b[m Merge pull request #81 from h0lm0/feature/adding-themes
+[1;33m|[m[1;34m\[m [1;33m\[m  
+[1;33m|[m * [1;33m|[m [33mc833e1c[m first
+[1;33m|[m * [1;33m|[m   [33me6993cb[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into feature/adding-themes
+[1;33m|[m [1;35m|[m[1;33m\[m [1;33m\[m  
+[1;33m|[m [1;35m|[m[1;33m/[m [1;33m/[m  
+[1;33m|[m[1;33m/[m[1;35m|[m [1;33m|[m   
+* [1;35m|[m [1;33m|[m [33mb4d6b15[m pta-cli update
+* [1;35m|[m [1;33m|[m [33mb9f7c19[m mini fix admin dashboard page
+* [1;35m|[m [1;33m|[m   [33mc049f5b[m Merge pull request #79 from h0lm0/feature/adding-themes
+[31m|[m[32m\[m [1;35m\[m [1;33m\[m  
+[31m|[m [32m|[m * [1;33m|[m [33m4e9853f[m preview
+[31m|[m [32m|[m * [1;33m|[m [33me161907[m first
+[31m|[m [32m|[m[32m/[m [1;33m/[m  
+[31m|[m * [1;33m|[m [33mbd8e286[m changed profile popup themes to latte and slate
+[31m|[m * [1;33m|[m [33m34ca58a[m Change Pwnthemall to Guest for the profile n the sidebar
+[31m|[m * [1;33m|[m [33me9769c7[m Changed default themes logic
+[31m|[m * [1;33m|[m [33m3e65dfd[m Fix buttons not visible, removed some themes, fix the margin present for nothing
+[31m|[m * [1;33m|[m [33m8000f30[m theme switch
+[31m|[m[31m/[m [1;33m/[m  
+* [1;33m|[m   [33m4f387fb[m Merge pull request #76 from h0lm0/frontend/create-user-fix
+[33m|[m[34m\[m [1;33m\[m  
+[33m|[m * [1;33m|[m [33m6b9527f[m fix user creation form
+[33m|[m[33m/[m [1;33m/[m  
+[33m|[m *   [33md180245[m Merge pull request #74 from h0lm0/dev
+[33m|[m [35m|[m[33m\[m  
+[33m|[m [35m|[m[33m/[m  
+[33m|[m[33m/[m[35m|[m   
+* [35m|[m   [33m9753c0f[m Merge pull request #68 from h0lm0/feature/36-profile-page
+[1;31m|[m[1;32m\[m [35m\[m  
+[1;31m|[m * [35m\[m   [33m26a546f[m Merge branch 'dev' into feature/36-profile-page
+[1;31m|[m [1;33m|[m[1;31m\[m [35m\[m  
+[1;31m|[m [1;33m|[m[1;31m/[m [35m/[m  
+[1;31m|[m[1;31m/[m[1;33m|[m [35m|[m   
+* [1;33m|[m [35m|[m   [33mda19f17[m Merge pull request #73 from h0lm0/feature/hot-reload
+[1;35m|[m[1;36m\[m [1;33m\[m [35m\[m  
+[1;35m|[m * [1;33m|[m [35m|[m [33m1fddd6a[m Fix anon request to /api/challenge-categories
+[1;35m|[m * [1;33m|[m [35m|[m [33m0299e2f[m Patch softlock error 401 while being anonymous
+[1;35m|[m * [1;33m|[m [35m|[m [33m5e31bc1[m Split docker-compose in prod/dev
+[1;35m|[m * [1;33m|[m [35m|[m [33m31e3599[m Adapt docker to implement Hot reload for frontend ()
+* [1;36m|[m [1;33m|[m [35m|[m [33m5794415[m Update CategoryContent.tsx
+* [1;36m|[m [1;33m|[m [35m|[m   [33m772f9c4[m Merge pull request #69 from h0lm0/feature/44-semi-responsive
+[31m|[m[32m\[m [1;36m\[m [1;33m\[m [35m\[m  
+[31m|[m * [1;36m|[m [1;33m|[m [35m|[m [33m87b3b91[m Fix cells eating eachothers
+[31m|[m * [1;36m|[m [1;33m|[m [35m|[m [33m03affb6[m using a scrollbar for semi responsive since the component has no responsive element (ithink)
+[31m|[m[31m/[m [1;36m/[m [1;33m/[m [35m/[m  
+[31m|[m [1;36m|[m * [35m|[m [33m05f194c[m Fix theme + added Appearance page (not working for now)
+[31m|[m [1;36m|[m * [35m|[m   [33me8443b1[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into feature/36-profile-page
+[31m|[m [1;36m|[m [33m|[m[31m\[m [35m\[m  
+[31m|[m [1;36m|[m[31m_[m[33m|[m[31m/[m [35m/[m  
+[31m|[m[31m/[m[1;36m|[m [33m|[m [35m|[m   
+* [1;36m|[m [33m|[m [35m|[m   [33m6813926[m Merge pull request #67 from h0lm0/feature/playwright-tests
+[1;36m|[m[36m\[m [1;36m\[m [33m\[m [35m\[m  
+[1;36m|[m [36m|[m[1;36m/[m [33m/[m [35m/[m  
+[1;36m|[m[1;36m/[m[36m|[m [33m|[m [35m|[m   
+[1;36m|[m * [33m|[m [35m|[m [33m42a71c4[m auth test (register + login)
+[1;36m|[m[1;36m/[m [33m/[m [35m/[m  
+[1;36m|[m * [35m|[m [33m4b63a04[m Added popup confirmations for each buttons
+[1;36m|[m * [35m|[m [33m709759a[m Change password + error when <8chars)
+[1;36m|[m * [35m|[m [33ma06aa89[m Update username & Delete user
+[1;36m|[m * [35m|[m [33m7f4e604[m Initial feature push - Made the ui
+[1;36m|[m[1;36m/[m [35m/[m  
+* [35m|[m   [33mac395c7[m Merge pull request #60 from h0lm0/feature/challenges-implementation
+[1;31m|[m[1;32m\[m [35m\[m  
+[1;31m|[m * [35m|[m [33m5871455[m Challenges implementation (front + back) + front refacto component
+[1;31m|[m[1;31m/[m [35m/[m  
+* [35m|[m [33madcfd06[m Run SAST only on main branch
+* [35m|[m   [33m99c038f[m Merge pull request #58 from h0lm0/bug/fix-ghost-session
+[1;33m|[m[1;34m\[m [35m\[m  
+[1;33m|[m * [35m|[m [33m7dc2329[m feature push
+[1;33m|[m[1;33m/[m [35m/[m  
+* [35m|[m   [33m4caa418[m Merge pull request #57 from h0lm0/feature/pwn-dropdown-dynamic-page-creation
+[1;35m|[m[1;36m\[m [35m\[m  
+[1;35m|[m * [35m|[m [33mea4620d[m feature push
+* [1;36m|[m [35m|[m [33m079ef1e[m opengrep debug
+* [1;36m|[m [35m|[m [33m26fb030[m opengrep auto PR
+* [1;36m|[m [35m|[m [33mc3ffcce[m opengrep fix
+* [1;36m|[m [35m|[m [33mf8cf527[m fix permission opengrep
+* [1;36m|[m [35m|[m [33mcc06c7f[m opengrep fix
+* [1;36m|[m [35m|[m [33me593616[m opengrep
+* [1;36m|[m [35m|[m [33m07ca532[m opengrep fix
+* [1;36m|[m [35m|[m [33mcdac78c[m opengrep workflow fix
+* [1;36m|[m [35m|[m [33mf0da239[m Trying opengrep
+* [1;36m|[m [35m|[m [33m8a96a8b[m Semgrep only on pull request
+* [1;36m|[m [35m|[m   [33maed02a7[m Merge pull request #56 from h0lm0/feature/backend-challenges
+[1;36m|[m[32m\[m [1;36m\[m [35m\[m  
+[1;36m|[m [32m|[m[1;36m/[m [35m/[m  
+[1;36m|[m[1;36m/[m[32m|[m [35m|[m   
+[1;36m|[m * [35m|[m [33m0531870[m Protect from zipbomb attack
+[1;36m|[m * [35m|[m [33mcf8684a[m Fix delete on minio sync with pgsql, /api/challenges POST route to create chall with .zip
+* [32m|[m [35m|[m   [33m34b6a9e[m Merge pull request #55 from h0lm0/feature/no-errors-issue-43
+[33m|[m[34m\[m [32m\[m [35m\[m  
+[33m|[m * [32m|[m [35m|[m [33m4d322ce[m feature push
+[33m|[m[33m/[m [32m/[m [35m/[m  
+* [32m|[m [35m|[m   [33m2f5161c[m Merge pull request #54 from h0lm0/feature/38-cookie-consent
+[32m|[m[36m\[m [32m\[m [35m\[m  
+[32m|[m [36m|[m[32m/[m [35m/[m  
+[32m|[m[32m/[m[36m|[m [35m|[m   
+[32m|[m * [35m|[m [33m7fa1d9c[m feature push
+[32m|[m[32m/[m [35m/[m  
+* [35m|[m [33m6cdb299[m new rules semgrep
+* [35m|[m [33meef82bd[m CodeQL only on main branch
+* [35m|[m [33m226031c[m Semgrep try
+[36m|[m *   [33mdc9c7ca[m Merge pull request #52 from h0lm0/dev
+[36m|[m [1;31m|[m[36m\[m  
+[36m|[m [1;31m|[m[36m/[m  
+[36m|[m[36m/[m[1;31m|[m   
+* [1;31m|[m [33m0ebba6f[m Merge branch 'main' into dev
+[1;33m|[m[1;31m\[m[1;31m|[m 
+[1;33m|[m * [33mb65bca9[m Create codeql.yml
+* [1;34m|[m [33m3b11a01[m CodeQL
+* [1;34m|[m   [33m0e7a907[m Merge pull request #48 from h0lm0/feature/frontend-challenge-categories-crud
+[1;35m|[m[1;36m\[m [1;34m\[m  
+[1;35m|[m * [1;34m|[m [33me460e56[m users & challenge-categories frontend + backend fix models
+[1;35m|[m[1;35m/[m [1;34m/[m  
+* [1;34m|[m   [33md0864ff[m Merge pull request #46 from h0lm0/feature/backend-challenge-categories
+[31m|[m[32m\[m [1;34m\[m  
+[31m|[m * [1;34m|[m [33ma1abb47[m Unique challenge category name on gorm models
+[31m|[m * [1;34m|[m [33m390b633[m Fix prop name on POST input request
+[31m|[m * [1;34m|[m [33mecb84e2[m Challenge categories backend finished implementation (routes + controller)
+[31m|[m[31m/[m [1;34m/[m  
+* [1;34m|[m   [33m04a5dd0[m Merge pull request #40 from h0lm0/feature/full-crud-users-management-page-fix-pr
+[33m|[m[34m\[m [1;34m\[m  
+[33m|[m * [1;34m|[m [33m4a87f39[m frontend push
+[33m|[m[33m/[m [1;34m/[m  
+* [1;34m|[m [33m5909db0[m challenge-categories routes (getone & getall) | hidden property added in chall.yml schema + in backend model
+* [1;34m|[m   [33ma5ea356[m Merge pull request #34 from h0lm0/fix/scrollbar-is-visible-on-top-of-profile-in-scrollbar
+[35m|[m[36m\[m [1;34m\[m  
+[35m|[m * [1;34m\[m   [33mdb351fc[m Merge branch 'dev' of github.com:h0lm0/pwnthemall into fix/scrollbar-is-visible-on-top-of-profile-in-scrollbar
+[35m|[m [1;31m|[m[35m\[m [1;34m\[m  
+[35m|[m [1;31m|[m[35m/[m [1;34m/[m  
+[35m|[m[35m/[m[1;31m|[m [1;34m|[m   
+* [1;31m|[m [1;34m|[m   [33m215e913[m Merge pull request #33 from h0lm0/feature/backend-challenges
+[1;33m|[m[1;34m\[m [1;31m\[m [1;34m\[m  
+[1;33m|[m * [1;31m|[m [1;34m|[m [33m9d55ea9[m MinIO + Postgres sync OK, api/challenges GetChallenges + GetChallenge ok
+[1;33m|[m [1;34m|[m * [1;34m|[m [33me10f5f1[m fix sidebar scrollbar on top of profile
+[1;33m|[m [1;34m|[m[1;33m/[m [1;34m/[m  
+[1;33m|[m[1;33m/[m[1;34m|[m [1;34m|[m   
+* [1;34m|[m [1;34m|[m   [33mc0da2d8[m Merge pull request #32 from h0lm0/fix/sidebar-cant-use-dropdowns-when-collapsed
+[1;34m|[m[1;36m\[m [1;34m\[m [1;34m\[m  
+[1;34m|[m [1;36m|[m[1;34m/[m [1;34m/[m  
+[1;34m|[m[1;34m/[m[1;36m|[m [1;34m|[m   
+[1;34m|[m * [1;34m|[m [33m7e83932[m fix sidebar dropdown issue when collapsed
+[1;34m|[m[1;34m/[m [1;34m/[m  
+* [1;34m|[m   [33m553ad6d[m Merge pull request #24 from h0lm0/dependabot/npm_and_yarn/frontend/next-14.2.30
+[31m|[m[32m\[m [1;34m\[m  
+[31m|[m * [1;34m|[m [33m5824be3[m Bump next from 14.0.4 to 14.2.30 in /frontend
+[31m|[m [1;34m|[m[1;34m/[m  
+* [1;34m|[m   [33mc920981[m Merge pull request #25 from h0lm0/feature/challenges-admin
+[33m|[m[34m\[m [1;34m\[m  
+[33m|[m * [1;34m|[m [33m737c3fc[m users content fix
+[33m|[m * [1;34m|[m [33m835f49e[m frontend: fix admin routes + pages & components splitted
+[33m|[m[33m/[m [1;34m/[m  
+* [1;34m|[m   [33mcddbb55[m Merge pull request #22 from h0lm0/sidebar-refresh-issue-fix-and-logout-popup
+[35m|[m[36m\[m [1;34m\[m  
+[35m|[m * [1;34m|[m [33m0c88d71[m sidebar-refresh-issue-fix-and-logout-popup
+[35m|[m[35m/[m [1;34m/[m  
+* [1;34m|[m [33md32a76f[m Merge pull request #21 from h0lm0/main
+[1;31m|[m[1;34m\[m[1;34m|[m 
+[1;31m|[m * [33m84c50a1[m Create LICENSE
+[1;31m|[m *   [33md964010[m Merge pull request #20 from h0lm0/dev
+[1;31m|[m [1;33m|[m[1;31m\[m  
+[1;31m|[m [1;33m|[m[1;31m/[m  
+[1;31m|[m[1;31m/[m[1;33m|[m   
+* [1;33m|[m [33md36f5ec[m Update README.md
+* [1;33m|[m [33m4165892[m Casbin seeder update (load csv), database seeder update, front register fix
+* [1;33m|[m   [33mb864f69[m Merge pull request #19 from h0lm0/feature/backend-casbin
+[1;35m|[m[1;36m\[m [1;33m\[m  
+[1;35m|[m * [1;33m|[m [33m401e7a3[m casbin policies ok
+[1;35m|[m * [1;33m|[m [33mb9a3618[m casbin begin
+* [1;36m|[m [1;33m|[m [33m8c7de4a[m Reset legit changes
+* [1;36m|[m [1;33m|[m   [33m3681ae6[m Merge pull request #17 from h0lm0/sidebar-update
+[1;36m|[m[32m\[m [1;36m\[m [1;33m\[m  
+[1;36m|[m [32m|[m[1;36m/[m [1;33m/[m  
+[1;36m|[m[1;36m/[m[32m|[m [1;33m|[m   
+[1;36m|[m * [1;33m|[m [33m550616c[m minio chall2
+[1;36m|[m * [1;33m|[m [33m4421d7f[m Conflict solves
+[1;36m|[m * [1;33m|[m [33mdce817e[m Fix guest profile briefly appearing in sidebar after tab switch or refresh
+[1;36m|[m * [1;33m|[m [33m28a6836[m - Hide email and profile link for guests - Block /profile if not logged in - Remove profile link from sidebar for guests - Ask before logging out
+[1;36m|[m * [1;33m|[m [33mb4bbe2d[m - Replace legacy sidebar with shadcn sidebar - Persist sidebar state using cookies (SSR-compatible) - Fetch user profile on login and display in sidebar - Hide sidebar until auth is resolved to prevent flicker - Add demo user seeding with SEED_DATABASE env var - Introduce placeholder scoreboard page with sidebar link - Clean up unused topbar and legacy UI code
+[1;36m|[m[1;36m/[m [1;33m/[m  
+* [1;33m|[m   [33m5ead0f6[m Merge pull request #16 from h0lm0/feature/minio-implement
+[33m|[m[34m\[m [1;33m\[m  
+[33m|[m * [1;33m|[m [33ma1a3ce0[m fix entrypoint minio
+[33m|[m * [1;33m|[m [33me787883[m allowOrigins fix cors go
+[33m|[m * [1;33m|[m [33mf579129[m minio webhook for postgresql challenges metadata sync (still wip)
+[33m|[m * [1;33m|[m [33m354727e[m challengecategory code fix
+[33m|[m * [1;33m|[m [33mb0c3481[m minio + pta-cli + ChallengeType to ChallengeCategory
+* [34m|[m [1;33m|[m [33mb9a7cc6[m regsiter cmpnt fix cardtitle
+[34m|[m[34m/[m [1;33m/[m  
+[34m|[m * [33m681645c[m Update README.md
+[34m|[m *   [33m039b527[m Merge pull request #15 from h0lm0/dev
+[34m|[m [35m|[m[34m\[m  
+[34m|[m [35m|[m[34m/[m  
+[34m|[m[34m/[m[35m|[m   
+* [35m|[m [33mff3afef[m fix user model (nullable team)
+[36m|[m *   [33m31155fe[m Merge pull request #14 from h0lm0/dev
+[36m|[m [1;31m|[m[36m\[m  
+[36m|[m [1;31m|[m[36m/[m  
+[36m|[m[36m/[m[1;31m|[m   
+* [1;31m|[m [33mbcb26ea[m readme upd + seeder begin
+* [1;31m|[m   [33m56b36d4[m Merge pull request #13 from h0lm0/feature/backend-improve
+[1;33m|[m[1;34m\[m [1;31m\[m  
+[1;33m|[m * [1;31m|[m [33mcb0965c[m casbin begin, minio added
+* [1;34m|[m [1;31m|[m   [33m5cf4a93[m Merge pull request #12 from h0lm0/feature/ui-enhance
+[1;35m|[m[1;36m\[m [1;34m\[m [1;31m\[m  
+[1;35m|[m * [1;34m|[m [1;31m|[m [33mb82f2ab[m fixed theme issues
+[1;35m|[m [1;34m|[m[1;34m/[m [1;31m/[m  
+[1;35m|[m * [1;31m/[m [33mb89ad70[m sidebar update, register/login UI update
+[1;35m|[m[1;35m/[m [1;31m/[m  
+* [1;31m|[m   [33m7e72581[m Merge pull request #9 from h0lm0/feature/adding-component
+[31m|[m[32m\[m [1;31m\[m  
+[31m|[m * [1;31m\[m   [33m378ebfb[m Merge branch 'dev' into feature/adding-component
+[31m|[m [33m|[m[31m\[m [1;31m\[m  
+[31m|[m [33m|[m[31m/[m [1;31m/[m  
+[31m|[m[31m/[m[33m|[m [1;31m|[m   
+* [33m|[m [1;31m|[m   [33m743a8a8[m Merge pull request #8 from h0lm0/feature/topbar-to-sidebar
+[35m|[m[36m\[m [33m\[m [1;31m\[m  
+[35m|[m * [33m|[m [1;31m|[m [33m1f21ccc[m Switched to side-bar, kept top for later ( /account param ? )
+[35m|[m[35m/[m [33m/[m [1;31m/[m  
+[35m|[m * [1;31m/[m [33me0d5ce3[m pwn page into component
+[35m|[m[35m/[m [1;31m/[m  
+* [1;31m|[m   [33m362e485[m Merge pull request #7 from h0lm0/feature/auth-and-session-handling
+[1;31m|[m[1;32m\[m [1;31m\[m  
+[1;31m|[m * [1;31m|[m [33m6794372[m env fix + auth controller
+[1;31m|[m * [1;31m|[m [33m5a135a4[m Fixed navbar/main page having different themes + added icons to the theme
+[1;31m|[m * [1;31m|[m [33m85e9124[m Added Light mode matching system, fixed the button
+[1;31m|[m * [1;31m|[m [33m6d260be[m Auth, /pwn, session handling
+[1;31m|[m [1;31m|[m[1;31m/[m  
+[1;31m|[m * [33m70356a1[m updated .env
+[1;31m|[m[1;31m/[m  
+* [33m8073159[m Update README.md
+* [33m7c65406[m Update README.md
+* [33md4f6157[m initial bigbigbig commit

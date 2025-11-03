@@ -75,6 +75,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("Hints").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ? and hidden = false", categoryName).
+		Order("challenges.\"order\" ASC, challenges.id ASC").
 		Find(&challenges)
 
 	if result.Error != nil {
