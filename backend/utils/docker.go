@@ -381,7 +381,7 @@ func StartComposeInstance(ctx context.Context, project *types.Project) error {
 	srv = compose.NewComposeService(dockerCli)
 	err = srv.Up(ctx, project, api.UpOptions{})
 	if err != nil {
-		log("error up:", err)
+		log.Fatalln("error up:", err)
 	}
 	return nil
 }
