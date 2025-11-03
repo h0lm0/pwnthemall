@@ -1,11 +1,12 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/debug"
 	"pwnthemall/models"
 	"pwnthemall/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,10 +30,12 @@ type ChallengeGeneralUpdateRequest struct {
 }
 
 type HintRequest struct {
-	ID       uint   `json:"id,omitempty"`
-	Content  string `json:"content"`
-	Cost     int    `json:"cost"`
-	IsActive bool   `json:"isActive"`
+	ID           uint       `json:"id,omitempty"`
+	Title        string     `json:"title"`
+	Content      string     `json:"content"`
+	Cost         int        `json:"cost"`
+	IsActive     bool       `json:"isActive"`
+	AutoActiveAt *time.Time `json:"autoActiveAt,omitempty"`
 }
 
 func UpdateChallengeAdmin(c *gin.Context) {
@@ -50,12 +53,8 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		return
 	}
 
-	// Update challenge basic fields
 	challenge.Points = req.Points
-
-	// Gérer le DecayFormulaID - si 0 ou nil, on met à nil pour désactiver le decay
 	challenge.DecayFormulaID = req.DecayFormulaID
-
 	challenge.EnableFirstBlood = req.EnableFirstBlood
 
 	// Convert []int to pq.Int64Array
@@ -86,59 +85,52 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	// Recalculate points for all solves of this challenge with new values
 	recalculateChallengePoints(challenge.ID)
 
-	// Pour FirstBlood, on sauvegarde juste l'état "enabled" et le bonus
-	// L'enregistrement FirstBlood sera créé quand une équipe résoudra le challenge
 	if !req.EnableFirstBlood {
-		// Si FirstBlood est désactivé, supprimer l'enregistrement existant
 		config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.FirstBlood{})
 	}
 
-	// Gestion des hints - approche complète de synchronisation
-	// 1. Récupérer tous les hints existants pour ce challenge
-	var existingHints []models.Hint
-	config.DB.Where("challenge_id = ?", challenge.ID).Find(&existingHints)
-
-	// 2. Créer une map des IDs des hints dans la requête
-	requestHintIDs := make(map[uint]bool)
+	// Process hints from request
 	for _, hintReq := range req.Hints {
+		debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
 		if hintReq.ID > 0 {
-			requestHintIDs[hintReq.ID] = true
-		}
-	}
-
-	// 3. Supprimer les hints qui ne sont plus dans la liste
-	for _, existingHint := range existingHints {
-		if !requestHintIDs[existingHint.ID] {
-			if err := config.DB.Delete(&existingHint).Error; err != nil {
-				log.Printf("Failed to delete hint %d: %v", existingHint.ID, err)
-			}
-		}
-	}
-
-	// 4. Créer ou mettre à jour les hints de la requête
-	for _, hintReq := range req.Hints {
-		if hintReq.ID > 0 {
-			// Mettre à jour un hint existant
+			// Update existing hint
 			var hint models.Hint
 			if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
+				hint.Title = hintReq.Title
 				hint.Content = hintReq.Content
 				hint.Cost = hintReq.Cost
 				hint.IsActive = hintReq.IsActive
+				hint.AutoActiveAt = hintReq.AutoActiveAt
 				if err := config.DB.Save(&hint).Error; err != nil {
-					log.Printf("Failed to update hint %d: %v", hint.ID, err)
+					debug.Log("Failed to update hint %d: %v", hint.ID, err)
+				} else {
+					debug.Log("Successfully updated hint %d", hint.ID)
 				}
 			}
 		} else if hintReq.Content != "" {
-			// Créer un nouveau hint
+			// Create new hint
 			hint := models.Hint{
-				ChallengeID: challenge.ID,
-				Content:     hintReq.Content,
-				Cost:        hintReq.Cost,
-				IsActive:    hintReq.IsActive,
+				ChallengeID:  challenge.ID,
+				Title:        hintReq.Title,
+				Content:      hintReq.Content,
+				Cost:         hintReq.Cost,
+				IsActive:     hintReq.IsActive,
+				AutoActiveAt: hintReq.AutoActiveAt,
 			}
 			if err := config.DB.Create(&hint).Error; err != nil {
-				log.Printf("Failed to create hint: %v", err)
+				debug.Log("Failed to create hint: %v", err)
+			} else {
+				debug.Log("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
 			}
+		}
+	}
+
+	if err := config.DB.Preload("DecayFormula").Preload("Hints").Preload("FirstBlood").First(&challenge, challenge.ID).Error; err != nil {
+		debug.Log("Failed to reload challenge: %v", err)
+	} else {
+		debug.Log("Reloaded challenge %d with %d hints", challenge.ID, len(challenge.Hints))
+		for i, hint := range challenge.Hints {
+			debug.Log("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
 		}
 	}
 
@@ -185,6 +177,11 @@ func GetChallengeAdmin(c *gin.Context) {
 		return
 	}
 
+	debug.Log("GetChallengeAdmin: Challenge %d has %d hints", challenge.ID, len(challenge.Hints))
+	for i, hint := range challenge.Hints {
+		debug.Log("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
+	}
+
 	var decayFormulas []models.DecayFormula
 	config.DB.Find(&decayFormulas)
 
@@ -228,31 +225,96 @@ func recalculateChallengePoints(challengeID uint) {
 	// Get the challenge details
 	var challenge models.Challenge
 	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
-		log.Printf("Failed to fetch challenge %d for recalculation: %v", challengeID, err)
+		debug.Log("Failed to fetch challenge %d for recalculation: %v", challengeID, err)
 		return
+	}
+
+	// Delete existing FirstBlood entries for this challenge and recreate them
+	if err := config.DB.Where("challenge_id = ?", challengeID).Delete(&models.FirstBlood{}).Error; err != nil {
+		debug.Log("Failed to delete existing FirstBlood entries: %v", err)
 	}
 
 	// Get all solves for this challenge, ordered by creation time
 	var solves []models.Solve
 	if err := config.DB.Where("challenge_id = ?", challengeID).Order("created_at ASC").Find(&solves).Error; err != nil {
-		log.Printf("Failed to fetch solves for challenge %d: %v", challengeID, err)
+		debug.Log("Failed to fetch solves for challenge %d: %v", challengeID, err)
 		return
 	}
 
 	// Recalculate points for each solve based on its position
 	for i, solve := range solves {
-		// Position is 0-based (first solve = position 0)
 		position := i
 		newPoints := decayService.CalculateDecayedPoints(&challenge, position)
 
-		// Update if points have changed
-		if solve.Points != newPoints {
-			solve.Points = newPoints
+		// Add FirstBlood bonus if applicable
+		firstBloodBonus := 0
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			if position < len(challenge.FirstBloodBonuses) {
+				firstBloodBonus = int(challenge.FirstBloodBonuses[position])
+
+				// Create FirstBlood entry
+				badge := "trophy" // default badge
+				if position < len(challenge.FirstBloodBadges) {
+					badge = challenge.FirstBloodBadges[position]
+				}
+
+				firstBlood := models.FirstBlood{
+					ChallengeID: challengeID,
+					TeamID:      solve.TeamID,
+					UserID:      solve.UserID,
+					Bonuses:     []int64{int64(firstBloodBonus)},
+					Badges:      []string{badge},
+				}
+
+				if err := config.DB.Create(&firstBlood).Error; err != nil {
+					debug.Log("Failed to recreate FirstBlood entry: %v", err)
+				}
+			}
+		}
+
+		newPointsWithBonus := newPoints + firstBloodBonus
+
+		if solve.Points != newPointsWithBonus {
+			solve.Points = newPointsWithBonus
 			if err := config.DB.Save(&solve).Error; err != nil {
-				log.Printf("Failed to update solve for team %d, challenge %d: %v", solve.TeamID, solve.ChallengeID, err)
+				debug.Log("Failed to update solve for team %d, challenge %d: %v", solve.TeamID, solve.ChallengeID, err)
 			} else {
-				log.Printf("Updated solve points for team %d, challenge %d: %d -> %d", solve.TeamID, solve.ChallengeID, solve.Points, newPoints)
+				debug.Log("Updated solve points for team %d, challenge %d: %d -> %d (decay: %d, firstblood: %d)",
+					solve.TeamID, solve.ChallengeID, solve.Points, newPointsWithBonus, newPoints, firstBloodBonus)
 			}
 		}
 	}
+}
+
+// CheckAndActivateHints endpoint to manually activate ALL hints for admin
+func CheckAndActivateHints(c *gin.Context) {
+	var hints []models.Hint
+	if err := config.DB.Find(&hints).Error; err != nil {
+		debug.Log("Failed to fetch all hints: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch hints"})
+		return
+	}
+
+	activatedCount := 0
+	totalHints := len(hints)
+
+	for _, hint := range hints {
+		if !hint.IsActive {
+			hint.IsActive = true
+			if err := config.DB.Save(&hint).Error; err != nil {
+				debug.Log("Failed to activate hint %d: %v", hint.ID, err)
+			} else {
+				debug.Log("Manually activated hint %d (%s) for challenge %d", hint.ID, hint.Title, hint.ChallengeID)
+				activatedCount++
+			}
+		}
+	}
+
+	debug.Log("Manual activation completed: activated %d hints out of %d total hints", activatedCount, totalHints)
+	c.JSON(http.StatusOK, gin.H{
+		"message":         "All hints activation completed",
+		"activated_count": activatedCount,
+		"total_hints":     totalHints,
+		"already_active":  totalHints - activatedCount,
+	})
 }

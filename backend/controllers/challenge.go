@@ -7,18 +7,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/debug"
+	"pwnthemall/dto"
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"github.com/lib/pq"
 	"github.com/minio/minio-go/v7"
 	"gorm.io/gorm"
@@ -71,6 +72,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("ChallengeCategory").
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
+		Preload("Hints").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ? and hidden = false", categoryName).
 		Find(&challenges)
@@ -82,6 +84,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 
 	// Get solved challenges for the user's team
 	var solvedChallengeIds []uint
+	var purchasedHintIds []uint
 	if user.Team != nil {
 		var solves []models.Solve
 		if err := config.DB.Where("team_id = ?", user.Team.ID).Find(&solves).Error; err == nil {
@@ -89,17 +92,35 @@ func GetChallengesByCategoryName(c *gin.Context) {
 				solvedChallengeIds = append(solvedChallengeIds, solve.ChallengeID)
 			}
 		}
+
+		// Get purchased hints for the team
+		var purchases []models.HintPurchase
+		if err := config.DB.Where("team_id = ?", user.Team.ID).Find(&purchases).Error; err == nil {
+			for _, purchase := range purchases {
+				purchasedHintIds = append(purchasedHintIds, purchase.HintID)
+			}
+		}
 	}
 
-	// Create response with solved status
+	// Create response with solved status and hint purchase info
+	type HintWithPurchased struct {
+		models.Hint
+		Purchased bool `json:"purchased"`
+	}
+
 	type ChallengeWithSolved struct {
 		models.Challenge
-		Solved      bool     `json:"solved"`
-		GeoRadiusKm *float64 `json:"geoRadiusKm,omitempty"`
+		Solved      bool                `json:"solved"`
+		GeoRadiusKm *float64            `json:"geoRadiusKm,omitempty"`
+		Hints       []HintWithPurchased `json:"hints"`
 	}
 
 	var challengesWithSolved []ChallengeWithSolved
 	decayService := utils.NewDecay()
+
+	// Check and activate scheduled hints before processing
+	utils.CheckAndActivateHintsForChallenges(challenges)
+
 	for _, challenge := range challenges {
 		solved := false
 		for _, solvedId := range solvedChallengeIds {
@@ -111,7 +132,34 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		// Compute current points (decay-aware) for display
 		challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
 
-		item := ChallengeWithSolved{Challenge: challenge, Solved: solved}
+		// Process hints with purchase status - only include active hints
+		var hintsWithPurchased []HintWithPurchased
+		for _, hint := range challenge.Hints {
+			debug.Log("Hint ID %d: IsActive=%t, User Role=%s", hint.ID, hint.IsActive, user.Role)
+			// Skip inactive hints unless user is admin
+			if !hint.IsActive && user.Role != "admin" {
+				debug.Log("Skipping inactive hint ID %d for non-admin user", hint.ID)
+				continue
+			}
+
+			purchased := false
+			for _, purchasedId := range purchasedHintIds {
+				if hint.ID == purchasedId {
+					purchased = true
+					break
+				}
+			}
+			hintsWithPurchased = append(hintsWithPurchased, HintWithPurchased{
+				Hint:      hint,
+				Purchased: purchased,
+			})
+		}
+
+		item := ChallengeWithSolved{
+			Challenge: challenge,
+			Solved:    solved,
+			Hints:     hintsWithPurchased,
+		}
 		if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
 			var spec models.GeoSpec
 			if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&spec).Error; err == nil {
@@ -215,7 +263,7 @@ func CreateChallenge(c *gin.Context) {
 		})
 
 		if err != nil {
-			log.Printf("Failed to upload %s: %v", objectPath, err)
+			debug.Log("Failed to upload %s: %v", objectPath, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to MinIO"})
 			return
 		}
@@ -335,6 +383,8 @@ func SubmitChallenge(c *gin.Context) {
 				var spec models.GeoSpec
 				if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&spec).Error; err == nil {
 					if utils.IsWithinRadiusKm(spec.TargetLat, spec.TargetLng, v, w, spec.RadiusKm) {
+						debug.Log("Geo submission within radius for challenge %d (lat=%f,lng=%f) target(%f,%f) radius=%f",
+							challenge.ID, v, w, spec.TargetLat, spec.TargetLng, spec.RadiusKm)
 						found = true
 					}
 				}
@@ -342,17 +392,60 @@ func SubmitChallenge(c *gin.Context) {
 		}
 	}
 	if found {
+		// Calculate solve position and first blood bonus before creating solve
+		var position int64
+		config.DB.Model(&models.Solve{}).Where("challenge_id = ?", challenge.ID).Count(&position)
+
+		debug.Log("FirstBlood: Challenge %d, Position %d, EnableFirstBlood: %v, Bonuses count: %d",
+			challenge.ID, position, challenge.EnableFirstBlood, len(challenge.FirstBloodBonuses))
+
+		firstBloodBonus := 0
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			pos := int(position)
+			if pos < len(challenge.FirstBloodBonuses) {
+				firstBloodBonus = int(challenge.FirstBloodBonuses[pos])
+				debug.Log("FirstBlood: Position %d gets bonus %d points", pos, firstBloodBonus)
+			} else {
+				debug.Log("FirstBlood: Position %d beyond configured bonuses (%d available)", pos, len(challenge.FirstBloodBonuses))
+			}
+		} else {
+			debug.Log("FirstBlood: FirstBlood not enabled or no bonuses configured")
+		}
+
 		var solve models.Solve
 		if err := config.DB.FirstOrCreate(&solve,
 			models.Solve{
 				TeamID:      user.Team.ID,
 				ChallengeID: challenge.ID,
 				UserID:      user.ID,
-				Points:      challenge.Points,
+				Points:      challenge.Points + firstBloodBonus, // Include first blood bonus in solve points
 			}).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "solve_create_failed"})
 			return
 		} else {
+			// Create FirstBlood entry if applicable
+			if firstBloodBonus > 0 {
+				// Get badge for this position if available
+				badge := "trophy" // default badge
+				if int(position) < len(challenge.FirstBloodBadges) {
+					badge = challenge.FirstBloodBadges[position]
+				}
+
+				firstBlood := models.FirstBlood{
+					ChallengeID: challenge.ID,
+					TeamID:      user.Team.ID,
+					UserID:      user.ID,
+					Bonuses:     []int64{int64(firstBloodBonus)},
+					Badges:      []string{badge},
+				}
+
+				if err := config.DB.Create(&firstBlood).Error; err != nil {
+					debug.Log("Failed to create FirstBlood entry: %v", err)
+				} else {
+					debug.Log("Created FirstBlood entry for user %d, challenge %d, position %d, bonus %d points",
+						user.ID, challenge.ID, position, firstBloodBonus)
+				}
+			}
 			// Broadcast team solve event over WebSocket
 			type TeamSolveEvent struct {
 				Event         string    `json:"event"`
@@ -369,7 +462,7 @@ func SubmitChallenge(c *gin.Context) {
 				TeamID:        user.Team.ID,
 				ChallengeID:   challenge.ID,
 				ChallengeName: challenge.Name,
-				Points:        challenge.Points,
+				Points:        challenge.Points + firstBloodBonus, // Include first blood bonus in event
 				UserID:        user.ID,
 				Username:      user.Username,
 				Timestamp:     time.Now().UTC(),
@@ -387,12 +480,12 @@ func SubmitChallenge(c *gin.Context) {
 					// Try stopping the container
 					if instance.Container != "" {
 						if err := utils.StopDockerInstance(instance.Container); err != nil {
-							log.Printf("Failed to stop Docker instance on solve: %v", err)
+							debug.Log("Failed to stop Docker instance on solve: %v", err)
 						}
 					}
 					// Remove instance record to free the slot
 					if err := config.DB.Delete(&instance).Error; err != nil {
-						log.Printf("Failed to delete instance on solve: %v", err)
+						debug.Log("Failed to delete instance on solve: %v", err)
 					}
 
 					// Notify team listeners that instance stopped
@@ -457,11 +550,12 @@ func GetChallengeSolves(c *gin.Context) {
 		return
 	}
 
-	// Create response with user information
+	// Create response with user information and first blood details
 	type SolveWithUser struct {
 		models.Solve
-		UserID   uint   `json:"userId"`
-		Username string `json:"username"`
+		UserID     uint               `json:"userId"`
+		Username   string             `json:"username"`
+		FirstBlood *models.FirstBlood `json:"firstBlood,omitempty"`
 	}
 
 	var solvesWithUsers []SolveWithUser
@@ -483,6 +577,13 @@ func GetChallengeSolves(c *gin.Context) {
 		if submissionResult.Error == nil && submission.User != nil {
 			solveWithUser.UserID = submission.UserID
 			solveWithUser.Username = submission.User.Username
+		}
+
+		// Check if this solve has a FirstBlood entry
+		var firstBlood models.FirstBlood
+		if err := config.DB.Where("challenge_id = ? AND team_id = ? AND user_id = ?",
+			challenge.ID, solve.TeamID, solve.UserID).First(&firstBlood).Error; err == nil {
+			solveWithUser.FirstBlood = &firstBlood
 		}
 
 		solvesWithUsers = append(solvesWithUsers, solveWithUser)
@@ -656,7 +757,7 @@ func StartChallengeInstance(c *gin.Context) {
 
 	containerID, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, ports)
 	if err != nil {
-		log.Printf("DEBUG: Error starting Docker instance: %v", err)
+		debug.Log("Error starting Docker instance: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -760,62 +861,64 @@ func KillChallengeInstance(c *gin.Context) {
 	challengeID := c.Param("id")
 	userID, ok := c.Get("user_id")
 	if !ok {
-		log.Printf("DEBUG: No user_id in context for kill request")
+		debug.Log("No user_id in context for kill request")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	log.Printf("DEBUG: Killing instance for challenge ID: %s by user ID: %v", challengeID, userID)
+	debug.Log("Killing instance for challenge ID: %s by user ID: %v", challengeID, userID)
 
 	var user models.User
 	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
-		log.Printf("DEBUG: User not found with ID %v: %v", userID, err)
+		debug.Log("User not found with ID %v: %v", userID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
-	log.Printf("DEBUG: Found user: %s, TeamID: %v", user.Username, user.TeamID)
+	debug.Log("Found user: %s, TeamID: %v", user.Username, user.TeamID)
 
 	if user.Team == nil || user.TeamID == nil {
-		log.Printf("DEBUG: User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
+		debug.Log("User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
 		return
 	}
-	log.Printf("DEBUG: User team: %s (ID: %d)", user.Team.Name, user.Team.ID)
+	debug.Log("User team: %s (ID: %d)", user.Team.Name, user.Team.ID)
+
 
 	// Find the instance for this user/team and challenge
 	var instance models.Instance
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
-		log.Printf("DEBUG: Instance not found for team %d, challenge %s: %v", user.Team.ID, challengeID, err)
+		debug.Log("Instance not found for team %d, challenge %s: %v", user.Team.ID, challengeID, err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
 		return
 	}
-	log.Printf("DEBUG: Found instance: ID=%d, Container=%s, Status=%s", instance.ID, instance.Container, instance.Status)
+	debug.Log("Found instance: ID=%d, Container=%s, Status=%s", instance.ID, instance.Container, instance.Status)
 
 	// Check if user owns this instance or is admin
 	if instance.UserID != user.ID && user.Role != "admin" {
-		log.Printf("DEBUG: User %d not authorized to kill instance owned by user %d (user role: %s)", user.ID, instance.UserID, user.Role)
+		debug.Log("User %d not authorized to kill instance owned by user %d (user role: %s)", user.ID, instance.UserID, user.Role)
 		c.JSON(http.StatusForbidden, gin.H{"error": "not_authorized"})
 		return
 	}
-	log.Printf("DEBUG: User authorized to kill instance")
+	debug.Log("User authorized to kill instance")
 
 	// Stop the Docker container
-	log.Printf("DEBUG: Stopping Docker container: %s", instance.Container)
+	debug.Log("Stopping Docker container: %s", instance.Container)
 	if err := utils.StopDockerInstance(instance.Container); err != nil {
-		log.Printf("DEBUG: Error stopping Docker instance: %v", err)
+		debug.Log("Error stopping Docker instance: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_stop_instance"})
 		return
 	}
-	log.Printf("DEBUG: Docker container stopped successfully: %s", instance.Container)
+	debug.Log("Docker container stopped successfully: %s", instance.Container)
 
 	// Update instance status
-	log.Printf("DEBUG: Updating instance status to 'stopped'")
+	debug.Log("Updating instance status to 'stopped'")
 	instance.Status = "stopped"
 	if err := config.DB.Save(&instance).Error; err != nil {
-		log.Printf("DEBUG: Error updating instance status: %v", err)
+		debug.Log("Error updating instance status: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_instance"})
 		return
 	}
-	log.Printf("DEBUG: Instance status updated successfully")
+	debug.Log("Instance status updated successfully")
+
 
 	// Record cooldown immediately before kill to prevent rapid restarts
 	if instance.TeamID != 0 {
@@ -858,7 +961,7 @@ func KillChallengeInstance(c *gin.Context) {
 		"status":  "instance_stopped",
 		"message": "Instance stopped successfully",
 	})
-	log.Printf("DEBUG: Kill instance request completed successfully for challenge %s", challengeID)
+	debug.Log("Kill instance request completed successfully for challenge %s", challengeID)
 }
 
 func GetInstanceStatus(c *gin.Context) {
@@ -1008,11 +1111,11 @@ func StopChallengeInstance(c *gin.Context) {
 
 	go func() {
 		if err := utils.StopDockerInstance(instance.Container); err != nil {
-			log.Printf("Failed to stop Docker instance: %v", err)
+			debug.Log("Failed to stop Docker instance: %v", err)
 		}
 
 		if err := config.DB.Delete(&instance).Error; err != nil {
-			log.Printf("Failed to delete instance from database: %v", err)
+			debug.Log("Failed to delete instance from database: %v", err)
 		}
 
 		// Cooldown already recorded synchronously above
@@ -1051,4 +1154,137 @@ func StopChallengeInstance(c *gin.Context) {
 		"message":   "instance_stopping",
 		"container": instance.Container,
 	})
+}
+
+func PurchaseHint(c *gin.Context) {
+	hintID := c.Param("id")
+
+	userI, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user, ok := userI.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
+	if user.TeamID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no_team"})
+		return
+	}
+
+	// Start transaction
+	tx := config.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Check if hint exists
+	var hint models.Hint
+	if err := tx.First(&hint, hintID).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusNotFound, gin.H{"error": "hint_not_found"})
+		return
+	}
+
+	// Check if hint is active (can't purchase inactive hints)
+	if !hint.IsActive {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "hint_not_active"})
+		return
+	}
+
+	// Check if team already purchased this hint
+	var existingPurchase models.HintPurchase
+	if err := tx.Where("team_id = ? AND hint_id = ?", *user.TeamID, hint.ID).First(&existingPurchase).Error; err == nil {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "hint_already_purchased"})
+		return
+	}
+
+	// Get team with current score
+	var team models.Team
+	if err := tx.Preload("Solves").First(&team, *user.TeamID).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_not_found"})
+		return
+	}
+
+	// Calculate team score
+	totalScore := 0
+	for _, solve := range team.Solves {
+		totalScore += solve.Points
+	}
+
+	// Get total spent on hints
+	var totalSpent int64
+	tx.Model(&models.HintPurchase{}).
+		Where("team_id = ?", *user.TeamID).
+		Select("COALESCE(SUM(cost), 0)").
+		Scan(&totalSpent)
+
+	availableScore := totalScore - int(totalSpent)
+
+	// Check if team has enough points
+	if availableScore < hint.Cost {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient_points", "required": hint.Cost, "available": availableScore})
+		return
+	}
+
+	// Create hint purchase record
+	purchase := models.HintPurchase{
+		TeamID: *user.TeamID,
+		HintID: hint.ID,
+		UserID: user.ID,
+		Cost:   hint.Cost,
+	}
+
+	if err := tx.Create(&purchase).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_purchase_hint"})
+		return
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_commit_transaction"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "hint_purchased",
+		"hint":    hint,
+		"cost":    hint.Cost,
+	})
+}
+
+// GetChallengeFirstBloods returns all first blood entries for a specific challenge
+func GetChallengeFirstBloods(c *gin.Context) {
+	challengeID := c.Param("id")
+
+	var firstBloods []models.FirstBlood
+	if err := config.DB.
+		Preload("User").
+		Preload("Team").
+		Preload("Challenge").
+		Where("challenge_id = ?", challengeID).
+		Order("created_at ASC").
+		Find(&firstBloods).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_fetch_first_bloods"})
+		return
+	}
+
+	var firstbloodDTOs []dto.FirstBloodDTO
+	for _, fb := range firstBloods {
+		firstbloodDTO := dto.FirstBloodDTO{}
+		copier.Copy(&firstbloodDTO, &fb)
+		firstbloodDTOs = append(firstbloodDTOs, firstbloodDTO)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"firstBloods": firstbloodDTOs})
 }

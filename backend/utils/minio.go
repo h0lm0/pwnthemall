@@ -233,14 +233,45 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 
 		// Create hints from YAML metadata
 		for _, hintMeta := range metaData.Hints {
+			// Default IsActive to true if not explicitly set
+			isActive := true
+			if hintMeta.IsActive != nil {
+				isActive = *hintMeta.IsActive
+				log.Printf("Hint '%s': IsActive explicitly set to %v", hintMeta.Title, isActive)
+			} else {
+				log.Printf("Hint '%s': IsActive not set, using default true", hintMeta.Title)
+			}
+
 			hint := models.Hint{
 				ChallengeID: challenge.ID,
+				Title:       hintMeta.Title,
 				Content:     hintMeta.Content,
 				Cost:        hintMeta.Cost,
-				IsActive:    hintMeta.IsActive,
+				IsActive:    isActive,
 			}
-			if err := config.DB.Create(&hint).Error; err != nil {
+
+			// Parse AutoActiveAt if provided
+			if hintMeta.AutoActiveAt != nil {
+				if autoActiveTime, err := time.Parse(time.RFC3339, *hintMeta.AutoActiveAt); err == nil {
+					hint.AutoActiveAt = &autoActiveTime
+					log.Printf("Hint '%s': AutoActiveAt set to %v", hintMeta.Title, autoActiveTime)
+				} else {
+					log.Printf("Hint '%s': Failed to parse AutoActiveAt '%s': %v", hintMeta.Title, *hintMeta.AutoActiveAt, err)
+				}
+			}
+
+			log.Printf("About to create hint '%s' with IsActive=%v", hintMeta.Title, hint.IsActive)
+			if err := config.DB.Select("ChallengeID", "Title", "Content", "Cost", "IsActive", "AutoActiveAt").Create(&hint).Error; err != nil {
+				log.Printf("Failed to create hint '%s': %v", hintMeta.Title, err)
 				return err
+			} else {
+				log.Printf("Successfully created hint '%s' with IsActive=%v (ID: %d)", hintMeta.Title, hint.IsActive, hint.ID)
+
+				// Verify by reading back from database
+				var dbHint models.Hint
+				if err := config.DB.First(&dbHint, hint.ID).Error; err == nil {
+					log.Printf("DB verification for hint '%s': IsActive=%v", hintMeta.Title, dbHint.IsActive)
+				}
 			}
 		}
 	}

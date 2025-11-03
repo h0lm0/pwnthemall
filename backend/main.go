@@ -10,6 +10,7 @@ import (
 	"pwnthemall/controllers"
 	"pwnthemall/debug"
 	"pwnthemall/routes"
+	"pwnthemall/utils"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
@@ -36,6 +37,9 @@ func main() {
 
 	// Initialize WebSocket hub for notifications
 	controllers.InitWebSocketHub()
+
+	// Start hint activation scheduler
+	utils.StartHintScheduler()
 
 	router := gin.Default()
 

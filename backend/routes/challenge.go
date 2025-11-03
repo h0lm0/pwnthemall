@@ -1,5 +1,6 @@
 package routes
 
+
 import (
 	"pwnthemall/controllers"
 	"pwnthemall/middleware"
@@ -13,6 +14,7 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.GET("", middleware.AuthRequiredTeamOrAdmin(), middleware.CheckPolicy("/challenges", "read"), controllers.GetChallenges)
 		challenges.GET("/:id", middleware.AuthRequiredTeamOrAdmin(), middleware.CheckPolicy("/challenges/:id", "read"), controllers.GetChallenge)
 		challenges.GET("/:id/solves", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/solves", "read"), controllers.GetChallengeSolves)
+		challenges.GET("/:id/firstbloods", middleware.AuthRequired(false), middleware.CheckPolicy("/challenges/:id/firstbloods", "read"), controllers.GetChallengeFirstBloods)
 		challenges.GET("/category/:category", middleware.AuthRequiredTeamOrAdmin(), middleware.CheckPolicy("/challenges/category/:category", "read"), controllers.GetChallengesByCategoryName)
 
 		challenges.POST("", middleware.CheckPolicy("/challenges", "write"), controllers.CreateChallenge)
@@ -21,6 +23,9 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.GET("/:id/instance-status", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/instance-status", "read"), controllers.GetInstanceStatus)
 		challenges.POST("/:id/start", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
 		challenges.POST("/:id/stop", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/stop", "write"), controllers.StopChallengeInstance)
+
+		// Hint routes
+		challenges.POST("/hints/:id/purchase", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/hints/:id/purchase", "write"), controllers.PurchaseHint)
 		// challenges.POST("/:id/kill", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/kill", "write"), controllers.KillChallengeInstance)
 		// challenges.PUT("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.UpdateUser)
 		// challenges.DELETE("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.DeleteUser)
@@ -35,5 +40,6 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		adminChallenges.PUT("/:id", middleware.AuthRequired(false), middleware.CheckPolicy("/admin/challenges/:id", "write"), controllers.UpdateChallengeAdmin)
 		adminChallenges.PUT("/:id/general", middleware.AuthRequired(false), middleware.CheckPolicy("/admin/challenges/:id", "write"), controllers.UpdateChallengeGeneralAdmin)
 		adminChallenges.DELETE("/hints/:hintId", middleware.AuthRequired(false), middleware.CheckPolicy("/admin/challenges/hints/:hintId", "write"), controllers.DeleteHint)
+		adminChallenges.POST("/hints/activate-scheduled", middleware.AuthRequired(false), middleware.CheckPolicy("/admin/challenges/hints/activate-scheduled", "write"), controllers.CheckAndActivateHints)
 	}
 }

@@ -63,11 +63,19 @@ func GetTeam(c *gin.Context) {
 		}
 	}
 
+	// Get total spent on hints
+	var totalSpent int64
+	config.DB.Model(&models.HintPurchase{}).
+		Where("team_id = ?", team.ID).
+		Select("COALESCE(SUM(cost), 0)").
+		Scan(&totalSpent)
+
 	c.JSON(http.StatusOK, gin.H{
 		"team":         team,
 		"members":      members,
 		"memberPoints": memberPoints,
-		"totalPoints":  totalPoints,
+		"totalPoints":  totalPoints - int(totalSpent),
+		"spentOnHints": int(totalSpent),
 	})
 }
 
@@ -451,9 +459,18 @@ func GetLeaderboard(c *gin.Context) {
 			}
 		}
 
+		// Subtract hints cost from total score
+		var totalSpent int64
+		config.DB.Model(&models.HintPurchase{}).
+			Where("team_id = ?", team.ID).
+			Select("COALESCE(SUM(cost), 0)").
+			Scan(&totalSpent)
+
+		finalScore := totalScore - int(totalSpent)
+
 		leaderboard = append(leaderboard, TeamScore{
 			Team:       team,
-			TotalScore: totalScore,
+			TotalScore: finalScore,
 			SolveCount: len(solves),
 		})
 	}
@@ -474,14 +491,21 @@ func GetLeaderboard(c *gin.Context) {
 func RecalculateTeamPoints(c *gin.Context) {
 	decayService := utils.NewDecay()
 
-	// Get all solves
+	// Delete all existing FirstBlood entries and recreate them
+	if err := config.DB.Delete(&models.FirstBlood{}, "1=1").Error; err != nil {
+		log.Printf("Failed to delete existing FirstBlood entries: %v", err)
+	}
+
+	// Get all solves grouped by challenge and ordered by creation time
 	var solves []models.Solve
-	if err := config.DB.Find(&solves).Error; err != nil {
+	if err := config.DB.Order("challenge_id ASC, created_at ASC").Find(&solves).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_fetch_solves"})
 		return
 	}
 
 	updatedCount := 0
+	challengePositions := make(map[uint]int) // Track position per challenge
+
 	for _, solve := range solves {
 		// Get challenge details
 		var challenge models.Challenge
@@ -489,18 +513,44 @@ func RecalculateTeamPoints(c *gin.Context) {
 			continue
 		}
 
-		// Calculate the position of this solve (0-based)
-		var position int64
-		config.DB.Model(&models.Solve{}).
-			Where("challenge_id = ? AND created_at < ?", challenge.ID, solve.CreatedAt).
-			Count(&position)
+		// Get current position for this challenge
+		position := challengePositions[solve.ChallengeID]
+		challengePositions[solve.ChallengeID]++
 
 		// Calculate new points with current decay settings
-		newPoints := decayService.CalculateDecayedPoints(&challenge, int(position))
+		newPoints := decayService.CalculateDecayedPoints(&challenge, position)
+
+		// Add FirstBlood bonus if applicable
+		firstBloodBonus := 0
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			if position < len(challenge.FirstBloodBonuses) {
+				firstBloodBonus = int(challenge.FirstBloodBonuses[position])
+
+				// Create FirstBlood entry
+				badge := "trophy" // default badge
+				if position < len(challenge.FirstBloodBadges) {
+					badge = challenge.FirstBloodBadges[position]
+				}
+
+				firstBlood := models.FirstBlood{
+					ChallengeID: challenge.ID,
+					TeamID:      solve.TeamID,
+					UserID:      solve.UserID,
+					Bonuses:     []int64{int64(firstBloodBonus)},
+					Badges:      []string{badge},
+				}
+
+				if err := config.DB.Create(&firstBlood).Error; err != nil {
+					log.Printf("Failed to recreate FirstBlood entry: %v", err)
+				}
+			}
+		}
+
+		newPointsWithBonus := newPoints + firstBloodBonus
 
 		// Update if points have changed
-		if solve.Points != newPoints {
-			solve.Points = newPoints
+		if solve.Points != newPointsWithBonus {
+			solve.Points = newPointsWithBonus
 			if err := config.DB.Save(&solve).Error; err != nil {
 				log.Printf("Failed to update solve for team %d, challenge %d: %v", solve.TeamID, solve.ChallengeID, err)
 				continue
@@ -512,5 +562,49 @@ func RecalculateTeamPoints(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":        "points_recalculated",
 		"updated_solves": updatedCount,
+	})
+}
+
+func GetTeamScore(c *gin.Context) {
+	userI, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user, ok := userI.(*models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		return
+	}
+
+	if user.TeamID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no_team"})
+		return
+	}
+
+	// Get team with solves
+	var team models.Team
+	if err := config.DB.Preload("Solves").First(&team, *user.TeamID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_not_found"})
+		return
+	}
+
+	// Calculate total score
+	totalScore := 0
+	for _, solve := range team.Solves {
+		totalScore += solve.Points
+	}
+
+	// Get total spent on hints
+	var totalSpent int64
+	config.DB.Model(&models.HintPurchase{}).
+		Where("team_id = ?", *user.TeamID).
+		Select("COALESCE(SUM(cost), 0)").
+		Scan(&totalSpent)
+
+	c.JSON(http.StatusOK, gin.H{
+		"totalScore":     totalScore,
+		"availableScore": totalScore - int(totalSpent),
+		"spentOnHints":   int(totalSpent),
 	})
 }

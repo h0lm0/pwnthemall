@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/github/license/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/blob/main/LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-blue?style=flat-square&logo=docker)](https://www.docker.com/)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/h0lm0/pwnthemall/build.yml?style=flat-square)](https://github.com/h0lm0/pwnthemall/actions)
+[![Demo status](https://img.shields.io/github/actions/workflow/status/h0lm0/pwnthemall/demo-deploy.yml?branch=main&label=🚀%20Demo%20status)](https://demo.pwnthemall.com)
 [![Stars](https://img.shields.io/github/stars/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/stargazers)
 [![Issues](https://img.shields.io/github/issues/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/issues)
 

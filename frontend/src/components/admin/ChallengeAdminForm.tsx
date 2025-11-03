@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import axios from "@/lib/axios"
 import { toast } from "sonner"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, Edit } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -35,9 +35,12 @@ interface DecayFormula {
 
 interface Hint {
   id: number
+  title?: string
   content: string
   cost: number
   challengeId: number
+  isActive?: boolean
+  autoActiveAt?: string | null
 }
 
 interface FirstBloodBonus {
@@ -48,6 +51,37 @@ interface FirstBloodBonus {
 export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdminFormProps) {
   const [loading, setLoading] = useState(false)
   const [generalLoading, setGeneralLoading] = useState(false)
+
+  // Helper function to format datetime for backend
+  const formatDateTimeForBackend = (dateString: string | null): string | null => {
+    if (!dateString) return null
+    // Convert datetime-local format to ISO string
+    try {
+      const date = new Date(dateString)
+      return date.toISOString()
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return null
+    }
+  }
+
+  // Helper function to format datetime from backend for frontend
+  const formatDateTimeForFrontend = (isoString: string | null): string => {
+    if (!isoString) return ""
+    try {
+      const date = new Date(isoString)
+      // Format to datetime-local format (YYYY-MM-DDTHH:mm)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}`
+    } catch (error) {
+      console.error('Error parsing date:', error)
+      return ""
+    }
+  }
   const [decayFormulas, setDecayFormulas] = useState<DecayFormula[]>([])
   const [challengeCategories, setChallengeCategories] = useState<ChallengeCategory[]>([])
   const [challengeDifficulties, setChallengeDifficulties] = useState<ChallengeDifficulty[]>([])
@@ -58,7 +92,6 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     hints: challenge.hints || [] as Hint[],
   })
   
-  // Convert arrays to FirstBloodBonus objects for easier management
   const initializeFirstBloodBonuses = (): FirstBloodBonus[] => {
     const bonuses = challenge.firstBloodBonuses || []
     const badges = challenge.firstBloodBadges || []
@@ -80,18 +113,48 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     categoryId: challenge.categoryId || 1,
     difficultyId: challenge.difficultyId || 1,
   })
-  const [newHint, setNewHint] = useState({ content: "", cost: 0 })
+  const [newHint, setNewHint] = useState({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null as string | null })
+  const [editingHints, setEditingHints] = useState<{[key: number]: {title: string, content: string, cost: number, isActive: boolean, autoActiveAt: string | null}}>({})
 
   useEffect(() => {
     fetchDecayFormulas()
     fetchChallengeCategories()
     fetchChallengeDifficulties()
+    fetchChallengeData()
   }, [])
+
+  const fetchChallengeData = async () => {
+    try {
+      const response = await axios.get(`/api/admin/challenges/${challenge.id}`)
+      const challengeData = response.data.challenge
+      
+      setFormData({
+        points: challengeData.points || 0,
+        enableFirstBlood: challengeData.enableFirstBlood || false,
+        decayFormulaId: challengeData.decayFormulaId || null,
+        hints: challengeData.hints || []
+      })
+
+      const bonuses = challengeData.firstBloodBonuses || []
+      const badges = challengeData.firstBloodBadges || []
+      
+      if (bonuses.length > 0) {
+        setFirstBloodBonuses(bonuses.map((points: number, index: number) => ({
+          points,
+          badge: badges[index] || 'trophy'
+        })))
+      } else {
+        setFirstBloodBonuses([])
+      }
+      
+    } catch (error) {
+      console.error("Failed to fetch challenge data:", error)
+    }
+  }
 
   const fetchDecayFormulas = async () => {
     try {
       const response = await axios.get("/api/decay-formulas")
-      // Filter out decay formulas with empty names and ensure all required fields
       const validFormulas = response.data.filter((formula: DecayFormula) => 
         formula.name && formula.name.trim() !== '' && formula.id > 0
       ).map((formula: any) => ({
@@ -130,7 +193,6 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      // Convert FirstBloodBonus objects back to separate arrays
       const firstBloodBonusesArray = firstBloodBonuses.map(bonus => bonus.points)
       const firstBloodBadgesArray = firstBloodBonuses.map(bonus => bonus.badge)
       
@@ -142,9 +204,11 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
         decayFormulaId: formData.decayFormulaId,
         hints: formData.hints.map(hint => ({
           id: hint.id,
+          title: hint.title || "Hint",
           content: hint.content,
           cost: hint.cost,
-          isActive: true
+          isActive: !!(hint as Hint).isActive,
+          autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
         }))
       })
       toast.success("Challenge configuration updated successfully")
@@ -171,26 +235,66 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     }
   }
 
-  const handleAddHint = () => {
-    if (!newHint.content.trim() || newHint.cost < 0) {
-      toast.error("Please provide valid hint content and cost")
+  const handleAddHint = async () => {
+    if (!newHint.title.trim() || !newHint.content.trim() || newHint.cost < 0) {
+      toast.error("Please provide valid hint title, content and cost")
       return
     }
 
     const newHintData = {
       id: 0,
+      title: newHint.title,
       content: newHint.content,
       cost: newHint.cost,
-      challengeId: challenge.id
+      challengeId: challenge.id,
+      isActive: newHint.isActive,
+      autoActiveAt: newHint.autoActiveAt
     }
+    
+    const updatedHints = [...formData.hints, newHintData]
     
     setFormData(prev => ({
       ...prev,
-      hints: [...prev.hints, newHintData]
+      hints: updatedHints
     }))
     
-    setNewHint({ content: "", cost: 0 })
-    toast.success("Hint added to form")
+    try {
+      const response = await axios.put(`/api/admin/challenges/${challenge.id}`, {
+        points: formData.points,
+        enableFirstBlood: formData.enableFirstBlood,
+        firstBloodBonuses: firstBloodBonuses.map(bonus => bonus.points),
+        firstBloodBadges: firstBloodBonuses.map(bonus => bonus.badge),
+        decayFormulaId: formData.decayFormulaId,
+        hints: updatedHints.map(hint => ({
+          id: hint.id,
+          title: hint.title || "Hint",
+          content: hint.content,
+          cost: hint.cost,
+          isActive: !!(hint as Hint).isActive,
+          autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
+        }))
+      })
+      
+      const updatedChallenge = response.data
+      if (updatedChallenge.hints) {
+        setFormData(prev => ({
+          ...prev,
+          hints: updatedChallenge.hints
+        }))
+      }
+      
+      toast.success("Hint added successfully")
+    } catch (error) {
+      setFormData(prev => ({
+        ...prev,
+        hints: prev.hints.slice(0, -1)
+      }))
+      toast.error("Failed to add hint")
+      console.error(error)
+      return
+    }
+    
+    setNewHint({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null })
   }
 
   const handleDeleteHint = async (hintId: number) => {
@@ -205,6 +309,64 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
       toast.success("Hint deleted successfully")
     } catch (error) {
       toast.error("Failed to delete hint")
+      console.error(error)
+    }
+  }
+
+  const handleSaveHint = async (hintId: number, updatedHint: { title: string; content: string; cost: number; isActive: boolean; autoActiveAt: string | null }) => {
+    const originalHints = [...formData.hints]
+    const updatedHints = formData.hints.map(h => 
+      h.id === hintId 
+        ? { ...h, title: updatedHint.title, content: updatedHint.content, cost: updatedHint.cost, isActive: updatedHint.isActive, autoActiveAt: updatedHint.autoActiveAt }
+        : h
+    )
+    
+    setFormData(prev => ({
+      ...prev,
+      hints: updatedHints
+    }))
+    setEditingHints(prev => {
+      const { [hintId]: removed, ...rest } = prev;
+      return rest;
+    })
+
+    try {
+      const response = await axios.put(`/api/admin/challenges/${challenge.id}`, {
+        points: formData.points,
+        enableFirstBlood: formData.enableFirstBlood,
+        firstBloodBonuses: firstBloodBonuses.map(bonus => bonus.points),
+        firstBloodBadges: firstBloodBonuses.map(bonus => bonus.badge),
+        decayFormulaId: formData.decayFormulaId,
+        hints: updatedHints.map(hint => ({
+          id: hint.id,
+          title: hint.title || "Hint",
+          content: hint.content,
+          cost: hint.cost,
+          isActive: !!(hint as Hint).isActive,
+          autoActiveAt: formatDateTimeForBackend((hint as Hint).autoActiveAt || null)
+        }))
+      })
+
+      const updatedChallenge = response.data
+      if (updatedChallenge.hints) {
+        setFormData(prev => ({
+          ...prev,
+          hints: updatedChallenge.hints
+        }))
+      }
+
+      toast.success("Hint updated successfully")
+    } catch (error) {
+      setFormData(prev => ({
+        ...prev,
+        hints: originalHints
+      }))
+      setEditingHints(prev => ({
+        ...prev,
+        [hintId]: updatedHint
+      }))
+      
+      toast.error("Failed to update hint")
       console.error(error)
     }
   }
@@ -397,13 +559,49 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
         <TabsContent value="hints" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Challenge Hints</CardTitle>
-              <CardDescription>
-                Manage hints for this challenge
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Challenge Hints</CardTitle>
+                  <CardDescription>
+                    Manage hints for this challenge
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      await axios.post('/api/admin/challenges/hints/activate-scheduled')
+                      toast.success('Hint activation check completed')
+                      // Refresh the challenge data to show updated hint statuses
+                      const response = await axios.get(`/api/admin/challenges/${challenge.id}`)
+                      const updatedChallenge = response.data.challenge
+                      if (updatedChallenge.hints) {
+                        setFormData(prev => ({
+                          ...prev,
+                          hints: updatedChallenge.hints
+                        }))
+                      }
+                    } catch (error) {
+                      toast.error('Failed to activate scheduled hints')
+                    }
+                  }}
+                >
+                  Activate all Hints
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
+                <div>
+                  <Label htmlFor="hintTitle">Hint Title</Label>
+                  <Input
+                    id="hintTitle"
+                    value={newHint.title}
+                    onChange={(e) => setNewHint(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Enter hint title..."
+                  />
+                </div>
                 <div>
                   <Label htmlFor="hintContent">Hint Content</Label>
                   <Textarea
@@ -423,6 +621,31 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     onChange={(e) => setNewHint(prev => ({ ...prev, cost: parseInt(e.target.value) || 0 }))}
                   />
                 </div>
+                
+                {/* New hint auto-activation fields */}
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="newHintActive"
+                    checked={newHint.isActive}
+                    onCheckedChange={(checked) => setNewHint(prev => ({ ...prev, isActive: checked }))}
+                  />
+                  <Label htmlFor="newHintActive">Active</Label>
+                </div>
+                
+                <div>
+                  <Label htmlFor="newHintAutoActive">Auto-activation date/time (optional)</Label>
+                  <Input
+                    id="newHintAutoActive"
+                    type="datetime-local"
+                    value={newHint.autoActiveAt || ""}
+                    onChange={(e) => setNewHint(prev => ({ ...prev, autoActiveAt: e.target.value || null }))}
+                    placeholder="Set auto-activation time"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Leave empty to disable auto-activation. The hint will become visible at this exact time.
+                  </p>
+                </div>
+                
                 <Button onClick={handleAddHint} className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Hint
@@ -433,18 +656,180 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                 <div className="space-y-2">
                   <h4 className="font-medium">Existing Hints</h4>
                   {formData.hints.map((hint) => (
-                    <div key={hint.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <p className="text-sm">{hint.content}</p>
-                        <p className="text-xs text-muted-foreground">Cost: {hint.cost} points</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteHint(hint.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div key={hint.id} className="p-3 border rounded-lg space-y-3 bg-background/50 hover:bg-background/80 transition-colors">
+                      {editingHints[hint.id] ? (
+                        // Mode édition
+                        <>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label htmlFor={`hint-title-${hint.id}`}>Title</Label>
+                              <Input
+                                id={`hint-title-${hint.id}`}
+                                value={editingHints[hint.id].title}
+                                onChange={(e) => setEditingHints(prev => ({
+                                  ...prev,
+                                  [hint.id]: { 
+                                    ...prev[hint.id], 
+                                    title: e.target.value
+                                  }
+                                }))}
+                                placeholder="Hint title"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`hint-cost-${hint.id}`}>Cost (points)</Label>
+                              <Input
+                                id={`hint-cost-${hint.id}`}
+                                type="number"
+                                min="0"
+                                value={editingHints[hint.id].cost}
+                                onChange={(e) => setEditingHints(prev => ({
+                                  ...prev,
+                                  [hint.id]: { 
+                                    ...prev[hint.id],
+                                    cost: parseInt(e.target.value) || 0
+                                  }
+                                }))}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor={`hint-content-${hint.id}`}>Content</Label>
+                            <Textarea
+                              id={`hint-content-${hint.id}`}
+                              value={editingHints[hint.id].content}
+                              onChange={(e) => setEditingHints(prev => ({
+                                ...prev,
+                                [hint.id]: { 
+                                  ...prev[hint.id],
+                                  content: e.target.value
+                                }
+                              }))}
+                              rows={2}
+                            />
+                          </div>
+                          
+                          {/* New auto-activation fields */}
+                          <div className="grid grid-cols-1 gap-3">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`hint-active-${hint.id}`}
+                                checked={editingHints[hint.id].isActive}
+                                onCheckedChange={(checked) => setEditingHints(prev => ({
+                                  ...prev,
+                                  [hint.id]: { 
+                                    ...prev[hint.id],
+                                    isActive: checked,
+                                    // Clear auto-activation when manually disabling
+                                    autoActiveAt: checked ? prev[hint.id].autoActiveAt : null
+                                  }
+                                }))}
+                              />
+                              <Label htmlFor={`hint-active-${hint.id}`}>Active</Label>
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`hint-auto-active-${hint.id}`}>Auto-activation date/time (optional)</Label>
+                              <Input
+                                id={`hint-auto-active-${hint.id}`}
+                                type="datetime-local"
+                                value={formatDateTimeForFrontend(editingHints[hint.id].autoActiveAt)}
+                                onChange={(e) => setEditingHints(prev => ({
+                                  ...prev,
+                                  [hint.id]: { 
+                                    ...prev[hint.id],
+                                    autoActiveAt: e.target.value || null
+                                  }
+                                }))}
+                                placeholder="Set auto-activation time"
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Leave empty to disable auto-activation. The hint will become visible at this exact time.
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const updatedHint = editingHints[hint.id];
+                                  handleSaveHint(hint.id, updatedHint);
+                                }}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingHints(prev => {
+                                  const { [hint.id]: removed, ...rest } = prev;
+                                  return rest;
+                                })}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteHint(hint.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-sm">{hint.title || "Hint"}</h5>
+                              <p className="text-sm text-muted-foreground mt-1">{hint.content}</p>
+                              <p className="text-xs text-muted-foreground mt-1">Cost: {hint.cost} points</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Status: {(hint as Hint).isActive ? (
+                                  <span className="text-green-600">Active</span>
+                                ) : (
+                                  <span className="text-red-600">Inactive</span>
+                                )}
+                              </p>
+                              {(hint as Hint).autoActiveAt && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Auto-activation: {new Date((hint as Hint).autoActiveAt!).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingHints(prev => ({
+                                  ...prev,
+                                  [hint.id]: {
+                                    title: hint.title || "",
+                                    content: hint.content,
+                                    cost: hint.cost,
+                                    isActive: !!(hint as Hint).isActive,
+                                    autoActiveAt: (hint as Hint).autoActiveAt ? formatDateTimeForFrontend((hint as Hint).autoActiveAt!) : null
+                                  }
+                                }))}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteHint(hint.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>

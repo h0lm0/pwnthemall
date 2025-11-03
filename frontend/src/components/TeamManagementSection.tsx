@@ -66,13 +66,14 @@ interface TeamStyleViewProps {
   onConfirmDisband: () => void;
   memberPointsMap?: Record<number, number>;
   totalPoints?: number;
+  spentOnHints?: number;
 }
 
 // --- TEAM STYLE COMPONENTS ---
 
 // Classic: Traditional table style
 function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, onKick, onTransfer, kickTarget, showKickDialog, setShowKickDialog, onConfirmKick, onCancelKick, transferTarget, setTransferTarget, showTransferDialog, setShowTransferDialog, onConfirmTransfer, onCancelTransfer, kickLoading, transferring, t,
-  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband, memberPointsMap, totalPoints
+  showLeaveDialog, setShowLeaveDialog, showDisbandDialog, setShowDisbandDialog, leaving, disbanding, handleLeaveClick, handleDisbandClick, onConfirmLeave, onConfirmDisband, memberPointsMap, totalPoints, spentOnHints
 }: TeamStyleViewProps) {
   return (
     <div className="rounded-lg border bg-background">
@@ -85,6 +86,13 @@ function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, 
               <span className="font-semibold">{typeof totalPoints === 'number' ? totalPoints : 0}</span>
               <span className="text-xs text-muted-foreground uppercase tracking-wide">{t('points') || 'Points'}</span>
             </div>
+            {spentOnHints && spentOnHints > 0 && (
+              <div className="flex items-center gap-2 rounded-full border bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800 px-3 py-1">
+                <span className="text-orange-600 dark:text-orange-400 text-xs">-</span>
+                <span className="font-semibold text-orange-700 dark:text-orange-300">{spentOnHints}</span>
+                <span className="text-xs text-orange-600 dark:text-orange-400 uppercase tracking-wide">{t('spent') || 'Spent'}</span>
+              </div>
+            )}
             {isCreator && (
               <Button variant="destructive" size="sm" onClick={handleDisbandClick} disabled={disbanding}>
                 {t('disband_team')}
@@ -179,6 +187,7 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
   // Points map fetched from backend; defaults to empty
   const [memberPointsMap, setMemberPointsMap] = useState<Record<number, number>>({});
   const [totalPoints, setTotalPoints] = useState<number>(0);
+  const [spentOnHints, setSpentOnHints] = useState<number>(0);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDisbandDialog, setShowDisbandDialog] = useState(false);
   const [showCreatorLeaveChoice, setShowCreatorLeaveChoice] = useState(false);
@@ -205,9 +214,14 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
             ? res.data.totalPoints
             : Object.values(normalized).reduce((a, b) => a + (b || 0), 0);
           setTotalPoints(tp);
+          
+          // Get spent on hints
+          const spent = typeof res.data?.spentOnHints === 'number' ? res.data.spentOnHints : 0;
+          setSpentOnHints(spent);
         } else if (!cancelled) {
           setMemberPointsMap({});
           setTotalPoints(0);
+          setSpentOnHints(0);
         }
       } catch {}
     })();
@@ -454,7 +468,8 @@ export const TeamManagementSection: React.FC<TeamManagementSectionProps> = ({ te
       onConfirmLeave={onConfirmLeave}
       onConfirmDisband={onConfirmDisband}
       memberPointsMap={memberPointsMap}
-  totalPoints={totalPoints}
+      totalPoints={totalPoints}
+      spentOnHints={spentOnHints}
     />
   );
 

@@ -39,10 +39,23 @@ export interface Challenge {
   decayFormulaId?: number
   hints?: {
     id: number
+    title?: string
     content: string
     cost: number
     challengeId: number
+    purchased?: boolean
   }[]
+}
+
+export interface FirstBlood {
+  id: number
+  challengeId: number
+  teamId: number
+  userId: number
+  bonuses: number[]
+  badges: string[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Solve {
@@ -54,4 +67,5 @@ export interface Solve {
   createdAt: string
   userId?: number
   username?: string
+  firstBlood?: FirstBlood
 }
