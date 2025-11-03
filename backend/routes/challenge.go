@@ -1,6 +1,5 @@
 package routes
 
-
 import (
 	"pwnthemall/controllers"
 	"pwnthemall/middleware"

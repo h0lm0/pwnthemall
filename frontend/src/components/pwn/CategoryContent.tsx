@@ -385,7 +385,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
   };
 
   const isDockerChallenge = (challenge: Challenge) => {
-    return challenge.type?.name?.toLowerCase() === 'docker';
+    if ((challenge.type?.name?.toLowerCase() === 'docker') || (challenge.type?.name?.toLowerCase() === 'compose')) {
+      return true
+    }
   };
 
   const getLocalInstanceStatus = (challengeId: number) => {

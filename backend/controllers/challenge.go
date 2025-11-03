@@ -619,8 +619,6 @@ func BuildChallengeImage(c *gin.Context) {
 
 func StartChallengeInstance(c *gin.Context) {
 	id := c.Param("id")
-	debug.Log("Starting instance for challenge ID: %s", id)
-
 	var challenge models.Challenge
 	result := config.DB.Preload("ChallengeType").First(&challenge, id)
 
@@ -630,9 +628,24 @@ func StartChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	// Check if challenge is of type docker
-	if challenge.ChallengeType.Name != "docker" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "challenge_not_docker_type"})
+	switch challenge.ChallengeType.Name {
+	case "docker":
+		StartDockerChallengeInstance(c)
+	case "compose":
+		StartComposeChallengeInstance(c)
+	}
+}
+
+func StartDockerChallengeInstance(c *gin.Context) {
+	id := c.Param("id")
+	debug.Log("Starting instance for challenge ID: %s", id)
+
+	var challenge models.Challenge
+	result := config.DB.Preload("ChallengeType").First(&challenge, id)
+
+	if result.Error != nil {
+		debug.Log("Challenge not found with ID %s: %v", id, result.Error)
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
 		return
 	}
 
@@ -882,7 +895,6 @@ func KillChallengeInstance(c *gin.Context) {
 	}
 	debug.Log("User team: %s (ID: %d)", user.Team.Name, user.Team.ID)
 
-
 	// Find the instance for this user/team and challenge
 	var instance models.Instance
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
@@ -918,7 +930,6 @@ func KillChallengeInstance(c *gin.Context) {
 		return
 	}
 	debug.Log("Instance status updated successfully")
-
 
 	// Record cooldown immediately before kill to prevent rapid restarts
 	if instance.TeamID != 0 {
@@ -962,6 +973,119 @@ func KillChallengeInstance(c *gin.Context) {
 		"message": "Instance stopped successfully",
 	})
 	debug.Log("Kill instance request completed successfully for challenge %s", challengeID)
+}
+
+func StartComposeChallengeInstance(c *gin.Context) {
+	id := c.Param("id")
+	debug.Log("Starting instance for compose challenge ID: %s", id)
+
+	var challenge models.Challenge
+	result := config.DB.Preload("ChallengeType").First(&challenge, id)
+
+	if result.Error != nil {
+		debug.Log("Challenge not found with ID %s: %v", id, result.Error)
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
+		return
+	}
+
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var dockerConfig models.DockerConfig
+	if err := config.DB.First(&dockerConfig).Error; err != nil {
+		debug.Log("Docker config not found: %v", err)
+		debug.Log("This might be due to missing environment variables or database seeding issues")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
+		debug.Log("User not found with ID %v: %v", userID, err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	if user.Team == nil || user.TeamID == nil {
+		debug.Log("User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
+		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
+		return
+	}
+
+	// Cooldown enforcement: prevent immediate restart after a stop by any team member
+	if dockerConfig.InstanceCooldownSeconds > 0 {
+		var cd models.InstanceCooldown
+		if err := config.DB.Where("team_id = ? AND challenge_id = ?", *user.TeamID, challenge.ID).First(&cd).Error; err == nil {
+			elapsed := time.Since(cd.LastStoppedAt)
+			remaining := time.Duration(dockerConfig.InstanceCooldownSeconds)*time.Second - elapsed
+			if remaining > 0 {
+				c.JSON(http.StatusTooEarly, gin.H{
+					"error":             "instance_cooldown_not_elapsed",
+					"remaining_seconds": int(remaining.Seconds()),
+				})
+				return
+			}
+		}
+	}
+
+	var countExist int64
+	config.DB.Model(&models.Instance{}).
+		Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
+		Count(&countExist)
+
+	if int(countExist) >= 1 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "instance_already_running"})
+		return
+	}
+
+	var countUser int64
+	config.DB.Model(&models.Instance{}).
+		Where("user_id = ?", user.ID).
+		Count(&countUser)
+
+	if int(countUser) >= dockerConfig.InstancesByUser {
+		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_user_reached"})
+		return
+	}
+
+	var countTeam int64
+	config.DB.Model(&models.Instance{}).
+		Where("team_id = ?", user.Team.ID).
+		Count(&countTeam)
+	if int(countTeam) >= dockerConfig.InstancesByTeam {
+		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_team_reached"})
+		return
+	}
+
+	// Ensure Docker connection is available before starting instance
+	if err := utils.EnsureDockerClientConnected(); err != nil {
+		debug.Log("Docker connection failed when starting instance for challenge %s: %v", challenge.Slug, err)
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "docker_unavailable",
+			"message": "Docker service is currently unavailable. Please try again later or contact an administrator.",
+		})
+		return
+	}
+	ctx := context.TODO()
+	compose, err := utils.GetComposeFile(challenge.Slug)
+	if err != nil {
+		debug.Log(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+	project := utils.CreateComposeProject(ctx, challenge.Slug, compose)
+	if err := utils.StartComposeInstance(ctx, project); err != nil {
+		debug.Log("StartComposeInstance failed for challenge %s: %v", challenge.Slug, err)
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "start_compose_failed",
+			"message": "Docker service is currently unavailable. Please try again later or contact an administrator.",
+		})
+		return
+	}
 }
 
 func GetInstanceStatus(c *gin.Context) {

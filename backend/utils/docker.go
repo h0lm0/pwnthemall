@@ -14,10 +14,18 @@ import (
 	"pwnthemall/config"
 	"pwnthemall/debug"
 	"pwnthemall/models"
+	"strings"
 
-	"github.com/docker/docker/api/types"
+	"github.com/compose-spec/compose-go/v2/loader"
+	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
+	"github.com/docker/compose/v2/pkg/api"
+	"github.com/docker/compose/v2/pkg/compose"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 )
@@ -77,33 +85,6 @@ func TarDirectory(dirPath string) (io.Reader, error) {
 	return buf, nil
 }
 
-func streamAndDetectBuildError(r io.Reader) error {
-	type buildLine struct {
-		Stream      string `json:"stream"`
-		Error       string `json:"error"`
-		ErrorDetail struct {
-			Message string `json:"message"`
-		} `json:"errorDetail"`
-	}
-
-	decoder := json.NewDecoder(r)
-	for decoder.More() {
-		var msg buildLine
-		if err := decoder.Decode(&msg); err != nil {
-			return fmt.Errorf("failed to parse docker build output: %w", err)
-		}
-
-		if msg.Error != "" {
-			return fmt.Errorf("docker build failed: %s", msg.ErrorDetail.Message)
-		}
-
-		if msg.Stream != "" {
-			fmt.Print(msg.Stream)
-		}
-	}
-	return nil
-}
-
 func FindAvailablePorts(count int) ([]int, error) {
 	ports := []int{}
 
@@ -119,19 +100,6 @@ func FindAvailablePorts(count int) ([]int, error) {
 	}
 
 	return ports, nil
-}
-
-func getDockerImagePrefix() (string, error) {
-	var cfg models.DockerConfig
-	result := config.DB.First(&cfg)
-	if result.Error != nil {
-		return "", fmt.Errorf("could not load DockerConfig: %w", result.Error)
-	}
-
-	if cfg.ImagePrefix == "" {
-		return "pta-", nil
-	}
-	return cfg.ImagePrefix, nil
 }
 
 func BuildDockerImage(slug string) (string, error) {
@@ -159,7 +127,7 @@ func BuildDockerImage(slug string) (string, error) {
 	}
 
 	imageName := prefix + slug
-	buildOptions := types.ImageBuildOptions{
+	buildOptions := build.ImageBuildOptions{
 		Tags:           []string{imageName},
 		Dockerfile:     "Dockerfile",
 		Remove:         true,
@@ -202,7 +170,7 @@ func IsImageBuilt(slug string) (string, bool) {
 	filtersArgs := filters.NewArgs()
 	filtersArgs.Add("reference", imageName)
 
-	images, err := config.DockerClient.ImageList(ctx, types.ImageListOptions{
+	images, err := config.DockerClient.ImageList(ctx, image.ListOptions{
 		Filters: filtersArgs,
 	})
 	if err != nil {
@@ -341,4 +309,133 @@ func StopDockerInstance(containerID string) error {
 
 	debug.Log("Successfully stopped and removed container %s", containerID)
 	return nil
+}
+
+func GetComposeFile(slug string) (string, error) {
+	debug.Log("GetComposeFile with slug: %s", slug)
+	tmpDir := filepath.Join(os.TempDir(), slug)
+	defer os.RemoveAll(tmpDir)
+
+	if err := DownloadChallengeContext(slug, tmpDir); err != nil {
+		return "", fmt.Errorf("failed to download challenge context: %w", err)
+	}
+	debug.Log("DownloadChallengeContext ok; tmpDir: %s", tmpDir)
+	composePath := filepath.Join(tmpDir, "docker-compose.yml")
+
+	debug.Log("composePath: ", composePath)
+
+	if _, err := os.Stat(composePath); err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("docker-compose.yml not found for challenge %s", slug)
+		}
+		return "", err
+	}
+
+	content, err := os.ReadFile(composePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read docker-compose.yml: %w", err)
+	}
+
+	return string(content), nil
+}
+
+func CreateComposeProject(ctx context.Context, slug string, composeFile string) *types.Project {
+	configDetails := types.ConfigDetails{
+		WorkingDir: "/in-memory/",
+		ConfigFiles: []types.ConfigFile{
+			{Filename: "docker-compose.yaml", Content: []byte(composeFile)},
+		},
+		Environment: nil,
+	}
+
+	projectName := slug
+
+	p, err := loader.LoadWithContext(ctx, configDetails, func(options *loader.Options) {
+		options.SetProjectName(projectName, true)
+	})
+
+	if err != nil {
+		log.Fatalln("error load:", err)
+	}
+	addServiceLabels(p)
+	return p
+}
+
+func StartComposeInstance(ctx context.Context, project *types.Project) error {
+	var srv api.Compose
+	dockerCli, err := command.NewDockerCli()
+	if err != nil {
+		return err
+	}
+
+	dockerContext := "default"
+
+	//Magic line to fix error:
+	//Failed to initialize: unable to resolve docker endpoint: no context store initialized
+	clientOpts := &flags.ClientOptions{Context: dockerContext, LogLevel: "error"}
+	err = dockerCli.Initialize(clientOpts)
+	if err != nil {
+		return err
+	}
+
+	srv = compose.NewComposeService(dockerCli)
+	err = srv.Up(ctx, project, api.UpOptions{})
+	if err != nil {
+		log("error up:", err)
+	}
+	return nil
+}
+
+func getDockerImagePrefix() (string, error) {
+	var cfg models.DockerConfig
+	result := config.DB.First(&cfg)
+	if result.Error != nil {
+		return "", fmt.Errorf("could not load DockerConfig: %w", result.Error)
+	}
+
+	if cfg.ImagePrefix == "" {
+		return "pta-", nil
+	}
+	return cfg.ImagePrefix, nil
+}
+
+func streamAndDetectBuildError(r io.Reader) error {
+	type buildLine struct {
+		Stream      string `json:"stream"`
+		Error       string `json:"error"`
+		ErrorDetail struct {
+			Message string `json:"message"`
+		} `json:"errorDetail"`
+	}
+
+	decoder := json.NewDecoder(r)
+	for decoder.More() {
+		var msg buildLine
+		if err := decoder.Decode(&msg); err != nil {
+			return fmt.Errorf("failed to parse docker build output: %w", err)
+		}
+
+		if msg.Error != "" {
+			return fmt.Errorf("docker build failed: %s", msg.ErrorDetail.Message)
+		}
+
+		if msg.Stream != "" {
+			fmt.Print(msg.Stream)
+		}
+	}
+	return nil
+}
+
+func addServiceLabels(project *types.Project) {
+	for i, s := range project.Services {
+		s.CustomLabels = map[string]string{
+			api.ProjectLabel:     project.Name,
+			api.ServiceLabel:     s.Name,
+			api.VersionLabel:     api.ComposeVersion,
+			api.WorkingDirLabel:  "/",
+			api.ConfigFilesLabel: strings.Join(project.ComposeFiles, ","),
+			api.OneoffLabel:      "False", // default, will be overridden by `run` command
+		}
+		project.Services[i] = s
+	}
 }
