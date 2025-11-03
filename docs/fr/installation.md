@@ -1,6 +1,8 @@
-# Linux
+# Installation
 
-## Prérequis
+## Linux
+
+### Prérequis
 
 * Docker
 * Docker Compose (>v2)
@@ -9,7 +11,7 @@
 
 NB : Actuellement, la seule option pour déployer le projet est d’utiliser Docker Compose.
 
-## Étapes
+### Étapes
 
 ```bash
 # Cloner le projet
@@ -35,14 +37,14 @@ Pour corriger cela, vous pouvez simplement ajouter une entrée pour ce nom de do
 
 ---
 
-# Windows
+## Windows
 
-## Prérequis
+### Prérequis
 
 * Windows Subsystem for Linux (WSL)
 * Ou, à défaut, Git Bash (si WSL n’est pas disponible)
 
-## Étapes
+### Étapes
 
 Vous pouvez exécuter le projet de la même manière que sur Linux si vous utilisez directement le terminal WSL.
 

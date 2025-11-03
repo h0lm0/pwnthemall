@@ -1,6 +1,8 @@
-# Linux
+# Installation
 
-## Requirements
+## Linux
+
+### Requirements
 
 - Docker
 - Docker Compose (>v2)
@@ -9,7 +11,7 @@
 
 NB: Currently, the only option to deploy the project is to use Docker Compose.
 
-## Steps
+### Steps
 
 
 ```bash
@@ -34,14 +36,14 @@ As remediation, you can simply add an entry for this domain name on your `/etc/h
 127.0.0.1   pwnthemall.local
 ```
 
-# Windows
+## Windows
 
-## Requirements
+### Requirements
 
 - Windows Subsystem for Linux (WSL)
 - Alternatively, Git Bash (if WSL is not available)
 
-## Steps
+### Steps
 
 Can run the same way as Linux if executed directly in the WSL terminal.
 

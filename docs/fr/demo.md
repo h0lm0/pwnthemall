@@ -1,4 +1,4 @@
-# Démo Publique
+# Démo publique
 
 La démo est maintenant disponible sur :  
 [https://demo.pwnthemall.com](https://demo.pwnthemall.com)

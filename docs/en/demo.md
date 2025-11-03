@@ -1,4 +1,4 @@
-## Public demo
+# Public demo
 
 The demo is now available at
 https://demo.pwnthemall.com
