@@ -250,7 +250,7 @@ test('Member to admin upgrade', async ({ page }) => {
 
   // Vérifie l'accès aux pages admin
   const adminPageChecks = [
-    { url: '/admin/dashboard', text: /dashboard/i },
+    { url: '/admin/dashboard', text: /administration page/i },
     { url: '/admin/users', text: /users/i },
     { url: '/admin/challenge-categories', text: /challenge categories/i },
   ];
@@ -292,18 +292,24 @@ test('Change password and relog using the new password', async ({ page }) => {
   // Aller dans le profil (navigation directe)
   await page.goto('https://pwnthemall.local/profile');
   
-  // Cliquer sur le bouton 'Security'
-  await page.getByRole('button', { name: /security/i }).click();
+  // Wait for profile to load - Account tab is the default
+  await page.waitForTimeout(1000);
+  
+  // Scroll to the security section
+  await page.locator('h3', { hasText: /security settings/i }).scrollIntoViewIfNeeded();
   
   // Remplir le formulaire de changement de mot de passe
-  await page.getByLabel(/current password|current/i).fill(oldPassword);
-  await page.getByLabel(/new password|new/i).fill(newPassword);
+  await page.locator('#current').fill(oldPassword);
+  await page.locator('#new').fill(newPassword);
   
-  // Cliquer sur le bouton 'Change Password' avant 'Confirm'
+  // Cliquer sur le bouton 'Change Password'
   await page.getByRole('button', { name: /change password/i }).click();
   
-  // Cliquer sur le bouton 'Confirm' après avoir changé le mot de passe
+  // Cliquer sur le bouton 'Confirm' dans le dialog
   await page.getByRole('button', { name: /confirm/i }).click();
+
+  // Wait for success toast
+  await expect(page.locator('body')).toContainText(/password updated/i, { timeout: 5000 });
 
   // Logout (API)
   await page.request.post('https://pwnthemall.local/api/logout');
@@ -510,12 +516,18 @@ test('Test connection_info feature for Docker challenges', async ({ page }) => {
   // Wait for login and check we're logged in
   await expect(page.locator('[id="__next"]')).toContainText(username);
 
-  // Create a team
-  await page.goto('https://pwnthemall.local/profile');
-  await page.getByRole('button', { name: /create team/i }).click();
-  await page.getByRole('textbox', { name: /team name/i }).fill(teamName);
-  await page.getByRole('textbox', { name: /team password/i }).fill(password);
-  await page.getByRole('button', { name: /create team/i }).click();
+  // Create a team - go to /team page
+  await page.goto('https://pwnthemall.local/team');
+  await page.waitForTimeout(500);
+  
+  // Fill the create team form (first form on the page)
+  const createForm = page.locator('form').first();
+  await createForm.getByPlaceholder(/team name/i).fill(teamName);
+  await createForm.getByPlaceholder(/password/i).fill(password);
+  await createForm.getByRole('button', { name: /create/i }).click();
+
+  // Wait for team creation and redirect
+  await page.waitForTimeout(2000);
 
   // Go to pwn page and look for Docker challenges
   await page.goto('https://pwnthemall.local/pwn');

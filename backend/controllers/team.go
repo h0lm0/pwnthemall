@@ -89,6 +89,27 @@ func CreateTeam(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_input"})
 		return
 	}
+
+	input.Name = strings.TrimSpace(input.Name)
+	if input.Name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "team_name_cannot_be_empty"})
+		return
+	}
+	if len(input.Password) < 8 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "password_too_short"})
+		return
+	}
+
+	// dupe check
+	var existingTeam models.Team
+	if err := config.DB.Where("name = ?", input.Name).First(&existingTeam).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "team_name_already_exists"})
+		return
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database_error"})
+		return
+	}
+
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -114,8 +135,7 @@ func CreateTeam(c *gin.Context) {
 		CreatorID: userID.(uint),
 	}
 	if err := config.DB.Create(&team).Error; err != nil {
-		// Check if it's a unique constraint violation for team name
-		if strings.Contains(err.Error(), "duplicate key") && strings.Contains(err.Error(), "uni_teams_name") {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "idx_teams_name_deleted") || strings.Contains(err.Error(), "unique constraint") {
 			c.JSON(http.StatusConflict, gin.H{"error": "team_name_already_exists"})
 			return
 		}
@@ -130,7 +150,6 @@ func CreateTeam(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"team": team})
 }
 
-// JoinTeam : rejoindre une équipe (par nom ou id + mot de passe)
 func JoinTeam(c *gin.Context) {
 	var input struct {
 		TeamID   *uint  `json:"teamId"`
@@ -146,51 +165,74 @@ func JoinTeam(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	var user models.User
-	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+
+	err := config.DB.Transaction(func(tx *gorm.DB) error {
+		var user models.User
+		if err := tx.First(&user, userID).Error; err != nil {
+			return errors.New("user_not_found")
+		}
+		if user.TeamID != nil {
+			return errors.New("user_already_in_team")
+		}
+		var team models.Team
+		if input.TeamID != nil {
+			if err := tx.First(&team, *input.TeamID).Error; err != nil {
+				return errors.New("team_not_found")
+			}
+		} else if input.Name != "" {
+			if err := tx.Where("name = ?", input.Name).First(&team).Error; err != nil {
+				return errors.New("team_not_found")
+			}
+		} else {
+			return errors.New("team_id_or_name_required")
+		}
+		if err := bcrypt.CompareHashAndPassword([]byte(team.Password), []byte(input.Password)); err != nil {
+			return errors.New("invalid_password")
+		}
+		user.TeamID = &team.ID
+		if err := tx.Save(&user).Error; err != nil {
+			return errors.New("team_join_failed")
+		}
+		return nil
+	})
+
+	if err != nil {
+		switch err.Error() {
+		case "user_not_found":
+			c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		case "user_already_in_team":
+			c.JSON(http.StatusBadRequest, gin.H{"error": "user_already_in_team"})
+		case "team_not_found":
+			c.JSON(http.StatusNotFound, gin.H{"error": "team_not_found"})
+		case "team_id_or_name_required":
+			c.JSON(http.StatusBadRequest, gin.H{"error": "team_id_or_name_required"})
+		case "invalid_password":
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_password"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "team_join_failed"})
+		}
 		return
 	}
-	if user.TeamID != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user_already_in_team"})
-		return
-	}
+
 	var team models.Team
 	if input.TeamID != nil {
-		if err := config.DB.First(&team, *input.TeamID).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "team_not_found"})
-			return
-		}
-	} else if input.Name != "" {
-		if err := config.DB.Where("name = ?", input.Name).First(&team).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "team_not_found"})
-			return
-		}
+		config.DB.First(&team, *input.TeamID)
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "team_id_or_name_required"})
-		return
+		config.DB.Where("name = ?", input.Name).First(&team)
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(team.Password), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_password"})
-		return
-	}
-	user.TeamID = &team.ID
-	if err := config.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "team_join_failed"})
-		return
-	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "Joined team", "team": team})
 }
 
 // deleteTeamCompletely removes a team and all its related records
 func deleteTeamCompletely(teamID uint) error {
-	// Use a transaction to ensure all operations succeed or fail together
 	return config.DB.Transaction(func(tx *gorm.DB) error {
-		// Get all users in this team for submissions cleanup
 		var userIds []uint
-		tx.Model(&models.User{}).Where("team_id = ?", teamID).Pluck("id", &userIds)
+		if err := tx.Model(&models.User{}).Where("team_id = ?", teamID).Pluck("id", &userIds).Error; err != nil {
+			log.Printf("Failed to get user IDs for team %d: %v", teamID, err)
+			return err
+		}
 
-		// Delete Submission records for all team members
 		if len(userIds) > 0 {
 			if err := tx.Where("user_id IN ?", userIds).Delete(&models.Submission{}).Error; err != nil {
 				log.Printf("Failed to delete submissions for team %d: %v", teamID, err)
@@ -198,34 +240,29 @@ func deleteTeamCompletely(teamID uint) error {
 			}
 		}
 
-		// Delete Instance records
 		if err := tx.Where("team_id = ?", teamID).Delete(&models.Instance{}).Error; err != nil {
 			log.Printf("Failed to delete instances for team %d: %v", teamID, err)
 			return err
 		}
 
-		// Delete DynamicFlag records
 		if err := tx.Where("team_id = ?", teamID).Delete(&models.DynamicFlag{}).Error; err != nil {
 			log.Printf("Failed to delete dynamic flags for team %d: %v", teamID, err)
 			return err
 		}
 
-		// Delete Solve records (these should cascade but let's be explicit)
 		if err := tx.Where("team_id = ?", teamID).Delete(&models.Solve{}).Error; err != nil {
 			log.Printf("Failed to delete solves for team %d: %v", teamID, err)
 			return err
 		}
 
-		// Finally delete the team
-		result := tx.Delete(&models.Team{}, teamID)
-		if result.Error != nil {
-			log.Printf("Failed to delete team %d: %v", teamID, result.Error)
-			return result.Error
+		if err := tx.Where("team_id = ?", teamID).Delete(&models.HintPurchase{}).Error; err != nil {
+			log.Printf("Failed to delete hint purchases for team %d: %v", teamID, err)
+			return err
 		}
 
-		if result.RowsAffected == 0 {
-			log.Printf("Team %d not found during deletion", teamID)
-			return errors.New("team not found")
+		if err := tx.Delete(&models.Team{}, teamID).Error; err != nil {
+			log.Printf("Failed to delete team %d: %v", teamID, err)
+			return err
 		}
 
 		log.Printf("Successfully deleted team %d and all related records", teamID)
