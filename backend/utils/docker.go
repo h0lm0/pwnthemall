@@ -14,10 +14,19 @@ import (
 	"pwnthemall/config"
 	"pwnthemall/debug"
 	"pwnthemall/models"
+	"strconv"
+	"strings"
 
-	"github.com/docker/docker/api/types"
+	"github.com/compose-spec/compose-go/v2/loader"
+	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
+	"github.com/docker/compose/v2/pkg/api"
+	"github.com/docker/compose/v2/pkg/compose"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
 )
@@ -77,33 +86,6 @@ func TarDirectory(dirPath string) (io.Reader, error) {
 	return buf, nil
 }
 
-func streamAndDetectBuildError(r io.Reader) error {
-	type buildLine struct {
-		Stream      string `json:"stream"`
-		Error       string `json:"error"`
-		ErrorDetail struct {
-			Message string `json:"message"`
-		} `json:"errorDetail"`
-	}
-
-	decoder := json.NewDecoder(r)
-	for decoder.More() {
-		var msg buildLine
-		if err := decoder.Decode(&msg); err != nil {
-			return fmt.Errorf("failed to parse docker build output: %w", err)
-		}
-
-		if msg.Error != "" {
-			return fmt.Errorf("docker build failed: %s", msg.ErrorDetail.Message)
-		}
-
-		if msg.Stream != "" {
-			fmt.Print(msg.Stream)
-		}
-	}
-	return nil
-}
-
 func FindAvailablePorts(count int) ([]int, error) {
 	ports := []int{}
 
@@ -119,19 +101,6 @@ func FindAvailablePorts(count int) ([]int, error) {
 	}
 
 	return ports, nil
-}
-
-func getDockerImagePrefix() (string, error) {
-	var cfg models.DockerConfig
-	result := config.DB.First(&cfg)
-	if result.Error != nil {
-		return "", fmt.Errorf("could not load DockerConfig: %w", result.Error)
-	}
-
-	if cfg.ImagePrefix == "" {
-		return "pta-", nil
-	}
-	return cfg.ImagePrefix, nil
 }
 
 func BuildDockerImage(slug string) (string, error) {
@@ -159,7 +128,7 @@ func BuildDockerImage(slug string) (string, error) {
 	}
 
 	imageName := prefix + slug
-	buildOptions := types.ImageBuildOptions{
+	buildOptions := build.ImageBuildOptions{
 		Tags:           []string{imageName},
 		Dockerfile:     "Dockerfile",
 		Remove:         true,
@@ -202,7 +171,7 @@ func IsImageBuilt(slug string) (string, bool) {
 	filtersArgs := filters.NewArgs()
 	filtersArgs.Add("reference", imageName)
 
-	images, err := config.DockerClient.ImageList(ctx, types.ImageListOptions{
+	images, err := config.DockerClient.ImageList(ctx, image.ListOptions{
 		Filters: filtersArgs,
 	})
 	if err != nil {
@@ -341,4 +310,253 @@ func StopDockerInstance(containerID string) error {
 
 	debug.Log("Successfully stopped and removed container %s", containerID)
 	return nil
+}
+
+func EnsureTeamNetworkExists(teamId int) (string, error) {
+	ctx := context.Background()
+	networkName := fmt.Sprintf("team_%d_network", teamId)
+
+	networks, err := config.DockerClient.NetworkList(ctx, network.ListOptions{
+		Filters: filters.NewArgs(filters.Arg("name", networkName)),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to list networks: %w", err)
+	}
+
+	if len(networks) > 0 {
+		return networkName, nil
+	}
+
+	_, err = config.DockerClient.NetworkCreate(
+		ctx,
+		networkName,
+		network.CreateOptions{
+			Driver:     "bridge",
+			Attachable: true,
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create network: %w", err)
+	}
+
+	return networkName, nil
+}
+
+func GetComposeFile(slug string) (string, error) {
+	debug.Log("GetComposeFile with slug: %s", slug)
+	tmpDir := filepath.Join(os.TempDir(), slug)
+	defer os.RemoveAll(tmpDir)
+
+	if err := DownloadChallengeContext(slug, tmpDir); err != nil {
+		return "", fmt.Errorf("failed to download challenge context: %w", err)
+	}
+	debug.Log("DownloadChallengeContext ok; tmpDir: %s", tmpDir)
+	composePath := filepath.Join(tmpDir, "docker-compose.yml")
+
+	debug.Log("composePath: %s", composePath)
+
+	if _, err := os.Stat(composePath); err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("docker-compose.yml not found for challenge %s", slug)
+		}
+		return "", err
+	}
+
+	content, err := os.ReadFile(composePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read docker-compose.yml: %w", err)
+	}
+
+	return string(content), nil
+}
+
+func RandomizeServicePorts(project *types.Project) ([]int, error) {
+	ports := []int{}
+
+	for i, service := range project.Services {
+		for j, portConfig := range service.Ports {
+			if portConfig.Published == "" {
+				l, err := net.Listen("tcp", ":0")
+				if err != nil {
+					return nil, fmt.Errorf("failed to find free port: %v", err)
+				}
+				freePort := l.Addr().(*net.TCPAddr).Port
+				l.Close()
+
+				project.Services[i].Ports[j].Published = strconv.Itoa(freePort)
+				ports = append(ports, freePort)
+			}
+		}
+	}
+
+	return ports, nil
+}
+
+func CreateComposeProject(slug string, teamId int, userId int, composeFile string) (*types.Project, error) {
+	ctx := context.TODO()
+
+	configDetails := types.ConfigDetails{
+		WorkingDir: "/in-memory/",
+		ConfigFiles: []types.ConfigFile{
+			{Filename: "docker-compose.yaml", Content: []byte(composeFile)},
+		},
+		Environment: nil,
+	}
+
+	projectName := fmt.Sprintf("%s_%d_%d", slug, teamId, userId)
+	p, err := loader.LoadWithContext(ctx, configDetails, func(options *loader.Options) {
+		options.SetProjectName(projectName, true)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to load compose file: %w", err)
+	}
+
+	debug.Log("Creating Docker network for team %d", teamId)
+
+	networkName, err := EnsureTeamNetworkExists(teamId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to ensure team network: %w", err)
+	}
+	debug.Log("Docker network created : %s", networkName)
+
+	// need to add IP pool/CIDR in config to restrict networks creation
+	p.Networks = map[string]types.NetworkConfig{
+		networkName: {
+			Name:     networkName,
+			Driver:   "bridge",
+			External: true,
+		},
+	}
+
+	for svcName, svc := range p.Services {
+		svc.Networks = map[string]*types.ServiceNetworkConfig{
+			networkName: {Aliases: []string{svcName}},
+		}
+		p.Services[svcName] = svc
+	}
+
+	addServiceLabels(p)
+	return p, nil
+}
+
+func StartComposeInstance(project *types.Project, teamId int) error {
+	ctx := context.TODO()
+
+	networkName, err := EnsureTeamNetworkExists(teamId)
+	if err != nil {
+		return fmt.Errorf("failed to ensure team network: %w", err)
+	}
+	debug.Log("StartComposeInstance started for team %d on network %s", teamId, networkName)
+
+	dockerCli, err := command.NewDockerCli(
+		command.WithStandardStreams(),
+		command.WithAPIClient(config.DockerClient),
+	)
+	if err != nil {
+		return err
+	}
+	debug.Log("dockerCli created")
+
+	if err := dockerCli.Initialize(flags.NewClientOptions()); err != nil {
+		return err
+	}
+	debug.Log("serverInfo: %s", dockerCli.ServerInfo().OSType)
+	srv := compose.NewComposeService(dockerCli)
+
+	for _, service := range project.Services {
+		if service.Networks == nil {
+			service.Networks = map[string]*types.ServiceNetworkConfig{}
+		}
+		service.Networks[networkName] = &types.ServiceNetworkConfig{}
+	}
+
+	err = srv.Up(ctx, project, api.UpOptions{})
+	if err != nil {
+		return fmt.Errorf("error starting compose project: %w", err)
+	}
+
+	return nil
+}
+
+func StopComposeInstance(projectName string) error {
+	ctx := context.TODO()
+	dockerCli, err := command.NewDockerCli(
+		command.WithStandardStreams(),
+		command.WithAPIClient(config.DockerClient),
+	)
+	if err != nil {
+		return err
+	}
+	debug.Log("dockerCli created")
+
+	if err := dockerCli.Initialize(flags.NewClientOptions()); err != nil {
+		return err
+	}
+	debug.Log("serverInfo: %s", dockerCli.ServerInfo().OSType)
+	srv := compose.NewComposeService(dockerCli)
+	options := api.DownOptions{
+		RemoveOrphans: true,
+		Volumes:       true,
+	}
+	err = srv.Down(ctx, projectName, options)
+	if err != nil {
+		return fmt.Errorf("error stopping compose project: %w", err)
+	}
+	return nil
+}
+
+func getDockerImagePrefix() (string, error) {
+	var cfg models.DockerConfig
+	result := config.DB.First(&cfg)
+	if result.Error != nil {
+		return "", fmt.Errorf("could not load DockerConfig: %w", result.Error)
+	}
+
+	if cfg.ImagePrefix == "" {
+		return "pta-", nil
+	}
+	return cfg.ImagePrefix, nil
+}
+
+func streamAndDetectBuildError(r io.Reader) error {
+	type buildLine struct {
+		Stream      string `json:"stream"`
+		Error       string `json:"error"`
+		ErrorDetail struct {
+			Message string `json:"message"`
+		} `json:"errorDetail"`
+	}
+
+	decoder := json.NewDecoder(r)
+	for decoder.More() {
+		var msg buildLine
+		if err := decoder.Decode(&msg); err != nil {
+			return fmt.Errorf("failed to parse docker build output: %w", err)
+		}
+
+		if msg.Error != "" {
+			return fmt.Errorf("docker build failed: %s", msg.ErrorDetail.Message)
+		}
+
+		if msg.Stream != "" {
+			fmt.Print(msg.Stream)
+		}
+	}
+	return nil
+}
+
+func addServiceLabels(project *types.Project) {
+	z := 0
+	for i, s := range project.Services {
+		s.CustomLabels = map[string]string{
+			api.ProjectLabel:     project.Name,
+			api.ServiceLabel:     strconv.Itoa(z),
+			api.VersionLabel:     api.ComposeVersion,
+			api.WorkingDirLabel:  "/",
+			api.ConfigFilesLabel: strings.Join(project.ComposeFiles, ","),
+			api.OneoffLabel:      "False", // default, will be overridden by `run` command
+		}
+		z++
+		project.Services[i] = s
+	}
 }

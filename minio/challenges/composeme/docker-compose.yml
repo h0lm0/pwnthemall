@@ -1,0 +1,11 @@
+services:
+  frontend:
+    image: nginx
+    ports:
+      - "8989"
+  cli:
+    image: alpine:3.22
+    ports:
+      - "22"
+  batch:
+    image: alpine:3.22

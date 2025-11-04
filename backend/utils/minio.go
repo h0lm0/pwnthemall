@@ -76,14 +76,18 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 		ports = dockerMeta.Ports
 
 	case "compose":
+		var composeMeta meta.ComposeChallengeMetadata
+		if err := yaml.Unmarshal(buf.Bytes(), &composeMeta); err != nil {
+			log.Printf("Invalid Compose YAML for %s: %v", objectKey, err)
+			return err
+		}
+		metaData = composeMeta.Base
 	case "geo":
 		var geoMeta meta.GeoChallengeMetadata
 		if err := yaml.Unmarshal(buf.Bytes(), &geoMeta); err != nil {
 			log.Printf("Invalid Geo YAML for %s: %v", objectKey, err)
 			return err
 		}
-		metaData = geoMeta.Base
-		// Save or update GeoSpec separately
 		defer func(slug string, g meta.GeoChallengeMetadata) {
 			// after challenge record is saved below, persist GeoSpec
 			var challenge models.Challenge
