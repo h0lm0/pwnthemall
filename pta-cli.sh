@@ -174,8 +174,8 @@ function remove_key() {
 function usage() {
     echo "Usage:"
     echo "  $0 minio sync <folder>"
-    echo "  $0 compose up [--build] [--env dev|prod]"
-    echo "  $0 compose down [--env dev|prod]"
+    echo "  $0 compose up [--build] [--env dev|prod|demo]"
+    echo "  $0 compose down [--env dev|prod|demo]"
     echo "  $0 keys -g|gen"
     echo "  $0 keys -r|remove"
     echo "  $0 env randomize"

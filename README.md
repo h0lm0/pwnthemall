@@ -2,7 +2,6 @@
 
 # pwnthemall
 
-[![License](https://img.shields.io/github/license/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/blob/main/LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-blue?style=flat-square&logo=docker)](https://www.docker.com/)
 [![Demo status](https://img.shields.io/github/actions/workflow/status/h0lm0/pwnthemall/demo-deploy.yml?branch=main&label=🚀%20Demo%20status)](https://demo.pwnthemall.com)
 [![Stars](https://img.shields.io/github/stars/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/stargazers)
@@ -11,30 +10,34 @@
 > Open-source **Capture The Flag (CTF)** platform to host, manage, and deploy your own cybersecurity challenges.  
 > Designed for self-hosted events and built with modern tools, it makes running CTFs fun and efficient.
 
----
 
 ## 🚀 Features
 
 - 🐳 Runs with **Docker** & **Docker Compose**
 - 📦 Deploy **Dockerfile-based** challenges easily
+- 🌎 Deploy **Geoint** challenges
 - 📁 **GitOps-style** challenge management with a universal folder structure
 - 🔄 **Real-time synchronization** of challenge metadata
 - 👯 Team support with **badges & awards**
 - ✍️ **Fully customizable** front-end and back-end
-- 🔥 Support for **Docker Compose-based challenges** *(WIP)*
 
----
+
+## 🚧 Work In Progress
+
+- Support for **Docker Compose-based challenges** *(WIP)*
+- Supporting multi workers
+- Supporting KVM workers
+
 
 ## 📚 Installation & Usage
 
-![vhs tape run](docs/run.gif)
+![vhs tape run](docs/assets/run.gif)
 
 Check out the official documentation:
 
-- 🔧 [Installation Guide](https://github.com/h0lm0/pwnthemall/wiki/I-%E2%80%90-Installation)
-- 🕹️ [Usage Guide](https://github.com/h0lm0/pwnthemall/wiki/II-%E2%80%90-Usage)
+- 🔧 [Installation Guide](https://docs.pwnthemall.com/1-installation)
+- 🕹️ [Usage Guide](https://docs.pwnthemall.com/2-usage)
 
----
 
 ## 🧠 Credits & Inspiration
 
@@ -44,7 +47,6 @@ The project is inspired by the amazing work of the following open-source project
 - [CTFd/CTFd](https://github.com/CTFd/CTFd)
 - [TheFlash2k/CTFd-CLI](https://github.com/TheFlash2k/CTFd-CLI)
 
----
 
 ## ❤️ Contribute
 

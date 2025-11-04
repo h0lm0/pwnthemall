@@ -1,0 +1,14 @@
+name: "Demo 02 (Docker)"
+description: |
+  Simple challenge using Docker container.
+
+  The flag is "whatsthis?aDockerContainer!"
+category: web
+difficulty: easy
+type: docker
+author: "Kevin'MITDocker"
+flags: ["whatsthis?aDockerContainer!"]
+hidden: false
+points: 500
+ports: [5001]
+connection_info: ["http://$ip:5001"] 

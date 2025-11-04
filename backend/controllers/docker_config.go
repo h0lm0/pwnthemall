@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,17 +13,17 @@ func GetDockerConfig(c *gin.Context) {
 
 	result := config.DB.First(&cfg)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Docker Configuration not found"})
+		utils.NotFoundError(c, "Docker Configuration not found")
 		return
 	}
-	c.JSON(http.StatusOK, cfg)
+	utils.OKResponse(c, cfg)
 }
 
 func UpdateDockerConfig(c *gin.Context) {
 	var newCfg models.DockerConfig
 
 	if err := c.ShouldBindJSON(&newCfg); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.BadRequestError(c, err.Error())
 		return
 	}
 
@@ -32,10 +32,10 @@ func UpdateDockerConfig(c *gin.Context) {
 
 	if result.Error != nil {
 		if err := config.DB.Create(&newCfg).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Docker Configuration"})
+			utils.InternalServerError(c, "Failed to create Docker Configuration")
 			return
 		}
-		c.JSON(http.StatusCreated, newCfg)
+		utils.CreatedResponse(c, newCfg)
 		return
 	}
 
@@ -49,12 +49,12 @@ func UpdateDockerConfig(c *gin.Context) {
 	existingCfg.InstanceCooldownSeconds = newCfg.InstanceCooldownSeconds
 
 	if err := config.DB.Save(&existingCfg).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update Docker Configuration"})
+		utils.InternalServerError(c, "Failed to update Docker Configuration")
 		return
 	}
 	if err := config.ConnectDocker(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Config updated but connection to Docker Daemon isn't healthy"})
+		utils.InternalServerError(c, "Config updated but connection to Docker Daemon isn't healthy")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully updated Docker configuration"})
+	utils.OKResponse(c, gin.H{"message": "Successfully updated Docker configuration"})
 }

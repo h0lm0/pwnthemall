@@ -1,96 +1,75 @@
 package controllers
 
 import (
-	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/dto"
 	"pwnthemall/debug"
 	"pwnthemall/models"
 	"pwnthemall/utils"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type ChallengeAdminUpdateRequest struct {
-	Points            int           `json:"points"`
-	DecayFormulaID    uint          `json:"decayFormulaId"`
-	EnableFirstBlood  bool          `json:"enableFirstBlood"`
-	FirstBloodBonuses []int         `json:"firstBloodBonuses"`
-	FirstBloodBadges  []string      `json:"firstBloodBadges"`
-	Hints             []HintRequest `json:"hints"`
-}
 
-type ChallengeGeneralUpdateRequest struct {
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	Author       string `json:"author"`
-	Hidden       bool   `json:"hidden"`
-	CategoryID   uint   `json:"categoryId"`
-	DifficultyID uint   `json:"difficultyId"`
-}
 
-type HintRequest struct {
-	ID           uint       `json:"id,omitempty"`
-	Title        string     `json:"title"`
-	Content      string     `json:"content"`
-	Cost         int        `json:"cost"`
-	IsActive     bool       `json:"isActive"`
-	AutoActiveAt *time.Time `json:"autoActiveAt,omitempty"`
-}
+
+
+
 
 func UpdateChallengeAdmin(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
 	if err := config.DB.First(&challenge, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		utils.NotFoundError(c, "Challenge not found")
 		return
 	}
 
-	var req ChallengeAdminUpdateRequest
+	var req dto.ChallengeAdminUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.BadRequestError(c, err.Error())
 		return
 	}
 
-	challenge.Points = req.Points
-	challenge.DecayFormulaID = req.DecayFormulaID
-	challenge.EnableFirstBlood = req.EnableFirstBlood
+	if req.Points != nil {
+		challenge.Points = *req.Points
+	}
+	if req.DecayFormulaID != nil {
+		challenge.DecayFormulaID = *req.DecayFormulaID
+	}
+	if req.EnableFirstBlood != nil {
+		challenge.EnableFirstBlood = *req.EnableFirstBlood
+	}
 
 	// Convert []int to pq.Int64Array
-	if len(req.FirstBloodBonuses) > 0 {
-		int64Array := make([]int64, len(req.FirstBloodBonuses))
-		for i, v := range req.FirstBloodBonuses {
-			int64Array[i] = int64(v)
-		}
-		challenge.FirstBloodBonuses = int64Array
-	} else {
+	if req.FirstBloodBonuses != nil && len(*req.FirstBloodBonuses) > 0 {
+		challenge.FirstBloodBonuses = *req.FirstBloodBonuses
+	} else if req.FirstBloodBonuses != nil {
 		challenge.FirstBloodBonuses = []int64{}
 	}
 
 	// Convert []string to pq.StringArray for badges
-	if len(req.FirstBloodBadges) > 0 {
-		stringArray := make([]string, len(req.FirstBloodBadges))
-		copy(stringArray, req.FirstBloodBadges)
-		challenge.FirstBloodBadges = stringArray
-	} else {
+	if req.FirstBloodBadges != nil && len(*req.FirstBloodBadges) > 0 {
+		challenge.FirstBloodBadges = *req.FirstBloodBadges
+	} else if req.FirstBloodBadges != nil {
 		challenge.FirstBloodBadges = []string{}
 	}
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update challenge"})
+		utils.InternalServerError(c, "Failed to update challenge")
 		return
 	}
 
 	// Recalculate points for all solves of this challenge with new values
 	recalculateChallengePoints(challenge.ID)
 
-	if !req.EnableFirstBlood {
+	if req.EnableFirstBlood != nil && !*req.EnableFirstBlood && challenge.EnableFirstBlood {
 		config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.FirstBlood{})
 	}
 
 	// Process hints from request
-	for _, hintReq := range req.Hints {
+	if req.Hints != nil {
+		for _, hintReq := range *req.Hints {
 		debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
 		if hintReq.ID > 0 {
 			// Update existing hint
@@ -124,6 +103,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 			}
 		}
 	}
+	}
 
 	if err := config.DB.Preload("DecayFormula").Preload("Hints").Preload("FirstBlood").First(&challenge, challenge.ID).Error; err != nil {
 		debug.Log("Failed to reload challenge: %v", err)
@@ -134,7 +114,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, challenge)
+	utils.OKResponse(c, challenge)
 }
 
 func UpdateChallengeGeneralAdmin(c *gin.Context) {
@@ -142,13 +122,13 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := config.DB.First(&challenge, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		utils.NotFoundError(c, "Challenge not found")
 		return
 	}
 
-	var req ChallengeGeneralUpdateRequest
+	var req dto.ChallengeGeneralUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.BadRequestError(c, err.Error())
 		return
 	}
 
@@ -156,16 +136,16 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	challenge.Name = req.Name
 	challenge.Description = req.Description
 	challenge.Author = req.Author
-	challenge.Hidden = req.Hidden
-	challenge.ChallengeCategoryID = req.CategoryID
-	challenge.ChallengeDifficultyID = req.DifficultyID
+	challenge.Hidden = *req.Hidden
+	challenge.ChallengeCategoryID = *req.CategoryID
+	challenge.ChallengeDifficultyID = *req.DifficultyID
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update challenge"})
+		utils.InternalServerError(c, "Failed to update challenge")
 		return
 	}
 
-	c.JSON(http.StatusOK, challenge)
+	utils.OKResponse(c, challenge)
 }
 
 func GetChallengeAdmin(c *gin.Context) {
@@ -173,7 +153,7 @@ func GetChallengeAdmin(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := config.DB.Preload("DecayFormula").Preload("Hints").Preload("FirstBlood").First(&challenge, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge not found"})
+		utils.NotFoundError(c, "Challenge not found")
 		return
 	}
 
@@ -194,28 +174,28 @@ func GetChallengeAdmin(c *gin.Context) {
 		"challengeDifficulties": challengeDifficulties,
 	}
 
-	c.JSON(http.StatusOK, response)
+	utils.OKResponse(c, response)
 }
 
 func GetAllChallengesAdmin(c *gin.Context) {
 	var challenges []models.Challenge
 	if err := config.DB.Preload("ChallengeCategory").Preload("ChallengeType").Preload("ChallengeDifficulty").Find(&challenges).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.InternalServerError(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, challenges)
+	utils.OKResponse(c, challenges)
 }
 
 func DeleteHint(c *gin.Context) {
 	hintID := c.Param("hintId")
 
 	if err := config.DB.Delete(&models.Hint{}, hintID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete hint"})
+		utils.InternalServerError(c, "Failed to delete hint")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Hint deleted successfully"})
+	utils.OKResponse(c, gin.H{"message": "Hint deleted successfully"})
 }
 
 // recalculateChallengePoints recalculates points for all solves of a specific challenge
@@ -291,7 +271,7 @@ func CheckAndActivateHints(c *gin.Context) {
 	var hints []models.Hint
 	if err := config.DB.Find(&hints).Error; err != nil {
 		debug.Log("Failed to fetch all hints: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch hints"})
+		utils.InternalServerError(c, "Failed to fetch hints")
 		return
 	}
 
@@ -311,7 +291,7 @@ func CheckAndActivateHints(c *gin.Context) {
 	}
 
 	debug.Log("Manual activation completed: activated %d hints out of %d total hints", activatedCount, totalHints)
-	c.JSON(http.StatusOK, gin.H{
+	utils.OKResponse(c, gin.H{
 		"message":         "All hints activation completed",
 		"activated_count": activatedCount,
 		"total_hints":     totalHints,

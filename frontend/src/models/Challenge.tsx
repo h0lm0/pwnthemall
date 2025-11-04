@@ -26,6 +26,7 @@ export interface Challenge {
   geoRadiusKm?: number | null
   points?: number
   currentPoints?: number
+  order?: number
   enableFirstBlood?: boolean
   firstBloodBonuses?: number[]
   firstBloodBadges?: string[]

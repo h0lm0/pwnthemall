@@ -54,7 +54,23 @@ export default function TeamPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!createName || !createPassword) return;
+    
+    // Client-side validation with toast messages
+    if (!createName || createName.trim() === "") {
+      toast.error(t("team_name_required") || "Team name is required", { className: "bg-red-600 text-white" });
+      return;
+    }
+    
+    if (!createPassword) {
+      toast.error(t("password_required") || "Password is required", { className: "bg-red-600 text-white" });
+      return;
+    }
+    
+    if (createPassword.length < 8) {
+      toast.error(t("password_too_short"), { className: "bg-red-600 text-white" });
+      return;
+    }
+    
     setLoading(true);
     try {
       const res = await axios.post("/api/teams", {
@@ -69,7 +85,10 @@ export default function TeamPage() {
       toast.success(t("team_created_success"));
       router.push("/");
     } catch (err: any) {
-      toast.error(err.message || t("team_creation_failed"), { className: "bg-red-600 text-white" });
+      const errorMessage = err.response?.data?.error 
+        ? t(err.response.data.error) 
+        : err.message || t("team_creation_failed");
+      toast.error(errorMessage, { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }
@@ -91,7 +110,10 @@ export default function TeamPage() {
       toast.success(t("team_joined_success"));
       router.push("/");
     } catch (err: any) {
-      toast.error(err.message || t("team_join_failed"), { className: "bg-red-600 text-white" });
+      const errorMessage = err.response?.data?.error 
+        ? t(err.response.data.error) 
+        : err.message || t("team_join_failed");
+      toast.error(errorMessage, { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }
@@ -115,7 +137,6 @@ export default function TeamPage() {
                 placeholder={t("team_name")}
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
-                required
                 maxLength={32}
               />
               <Input
@@ -123,7 +144,6 @@ export default function TeamPage() {
                 placeholder={t("password")}
                 value={createPassword}
                 onChange={(e) => setCreatePassword(e.target.value)}
-                required
                 maxLength={72}
               />
               <Button type="submit" disabled={loading} className="w-full">

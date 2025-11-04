@@ -1,0 +1,152 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: prod
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NODE_ENV=production
+      - PTA_DEBUG_ENABLED=${PTA_DEBUG_ENABLED}
+    depends_on:
+      - backend
+    networks:
+      public:
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        DOCKER_GID: ${DOCKER_GID}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable'
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC: ${MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC}
+      PTA_SEED_DATABASE: ${PTA_SEED_DATABASE}
+      PTA_PTA_SEED_CASBIN_CSV: ${PTA_PTA_SEED_CASBIN_CSV}
+      PTA_SEED_CASBIN: ${PTA_SEED_CASBIN}
+      JWT_SECRET: ${JWT_SECRET}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      PTA_DEMO: ${PTA_DEMO}
+      PTA_SITE_NAME: ${PTA_SITE_NAME}
+      PTA_REGISTRATION_ENABLED: ${PTA_REGISTRATION_ENABLED}
+      PTA_PUBLIC_IP: ${PTA_PUBLIC_IP}
+      PTA_DOCKER_HOST: ${PTA_DOCKER_HOST}
+      PTA_DOCKER_IMAGE_PREFIX: ${PTA_DOCKER_IMAGE_PREFIX}
+      PTA_DOCKER_MAXMEM_PER_INSTANCE: ${PTA_DOCKER_MAXMEM_PER_INSTANCE}
+      PTA_DOCKER_MAXCPU_PER_INSTANCE: ${PTA_DOCKER_MAXCPU_PER_INSTANCE}
+      PTA_DOCKER_INSTANCES_BY_USER: ${PTA_DOCKER_INSTANCES_BY_USER}
+      PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
+      PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS: ${PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS}
+      PTA_DEBUG_ENABLED: ${PTA_DEBUG_ENABLED}
+    volumes:
+      - ./shared/worker:/home/app/.ssh/worker
+      # - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      public:
+      private:
+
+  worker:
+    container_name: worker
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+      args:
+        DOCKER_GID: ${DOCKER_GID}
+        WORKER_PASSWORD: ${WORKER_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./shared/worker.pub:/home/docker/.ssh/authorized_keys
+    networks:
+      private:
+    healthcheck:
+      test: ["CMD", "nc", "127.0.0.1", "22"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  db:
+    container_name: db
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      private:
+
+  caddy:
+    container_name: caddy
+    hostname: pwnthemmall.local
+    build:
+      context: caddy/
+      dockerfile: Dockerfile
+      args:
+        CADDY_ENV: ${CADDY_ENV}  
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    networks:
+      public:
+    volumes:
+      - caddy_data:/data
+
+  minio:
+    image: 'minio/minio:latest'
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
+      MINIO_NOTIFY_WEBHOOK_ENABLE_DBSYNC: "on"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_DBSYNC: "http://backend:8080/webhook/minio"
+      MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC: "Bearer ${MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC}"
+    volumes:
+      - "./minio/challenges:/data/challenges"
+      - "./minio/config:/data/config"
+      - "minio:/data/minio"
+    entrypoint: '/bin/sh /data/config/entrypoint.sh'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:9001:9001"
+    networks:
+      public:
+      private:
+
+volumes:
+  postgres_data:
+  minio:
+  caddy_data:
+
+networks:
+  public:
+  private:

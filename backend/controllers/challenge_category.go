@@ -1,42 +1,36 @@
 package controllers
 
 import (
-	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/dto"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 )
 
-type ChallengeCategoryInput struct {
-	Name string `json:"name" binding:"required"`
-}
+
 
 func GetChallengeCategories(c *gin.Context) {
-	userI, exists := c.Get("user")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	user, ok := userI.(*models.User)
+	user, ok := utils.GetAuthenticatedUser(c)
 	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "user_wrong_type"})
+		utils.UnauthorizedError(c, "unauthorized")
 		return
 	}
 
-	// Check CTF timing - only allow access if CTF has started or user is admin
 	if !config.IsCTFStarted() && user.Role != "admin" {
-		c.JSON(http.StatusOK, []interface{}{}) // Return empty array instead of error
+		utils.OKResponse(c, []interface{}{})
 		return
 	}
 
 	var challengeCategories []models.ChallengeCategory
 	result := config.DB.Find(&challengeCategories)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
-	c.JSON(http.StatusOK, challengeCategories)
+	utils.OKResponse(c, challengeCategories)
 }
 
 func GetChallengeCategory(c *gin.Context) {
@@ -45,28 +39,28 @@ func GetChallengeCategory(c *gin.Context) {
 
 	result := config.DB.First(&challengeCategory, id)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge category not found"})
+		utils.NotFoundError(c, "Challenge category not found")
 		return
 	}
-	c.JSON(http.StatusOK, challengeCategory)
+	utils.OKResponse(c, challengeCategory)
 }
 
 func CreateChallengeCategory(c *gin.Context) {
-	var input ChallengeCategoryInput
+	var input dto.ChallengeCategoryInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.BadRequestError(c, err.Error())
 		return
 	}
 
-	challengeCategory := models.ChallengeCategory{
-		Name: input.Name,
-	}
+	var challengeCategory models.ChallengeCategory
+	copier.Copy(&challengeCategory, &input)
+
 	if err := config.DB.Create(&challengeCategory).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.InternalServerError(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	utils.CreatedResponse(c, gin.H{
 		"id":   challengeCategory.ID,
 		"name": challengeCategory.Name,
 	})
@@ -78,20 +72,20 @@ func UpdateChallengeCategory(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := config.DB.First(&challengeCategory, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge category not found"})
+		utils.NotFoundError(c, "Challenge category not found")
 		return
 	}
 
 	var input models.ChallengeCategory
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.BadRequestError(c, err.Error())
 		return
 	}
 
 	challengeCategory.Name = input.Name
 	config.DB.Save(&challengeCategory)
 
-	c.JSON(http.StatusOK, challengeCategory)
+	utils.OKResponse(c, challengeCategory)
 }
 
 func DeleteChallengeCategory(c *gin.Context) {
@@ -99,10 +93,49 @@ func DeleteChallengeCategory(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := config.DB.First(&challengeCategory, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge category not found"})
+		utils.NotFoundError(c, "Challenge category not found")
 		return
 	}
 
 	config.DB.Delete(&challengeCategory)
-	c.JSON(http.StatusOK, gin.H{"message": "Challenge category deleted"})
+	utils.OKResponse(c, gin.H{"message": "Challenge category deleted"})
+}
+
+
+
+func ReorderChallenges(c *gin.Context) {
+	categoryId := c.Param("id")
+
+	var category models.ChallengeCategory
+	if err := config.DB.First(&category, categoryId).Error; err != nil {
+		utils.NotFoundError(c, "Challenge category not found")
+		return
+	}
+
+	var req dto.ReorderChallengesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequestError(c, err.Error())
+		return
+	}
+
+	for index, challengeId := range req.ChallengeIDs {
+		var challenge models.Challenge
+		if err := config.DB.First(&challenge, challengeId).Error; err != nil {
+			continue 
+		}
+
+	
+		if challenge.ChallengeCategoryID != category.ID {
+			utils.BadRequestError(c, "Challenge does not belong to this category")
+			return
+		}
+
+		challenge.Order = index
+		if err := config.DB.Save(&challenge).Error; err != nil {
+			utils.InternalServerError(c, "Failed to update challenge order")
+			return
+		}
+	}
+
+	utils.OKResponse(c, gin.H{"message": "Challenges reordered successfully"})
 }
