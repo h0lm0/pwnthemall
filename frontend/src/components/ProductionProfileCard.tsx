@@ -1,8 +1,7 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import axios from "@/lib/axios";
 import { AxiosResponse } from "axios";
-import { User } from "@/models/User";
-import { Team } from "@/models/Team";
+import { User, Team } from "@/models";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

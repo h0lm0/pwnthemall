@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Challenge } from "@/models/Challenge"
+import { Challenge, ChallengeCategory, ChallengeDifficulty } from "@/models"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,8 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { FirstBloodManager } from "./FirstBloodManager"
-import { ChallengeCategory } from "@/models/ChallengeCategory"
-import { ChallengeDifficulty } from "@/models/ChallengeDifficulty"
 
 interface ChallengeAdminFormProps {
   challenge: Challenge

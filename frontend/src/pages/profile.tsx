@@ -1,24 +1,11 @@
-import { useEffect } from "react";
-import { useRouter } from "next/router";
-import { useAuth } from "@/context/AuthContext";
+import { useProtectedRoute } from "@/hooks/use-protected-route";
 import ProductionProfileCard from "../components/ProductionProfileCard";
 import { Loader } from "lucide-react";
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const { loggedIn, checkAuth, authChecked } = useAuth();
+  const { loading, loggedIn } = useProtectedRoute();
 
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
-  useEffect(() => {
-    if (authChecked && !loggedIn) {
-      router.replace("/login");
-    }
-  }, [authChecked, loggedIn, router]);
-
-  if (!authChecked) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader className="animate-spin text-primary" size={32} />
@@ -26,9 +13,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (!loggedIn) {
-    return null;
-  }
+  if (!loggedIn) return null;
 
   return <ProductionProfileCard />;
 }
