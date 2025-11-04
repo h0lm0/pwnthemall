@@ -1,9 +1,10 @@
 package controllers
 
 import (
-	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/dto"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -13,21 +14,16 @@ import (
 
 // Add this struct for input validation
 
-type UserInput struct {
-	Username string `json:"username" binding:"required,max=32"`
-	Email    string `json:"email" binding:"required,email,max=254"`
-	Password string `json:"password,omitempty" binding:"omitempty,min=8,max=72"`
-	Role     string `json:"role"`
-}
+
 
 func GetUsers(c *gin.Context) {
 	var users []models.User
 	result := config.DB.Preload("Team").Find(&users)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
-	c.JSON(http.StatusOK, users)
+	utils.OKResponse(c, users)
 }
 
 func GetUser(c *gin.Context) {
@@ -36,42 +32,39 @@ func GetUser(c *gin.Context) {
 
 	result := config.DB.First(&user, id)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		utils.NotFoundError(c, "User not found")
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	utils.OKResponse(c, user)
 }
 
 func CreateUser(c *gin.Context) {
-	var input UserInput
+	var input dto.UserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username (max 32), email (max 254), password (8-72) invalid: " + err.Error()})
+		utils.BadRequestError(c, "Username (max 32), email (max 254), password (8-72) invalid: "+err.Error())
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		utils.InternalServerError(c, "Internal server error")
 		return
 	}
 
-	user := models.User{
-		Username: input.Username,
-		Email:    input.Email,
-		Password: string(hashedPassword),
-		Role:     input.Role,
-	}
+	var user models.User
+	copier.Copy(&user, &input)
+	user.Password = string(hashedPassword)
 	if user.Role == "" {
 		user.Role = "member"
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.InternalServerError(c, err.Error())
 		return
 	}
 
 	// Ne retourne jamais le mot de passe dans la réponse
-	c.JSON(http.StatusCreated, gin.H{
+	utils.CreatedResponse(c, gin.H{
 		"id":       user.ID,
 		"username": user.Username,
 		"email":    user.Email,
@@ -83,13 +76,13 @@ func UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := config.DB.First(&user, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		utils.NotFoundError(c, "User not found")
 		return
 	}
 
-	var input UserInput
+	var input dto.UserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username (max 32), email (max 254) or password invalid: " + err.Error()})
+		utils.BadRequestError(c, "Username (max 32), email (max 254) or password invalid: "+err.Error())
 		return
 	}
 
@@ -100,14 +93,14 @@ func UpdateUser(c *gin.Context) {
 	if strings.TrimSpace(input.Password) != "" {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			utils.InternalServerError(c, "Internal server error")
 			return
 		}
 		user.Password = string(hashedPassword)
 	}
 	config.DB.Save(&user)
 
-	c.JSON(http.StatusOK, user)
+	utils.OKResponse(c, user)
 }
 
 func DeleteUser(c *gin.Context) {
@@ -115,25 +108,25 @@ func DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := config.DB.First(&user, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		utils.NotFoundError(c, "User not found")
 		return
 	}
 
 	config.DB.Delete(&user)
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
+	utils.OKResponse(c, gin.H{"message": "User deleted"})
 }
 
 // GetCurrentUser returns the currently authenticated user based on the session
 func GetCurrentUser(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		utils.UnauthorizedError(c, "unauthorized")
 		return
 	}
 
 	var user models.User
 	if err := config.DB.Preload("Team.Creator").Preload("Team").First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		utils.NotFoundError(c, "User not found")
 		return
 	}
 
@@ -200,7 +193,7 @@ func GetCurrentUser(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, response)
+	utils.OKResponse(c, response)
 }
 
 func BanOrUnbanUser(c *gin.Context) {
@@ -208,21 +201,21 @@ func BanOrUnbanUser(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := config.DB.First(&user, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		utils.NotFoundError(c, "user not found")
 		return
 	}
 
 	user.Banned = !user.Banned
 	config.DB.Save(&user)
 
-	c.JSON(http.StatusOK, gin.H{"banned": user.Banned})
+	utils.OKResponse(c, gin.H{"banned": user.Banned})
 }
 
 // GetUserByIP searches for users by IP address (admin only)
 func GetUserByIP(c *gin.Context) {
 	ip := c.Query("ip")
 	if ip == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "IP address is required"})
+		utils.BadRequestError(c, "IP address is required")
 		return
 	}
 
@@ -232,7 +225,7 @@ func GetUserByIP(c *gin.Context) {
 	result := config.DB.Preload("Team").Where("ip_addresses LIKE ?", "%\""+ip+"\"%").Find(&users)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search users by IP"})
+		utils.InternalServerError(c, "Failed to search users by IP")
 		return
 	}
 
@@ -247,5 +240,5 @@ func GetUserByIP(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, filteredUsers)
+	utils.OKResponse(c, filteredUsers)
 }

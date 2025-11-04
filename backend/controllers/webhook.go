@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"log"
-	"net/http"
 	"strings"
 
 	"pwnthemall/utils"
@@ -14,7 +13,7 @@ import (
 func MinioWebhook(c *gin.Context) {
 	var event map[string]interface{}
 	if err := c.BindJSON(&event); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON payload"})
+		utils.BadRequestError(c, "invalid JSON payload")
 		return
 	}
 
@@ -31,5 +30,5 @@ func MinioWebhook(c *gin.Context) {
 		log.Printf("Key not found or not a string")
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "challenge sync started"})
+	utils.OKResponse(c, gin.H{"status": "challenge sync started"})
 }
