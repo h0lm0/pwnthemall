@@ -81,3 +81,13 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       ```yaml
       name: "Demo 04 (Compose - WIP)"
       ```
+
+## Challenge Synchronization
+
+Challenge synchronization is handled via the `pta-cli.sh` script. Once your YAML files have been created or modified, you can synchronize the challenges to the MinIO storage using the following command:
+
+```bash
+bash pta-cli.sh minio sync challenges
+```
+
+![sync-vhs](../assets/minio-sync.gif)

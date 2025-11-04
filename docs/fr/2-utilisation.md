@@ -82,3 +82,13 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       ```yaml
       name: "Demo 04 (Compose - WIP)"
       ```
+
+## Synchronisation des challenges
+
+La synchronisation des challenges se fait via le script `pta-cli.sh`. Une fois vos YAML créés et modifiés, vous pouvez lancer la synchronisation des challeges vers le stockage MinIO avec la commande:
+
+```bash
+bash pta-cli.sh minio sync challenges
+```
+
+![sync-vhs](../assets/minio-sync.gif)
