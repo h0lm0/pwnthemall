@@ -69,7 +69,10 @@ export default function TeamPage() {
       toast.success(t("team_created_success"));
       router.push("/");
     } catch (err: any) {
-      toast.error(err.message || t("team_creation_failed"), { className: "bg-red-600 text-white" });
+      const errorMessage = err.response?.data?.error 
+        ? t(err.response.data.error) 
+        : err.message || t("team_creation_failed");
+      toast.error(errorMessage, { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }
@@ -91,7 +94,10 @@ export default function TeamPage() {
       toast.success(t("team_joined_success"));
       router.push("/");
     } catch (err: any) {
-      toast.error(err.message || t("team_join_failed"), { className: "bg-red-600 text-white" });
+      const errorMessage = err.response?.data?.error 
+        ? t(err.response.data.error) 
+        : err.message || t("team_join_failed");
+      toast.error(errorMessage, { className: "bg-red-600 text-white" });
     } finally {
       setLoading(false);
     }

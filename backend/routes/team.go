@@ -14,7 +14,7 @@ func RegisterTeamRoutes(router *gin.Engine) {
 		teams.GET("/:id", middleware.CheckPolicy("/teams/:id", "read"), controllers.GetTeam)
 		teams.GET("/leaderboard", middleware.CheckPolicy("/teams", "read"), controllers.GetLeaderboard)
 		teams.POST("", middleware.CheckPolicy("/teams", "write"), controllers.CreateTeam)
-		teams.POST("/join", middleware.CheckPolicy("/teams", "write"), controllers.JoinTeam)
+		teams.POST("/join", middleware.CheckPolicy("/teams", "write"), middleware.RateLimitJoinTeam(), controllers.JoinTeam)
 		teams.POST("/leave", middleware.CheckPolicy("/teams", "write"), controllers.LeaveTeam)
 		teams.POST("/transfer-owner", middleware.CheckPolicy("/teams", "write"), controllers.TransferTeamOwnership)
 		teams.POST("/disband", middleware.CheckPolicy("/teams", "write"), controllers.DisbandTeam)
