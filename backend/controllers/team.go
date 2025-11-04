@@ -100,6 +100,16 @@ func CreateTeam(c *gin.Context) {
 		return
 	}
 
+	// dupe check
+	var existingTeam models.Team
+	if err := config.DB.Where("name = ?", input.Name).First(&existingTeam).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "team_name_already_exists"})
+		return
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database_error"})
+		return
+	}
+
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -125,7 +135,7 @@ func CreateTeam(c *gin.Context) {
 		CreatorID: userID.(uint),
 	}
 	if err := config.DB.Create(&team).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate key") && strings.Contains(err.Error(), "idx_teams_name_deleted") {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "idx_teams_name_deleted") || strings.Contains(err.Error(), "unique constraint") {
 			c.JSON(http.StatusConflict, gin.H{"error": "team_name_already_exists"})
 			return
 		}
