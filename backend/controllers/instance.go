@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/dto"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -14,7 +14,7 @@ func GetInstances(c *gin.Context) {
 	var instances []models.Instance
 	result := config.DB.Preload("User").Preload("Team").Preload("Challenge").Find(&instances)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
 
@@ -25,7 +25,7 @@ func GetInstances(c *gin.Context) {
 		instanceDTOs = append(instanceDTOs, instanceDTO)
 	}
 
-	c.JSON(http.StatusOK, instanceDTOs)
+	utils.OKResponse(c, instanceDTOs)
 }
 
 func GetInstance(c *gin.Context) {
@@ -33,12 +33,12 @@ func GetInstance(c *gin.Context) {
 	id := c.Param("id")
 	result := config.DB.Preload("User").Preload("Team").Preload("Challenge").First(&instance, id)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Instance not found"})
+		utils.NotFoundError(c, "Instance not found")
 		return
 	}
 
 	var instanceDTO dto.InstanceDTO
 	copier.Copy(&instanceDTO, &instance)
 
-	c.JSON(http.StatusOK, instanceDTO)
+	utils.OKResponse(c, instanceDTO)
 }

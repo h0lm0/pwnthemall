@@ -3,33 +3,15 @@ package controllers
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/dto"
 	"pwnthemall/models"
 	"pwnthemall/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 )
-
-// NotificationInput represents the input for creating notifications
-type NotificationInput struct {
-	Title   string `json:"title" binding:"required,max=255"`
-	Message string `json:"message" binding:"required"`
-	Type    string `json:"type" binding:"required,oneof=info warning error"`
-	UserID  *uint  `json:"userId,omitempty"` // null for global notifications
-	TeamID  *uint  `json:"teamId,omitempty"` // null for global notifications
-}
-
-// NotificationResponse represents the notification response structure
-type NotificationResponse struct {
-	ID        uint       `json:"id"`
-	Title     string     `json:"title"`
-	Message   string     `json:"message"`
-	Type      string     `json:"type"`
-	ReadAt    *time.Time `json:"readAt,omitempty"`
-	CreatedAt time.Time  `json:"createdAt"`
-}
 
 // WebSocketHub is a global variable to manage WebSocket connections
 var WebSocketHub *utils.Hub
@@ -42,9 +24,9 @@ func InitWebSocketHub() {
 
 // SendNotification sends a notification to users
 func SendNotification(c *gin.Context) {
-	var input NotificationInput
+	var input dto.NotificationInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		utils.BadRequestError(c, "Invalid input: "+err.Error())
 		return
 	}
 
@@ -52,31 +34,22 @@ func SendNotification(c *gin.Context) {
 	senderID := c.GetUint("user_id")
 
 	// Create notification in database
-	notification := models.Notification{
-		Title:   input.Title,
-		Message: input.Message,
-		Type:    input.Type,
-		UserID:  input.UserID,
-		TeamID:  input.TeamID,
-	}
+	var notification models.Notification
+	copier.Copy(&notification, &input)
 
 	if err := config.DB.Create(&notification).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create notification: " + err.Error()})
+		utils.InternalServerError(c, "Failed to create notification: "+err.Error())
 		return
 	}
 
 	// Prepare notification message for WebSocket
-	notificationMsg := NotificationResponse{
-		ID:        notification.ID,
-		Title:     notification.Title,
-		Message:   notification.Message,
-		Type:      notification.Type,
-		CreatedAt: notification.CreatedAt,
-	}
+	var notificationMsg dto.NotificationResponse
+	copier.Copy(&notificationMsg, &notification)
 
+	// Send notification via WebSocket if available
 	messageBytes, err := json.Marshal(notificationMsg)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal notification"})
+		utils.InternalServerError(c, "Failed to marshal notification")
 		return
 	}
 
@@ -92,7 +65,7 @@ func SendNotification(c *gin.Context) {
 		WebSocketHub.SendToAllExcept(messageBytes, senderID)
 	}
 
-	c.JSON(http.StatusCreated, notificationMsg)
+	utils.CreatedResponse(c, notificationMsg)
 }
 
 // GetUserNotifications retrieves notifications for the current user
@@ -104,7 +77,7 @@ func GetUserNotifications(c *gin.Context) {
 	// Get user's team ID
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		utils.InternalServerError(c, "Failed to fetch user")
 		return
 	}
 
@@ -117,32 +90,27 @@ func GetUserNotifications(c *gin.Context) {
 	result := query.Order("created_at DESC").Limit(50).Find(&notifications)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notifications"})
+		utils.InternalServerError(c, "Failed to fetch notifications")
 		return
 	}
 
 	// Convert to response format
-	var response []NotificationResponse
+	var response []dto.NotificationResponse
 	for _, notification := range notifications {
-		response = append(response, NotificationResponse{
-			ID:        notification.ID,
-			Title:     notification.Title,
-			Message:   notification.Message,
-			Type:      notification.Type,
-			ReadAt:    notification.ReadAt,
-			CreatedAt: notification.CreatedAt,
-		})
+		var notifResp dto.NotificationResponse
+		copier.Copy(&notifResp, &notification)
+		response = append(response, notifResp)
 	}
 
 	// Ensure we always return an array, even if empty
 	if response == nil {
-		response = []NotificationResponse{}
+		response = []dto.NotificationResponse{}
 	}
 
 	// Log the response for debugging
 	log.Printf("User %d notifications: %+v", userID, response)
 
-	c.JSON(http.StatusOK, response)
+	utils.OKResponse(c, response)
 }
 
 // MarkNotificationAsRead marks a notification as read
@@ -155,7 +123,7 @@ func MarkNotificationAsRead(c *gin.Context) {
 	// Get user's team ID
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		utils.InternalServerError(c, "Failed to fetch user")
 		return
 	}
 
@@ -168,7 +136,7 @@ func MarkNotificationAsRead(c *gin.Context) {
 	result := query.First(&notification)
 
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Notification not found"})
+		utils.NotFoundError(c, "Notification not found")
 		return
 	}
 
@@ -176,11 +144,11 @@ func MarkNotificationAsRead(c *gin.Context) {
 	notification.ReadAt = &now
 
 	if err := config.DB.Save(&notification).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark notification as read"})
+		utils.InternalServerError(c, "Failed to mark notification as read")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Notification marked as read"})
+	utils.OKResponse(c, gin.H{"message": "Notification marked as read"})
 }
 
 // MarkAllNotificationsAsRead marks all notifications for a user as read
@@ -190,7 +158,7 @@ func MarkAllNotificationsAsRead(c *gin.Context) {
 	// Get user's team ID
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		utils.InternalServerError(c, "Failed to fetch user")
 		return
 	}
 
@@ -205,11 +173,11 @@ func MarkAllNotificationsAsRead(c *gin.Context) {
 	result := query.Update("read_at", now)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark notifications as read"})
+		utils.InternalServerError(c, "Failed to mark notifications as read")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "All notifications marked as read"})
+	utils.OKResponse(c, gin.H{"message": "All notifications marked as read"})
 }
 
 // GetUnreadCount returns the count of unread notifications for the current user
@@ -219,7 +187,7 @@ func GetUnreadCount(c *gin.Context) {
 	// Get user's team ID
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		utils.InternalServerError(c, "Failed to fetch user")
 		return
 	}
 
@@ -234,14 +202,14 @@ func GetUnreadCount(c *gin.Context) {
 	result := query.Count(&count)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get unread count"})
+		utils.InternalServerError(c, "Failed to get unread count")
 		return
 	}
 
 	// Log the count for debugging
 	log.Printf("User %d unread count: %d", userID, count)
 
-	c.JSON(http.StatusOK, gin.H{"count": count})
+	utils.OKResponse(c, gin.H{"count": count})
 }
 
 // GetSentNotifications retrieves all sent notifications (admin only)
@@ -250,7 +218,7 @@ func GetSentNotifications(c *gin.Context) {
 	result := config.DB.Preload("User").Preload("Team").Order("created_at DESC").Limit(100).Find(&notifications)
 
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notifications"})
+		utils.InternalServerError(c, "Failed to fetch notifications")
 		return
 	}
 
@@ -258,29 +226,12 @@ func GetSentNotifications(c *gin.Context) {
 	log.Printf("Raw notifications from DB: %+v", notifications)
 
 	// Convert to response format with user info
-	type SentNotificationResponse struct {
-		ID        uint      `json:"id"`
-		Title     string    `json:"title"`
-		Message   string    `json:"message"`
-		Type      string    `json:"type"`
-		UserID    *uint     `json:"userId,omitempty"`
-		Username  *string   `json:"username,omitempty"`
-		TeamID    *uint     `json:"teamId,omitempty"`
-		TeamName  *string   `json:"teamName,omitempty"`
-		CreatedAt time.Time `json:"createdAt"`
-	}
+	
 
-	var response []SentNotificationResponse
+	var response []dto.SentNotificationResponse
 	for _, notification := range notifications {
-		resp := SentNotificationResponse{
-			ID:        notification.ID,
-			Title:     notification.Title,
-			Message:   notification.Message,
-			Type:      notification.Type,
-			UserID:    notification.UserID,
-			TeamID:    notification.TeamID,
-			CreatedAt: notification.CreatedAt,
-		}
+		var resp dto.SentNotificationResponse
+		copier.Copy(&resp, &notification)
 
 		if notification.User != nil {
 			resp.Username = &notification.User.Username
@@ -295,11 +246,11 @@ func GetSentNotifications(c *gin.Context) {
 
 	// Ensure we always return an array, even if empty
 	if response == nil {
-		response = []SentNotificationResponse{}
+		response = []dto.SentNotificationResponse{}
 	}
 
 	log.Printf("Final response: %+v", response)
-	c.JSON(http.StatusOK, response)
+	utils.OKResponse(c, response)
 }
 
 // DeleteNotification deletes a notification (admin only)
@@ -308,14 +259,14 @@ func DeleteNotification(c *gin.Context) {
 
 	var notification models.Notification
 	if err := config.DB.First(&notification, notificationID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Notification not found"})
+		utils.NotFoundError(c, "Notification not found")
 		return
 	}
 
 	if err := config.DB.Delete(&notification).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete notification"})
+		utils.InternalServerError(c, "Failed to delete notification")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Notification deleted"})
+	utils.OKResponse(c, gin.H{"message": "Notification deleted"})
 }
