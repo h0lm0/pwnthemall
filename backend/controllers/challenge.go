@@ -870,118 +870,12 @@ func StartDockerChallengeInstance(c *gin.Context) {
 	})
 }
 
-func KillChallengeInstance(c *gin.Context) {
-	challengeID := c.Param("id")
-	userID, ok := c.Get("user_id")
-	if !ok {
-		debug.Log("No user_id in context for kill request")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	debug.Log("Killing instance for challenge ID: %s by user ID: %v", challengeID, userID)
-
-	var user models.User
-	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
-		debug.Log("User not found with ID %v: %v", userID, err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
-		return
-	}
-	debug.Log("Found user: %s, TeamID: %v", user.Username, user.TeamID)
-
-	if user.Team == nil || user.TeamID == nil {
-		debug.Log("User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
-		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
-		return
-	}
-	debug.Log("User team: %s (ID: %d)", user.Team.Name, user.Team.ID)
-
-	// Find the instance for this user/team and challenge
-	var instance models.Instance
-	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
-		debug.Log("Instance not found for team %d, challenge %s: %v", user.Team.ID, challengeID, err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
-		return
-	}
-	debug.Log("Found instance: ID=%d, Container=%s, Status=%s", instance.ID, instance.Container, instance.Status)
-
-	// Check if user owns this instance or is admin
-	if instance.UserID != user.ID && user.Role != "admin" {
-		debug.Log("User %d not authorized to kill instance owned by user %d (user role: %s)", user.ID, instance.UserID, user.Role)
-		c.JSON(http.StatusForbidden, gin.H{"error": "not_authorized"})
-		return
-	}
-	debug.Log("User authorized to kill instance")
-
-	// Stop the Docker container
-	debug.Log("Stopping Docker container: %s", instance.Container)
-	if err := utils.StopDockerInstance(instance.Container); err != nil {
-		debug.Log("Error stopping Docker instance: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_stop_instance"})
-		return
-	}
-	debug.Log("Docker container stopped successfully: %s", instance.Container)
-
-	// Update instance status
-	debug.Log("Updating instance status to 'stopped'")
-	instance.Status = "stopped"
-	if err := config.DB.Save(&instance).Error; err != nil {
-		debug.Log("Error updating instance status: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_update_instance"})
-		return
-	}
-	debug.Log("Instance status updated successfully")
-
-	// Record cooldown immediately before kill to prevent rapid restarts
-	if instance.TeamID != 0 {
-		now := time.Now().UTC()
-		var cd models.InstanceCooldown
-		if err := config.DB.Where("team_id = ? AND challenge_id = ?", instance.TeamID, instance.ChallengeID).First(&cd).Error; err == nil {
-			cd.LastStoppedAt = now
-			_ = config.DB.Save(&cd).Error
-		} else {
-			_ = config.DB.Create(&models.InstanceCooldown{TeamID: instance.TeamID, ChallengeID: instance.ChallengeID, LastStoppedAt: now}).Error
-		}
-	}
-
-	// Broadcast instance stopped event to team (except the actor)
-	if WebSocketHub != nil {
-		type InstanceEvent struct {
-			Event       string    `json:"event"`
-			TeamID      uint      `json:"teamId"`
-			UserID      uint      `json:"userId"`
-			Username    string    `json:"username"`
-			ChallengeID uint      `json:"challengeId"`
-			Status      string    `json:"status"`
-			UpdatedAt   time.Time `json:"updatedAt"`
-		}
-		event := InstanceEvent{
-			Event:       "instance_update",
-			TeamID:      user.Team.ID,
-			UserID:      user.ID,
-			Username:    user.Username,
-			ChallengeID: instance.ChallengeID,
-			Status:      "stopped",
-			UpdatedAt:   time.Now().UTC(),
-		}
-		if payload, err := json.Marshal(event); err == nil {
-			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "instance_stopped",
-		"message": "Instance stopped successfully",
-	})
-	debug.Log("Kill instance request completed successfully for challenge %s", challengeID)
-}
-
 func StartComposeChallengeInstance(c *gin.Context) {
 	id := c.Param("id")
 	debug.Log("Starting instance for compose challenge ID: %s", id)
 
 	var challenge models.Challenge
 	result := config.DB.Preload("ChallengeType").First(&challenge, id)
-
 	if result.Error != nil {
 		debug.Log("Challenge not found with ID %s: %v", id, result.Error)
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
@@ -997,25 +891,21 @@ func StartComposeChallengeInstance(c *gin.Context) {
 	var dockerConfig models.DockerConfig
 	if err := config.DB.First(&dockerConfig).Error; err != nil {
 		debug.Log("Docker config not found: %v", err)
-		debug.Log("This might be due to missing environment variables or database seeding issues")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_config_not_found"})
 		return
 	}
 
 	var user models.User
 	if err := config.DB.Preload("Team").First(&user, userID).Error; err != nil {
-		debug.Log("User not found with ID %v: %v", userID, err)
+		debug.Log("User not found: %v", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
 		return
 	}
-
 	if user.Team == nil || user.TeamID == nil {
-		debug.Log("User has no team: Team=%v, TeamID=%v", user.Team, user.TeamID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "team_required"})
 		return
 	}
 
-	// Cooldown enforcement: prevent immediate restart after a stop by any team member
 	if dockerConfig.InstanceCooldownSeconds > 0 {
 		var cd models.InstanceCooldown
 		if err := config.DB.Where("team_id = ? AND challenge_id = ?", *user.TeamID, challenge.ID).First(&cd).Error; err == nil {
@@ -1031,61 +921,109 @@ func StartComposeChallengeInstance(c *gin.Context) {
 		}
 	}
 
-	var countExist int64
-	config.DB.Model(&models.Instance{}).
-		Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).
-		Count(&countExist)
-
-	if int(countExist) >= 1 {
+	var countExist, countUser, countTeam int64
+	config.DB.Model(&models.Instance{}).Where("team_id = ? AND challenge_id = ?", user.Team.ID, challenge.ID).Count(&countExist)
+	config.DB.Model(&models.Instance{}).Where("user_id = ?", user.ID).Count(&countUser)
+	config.DB.Model(&models.Instance{}).Where("team_id = ?", user.Team.ID).Count(&countTeam)
+	if countExist > 0 {
 		c.JSON(http.StatusForbidden, gin.H{"error": "instance_already_running"})
 		return
 	}
-
-	var countUser int64
-	config.DB.Model(&models.Instance{}).
-		Where("user_id = ?", user.ID).
-		Count(&countUser)
-
 	if int(countUser) >= dockerConfig.InstancesByUser {
 		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_user_reached"})
 		return
 	}
-
-	var countTeam int64
-	config.DB.Model(&models.Instance{}).
-		Where("team_id = ?", user.Team.ID).
-		Count(&countTeam)
 	if int(countTeam) >= dockerConfig.InstancesByTeam {
 		c.JSON(http.StatusForbidden, gin.H{"error": "max_instances_by_team_reached"})
 		return
 	}
 
-	// Ensure Docker connection is available before starting instance
 	if err := utils.EnsureDockerClientConnected(); err != nil {
-		debug.Log("Docker connection failed when starting instance for challenge %s: %v", challenge.Slug, err)
+		debug.Log("Docker connection failed: %v", err)
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error":   "docker_unavailable",
-			"message": "Docker service is currently unavailable. Please try again later or contact an administrator.",
+			"message": "Docker service unavailable.",
 		})
 		return
 	}
-	ctx := context.TODO()
+
 	compose, err := utils.GetComposeFile(challenge.Slug)
 	if err != nil {
-		debug.Log(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-	}
-	project := utils.CreateComposeProject(ctx, challenge.Slug, compose)
-	if err := utils.StartComposeInstance(ctx, project); err != nil {
-		debug.Log("StartComposeInstance failed for challenge %s: %v", challenge.Slug, err)
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"error":   "start_compose_failed",
-			"message": "Docker service is currently unavailable. Please try again later or contact an administrator.",
-		})
+		debug.Log("GetComposeFile failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	project, err := utils.CreateComposeProject(challenge.Slug, int(*user.TeamID), int(user.ID), compose)
+	if err != nil {
+		debug.Log("CreateComposeProject failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "create_compose_failed"})
+		return
+	}
+
+	ports, err := utils.RandomizeServicePorts(project)
+	if err != nil {
+		debug.Log("RandomizeServicePorts failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "randomize_ports_failed"})
+		return
+	}
+
+	if err := utils.StartComposeInstance(project, int(*user.TeamID)); err != nil {
+		debug.Log("StartComposeInstance failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "start_compose_failed"})
+		return
+	}
+
+	expiresAt := time.Now().Add(time.Duration(dockerConfig.InstanceTimeout) * time.Minute)
+	if dockerConfig.InstanceTimeout <= 0 {
+		expiresAt = time.Now().Add(24 * time.Hour)
+	}
+
+	ports64 := make(pq.Int64Array, len(ports))
+	for i, p := range ports {
+		ports64[i] = int64(p)
+	}
+
+	instance := models.Instance{
+		UserID:      user.ID,
+		TeamID:      *user.TeamID,
+		ChallengeID: challenge.ID,
+		Container:   project.Name,
+		Ports:       ports64,
+		Status:      "running",
+		CreatedAt:   time.Now(),
+		ExpiresAt:   expiresAt,
+	}
+
+	if err := config.DB.Create(&instance).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "instance_create_failed"})
+		return
+	}
+
+	if WebSocketHub != nil {
+		event := map[string]interface{}{
+			"event":       "instance_update",
+			"teamId":      user.Team.ID,
+			"userId":      user.ID,
+			"username":    user.Username,
+			"challengeId": challenge.ID,
+			"status":      "running",
+			"createdAt":   instance.CreatedAt,
+			"expiresAt":   instance.ExpiresAt,
+			"container":   instance.Container,
+			"ports":       ports,
+		}
+		if payload, err := json.Marshal(event); err == nil {
+			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":     "compose_instance_started",
+		"project":    project.Name,
+		"expires_at": expiresAt,
+		"ports":      ports,
+	})
 }
 
 func GetInstanceStatus(c *gin.Context) {
@@ -1204,7 +1142,6 @@ func StopChallengeInstance(c *gin.Context) {
 	}
 
 	var instance models.Instance
-	// Scope by team to be consistent with start and kill handlers
 	query := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, func() uint {
 		if user.TeamID != nil {
 			return *user.TeamID
@@ -1221,7 +1158,6 @@ func StopChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	// Record cooldown immediately to prevent race conditions with immediate restarts
 	if instance.TeamID != 0 {
 		now := time.Now().UTC()
 		var cd models.InstanceCooldown
@@ -1233,21 +1169,33 @@ func StopChallengeInstance(c *gin.Context) {
 		}
 	}
 
+	var challenge models.Challenge
+	if err := config.DB.Preload("ChallengeType").First(&challenge, challengeID).Error; err != nil {
+		debug.Log("Challenge not found with ID %s: %v", challengeID, err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
+		return
+	}
+
 	go func() {
-		if err := utils.StopDockerInstance(instance.Container); err != nil {
-			debug.Log("Failed to stop Docker instance: %v", err)
+		switch challenge.ChallengeType.Name {
+		case "docker":
+			if err := utils.StopDockerInstance(instance.Container); err != nil {
+				debug.Log("Failed to stop Docker instance: %v", err)
+			}
+		case "compose":
+			if err := utils.StopComposeInstance(instance.Container); err != nil {
+				debug.Log("Failed to stop Compose instance: %v", err)
+			}
+		default:
+			debug.Log("Unknown challenge type: %s", challenge.ChallengeType.Name)
 		}
 
 		if err := config.DB.Delete(&instance).Error; err != nil {
 			debug.Log("Failed to delete instance from database: %v", err)
 		}
-
-		// Cooldown already recorded synchronously above
 	}()
 
-	// Broadcast instance stopped event to team (except the actor)
 	if WebSocketHub != nil {
-		// Retrieve basic user for username if available
 		var user models.User
 		if err := config.DB.Select("id, username, team_id").First(&user, userID).Error; err == nil && user.TeamID != nil {
 			type InstanceEvent struct {
