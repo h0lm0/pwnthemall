@@ -10,3 +10,7 @@ author: "h0lm0"
 hidden: false
 flags: ["PwnThatDemo"]
 points: 123
+
+# a faire:
+# ports: [5001]
+# connection_info: ["http://$ip:5001"] 
