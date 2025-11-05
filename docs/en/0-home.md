@@ -21,9 +21,11 @@ To empower educators, students, and cybersecurity enthusiasts with a platform th
 
 ---
 
-## 🤝 Get Involved
+## 🤝 Get involved
 
 pwnthemall is community-driven.
 Contribute ideas, report issues, or join development — everyone’s welcome!
 
 Explore the project on GitHub: [github.com/h0lm0/pwnthemall](https://github.com/h0lm0/pwnthemall)
+
+If you have a question, a bug or anything else about the project, you can join the official [**Discord server**](https://discord.gg/EsW8r6EXDf).

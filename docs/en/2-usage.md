@@ -2,7 +2,7 @@
 
 This page explains how to use pwnthemall, starting with creating challenges.
 
-## Creating Challenges
+## Creating challenges
 
 All challenges must be placed in the following folder:
 
@@ -14,7 +14,7 @@ Inside `[challenge_name]`, there **must** be a file called `chall.yml`. This fil
 
 Examples of YAML files can be found in [docs/challenges/](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges)
 
-### Types of Challenges
+### Types of challenges
 
 1. **Standard**  
    - A flag to find based on a description.  
@@ -82,7 +82,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       name: "Demo 04 (Compose - WIP)"
       ```
 
-## Challenge Synchronization
+## Challenge synchronization
 
 Challenge synchronization is handled via the `pta-cli.sh` script. Once your YAML files have been created or modified, you can synchronize the challenges to the MinIO storage using the following command:
 
