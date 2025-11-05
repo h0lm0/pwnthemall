@@ -1,4 +1,4 @@
-FROM golang:1.23 AS go_builder
+FROM golang:1.24.9-alpine AS go_builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o pwnthemall
 
 #region Dev stage
-FROM golang:1.23-alpine AS dev
+FROM golang:1.24.9-alpine AS dev
 
 WORKDIR /app
 
@@ -38,7 +38,7 @@ CMD ["sh", "/entrypoint.sh"]
 #endregion
 
 #region Prod stage
-FROM alpine:latest AS prod
+FROM alpine:3.22 AS prod
 
 ARG DOCKER_GID
 ENV DOCKER_GID=${DOCKER_GID}

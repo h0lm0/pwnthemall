@@ -1,28 +1,25 @@
 package controllers
 
 import (
-	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/dto"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 )
 
-type ConfigInput struct {
-	Key         string `json:"key" binding:"required"`
-	Value       string `json:"value" binding:"required"`
-	Public      bool   `json:"public"`
-	SyncWithEnv bool   `json:"syncWithEnv"`
-}
+
 
 func GetConfigs(c *gin.Context) {
 	var configs []models.Config
 	result := config.DB.Find(&configs)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
-	c.JSON(http.StatusOK, configs)
+	utils.OKResponse(c, configs)
 }
 
 func GetConfig(c *gin.Context) {
@@ -31,28 +28,31 @@ func GetConfig(c *gin.Context) {
 
 	result := config.DB.Where("key = ?", key).First(&cfg)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Configuration not found"})
+		utils.NotFoundError(c, "Configuration not found")
 		return
 	}
-	c.JSON(http.StatusOK, cfg)
+	utils.OKResponse(c, cfg)
 }
 
 func CreateConfig(c *gin.Context) {
-	var input ConfigInput
+	var input dto.ConfigInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		utils.BadRequestError(c, "Invalid input: "+err.Error())
 		return
 	}
 
-	cfg := models.Config{
-		Key:         input.Key,
-		Value:       input.Value,
-		Public:      input.Public,
-		SyncWithEnv: input.SyncWithEnv,
+	var cfg models.Config
+	copier.Copy(&cfg, &input)
+	// Handle pointer fields manually
+	if input.Public != nil {
+		cfg.Public = *input.Public
+	}
+	if input.SyncWithEnv != nil {
+		cfg.SyncWithEnv = *input.SyncWithEnv
 	}
 
 	if err := config.DB.Create(&cfg).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.InternalServerError(c, err.Error())
 		return
 	}
 
@@ -61,13 +61,13 @@ func CreateConfig(c *gin.Context) {
 		config.SynchronizeEnvWithDb()
 	}
 
-	c.JSON(http.StatusCreated, cfg)
+	utils.CreatedResponse(c, cfg)
 }
 
 func UpdateConfig(c *gin.Context) {
-	var input ConfigInput
+	var input dto.ConfigInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input: " + err.Error()})
+		utils.BadRequestError(c, "Invalid input: "+err.Error())
 		return
 	}
 
@@ -76,16 +76,20 @@ func UpdateConfig(c *gin.Context) {
 
 	result := config.DB.Where("key = ?", key).First(&cfg)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Configuration not found"})
+		utils.NotFoundError(c, "Configuration not found")
 		return
 	}
 
 	cfg.Value = input.Value
-	cfg.Public = input.Public
-	cfg.SyncWithEnv = input.SyncWithEnv
+	if input.Public != nil {
+		cfg.Public = *input.Public
+	}
+	if input.SyncWithEnv != nil {
+		cfg.SyncWithEnv = *input.SyncWithEnv
+	}
 
 	if err := config.DB.Save(&cfg).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.InternalServerError(c, err.Error())
 		return
 	}
 
@@ -94,7 +98,7 @@ func UpdateConfig(c *gin.Context) {
 		config.SynchronizeEnvWithDb()
 	}
 
-	c.JSON(http.StatusOK, cfg)
+	utils.OKResponse(c, cfg)
 }
 
 func DeleteConfig(c *gin.Context) {
@@ -103,12 +107,12 @@ func DeleteConfig(c *gin.Context) {
 
 	result := config.DB.Where("key = ?", key).First(&cfg)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Configuration not found"})
+		utils.NotFoundError(c, "Configuration not found")
 		return
 	}
 
 	if err := config.DB.Delete(&cfg).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.InternalServerError(c, err.Error())
 		return
 	}
 
@@ -117,13 +121,13 @@ func DeleteConfig(c *gin.Context) {
 		config.SynchronizeEnvWithDb()
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Configuration deleted successfully"})
+	utils.OKResponse(c, gin.H{"message": "Configuration deleted successfully"})
 }
 
 // GetCTFStatus returns the current CTF timing status
 func GetCTFStatus(c *gin.Context) {
 	status := config.GetCTFStatus()
-	c.JSON(http.StatusOK, gin.H{
+	utils.OKResponse(c, gin.H{
 		"status":     string(status),
 		"is_active":  config.IsCTFActive(),
 		"is_started": config.IsCTFStarted(),
@@ -135,8 +139,8 @@ func GetPublicConfigs(c *gin.Context) {
 	var configs []models.Config
 	result := config.DB.Where("public = ?", true).Find(&configs)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
-	c.JSON(http.StatusOK, configs)
+	utils.OKResponse(c, configs)
 }

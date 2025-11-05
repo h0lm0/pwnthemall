@@ -1,31 +1,24 @@
 package controllers
 
 import (
-	"net/http"
 	"pwnthemall/config"
+	"pwnthemall/dto"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 )
-
-// BadgeInput for creating/updating badges
-type BadgeInput struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	Icon        string `json:"icon"`
-	Color       string `json:"color"`
-	Type        string `json:"type"`
-}
 
 // GetBadges returns all badges
 func GetBadges(c *gin.Context) {
 	var badges []models.Badge
 	result := config.DB.Find(&badges)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
-	c.JSON(http.StatusOK, badges)
+	utils.OKResponse(c, badges)
 }
 
 // GetBadge returns a specific badge by ID
@@ -34,10 +27,10 @@ func GetBadge(c *gin.Context) {
 	id := c.Param("id")
 	result := config.DB.First(&badge, id)
 	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Badge not found"})
+		utils.NotFoundError(c, "Badge not found")
 		return
 	}
-	c.JSON(http.StatusOK, badge)
+	utils.OKResponse(c, badge)
 }
 
 // GetUserBadges returns all badges for a specific user
@@ -47,35 +40,30 @@ func GetUserBadges(c *gin.Context) {
 	var userBadges []models.UserBadge
 	result := config.DB.Preload("Badge").Preload("Challenge").Where("user_id = ?", userID).Find(&userBadges)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, userBadges)
+	utils.OKResponse(c, userBadges)
 }
 
 // CreateBadge creates a new badge (admin only)
 func CreateBadge(c *gin.Context) {
-	var input BadgeInput
+	var input dto.BadgeInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.BadRequestError(c, err.Error())
 		return
 	}
 
-	badge := models.Badge{
-		Name:        input.Name,
-		Description: input.Description,
-		Icon:        input.Icon,
-		Color:       input.Color,
-		Type:        input.Type,
-	}
+	var badge models.Badge
+	copier.Copy(&badge, &input)
 
 	if err := config.DB.Create(&badge).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.InternalServerError(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusCreated, badge)
+	utils.CreatedResponse(c, badge)
 }
 
 // AwardBadge awards a badge to a user

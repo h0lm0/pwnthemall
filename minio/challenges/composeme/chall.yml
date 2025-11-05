@@ -1,0 +1,12 @@
+name: "Demo 02"
+description: |
+  Compose challenge example
+
+  Make a team and enter the flag "PwnThatDemo" to solve it !
+category: "pwn"
+difficulty: "easy"
+type: "compose"
+author: "h0lm0"
+hidden: false
+flags: ["PwnThatDemo"]
+points: 123

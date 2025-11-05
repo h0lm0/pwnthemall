@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react"
-import { useRouter } from "next/router"
 import axios from "@/lib/axios";
-import { useAuth } from "@/context/AuthContext"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 import ChallengesContent from "@/components/admin/ChallengesContent"
-import { Challenge } from "@/models/Challenge"
+import { Challenge } from "@/models"
 
 export default function ChallengesPage() {
-  const router = useRouter();
-  const { loggedIn, checkAuth, authChecked } = useAuth();
-  const [role, setRole] = useState("");
+  const { loading, isAdmin } = useAdminAuth();
   const [challenges, setChallenges] = useState<Challenge[]>([])
 
   const fetchChallenges = () => {
@@ -19,31 +16,12 @@ export default function ChallengesPage() {
   }
 
   useEffect(() => {
-    checkAuth()
-  }, [])
-
-  useEffect(() => {
-    if (authChecked && loggedIn) {
-      axios
-        .get("/api/me")
-        .then((res) => setRole(res.data.role))
-        .catch(() => setRole(""));
-    }
-  }, [authChecked, loggedIn]);
-
-  useEffect(() => {
-    if (!authChecked) return;
-    if (!loggedIn) {
-      router.replace("/login");
-    } else if (role && role !== "admin") {
-      router.replace("/pwn");
-    } else if (role === "admin") {
+    if (isAdmin) {
       fetchChallenges()
     }
-  }, [authChecked, loggedIn, role, router]);
+  }, [isAdmin]);
 
-  if (!authChecked) return null;
-  if (!loggedIn || role !== "admin") return null;
+  if (loading || !isAdmin) return null;
 
   return (
     <ChallengesContent
