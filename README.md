@@ -38,6 +38,9 @@ Check out the official documentation:
 - 🔧 [Installation Guide](https://docs.pwnthemall.com/1-installation)
 - 🕹️ [Usage Guide](https://docs.pwnthemall.com/2-usage)
 
+## 💬 Community & Support
+
+If you have a question, a bug or anything else about the project, you can join the official [**Discord server**](https://discord.gg/EsW8r6EXDf).
 
 ## 🧠 Credits & Inspiration
 

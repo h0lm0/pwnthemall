@@ -27,3 +27,5 @@ pwnthemall est un projet communautaire.
 Vous pouvez proposer des idées, signaler des problèmes ou contribuer au développement.
 
 Découvrez le projet sur GitHub : [github.com/h0lm0/pwnthemall](https://github.com/h0lm0/pwnthemall)
+
+Si vous avez une question, une demande, ou si vous voulez juste être en contact avec la communauté, vous pouvez rejoindre le [**serveur Discord officiel**](https://discord.gg/EsW8r6EXDf).
