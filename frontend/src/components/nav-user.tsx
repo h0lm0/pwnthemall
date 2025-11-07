@@ -39,6 +39,8 @@ import { useTheme } from "next-themes"
 import {
   useSidebar,
 } from "@/components/ui/sidebar"
+import axios from "@/lib/axios"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/context/AuthContext"
 import { useLanguage } from '@/context/LanguageContext'
@@ -57,8 +59,33 @@ export function NavUser({
 }) {
   const { isMobile, open } = useSidebar()
   const { setTheme } = useTheme()
-  const { loggedIn } = useAuth()
+  const { loggedIn, authChecked } = useAuth()
   const { t, language, setLanguage } = useLanguage();
+  const [role, setRole] = useState("")
+
+  useEffect(() => {
+    if (!authChecked) return
+    if (!loggedIn) {
+      setRole("")
+      return
+    }
+
+    let mounted = true
+    axios
+      .get("/api/me")
+      .then((res) => {
+        if (!mounted) return
+        setRole(res.data.role || "")
+      })
+      .catch(() => {
+        if (!mounted) return
+        setRole("")
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [authChecked, loggedIn])
 
   return (
     <div className="p-2">
