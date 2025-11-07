@@ -82,6 +82,8 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 			return err
 		}
 		metaData = composeMeta.Base
+		ports = composeMeta.Ports
+
 	case "geo":
 		var geoMeta meta.GeoChallengeMetadata
 		if err := yaml.Unmarshal(buf.Bytes(), &geoMeta); err != nil {

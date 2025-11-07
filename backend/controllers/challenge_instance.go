@@ -710,7 +710,7 @@ func GetInstanceStatus(c *gin.Context) {
 		// Get the IP address from environment or use a placeholder
 		ip := os.Getenv("PTA_PUBLIC_IP")
 		if ip == "" {
-			ip = "your-instance-ip" // Fallback placeholder
+			ip = "instance-ip" // Fallback placeholder
 		}
 
 		// Convert instance ports to int slice for easier handling
@@ -719,14 +719,11 @@ func GetInstanceStatus(c *gin.Context) {
 			instancePorts[i] = int(p)
 		}
 
-		for i, info := range challenge.ConnectionInfo {
-			// Replace $ip placeholder with actual IP
-			formattedInfo := strings.ReplaceAll(info, "$ip", ip)
+		debug.Log("Starting port mapping for challenge %v", instancePorts)
 
-			// If we have a corresponding port in the instance, replace the port number
+		for i, info := range challenge.ConnectionInfo {
+			formattedInfo := strings.ReplaceAll(info, "$ip", ip)
 			if i < len(instancePorts) {
-				// Find the original port number in the connection info and replace it
-				// This is a simple approach - for more complex cases, we might need regex
 				for j, originalPort := range challenge.Ports {
 					if j < len(instancePorts) {
 						originalPortStr := fmt.Sprintf(":%d", originalPort)

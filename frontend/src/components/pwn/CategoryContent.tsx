@@ -976,7 +976,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                               </div>
                               
                               <div className="flex gap-2">
-                                {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
+                                {(getLocalInstanceStatus(selectedChallenge.id) === 'stopped' || 
+                                 getLocalInstanceStatus(selectedChallenge.id) === 'expired') && (
                                   <Button
                                     onClick={() => handleStartInstance(selectedChallenge.id)}
                                     disabled={instanceLoading}
