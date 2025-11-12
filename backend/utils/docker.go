@@ -470,7 +470,24 @@ func StartComposeInstance(project *types.Project, teamId int) error {
 		service.Networks[networkName] = &types.ServiceNetworkConfig{}
 	}
 
-	err = srv.Up(ctx, project, api.UpOptions{})
+	// err = srv.Build(ctx, project, api.BuildOptions{
+	// 	Deps: true,
+	// })
+
+	// if err != nil {
+	// 	return fmt.Errorf("error building compose project: %w", err)
+	// }
+
+	debug.Log("Build complete for project: %s", project.Name)
+	createOptions := api.CreateOptions{
+		Build: &api.BuildOptions{
+			NoCache: true,
+			Deps:    true,
+		},
+		RemoveOrphans: true,
+	}
+
+	err = srv.Up(ctx, project, api.UpOptions{Create: createOptions, Start: api.StartOptions{}})
 	if err != nil {
 		return fmt.Errorf("error starting compose project: %w", err)
 	}

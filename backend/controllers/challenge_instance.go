@@ -723,8 +723,10 @@ func GetInstanceStatus(c *gin.Context) {
 
 		for i, info := range challenge.ConnectionInfo {
 			formattedInfo := strings.ReplaceAll(info, "$ip", ip)
+			debug.Log("len(instancePorts): %v", instancePorts)
 			if i < len(instancePorts) {
 				for j, originalPort := range challenge.Ports {
+					debug.Log("j: % i | original port %i", j, originalPort)
 					if j < len(instancePorts) {
 						originalPortStr := fmt.Sprintf(":%d", originalPort)
 						newPortStr := fmt.Sprintf(":%d", instancePorts[j])
