@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/debug"
 	"pwnthemall/dto"
@@ -22,23 +23,33 @@ import (
 func BuildChallengeImage(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
-
 	result := config.DB.Preload("ChallengeType").First(&challenge, id)
 	if result.Error != nil {
 		utils.NotFoundError(c, "challenge_not_found")
 		return
 	}
-
 	// Check if challenge is of type docker
 	if challenge.ChallengeType.Name != "docker" {
 		utils.BadRequestError(c, "challenge_not_docker_type")
 		return
 	}
-	_, err := utils.BuildDockerImage(challenge.Slug)
+
+	// Download the challenge context to a temporary directory
+	tmpDir := filepath.Join(os.TempDir(), challenge.Slug)
+	defer os.RemoveAll(tmpDir)
+
+	if err := utils.DownloadChallengeContext(challenge.Slug, tmpDir); err != nil {
+		utils.InternalServerError(c, fmt.Sprintf("Failed to download challenge context: %v", err))
+		return
+	}
+
+	// Build the Docker image using the temporary directory as the source
+	_, err := utils.BuildDockerImage(challenge.Slug, tmpDir)
 	if err != nil {
 		utils.InternalServerError(c, err.Error())
 		return
 	}
+
 	utils.OKResponse(c, gin.H{"message": fmt.Sprintf("Successfully built image for challenge %s", challenge.Slug)})
 }
 
@@ -162,10 +173,8 @@ func KillChallengeInstance(c *gin.Context) {
 func StartDockerChallengeInstance(c *gin.Context) {
 	id := c.Param("id")
 	debug.Log("Starting instance for challenge ID: %s", id)
-
 	var challenge models.Challenge
 	result := config.DB.Preload("ChallengeType").First(&challenge, id)
-
 	if result.Error != nil {
 		debug.Log("Challenge not found with ID %s: %v", id, result.Error)
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
@@ -183,9 +192,17 @@ func StartDockerChallengeInstance(c *gin.Context) {
 			})
 			return
 		}
-
 		var err error
-		imageName, err = utils.BuildDockerImage(challenge.Slug)
+		// Use the new BuildDockerImage function with sourceDir
+		// For Docker challenges, the source directory is typically the challenge's directory
+		tmpDir := filepath.Join(os.TempDir(), challenge.Slug)
+		if err := utils.DownloadChallengeContext(challenge.Slug, tmpDir); err != nil {
+			debug.Log("Failed to download challenge context: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_download_challenge"})
+			return
+		}
+		defer os.RemoveAll(tmpDir)
+		imageName, err = utils.BuildDockerImage(challenge.Slug, tmpDir)
 		if err != nil {
 			debug.Log("Docker build failed for challenge %s: %v", challenge.Slug, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_build_failed"})
@@ -303,7 +320,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 	if dockerConfig.InstanceTimeout > 0 {
 		expiresAt = time.Now().Add(time.Duration(dockerConfig.InstanceTimeout) * time.Minute)
 	} else {
-		expiresAt = time.Now().Add(24 * time.Hour) // Default 24 hours if no timeout set
+		expiresAt = time.Now().Add(24 * time.Hour)
 	}
 
 	// Convert ports to pq.Int64Array for storage
@@ -317,11 +334,12 @@ func StartDockerChallengeInstance(c *gin.Context) {
 		UserID:      user.ID,
 		TeamID:      *user.TeamID,
 		ChallengeID: challenge.ID,
-		Ports:       ports64, // Store the dynamically assigned ports
+		Ports:       ports64,
 		CreatedAt:   time.Now(),
 		ExpiresAt:   expiresAt,
 		Status:      "running",
 	}
+
 	if err := config.DB.Create(&instance).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "instance_create_failed"})
 		return
@@ -329,14 +347,12 @@ func StartDockerChallengeInstance(c *gin.Context) {
 
 	// Broadcast instance start event to the whole team (except the starter)
 	if WebSocketHub != nil {
-		// Build connection info similar to GetInstanceStatus
 		var connectionInfo []string
 		if len(challenge.ConnectionInfo) > 0 {
 			ip := os.Getenv("PTA_PUBLIC_IP")
 			if ip == "" {
 				ip = "worker-ip"
 			}
-
 			for i, info := range challenge.ConnectionInfo {
 				formattedInfo := strings.ReplaceAll(info, "$ip", ip)
 				if i < len(ports) {
@@ -379,6 +395,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 			Ports:          ports,
 			ConnectionInfo: connectionInfo,
 		}
+
 		if payload, err := json.Marshal(event); err == nil {
 			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 		}

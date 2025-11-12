@@ -1,7 +1,7 @@
-FROM docker:29.0.0-dind-alpine3.22
-# FROM alpine:3.20
+# FROM docker:29.0.0-dind-alpine3.22
+FROM alpine:3.20
 
-RUN apk add --no-cache openssh bash docker openrc shadow
+RUN apk add --no-cache openssh bash docker docker-compose openrc shadow
 
 # Set default GID for docker group (will be overridden via build/run-time env + pta-cli.sh)
 ARG DOCKER_GID

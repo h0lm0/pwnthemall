@@ -4,9 +4,7 @@ services:
     ports:
       - "8989"
   attacker:
-    build:
-      context: attacker
-      dockerfile: Dockerfile
+    build: .
     ports:
       - "22"
   batch:
