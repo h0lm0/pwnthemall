@@ -1,5 +1,9 @@
 {
   "account": {
+    "account": "Compte",
+    "account_settings": "Paramètres du compte",
+    "appearance": "Apparence",
+    "badges": "Badges",
     "danger_zone": "Zone de danger",
     "delete_account": "Supprimer le compte",
     "delete_account_confirm": "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action ne peut pas être annulée.",
@@ -195,6 +199,20 @@
     "flag_submission_no_longer_available": "La soumission de flags n'est plus disponible",
     "submit": "Valider"
   },
+  "hints": {
+    "available": "Disponible",
+    "available_hints": "Indices Disponibles",
+    "buy_for_points": "Acheter pour {cost} points",
+    "hint": "Indice",
+    "hint_locked": "Cet indice est verrouillé. Achetez-le pour révéler son contenu.",
+    "hints": "Indices",
+    "insufficient_points": "Points insuffisants ({cost} requis)",
+    "purchased": "Acheté",
+    "purchasing": "Achat en cours...",
+    "spent": "Dépensé",
+    "team_score": "Score de l'équipe",
+    "total": "Total"
+  },
   "instance": {
     "active_instances": "Instances Actives",
     "docker_instance": "Instance",
@@ -305,15 +323,21 @@
     "team_left_successfully": "Vous avez quitté l'équipe.",
     "team_name": "Nom de l'équipe",
     "team_name_or_id": "Nom ou ID de l'équipe",
-    "team_name_required": "Le nom de l'équipe est requis"
+    "team_name_required": "Le nom de l'équipe est requis",
+    "team_required": "Vous devez être dans une équipe.",
+    "team_required_to_submit": "Vous devez faire partie d'une équipe pour soumettre des flags."
   },
   "team_members": {
     "a_teammate": "un coéquipier",
+    "actions": "Actions",
     "as_creator_leave_choice": "En tant que créateur de l'équipe, vous pouvez soit dissoudre l'équipe, soit en transférer la propriété et la quitter.",
+    "creator": "Créateur",
     "kick": "Exclure",
     "member": "Membre",
     "members": "Membres",
-    "team_disband_confirm": "Are you sure you want to disband the team? This will remove all members and delete the team.",
+    "role": "Rôle",
+    "score": "Score",
+    "team_disband_confirm": "Êtes-vous sûr de vouloir dissoudre l'équipe ? Cela supprimera tous les membres et supprimera l'équipe.",
     "team_kick_failed": "Échec de l'exclusion du membre de l'équipe.",
     "team_kick_success": "Membre exclu de l'équipe !",
     "team_leave_confirm": "Êtes-vous sûr de vouloir quitter votre équipe ?"

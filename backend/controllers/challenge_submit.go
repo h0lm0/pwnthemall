@@ -43,7 +43,7 @@ func SubmitChallenge(c *gin.Context) {
 
 	// Block all users (including admins) from submitting if not in a team
 	if user.Team == nil || user.TeamID == nil {
-		utils.ForbiddenError(c, "team_required_to_submit")
+		utils.ForbiddenError(c, "team_required")
 		return
 	}
 

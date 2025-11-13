@@ -1,5 +1,9 @@
 {
   "account": {
+    "account": "Account",
+    "account_settings": "Account Settings",
+    "appearance": "Appearance",
+    "badges": "Badges",
     "danger_zone": "Danger zone",
     "delete_account": "Delete Account",
     "delete_account_confirm": "Are you sure you want to delete your account? This action cannot be undone.",
@@ -195,6 +199,20 @@
     "flag_submission_no_longer_available": "Flag submission is no longer available",
     "submit": "Submit"
   },
+  "hints": {
+    "available": "Available",
+    "available_hints": "Available Hints",
+    "buy_for_points": "Buy for {cost} points",
+    "hint": "Hint",
+    "hint_locked": "This hint is locked. Buy it to reveal its content.",
+    "hints": "Hints",
+    "insufficient_points": "Insufficient points ({cost} required)",
+    "purchased": "Purchased",
+    "purchasing": "Purchasing...",
+    "spent": "Spent",
+    "team_score": "Team Score",
+    "total": "Total"
+  },
   "instance": {
     "active_instances": "Active Instances",
     "docker_instance": "Docker Instance",
@@ -305,14 +323,19 @@
     "team_left_successfully": "You have left the team.",
     "team_name": "Team name",
     "team_name_or_id": "Team name or ID",
-    "team_name_required": "Team name is required"
+    "team_name_required": "Team name is required",
+    "team_required": "Team membership required."
   },
   "team_members": {
     "a_teammate": "a teammate",
+    "actions": "Actions",
     "as_creator_leave_choice": "As the team creator, you can either disband the team or transfer ownership and leave.",
+    "creator": "Creator",
     "kick": "Kick",
     "member": "Member",
     "members": "members",
+    "role": "Role",
+    "score": "Score",
     "team_disband_confirm": "Are you sure you want to disband the team? This will remove all members and delete the team.",
     "team_kick_failed": "Failed to kick member from the team.",
     "team_kick_success": "Member kicked from the team!",
