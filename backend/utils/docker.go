@@ -476,7 +476,7 @@ func StartComposeInstance(project *types.Project, teamId int) error {
 }
 
 func StopComposeInstance(projectName string) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	dockerCli, err := command.NewDockerCli(
 		command.WithStandardStreams(),
 		command.WithAPIClient(config.DockerClient),

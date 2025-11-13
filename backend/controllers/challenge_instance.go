@@ -615,24 +615,34 @@ func StopChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	go func() {
-		switch challenge.ChallengeType.Name {
-		case "docker":
+	switch challenge.ChallengeType.Name {
+	case "docker":
+		go func() {
 			if err := utils.StopDockerInstance(instance.Container); err != nil {
 				debug.Log("Failed to stop Docker instance: %v", err)
 			}
-		case "compose":
-			if err := utils.StopComposeInstance(instance.Container); err != nil {
-				debug.Log("Failed to stop Compose instance: %v", err)
+			if err := config.DB.Delete(&instance).Error; err != nil {
+				debug.Log("Failed to delete instance from DB: %v", err)
 			}
-		default:
-			debug.Log("Unknown challenge type: %s", challenge.ChallengeType.Name)
+		}()
+
+	case "compose":
+		if err := utils.StopComposeInstance(instance.Container); err != nil {
+			debug.Log("Failed to stop Compose instance: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "compose_stop_failed"})
+			return
+		}
+		if err := config.DB.Delete(&instance).Error; err != nil {
+			debug.Log("Failed to delete Compose instance from DB: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "db_delete_failed"})
+			return
 		}
 
-		if err := config.DB.Delete(&instance).Error; err != nil {
-			debug.Log("Failed to delete instance from database: %v", err)
-		}
-	}()
+	default:
+		debug.Log("Unknown challenge type: %s", challenge.ChallengeType.Name)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown_challenge_type"})
+		return
+	}
 
 	if WebSocketHub != nil {
 		var user models.User
@@ -662,7 +672,7 @@ func StopChallengeInstance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "instance_stopping",
+		"message":   "instance_stopped",
 		"container": instance.Container,
 	})
 }
