@@ -323,7 +323,7 @@
     "docker_build_failed": "Failed to build Docker image",
     "docker_config_not_found": "Docker configuration not found",
     "container": "Container",
-    "connection_info": "Connection Information",
+    "connection_info": "Connection information",
     "connected": "Connected",
     "disconnected": "Disconnected"
   },
@@ -504,7 +504,7 @@
 
   "misc": {
     "pwn": "pwn",
-    "will_you_pwn_it": "will you pwn it ?",
+    "will_you_pwn_them": "will you pwn them ?",
     "create_account": "Create a new account to continue",
     "download_certificate": "Download Certificate"
   }

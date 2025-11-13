@@ -503,7 +503,7 @@
 
   "misc": {
     "pwn": "pwn",
-    "will_you_pwn_it": "will you pwn it ?",
+    "will_you_pwn_them": "will you pwn them ?",
     "create_account": "Créez un nouveau compte pour continuer",
     "download_certificate": "Download Certificate"
   }
