@@ -87,7 +87,7 @@ export default function UserForm({ initialData, isEdit, onSubmit, apiError }: Us
         </Select>
         {errors.role && <span className="text-red-500 text-xs">{errors.role}</span>}
       </div>
-      <Button type="submit" className="w-full">{isEdit ? t('update_user') : t('create_user_button')}</Button>
+      <Button type="submit" className="w-full">{isEdit ? t('update_user') : t('create_user')}</Button>
     </form>
   );
 }

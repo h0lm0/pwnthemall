@@ -268,7 +268,7 @@ export default function NotificationsContent({
                 </div>
 
                 <Button type="submit" disabled={isSending} className="w-full">
-                  {isSending ? t("sending") : t("send_notification_button")}
+                  {isSending ? t("submitting") : t("send_notification")}
                 </Button>
               </form>
             </CardContent>
