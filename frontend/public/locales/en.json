@@ -179,7 +179,7 @@
   "docker": {
     "building": "Building",
     "connected": "Connected",
-    "connection_info": "Connection Information",
+    "connection_info": "Connection information",
     "container": "Container",
     "disconnected": "Disconnected"
   },
@@ -223,7 +223,8 @@
   },
   "misc": {
     "create_account": "Create a new account to continue",
-    "pwn": "pwn"
+    "pwn": "pwn",
+    "will_you_pwn_them": "Will you pwn them ?"
   },
   "notification_send": {
     "no_notifications_sent": "No notifications sent yet",
