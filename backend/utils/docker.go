@@ -103,30 +103,19 @@ func FindAvailablePorts(count int) ([]int, error) {
 	return ports, nil
 }
 
-func BuildDockerImage(slug string) (string, error) {
+func BuildDockerImage(slug string, sourceDir string) (string, error) {
 	if err := EnsureDockerClientConnected(); err != nil {
 		return "", err
 	}
-
-	tmpDir := filepath.Join(os.TempDir(), slug)
-	defer os.RemoveAll(tmpDir)
-
-	if err := DownloadChallengeContext(slug, tmpDir); err != nil {
-		return "", err
-	}
-
-	tarReader, err := TarDirectory(tmpDir)
+	tarReader, err := TarDirectory(sourceDir)
 	if err != nil {
 		return "", err
 	}
-
 	ctx := context.Background()
-
 	prefix, err := getDockerImagePrefix()
 	if err != nil {
 		return "", fmt.Errorf("could not get Docker image prefix: %w", err)
 	}
-
 	imageName := prefix + slug
 	buildOptions := build.ImageBuildOptions{
 		Tags:           []string{imageName},
@@ -134,21 +123,17 @@ func BuildDockerImage(slug string) (string, error) {
 		Remove:         true,
 		SuppressOutput: true,
 	}
-
 	buildResponse, err := config.DockerClient.ImageBuild(ctx, tarReader, buildOptions)
 	if err != nil {
 		return imageName, err
 	}
 	defer buildResponse.Body.Close()
-
 	if err := streamAndDetectBuildError(buildResponse.Body); err != nil {
 		log.Printf("Docker build failed: %v", err)
 		return imageName, err
 	}
-
 	io.Copy(os.Stdout, buildResponse.Body)
 	log.Printf("Built image %s for challenge %s", imageName, slug)
-
 	return imageName, nil
 }
 
@@ -344,30 +329,11 @@ func EnsureTeamNetworkExists(teamId int) (string, error) {
 
 func GetComposeFile(slug string) (string, error) {
 	debug.Log("GetComposeFile with slug: %s", slug)
-	tmpDir := filepath.Join(os.TempDir(), slug)
-	defer os.RemoveAll(tmpDir)
-
-	if err := DownloadChallengeContext(slug, tmpDir); err != nil {
-		return "", fmt.Errorf("failed to download challenge context: %w", err)
-	}
-	debug.Log("DownloadChallengeContext ok; tmpDir: %s", tmpDir)
-	composePath := filepath.Join(tmpDir, "docker-compose.yml")
-
-	debug.Log("composePath: %s", composePath)
-
-	if _, err := os.Stat(composePath); err != nil {
-		if os.IsNotExist(err) {
-			return "", fmt.Errorf("docker-compose.yml not found for challenge %s", slug)
-		}
+	_, content, err := prepareChallengeContext(slug)
+	if err != nil {
 		return "", err
 	}
-
-	content, err := os.ReadFile(composePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read docker-compose.yml: %w", err)
-	}
-
-	return string(content), nil
+	return content, nil
 }
 
 func RandomizeServicePorts(project *types.Project) ([]int, error) {
@@ -394,15 +360,19 @@ func RandomizeServicePorts(project *types.Project) ([]int, error) {
 
 func CreateComposeProject(slug string, teamId int, userId int, composeFile string) (*types.Project, error) {
 	ctx := context.TODO()
+	tmpDir, _, err := prepareChallengeContext(slug)
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(tmpDir)
 
 	configDetails := types.ConfigDetails{
-		WorkingDir: "/in-memory/",
+		WorkingDir: tmpDir,
 		ConfigFiles: []types.ConfigFile{
-			{Filename: "docker-compose.yaml", Content: []byte(composeFile)},
+			{Filename: "docker-compose.yml", Content: []byte(composeFile)},
 		},
 		Environment: nil,
 	}
-
 	projectName := fmt.Sprintf("%s_%d_%d", slug, teamId, userId)
 	p, err := loader.LoadWithContext(ctx, configDetails, func(options *loader.Options) {
 		options.SetProjectName(projectName, true)
@@ -411,15 +381,33 @@ func CreateComposeProject(slug string, teamId int, userId int, composeFile strin
 		return nil, fmt.Errorf("failed to load compose file: %w", err)
 	}
 
-	debug.Log("Creating Docker network for team %d", teamId)
+	for svcName, svc := range p.Services {
+		if svc.Build != nil {
+			sourceDir := tmpDir
+			if svc.Build.Context != "" {
+				sourceDir = filepath.Join(tmpDir, svc.Build.Context)
+				if _, err := os.Stat(sourceDir); os.IsNotExist(err) {
+					sourceDir = tmpDir
+				}
+			}
 
+			imageName, err := BuildDockerImage(fmt.Sprintf("%s-%s", slug, svcName), sourceDir)
+			if err != nil {
+				return nil, fmt.Errorf("failed to build image for %s: %w", svcName, err)
+			}
+			svc.Image = imageName
+			svc.Build = nil
+			p.Services[svcName] = svc
+			debug.Log("Built image %s for service %s", imageName, svcName)
+		}
+	}
+
+	debug.Log("Creating Docker network for team %d", teamId)
 	networkName, err := EnsureTeamNetworkExists(teamId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to ensure team network: %w", err)
 	}
-	debug.Log("Docker network created : %s", networkName)
-
-	// need to add IP pool/CIDR in config to restrict networks creation
+	debug.Log("Docker network created: %s", networkName)
 	p.Networks = map[string]types.NetworkConfig{
 		networkName: {
 			Name:     networkName,
@@ -456,13 +444,11 @@ func StartComposeInstance(project *types.Project, teamId int) error {
 		return err
 	}
 	debug.Log("dockerCli created")
-
 	if err := dockerCli.Initialize(flags.NewClientOptions()); err != nil {
 		return err
 	}
 	debug.Log("serverInfo: %s", dockerCli.ServerInfo().OSType)
 	srv := compose.NewComposeService(dockerCli)
-
 	for _, service := range project.Services {
 		if service.Networks == nil {
 			service.Networks = map[string]*types.ServiceNetworkConfig{}
@@ -470,16 +456,27 @@ func StartComposeInstance(project *types.Project, teamId int) error {
 		service.Networks[networkName] = &types.ServiceNetworkConfig{}
 	}
 
-	err = srv.Up(ctx, project, api.UpOptions{})
+	// debug.Log("Building compose project: %s", project.Name)
+	// if err := srv.Build(ctx, project, api.BuildOptions{Deps: true}); err != nil {
+	// 	return fmt.Errorf("error building compose project: %w", err)
+	// }
+
+	createOptions := api.CreateOptions{
+		// Build: &api.BuildOptions{
+		// 	NoCache: true,
+		// 	Deps:    true,
+		// },
+		RemoveOrphans: true,
+	}
+	err = srv.Up(ctx, project, api.UpOptions{Create: createOptions, Start: api.StartOptions{}})
 	if err != nil {
 		return fmt.Errorf("error starting compose project: %w", err)
 	}
-
 	return nil
 }
 
 func StopComposeInstance(projectName string) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	dockerCli, err := command.NewDockerCli(
 		command.WithStandardStreams(),
 		command.WithAPIClient(config.DockerClient),
@@ -559,4 +556,28 @@ func addServiceLabels(project *types.Project) {
 		z++
 		project.Services[i] = s
 	}
+}
+
+func prepareChallengeContext(slug string) (string, string, error) {
+	tmpDir, err := os.MkdirTemp("", "compose-"+slug)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	if err := DownloadChallengeContext(slug, tmpDir); err != nil {
+		os.RemoveAll(tmpDir)
+		return "", "", fmt.Errorf("failed to download challenge context: %w", err)
+	}
+	// Debug: List the contents of tmpDir
+	entries, _ := os.ReadDir(tmpDir)
+	debug.Log("Contents of %s:", tmpDir)
+	for _, e := range entries {
+		debug.Log("  %s (isDir: %v)", e.Name(), e.IsDir())
+	}
+	composePath := filepath.Join(tmpDir, "docker-compose.yml")
+	content, err := os.ReadFile(composePath)
+	if err != nil {
+		os.RemoveAll(tmpDir)
+		return "", "", fmt.Errorf("failed to read docker-compose.yml: %w", err)
+	}
+	return tmpDir, string(content), nil
 }

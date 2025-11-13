@@ -14,7 +14,7 @@
 ## 🚀 Features
 
 - 🐳 Runs with **Docker** & **Docker Compose**
-- 📦 Deploy **Dockerfile-based** challenges easily
+- 📦 Deploy **Dockerfile-based** & **Docker Compose based** challenges easily
 - 🌎 Deploy **Geoint** challenges
 - 📁 **GitOps-style** challenge management with a universal folder structure
 - 🔄 **Real-time synchronization** of challenge metadata
@@ -24,7 +24,6 @@
 
 ## 🚧 Work In Progress
 
-- Support for **Docker Compose-based challenges** *(WIP)*
 - Supporting multi workers
 - Supporting KVM workers
 

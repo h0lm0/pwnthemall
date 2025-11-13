@@ -28,10 +28,21 @@ const InstanceStatus = ({ className }: InstanceStatusProps) => {
     }
   }
 
+  const waitForStop = async (instanceId: number, maxAttempts = 10, interval = 1000) => {
+    for (let i = 0; i < maxAttempts; i++) {
+      const res = await axios.get<Instance[]>('/api/instances')
+      const stillRunning = res.data.some(inst => inst.id === instanceId)
+      if (!stillRunning) return true
+      await new Promise(r => setTimeout(r, interval))
+    }
+    return false
+  }
+
   const stopInstance = async (instanceId: number) => {
     setLoading(true)
     try {
       await axios.post(`/api/instances/${instanceId}/stop`)
+      await waitForStop(instanceId)
       fetchInstances()
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to stop instance'

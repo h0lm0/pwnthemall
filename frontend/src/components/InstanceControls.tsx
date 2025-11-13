@@ -231,18 +231,18 @@ export const InstanceControls: React.FC<InstanceControlsProps> = ({
               <Square className="w-4 h-4 mr-2" />
               {t('stop_instance') || 'Stop Instance'}
             </Button>
-            <Button
+            {/* <Button
               onClick={handleKillInstance}
               disabled={loading || instanceLoading}
               variant="destructive"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               {t('kill_instance') || 'Kill Instance'}
-            </Button>
+            </Button> */}
           </>
         )}
 
-        {instanceStatus?.has_instance && instanceStatus.status === 'stopped' && (
+        {instanceStatus?.has_instance && (instanceStatus.status === 'stopped' || instanceStatus.status == 'expired') && (
           <Button
             onClick={handleStartInstance}
             disabled={loading || instanceLoading}

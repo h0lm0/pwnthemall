@@ -75,11 +75,24 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       radius_km: 1.0
       ```
 
-4. **Compose** *(WIP – not finished yet)*  
+4. **Compose**
    - A flag to find in an environment with multiple dedicated containers.  
    - Exemple : [docs/challenges/compose.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
       ```yaml
       name: "Demo 04 (Compose - WIP)"
+      description: |
+         Compose challenge example
+
+         Enter the flag "really?ComposeChallenges!" to solve it !
+      category: "pwn"
+      difficulty: "easy"
+      type: "compose"
+      author: "h0lm0"
+      hidden: false
+      flags: ["really?ComposeChallenges!"]
+      points: 123
+      ports: [80,22]
+      connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
 
 ## Challenge synchronization
