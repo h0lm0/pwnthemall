@@ -45,8 +45,8 @@ const InstanceStatus = ({ className }: InstanceStatusProps) => {
       await waitForStop(instanceId)
       fetchInstances()
     } catch (error: any) {
-      const msg = error.response?.data?.error || 'Failed to stop instance'
-      toast.error(msg)
+      const errorMessage = error.response?.data?.error || 'Failed to stop instance'
+      toast.error(t(errorMessage) || errorMessage)
     } finally {
       setLoading(false)
     }

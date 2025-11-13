@@ -36,7 +36,7 @@ export function useChallengeOrder() {
       return true;
     } catch (error: any) {
       console.error("Failed to reorder challenges:", error);
-      toast.error(error.response?.data?.error || t('failed_to_update_challenge_order'));
+      toast.error(t(error.response?.data?.error) || t('failed_to_update_challenge_order'));
       return false;
     } finally {
       setLoading(false);

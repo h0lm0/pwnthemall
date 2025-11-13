@@ -18,7 +18,7 @@ export const useInstances = () => {
       return response.data
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to build image'
-      toast.error(errorMessage)
+      toast.error(t(errorMessage) || errorMessage)
       throw error
     } finally {
       setLoading(false)
@@ -61,7 +61,7 @@ export const useInstances = () => {
         toast.error(t('instance_cooldown_wait', { seconds: secs }) || `Please wait ${secs}s before starting a new instance`)
         setError('instance_cooldown_not_elapsed')
       } else {
-        toast.error(errorMessage || error.response?.data?.error || 'Failed to start instance')
+        toast.error(t(errorMessage || error.response?.data?.error) || 'Failed to start instance')
       setError(error.response?.data?.error || 'Failed to start instance')
       }
       
@@ -101,7 +101,7 @@ export const useInstances = () => {
       return response.data
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to kill instance'
-      toast.error(errorMessage)
+      toast.error(t(errorMessage) || errorMessage)
       throw error
     } finally {
       setLoading(false)
