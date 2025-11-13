@@ -37,7 +37,38 @@ const LanguageContext = createContext<LanguageContextProps>({
 });
 
 // Translation cache version - increment this when you update translations
-const TRANSLATION_VERSION = '1.0.9';
+const TRANSLATION_VERSION = '1.0.11';
+
+// Flatten nested object into dot notation keys
+// Supports both nested (auth.login) and flat (login) key access
+// e.g., { auth: { login: "Login" } } -> { "auth.login": "Login", "login": "Login" }
+const flattenTranslations = (obj: any, prefix = ''): Record<string, string> => {
+  const flattened: Record<string, string> = {};
+  
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const value = obj[key];
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Recursively flatten nested objects
+        Object.assign(flattened, flattenTranslations(value, newKey));
+      } else {
+        // Store the value with both the full path and just the key
+        // This allows both t('auth.login') and t('login') to work
+        flattened[newKey] = String(value);
+        
+        // Also store without prefix for backwards compatibility
+        // Only if the key without prefix doesn't already exist
+        if (prefix && !flattened[key]) {
+          flattened[key] = String(value);
+        }
+      }
+    }
+  }
+  
+  return flattened;
+};
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize language state from localStorage if available
@@ -111,11 +142,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           throw new Error(`Failed to load translations: ${res.status}`);
         }
         const data = await res.json();
-        setTranslations(data);
-        // Cache translations in localStorage with version
+        
+        // Flatten nested translations to dot notation keys
+        const flattenedData = flattenTranslations(data);
+        setTranslations(flattenedData);
+        
+        // Cache flattened translations in localStorage with version
         if (typeof window !== 'undefined') {
           const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
-          localStorage.setItem(cacheKey, JSON.stringify(data));
+          localStorage.setItem(cacheKey, JSON.stringify(flattenedData));
         }
         // Add minimum loading time to prevent flickering only on initial load
         if (isInitialLoad) {

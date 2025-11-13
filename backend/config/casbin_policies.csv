@@ -30,4 +30,5 @@ p, member, /notifications/:id/read, write
 p, member, /notifications/read-all, write
 p, member, /ws/notifications, read
 
+p, admin, /admin/submissions, read
 p, admin, /*, *
