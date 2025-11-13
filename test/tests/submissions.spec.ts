@@ -186,20 +186,21 @@ test('Add teams and submissions', async ({ page }) => {
   }
   
   for (const team of teams) {
-    
-    const loginResp = await page.request.post('https://pwnthemall.local/api/login', {
-      data: {
-        username: team.members[0].email,
-        password: team.members[0].password
-      }
-    });
-
-    const cookie = getCookieHeader(loginResp);
-    
     const numToSolve = Math.floor(challenges.length * team.solveRate);
     
     for (let i = 0; i < numToSolve; i++) {
       const challenge = challenges[i];
+      
+      const randomMember = team.members[Math.floor(Math.random() * team.members.length)];
+      
+      const loginResp = await page.request.post('https://pwnthemall.local/api/login', {
+        data: {
+          username: randomMember.email,
+          password: randomMember.password
+        }
+      });
+
+      const cookie = getCookieHeader(loginResp);
       
       const numWrongAttempts = 2 + Math.floor(Math.random() * 3);
       for (let w = 0; w < numWrongAttempts; w++) {
@@ -216,7 +217,20 @@ test('Add teams and submissions', async ({ page }) => {
           headers: { 'Cookie': cookie }
         });
       }
+      
+      await page.request.post('https://pwnthemall.local/api/logout', {
+        headers: { 'Cookie': cookie }
+      });
     }
+    
+    const randomMember = team.members[Math.floor(Math.random() * team.members.length)];
+    const noiseLoginResp = await page.request.post('https://pwnthemall.local/api/login', {
+      data: {
+        username: randomMember.email,
+        password: randomMember.password
+      }
+    });
+    const noiseCookie = getCookieHeader(noiseLoginResp);
     
     const numNoiseAttempts = 5 + Math.floor(Math.random() * 6);
     for (let n = 0; n < numNoiseAttempts; n++) {
@@ -224,13 +238,13 @@ test('Add teams and submissions', async ({ page }) => {
       if (randomChallenge) {
         await page.request.post(`https://pwnthemall.local/api/challenges/${randomChallenge.id}/submit`, {
           data: { flag: wrongFlags[Math.floor(Math.random() * wrongFlags.length)] },
-          headers: { 'Cookie': cookie }
+          headers: { 'Cookie': noiseCookie }
         });
       }
     }
     
     await page.request.post('https://pwnthemall.local/api/logout', {
-      headers: { 'Cookie': cookie }
+      headers: { 'Cookie': noiseCookie }
     });
   }
 
