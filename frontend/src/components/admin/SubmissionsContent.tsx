@@ -223,7 +223,7 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
           {t("showing") || "Showing"} {filteredSubmissions.length} {t("of") || "of"} {submissions.length} {t("admin.submissions")?.toLowerCase() || "submissions"}
         </div>
 
-        <DataTable columns={columns} data={filteredSubmissions} />
+        <DataTable columns={columns} data={filteredSubmissions} enablePagination={true} defaultPageSize={25} />
       </div>
     </>
   )
