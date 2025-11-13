@@ -689,19 +689,19 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                 <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
                                   <h3 className="font-semibold text-lg text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
                                     <Trophy className="w-5 h-5" />
-                                    Score de l&apos;équipe
+                                    {t('hints.team_score') || 'Team Score'}
                                   </h3>
                                   <div className="grid grid-cols-3 gap-4 text-sm">
                                     <div>
-                                      <span className="text-blue-600 dark:text-blue-400 font-medium">Total:</span>
+                                      <span className="text-blue-600 dark:text-blue-400 font-medium">{t('hints.total') || 'Total'}:</span>
                                       <div className="font-bold text-blue-800 dark:text-blue-200">{teamScore.totalScore} pts</div>
                                     </div>
                                     <div>
-                                      <span className="text-green-600 dark:text-green-400 font-medium">Disponible:</span>
+                                      <span className="text-green-600 dark:text-green-400 font-medium">{t('hints.available') || 'Available'}:</span>
                                       <div className="font-bold text-green-800 dark:text-green-200">{teamScore.availableScore} pts</div>
                                     </div>
                                     <div>
-                                      <span className="text-orange-600 dark:text-orange-400 font-medium">Dépensé:</span>
+                                      <span className="text-orange-600 dark:text-orange-400 font-medium">{t('hints.spent') || 'Spent'}:</span>
                                       <div className="font-bold text-orange-800 dark:text-orange-200">{teamScore.spentOnHints} pts</div>
                                     </div>
                                   </div>
@@ -737,7 +737,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                           </div>
                                           {hint.purchased && (
                                             <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-600">
-                                              ✓ Acheté
+                                              ✓ {t('hints.purchased') || 'Purchased'}
                                             </Badge>
                                           )}
                                         </div>
@@ -750,7 +750,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                       ) : (
                                         <div className="space-y-3">
                                           <div className="text-sm text-muted-foreground leading-relaxed italic">
-                                            Cet indice est verrouillé. Achetez-le pour révéler son contenu.
+                                            {t('hints.hint_locked') || 'This hint is locked. Buy it to reveal its content.'}
                                           </div>
                                           <Button
                                             onClick={async () => {
@@ -797,12 +797,12 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                             {hintsLoading ? (
                                               <>
                                                 <Settings className="w-4 h-4 mr-2 animate-spin" />
-                                                Achat en cours...
+                                                {t('hints.purchasing') || 'Purchasing...'}
                                               </>
                                             ) : teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost ? (
-                                              `Points insuffisants (${hint.cost} requis)`
+                                              t('hints.insufficient_points', { cost: hint.cost }) || `Insufficient points (${hint.cost} required)`
                                             ) : (
-                                              `Acheter pour ${hint.cost} points`
+                                              t('hints.buy_for_points', { cost: hint.cost }) || `Buy for ${hint.cost} points`
                                             )}
                                           </Button>
                                         </div>
