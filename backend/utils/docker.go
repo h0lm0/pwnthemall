@@ -391,12 +391,10 @@ func CreateComposeProject(slug string, teamId int, userId int, composeFile strin
 				}
 			}
 
-			// Build the image using BuildDockerImage()
 			imageName, err := BuildDockerImage(fmt.Sprintf("%s-%s", slug, svcName), sourceDir)
 			if err != nil {
 				return nil, fmt.Errorf("failed to build image for %s: %w", svcName, err)
 			}
-			// Replace build with the pre-built image
 			svc.Image = imageName
 			svc.Build = nil
 			p.Services[svcName] = svc
@@ -404,7 +402,6 @@ func CreateComposeProject(slug string, teamId int, userId int, composeFile strin
 		}
 	}
 
-	// Set up Docker network
 	debug.Log("Creating Docker network for team %d", teamId)
 	networkName, err := EnsureTeamNetworkExists(teamId)
 	if err != nil {

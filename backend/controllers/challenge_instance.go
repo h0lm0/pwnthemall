@@ -690,31 +690,26 @@ func GetInstanceStatus(c *gin.Context) {
 		return
 	}
 
-	// Find the instance for this user/team and challenge
 	var instance models.Instance
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// This is expected when no instance exists - don't log as error
 			utils.OKResponse(c, gin.H{
 				"has_instance": false,
 				"status":       "no_instance",
 			})
 			return
 		}
-		// Log unexpected database errors
 		debug.Log("Database error when checking instance status: %v", err)
 		utils.InternalServerError(c, "database_error")
 		return
 	}
 
-	// Check if instance is expired
 	isExpired := time.Now().After(instance.ExpiresAt)
 	if isExpired && instance.Status == "running" {
 		instance.Status = "expired"
 		config.DB.Save(&instance)
 	}
 
-	// Get challenge details for connection info
 	var challenge models.Challenge
 	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
 		utils.InternalServerError(c, "challenge_not_found")
@@ -724,13 +719,11 @@ func GetInstanceStatus(c *gin.Context) {
 	// Build connection info with actual ports
 	var connectionInfo []string
 	if instance.Status == "running" && len(challenge.ConnectionInfo) > 0 {
-		// Get the IP address from environment or use a placeholder
 		ip := os.Getenv("PTA_PUBLIC_IP")
 		if ip == "" {
-			ip = "instance-ip" // Fallback placeholder
+			ip = "instance-ip"
 		}
 
-		// Convert instance ports to int slice for easier handling
 		instancePorts := make([]int, len(instance.Ports))
 		for i, p := range instance.Ports {
 			instancePorts[i] = int(p)
@@ -740,13 +733,11 @@ func GetInstanceStatus(c *gin.Context) {
 
 		for i, info := range challenge.ConnectionInfo {
 			formattedInfo := strings.ReplaceAll(info, "$ip", ip)
-			debug.Log("len(instancePorts): %v", instancePorts)
 			if i < len(instancePorts) {
 				for j, originalPort := range challenge.Ports {
-					debug.Log("j: % i | original port %i", j, originalPort)
 					if j < len(instancePorts) {
-						originalPortStr := fmt.Sprintf(":%d", originalPort)
-						newPortStr := fmt.Sprintf(":%d", instancePorts[j])
+						originalPortStr := fmt.Sprintf("[%d]", originalPort)
+						newPortStr := fmt.Sprintf("%d", instancePorts[j])
 						formattedInfo = strings.ReplaceAll(formattedInfo, originalPortStr, newPortStr)
 					}
 				}

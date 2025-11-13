@@ -10,5 +10,5 @@ author: "h0lm0"
 hidden: false
 flags: ["PwnThatDemo"]
 points: 123
-ports: [8989,22]
-connection_info: ["http://$ip:8989", "ssh -p 22 guest@$ip"] 
+ports: [80,22]
+connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
