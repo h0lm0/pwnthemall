@@ -17,7 +17,8 @@
     "dashboard": "Tableau de bord",
     "role": "Rôle",
     "role_required": "Le rôle est requis. ",
-    "select_role": "Sélectionner un rôle"
+    "select_role": "Sélectionner un rôle",
+    "submissions": "Tentatives de flag"
   },
   "auth": {
     "already_have_account": "Vous avez déjà un compte ?",

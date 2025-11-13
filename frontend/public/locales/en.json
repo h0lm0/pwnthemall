@@ -17,7 +17,8 @@
     "dashboard": "Dashboard",
     "role": "Role",
     "role_required": "Role is required.",
-    "select_role": "Select a role"
+    "select_role": "Select a role",
+    "submissions": "Submissions"
   },
   "auth": {
     "already_have_account": "Already have an account?",
