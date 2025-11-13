@@ -43,7 +43,6 @@ const ConnectionInfo: React.FC<ConnectionInfoProps> = ({ challengeId, connection
         <span className="font-medium">{t('connection_info') || 'Connection Information'}</span>
       </div>
       <div className="space-y-2">
-        {console.log(connectionInfo)}
         {connectionInfo.map((info, index) => (
           <div key={index} className="flex items-center gap-2">
             <code className="px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded text-sm font-mono flex-1 break-all">
