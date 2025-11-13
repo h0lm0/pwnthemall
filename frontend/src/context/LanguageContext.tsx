@@ -37,7 +37,7 @@ const LanguageContext = createContext<LanguageContextProps>({
 });
 
 // Translation cache version - increment this when you update translations
-const TRANSLATION_VERSION = '1.0.10';
+const TRANSLATION_VERSION = '1.0.11';
 
 // Flatten nested object into dot notation keys
 // Supports both nested (auth.login) and flat (login) key access
