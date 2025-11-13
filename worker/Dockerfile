@@ -1,6 +1,7 @@
+# FROM docker:29.0.0-dind-alpine3.22
 FROM alpine:3.20
 
-RUN apk add --no-cache openssh bash docker openrc shadow
+RUN apk add --no-cache openssh bash docker docker-compose openrc shadow
 
 # Set default GID for docker group (will be overridden via build/run-time env + pta-cli.sh)
 ARG DOCKER_GID
@@ -28,6 +29,10 @@ RUN echo "docker:${WORKER_PASSWORD}" | chpasswd
 # SSH server config: disable root login, enable pubkey auth
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
     sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+
+RUN mkdir -p ~/.docker/cli-plugins && \
+    wget -qO ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.29.1/buildx-v0.29.1.linux-amd64 && \
+    chmod +x ~/.docker/cli-plugins/docker-buildx
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

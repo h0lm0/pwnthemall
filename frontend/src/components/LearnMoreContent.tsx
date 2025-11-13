@@ -6,7 +6,7 @@ export default function LearnMoreContent() {
       <Head>
         <title>Learn more about cookies</title>
       </Head>
-      <h1 className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
+      <h1 className="text-3xl font-bold dark:text-cyan-400">
         Learn more about cookies (placeholder)
       </h1>
     </div>

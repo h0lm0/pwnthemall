@@ -404,7 +404,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
           <title>{getSiteName()} - {cat}</title>
         </Head>
         <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 py-10 text-center">
-          <h1 className="text-3xl font-bold mb-6 text-cyan-600 dark:text-cyan-400">
+          <h1 className="text-3xl font-bold mb-6 dark:text-cyan-400">
             {cat}
           </h1>
           <p className="text-muted-foreground">{t('no_challenges_available') || 'No challenges available'}</p>
@@ -420,7 +420,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
       </Head>
 
       <main className="bg-muted flex flex-col items-center justify-start min-h-screen px-6 py-10 text-center">
-        <h1 className="text-3xl font-bold mb-6 text-cyan-600 dark:text-cyan-400">
+        <h1 className="text-3xl font-bold mb-6 dark:text-cyan-400">
           {cat}
         </h1>
 
@@ -458,7 +458,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                 <CardTitle className={`${
                   challenge.solved 
                     ? 'text-green-700 dark:text-green-200' 
-                    : 'text-cyan-700 dark:text-cyan-300'
+                    : 'dark:text-cyan-300'
                 }`}>
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
@@ -531,7 +531,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
               <DialogTitle className={`${
                 selectedChallenge?.solved 
                   ? 'text-green-600 dark:text-green-300' 
-                  : 'text-cyan-600 dark:text-cyan-300'
+                  : 'dark:text-cyan-300'
               }`}>
                 {selectedChallenge?.name || 'Unnamed Challenge'}
                 {selectedChallenge?.solved && (
@@ -572,7 +572,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                   {...props}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="underline text-cyan-700 dark:text-cyan-300 hover:text-cyan-800 dark:hover:text-cyan-200"
+                                  className="underline dark:text-cyan-300 hover:text-cyan-800 dark:hover:text-cyan-200"
                                 />
                               ),
                               code: (props: any) => (
@@ -885,7 +885,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                                    <div className="text-sm font-bold dark:text-cyan-400">
                                       {solve.firstBlood && solve.firstBlood.bonuses.length > 0 ? (
                                         <div className="space-y-1">
                                           <div className="flex items-center justify-end gap-1">
@@ -976,7 +976,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                               </div>
                               
                               <div className="flex gap-2">
-                                {getLocalInstanceStatus(selectedChallenge.id) === 'stopped' && (
+                                {(getLocalInstanceStatus(selectedChallenge.id) === 'stopped' || 
+                                 getLocalInstanceStatus(selectedChallenge.id) === 'expired') && (
                                   <Button
                                     onClick={() => handleStartInstance(selectedChallenge.id)}
                                     disabled={instanceLoading}

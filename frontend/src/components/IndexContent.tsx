@@ -96,7 +96,7 @@ const IndexContent = ({ ctfStatus, ctfLoading, isLoggedIn, hasTeam, userRole }: 
               priority
             />
             <p className="text-xl md:text-2xl font-medium mb-8 text-cyan-600 dark:text-cyan-400">
-              <AnimatedText text={t('will_you_pwn_it')} delay={150} />
+              <AnimatedText text={t('will_you_pwn_them')} delay={150} />
             </p>
           </div>
           

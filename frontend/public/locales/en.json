@@ -59,7 +59,7 @@
   "confirm": "Confirm",
   "confirm_transfer_to": "Transfer ownership to {username}",
   "connected": "Connected",
-  "connection_info": "Connection Information",
+  "connection_info": "Connection information",
   "container": "Container",
   "cookie_accept_message": "By clicking Accept, you agree to our use of cookies.",
   "cookie_message": "We use cookies to ensure you get the best experience on our website. For more information on how we use cookies, please see our cookie policy.",
@@ -405,7 +405,7 @@
   "warning": "Warning",
   "welcome_back": "Welcome back",
   "well_done": "Well done!",
-  "will_you_pwn_it": "will you pwn it ?",
+  "will_you_pwn_them": "will you pwn them ?",
   "wrong_flag": "Wrong flag",
   "yes": "yes"
 }
