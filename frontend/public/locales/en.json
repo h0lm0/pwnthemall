@@ -40,6 +40,7 @@
   "ban": {
     "temp_ban": "Temporary ban",
     "temp_ban_user": "Temporarily ban user",
+    "temp_ban_user_confirm": "Are you sure you want to temporarily ban {username}?",
     "temp_ban_users": "Temporarily ban users",
     "temp_ban_users_confirm": "Are you sure you want to temporarily ban the selected users?",
     "unban": "Unban",
@@ -78,6 +79,7 @@
   "challenge_order": {
     "challenge_order_management": "Challenge Order Management",
     "challenge_order_updated_success": "Challenge order updated successfully",
+    "challenges_count": "{count} challenges",
     "drag_drop_reorder_description": "Drag and drop to reorder challenges within each category",
     "failed_to_update_challenge_order": "Failed to update challenge order",
     "reorder_challenges": "Reorder Challenges",
@@ -170,7 +172,11 @@
     "ctf_ended": "CTF Ended",
     "ctf_not_started": "CTF Not Started",
     "ctf_not_started_message": "The CTF competition has not started yet. Please wait for the competition to begin.",
+    "ctf_start_time_description": "Set when the CTF competition starts. Leave empty for no time restrictions.",
     "ctf_status": "CTF Status",
+    "ctf_status_no_timing": "No Timing Configured",
+    "ctf_status_no_timing_desc": "No start or end times are configured. The CTF operates without time restrictions.",
+    "CTF_START_TIME": "CTF Start Time",
     "loading_ctf_status": "Loading CTF status...",
     "unable_to_load_ctf_status": "Unable to load CTF status"
   },

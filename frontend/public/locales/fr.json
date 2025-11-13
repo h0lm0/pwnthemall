@@ -40,6 +40,7 @@
   "ban": {
     "temp_ban": "Bannir temporairement",
     "temp_ban_user": "Bannir temporairement l'utilisateur",
+    "temp_ban_user_confirm": "Êtes-vous sûr de vouloir bannir temporairement {username} ?",
     "temp_ban_users": "Bannir temporairement les utilisateurs",
     "temp_ban_users_confirm": "Êtes-vous sûr de vouloir bannir temporairement les utilisateurs sélectionnés ?",
     "unban": "Débannir",
@@ -78,6 +79,7 @@
   "challenge_order": {
     "challenge_order_management": "Gestion de l'ordre des challenges",
     "challenge_order_updated_success": "Ordre des challenges mis à jour avec succès",
+    "challenges_count": "{count} challenges",
     "drag_drop_reorder_description": "Glissez-déposez pour réorganiser les challenges dans chaque catégorie",
     "failed_to_update_challenge_order": "Échec de la mise à jour de l'ordre des challenges",
     "reorder_challenges": "Réorganiser les challenges",
@@ -170,7 +172,11 @@
     "ctf_ended": "CTF Terminé",
     "ctf_not_started": "CTF Non Démarré",
     "ctf_not_started_message": "La compétition CTF n'a pas encore commencé. Veuillez attendre le début de la compétition.",
+    "ctf_start_time_description": "Définissez quand la compétition CTF commence. Laissez vide pour aucune restriction de temps.",
     "ctf_status": "Statut du CTF",
+    "ctf_status_no_timing": "Aucun Timing Configuré",
+    "ctf_status_no_timing_desc": "Aucune heure de début ou de fin n'est configurée. Le CTF fonctionne sans restrictions de temps.",
+    "CTF_START_TIME": "Heure de Début du CTF",
     "loading_ctf_status": "Chargement du statut CTF...",
     "unable_to_load_ctf_status": "Impossible de charger le statut CTF"
   },
