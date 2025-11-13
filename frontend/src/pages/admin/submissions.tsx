@@ -7,8 +7,15 @@ type Submission = {
   id: number
   value: string
   createdAt: string
-  user?: { id: number; username: string }
-  challenge?: { id: number; label: string }
+  user?: { 
+    id: number
+    username: string
+    team?: {
+      id: number
+      name: string
+    }
+  }
+  challenge?: { id: number; name: string }
 }
 
 export default function SubmissionsPage() {

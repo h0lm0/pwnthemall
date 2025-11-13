@@ -13,7 +13,7 @@ func GetAllSubmissions(c *gin.Context) {
 	var submissions []models.Submission
 
 	if err := config.DB.
-		Preload("User").
+		Preload("User.Team").
 		Preload("Challenge").
 		Order("created_at DESC").
 		Find(&submissions).Error; err != nil {
