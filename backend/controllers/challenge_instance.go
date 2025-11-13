@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"pwnthemall/config"
 	"pwnthemall/debug"
 	"pwnthemall/dto"
@@ -22,23 +23,33 @@ import (
 func BuildChallengeImage(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
-
 	result := config.DB.Preload("ChallengeType").First(&challenge, id)
 	if result.Error != nil {
 		utils.NotFoundError(c, "challenge_not_found")
 		return
 	}
-
 	// Check if challenge is of type docker
 	if challenge.ChallengeType.Name != "docker" {
 		utils.BadRequestError(c, "challenge_not_docker_type")
 		return
 	}
-	_, err := utils.BuildDockerImage(challenge.Slug)
+
+	// Download the challenge context to a temporary directory
+	tmpDir := filepath.Join(os.TempDir(), challenge.Slug)
+	defer os.RemoveAll(tmpDir)
+
+	if err := utils.DownloadChallengeContext(challenge.Slug, tmpDir); err != nil {
+		utils.InternalServerError(c, fmt.Sprintf("Failed to download challenge context: %v", err))
+		return
+	}
+
+	// Build the Docker image using the temporary directory as the source
+	_, err := utils.BuildDockerImage(challenge.Slug, tmpDir)
 	if err != nil {
 		utils.InternalServerError(c, err.Error())
 		return
 	}
+
 	utils.OKResponse(c, gin.H{"message": fmt.Sprintf("Successfully built image for challenge %s", challenge.Slug)})
 }
 
@@ -162,10 +173,8 @@ func KillChallengeInstance(c *gin.Context) {
 func StartDockerChallengeInstance(c *gin.Context) {
 	id := c.Param("id")
 	debug.Log("Starting instance for challenge ID: %s", id)
-
 	var challenge models.Challenge
 	result := config.DB.Preload("ChallengeType").First(&challenge, id)
-
 	if result.Error != nil {
 		debug.Log("Challenge not found with ID %s: %v", id, result.Error)
 		c.JSON(http.StatusNotFound, gin.H{"error": "challenge_not_found"})
@@ -183,9 +192,17 @@ func StartDockerChallengeInstance(c *gin.Context) {
 			})
 			return
 		}
-
 		var err error
-		imageName, err = utils.BuildDockerImage(challenge.Slug)
+		// Use the new BuildDockerImage function with sourceDir
+		// For Docker challenges, the source directory is typically the challenge's directory
+		tmpDir := filepath.Join(os.TempDir(), challenge.Slug)
+		if err := utils.DownloadChallengeContext(challenge.Slug, tmpDir); err != nil {
+			debug.Log("Failed to download challenge context: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed_to_download_challenge"})
+			return
+		}
+		defer os.RemoveAll(tmpDir)
+		imageName, err = utils.BuildDockerImage(challenge.Slug, tmpDir)
 		if err != nil {
 			debug.Log("Docker build failed for challenge %s: %v", challenge.Slug, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "docker_build_failed"})
@@ -303,7 +320,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 	if dockerConfig.InstanceTimeout > 0 {
 		expiresAt = time.Now().Add(time.Duration(dockerConfig.InstanceTimeout) * time.Minute)
 	} else {
-		expiresAt = time.Now().Add(24 * time.Hour) // Default 24 hours if no timeout set
+		expiresAt = time.Now().Add(24 * time.Hour)
 	}
 
 	// Convert ports to pq.Int64Array for storage
@@ -317,11 +334,12 @@ func StartDockerChallengeInstance(c *gin.Context) {
 		UserID:      user.ID,
 		TeamID:      *user.TeamID,
 		ChallengeID: challenge.ID,
-		Ports:       ports64, // Store the dynamically assigned ports
+		Ports:       ports64,
 		CreatedAt:   time.Now(),
 		ExpiresAt:   expiresAt,
 		Status:      "running",
 	}
+
 	if err := config.DB.Create(&instance).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "instance_create_failed"})
 		return
@@ -329,14 +347,12 @@ func StartDockerChallengeInstance(c *gin.Context) {
 
 	// Broadcast instance start event to the whole team (except the starter)
 	if WebSocketHub != nil {
-		// Build connection info similar to GetInstanceStatus
 		var connectionInfo []string
 		if len(challenge.ConnectionInfo) > 0 {
 			ip := os.Getenv("PTA_PUBLIC_IP")
 			if ip == "" {
 				ip = "worker-ip"
 			}
-
 			for i, info := range challenge.ConnectionInfo {
 				formattedInfo := strings.ReplaceAll(info, "$ip", ip)
 				if i < len(ports) {
@@ -379,6 +395,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 			Ports:          ports,
 			ConnectionInfo: connectionInfo,
 		}
+
 		if payload, err := json.Marshal(event); err == nil {
 			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 		}
@@ -598,24 +615,34 @@ func StopChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	go func() {
-		switch challenge.ChallengeType.Name {
-		case "docker":
+	switch challenge.ChallengeType.Name {
+	case "docker":
+		go func() {
 			if err := utils.StopDockerInstance(instance.Container); err != nil {
 				debug.Log("Failed to stop Docker instance: %v", err)
 			}
-		case "compose":
-			if err := utils.StopComposeInstance(instance.Container); err != nil {
-				debug.Log("Failed to stop Compose instance: %v", err)
+			if err := config.DB.Delete(&instance).Error; err != nil {
+				debug.Log("Failed to delete instance from DB: %v", err)
 			}
-		default:
-			debug.Log("Unknown challenge type: %s", challenge.ChallengeType.Name)
+		}()
+
+	case "compose":
+		if err := utils.StopComposeInstance(instance.Container); err != nil {
+			debug.Log("Failed to stop Compose instance: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "compose_stop_failed"})
+			return
+		}
+		if err := config.DB.Delete(&instance).Error; err != nil {
+			debug.Log("Failed to delete Compose instance from DB: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "db_delete_failed"})
+			return
 		}
 
-		if err := config.DB.Delete(&instance).Error; err != nil {
-			debug.Log("Failed to delete instance from database: %v", err)
-		}
-	}()
+	default:
+		debug.Log("Unknown challenge type: %s", challenge.ChallengeType.Name)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown_challenge_type"})
+		return
+	}
 
 	if WebSocketHub != nil {
 		var user models.User
@@ -645,7 +672,7 @@ func StopChallengeInstance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "instance_stopping",
+		"message":   "instance_stopped",
 		"container": instance.Container,
 	})
 }
@@ -673,31 +700,26 @@ func GetInstanceStatus(c *gin.Context) {
 		return
 	}
 
-	// Find the instance for this user/team and challenge
 	var instance models.Instance
 	if err := config.DB.Where("team_id = ? AND challenge_id = ?", user.Team.ID, challengeID).First(&instance).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// This is expected when no instance exists - don't log as error
 			utils.OKResponse(c, gin.H{
 				"has_instance": false,
 				"status":       "no_instance",
 			})
 			return
 		}
-		// Log unexpected database errors
 		debug.Log("Database error when checking instance status: %v", err)
 		utils.InternalServerError(c, "database_error")
 		return
 	}
 
-	// Check if instance is expired
 	isExpired := time.Now().After(instance.ExpiresAt)
 	if isExpired && instance.Status == "running" {
 		instance.Status = "expired"
 		config.DB.Save(&instance)
 	}
 
-	// Get challenge details for connection info
 	var challenge models.Challenge
 	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
 		utils.InternalServerError(c, "challenge_not_found")
@@ -707,30 +729,25 @@ func GetInstanceStatus(c *gin.Context) {
 	// Build connection info with actual ports
 	var connectionInfo []string
 	if instance.Status == "running" && len(challenge.ConnectionInfo) > 0 {
-		// Get the IP address from environment or use a placeholder
 		ip := os.Getenv("PTA_PUBLIC_IP")
 		if ip == "" {
-			ip = "your-instance-ip" // Fallback placeholder
+			ip = "instance-ip"
 		}
 
-		// Convert instance ports to int slice for easier handling
 		instancePorts := make([]int, len(instance.Ports))
 		for i, p := range instance.Ports {
 			instancePorts[i] = int(p)
 		}
 
-		for i, info := range challenge.ConnectionInfo {
-			// Replace $ip placeholder with actual IP
-			formattedInfo := strings.ReplaceAll(info, "$ip", ip)
+		debug.Log("Starting port mapping for challenge %v", instancePorts)
 
-			// If we have a corresponding port in the instance, replace the port number
+		for i, info := range challenge.ConnectionInfo {
+			formattedInfo := strings.ReplaceAll(info, "$ip", ip)
 			if i < len(instancePorts) {
-				// Find the original port number in the connection info and replace it
-				// This is a simple approach - for more complex cases, we might need regex
 				for j, originalPort := range challenge.Ports {
 					if j < len(instancePorts) {
-						originalPortStr := fmt.Sprintf(":%d", originalPort)
-						newPortStr := fmt.Sprintf(":%d", instancePorts[j])
+						originalPortStr := fmt.Sprintf("[%d]", originalPort)
+						newPortStr := fmt.Sprintf("%d", instancePorts[j])
 						formattedInfo = strings.ReplaceAll(formattedInfo, originalPortStr, newPortStr)
 					}
 				}

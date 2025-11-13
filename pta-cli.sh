@@ -26,25 +26,50 @@ DOCKER_GID=$(getent group docker | cut -d: -f3)
 export DOCKER_GID
 
 function minio_alias() {
-    docker compose -f docker-compose.prod.yml exec -it "$MINIO_CONTAINER" mc alias set "$MINIO_ALIAS" "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" 2>/dev/null || true
+    local env="${1:-prod}" # default to prod
+    local compose_file="docker-compose.${env}.yml"
+
+    if [[ ! -f "$compose_file" ]]; then
+        echo "[✗] Compose file not found: $compose_file"
+        exit 1
+    fi
+
+    echo "[+] Setting MinIO alias using $compose_file"
+
+    docker compose -f "$compose_file" exec -T "$MINIO_CONTAINER" \
+        mc alias set "$MINIO_ALIAS" "$MINIO_ENDPOINT" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" 2>/dev/null || true
 }
 
 function minio_sync() {
-    local folder="$1"
+    local env="${1:-prod}"
+    shift
+    local folder="${1:-}"
+
+    if [[ -z "$folder" ]]; then
+        echo "[✗] Missing folder argument"
+        usage
+    fi
+
+    local compose_file="docker-compose.${env}.yml"
+    if [[ ! -f "$compose_file" ]]; then
+        echo "[✗] Compose file not found: $compose_file"
+        exit 1
+    fi
+
     local fullpath
     fullpath="$(realpath "$folder")"
     local bucket
     bucket="$(basename "$folder")"
     local container_path="$MOUNT_PATH/$bucket"
 
-    echo "[+] Sync $folder → MinIO (bucket: $bucket)"
+    echo "[+] Sync $folder → MinIO (bucket: $bucket) using $compose_file"
 
-    docker compose -f docker-compose.prod.yml exec -it "$MINIO_CONTAINER" mc mb --ignore-existing "$MINIO_ALIAS/$bucket"
-
-    docker compose -f docker-compose.prod.yml exec -it "$MINIO_CONTAINER" mc mirror --overwrite --remove "$container_path" "$MINIO_ALIAS/$bucket"
+    docker compose -f "$compose_file" exec -T "$MINIO_CONTAINER" mc mb --ignore-existing "$MINIO_ALIAS/$bucket"
+    docker compose -f "$compose_file" exec -T "$MINIO_CONTAINER" mc mirror --overwrite --remove "$container_path" "$MINIO_ALIAS/$bucket"
 
     echo "[✓] Sync successful"
 }
+
 
 function env_randomize() {
     local env_file="$ENV_FILE"
@@ -190,11 +215,16 @@ case "${1:-}" in
         case "${1:-}" in
             sync)
                 shift
+                env="prod"
+                if [[ "$1" == "-e" || "$1" == "--env" ]]; then
+                    env="$2"
+                    shift 2
+                fi
                 folder="${1:-}"
                 [ -z "$folder" ] && usage
 
-                minio_alias
-                minio_sync "$folder"
+                minio_alias "$env"
+                minio_sync "$env" "$folder"
                 ;;
             *)
                 usage

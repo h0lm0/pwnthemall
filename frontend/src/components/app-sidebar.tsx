@@ -131,7 +131,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           items: [
             { title: t('dashboard'), url: "/admin/dashboard" },
             { title: t('users'), url: "/admin/users" },
-            { title: t('challenge_categories'), url: "/admin/challenge-categories" },
+            { title: t('admin.submissions'), url: "/admin/submissions" },
+            { title: t('challenge_category.challenge_categories'), url: "/admin/challenge-categories" },
             { title: 'Challenges', url: "/admin/challenges" },
             { title: t('challenge_order_management'), url: "/admin/challenge-order" },
             { title: t('configuration'), url: "/admin/configuration" },
@@ -140,6 +141,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           isActive:
             router.pathname === "/admin/dashboard" ||
             router.pathname === "/admin/users" ||
+            router.pathname === "/admin/submissions" ||
             router.pathname === "/admin/challenge-categories" ||
             router.pathname === "/admin/challenges" ||
             router.pathname === "/admin/challenge-order" ||

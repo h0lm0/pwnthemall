@@ -1,1 +1,14 @@
 name: "Demo 04 (Compose - WIP)"
+description: |
+  Compose challenge example
+
+  Enter the flag "really?ComposeChallenges!" to solve it !
+category: "pwn"
+difficulty: "easy"
+type: "compose"
+author: "h0lm0"
+hidden: false
+flags: ["really?ComposeChallenges!"]
+points: 123
+ports: [80,22]
+connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
