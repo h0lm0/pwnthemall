@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import axios from "@/lib/axios";
 import { debugLog, debugError } from "@/lib/debug";
 import { clearTranslationCache } from "@/context/LanguageContext";
@@ -6,7 +6,7 @@ import { clearTranslationCache } from "@/context/LanguageContext";
 interface AuthContextType {
   loggedIn: boolean;
   login: () => void;
-  logout: () => Promise<void>;
+  logout: (redirect?: boolean) => Promise<void>;
   checkAuth: () => Promise<void>;
   authChecked: boolean;
 }
@@ -16,6 +16,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const authCheckedRef = useRef(false);
+  const isCheckingRef = useRef(false);
 
   const login = () => {
     setLoggedIn(true);
@@ -41,37 +43,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
+    if (authCheckedRef.current || isCheckingRef.current) {
+      return;
+    }
+
+    isCheckingRef.current = true;
+
     try {
       await axios.get("/api/me");
       setLoggedIn(true);
     } catch (err: any) {
-      if (err?.response?.status === 401) {
-        // Check if user is banned
-        if (err?.response?.data?.error === "banned") {
-          debugLog("User is banned, forcing logout");
-          await logout(false); // Force logout without redirect
-          return;
-        }
-        
-        try {
-          await axios.post("/api/refresh");
-          setLoggedIn(true);
-        } catch (error) {
-          debugError("Failed to refresh token:", error);
-          await logout(false);
-        }
-      } else {
-        setLoggedIn(false);
-      }
+      setLoggedIn(false);
     } finally {
+      authCheckedRef.current = true;
+      isCheckingRef.current = false;
       setAuthChecked(true);
     }
-  };
+  }, []); // No dependencies - function never changes
 
   useEffect(() => {
     checkAuth();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   // Listen for auth refresh events (e.g., after username update, team changes)
   useEffect(() => {

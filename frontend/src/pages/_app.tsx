@@ -2,6 +2,7 @@ import App, { AppProps, AppContext } from 'next/app'
 import { SidebarProvider, SidebarInset, SIDEBAR_COOKIE_NAME } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/app-sidebar'
 import { AuthProvider } from '@/context/AuthContext'
+import { UserProvider } from '@/context/UserContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { SiteConfigProvider } from '@/context/SiteConfigContext'
 import { NotificationProvider } from '@/context/NotificationContext'
@@ -31,9 +32,10 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <SiteConfigProvider>
-          <NotificationProvider>
-        <ThemeProvider
+        <UserProvider>
+          <SiteConfigProvider>
+            <NotificationProvider>
+          <ThemeProvider
           attribute="class"
           defaultTheme={systemTheme}
           enableSystem={false}
@@ -68,8 +70,9 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
             expand
           />
         </ThemeProvider>
-          </NotificationProvider>
-        </SiteConfigProvider>
+            </NotificationProvider>
+          </SiteConfigProvider>
+        </UserProvider>
       </AuthProvider>
     </LanguageProvider>
   )
