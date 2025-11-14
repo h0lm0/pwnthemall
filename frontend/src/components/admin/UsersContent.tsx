@@ -1,11 +1,13 @@
 import Head from "next/head"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import axios from "@/lib/axios";
 
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { X } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -45,6 +47,36 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [confirmMassBan, setConfirmMassBan] = useState(false)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [createError, setCreateError] = useState<string | null>(null)
+  
+  // Filter states
+  const [usernameFilter, setUsernameFilter] = useState("")
+  const [emailFilter, setEmailFilter] = useState("")
+  const [teamFilter, setTeamFilter] = useState("")
+  const [roleFilter, setRoleFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState("") // "banned" | "active" | ""
+
+  // Filtered users
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      const usernameMatch = !usernameFilter || 
+        user.username?.toLowerCase().includes(usernameFilter.toLowerCase())
+      
+      const emailMatch = !emailFilter || 
+        user.email?.toLowerCase().includes(emailFilter.toLowerCase())
+      
+      const teamMatch = !teamFilter || 
+        user.team?.name?.toLowerCase().includes(teamFilter.toLowerCase())
+      
+      const roleMatch = !roleFilter || 
+        user.role?.toLowerCase() === roleFilter.toLowerCase()
+      
+      const statusMatch = !statusFilter || 
+        (statusFilter === "banned" && user.banned) || 
+        (statusFilter === "active" && !user.banned)
+      
+      return usernameMatch && emailMatch && teamMatch && roleMatch && statusMatch
+    })
+  }, [users, usernameFilter, emailFilter, teamFilter, roleFilter, statusFilter])
 
   const columns: ColumnDef<User>[] = [
     {
@@ -241,7 +273,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doDeleteSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)].id)
+    const ids = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)].id)
     await Promise.all(ids.map((id) => axios.delete(`/api/users/${id}`)))
     setRowSelection({})
     setConfirmMassDelete(false)
@@ -250,7 +282,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doTempBanSelected = async () => {
-    const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+    const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
     const ids = selectedUsers.map(user => user.id)
     const bannedCount = selectedUsers.filter(user => user.banned).length
     const unbannedCount = selectedUsers.length - bannedCount
@@ -289,14 +321,10 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         <title>{getSiteName()}</title>
       </Head>
       <div className="bg-muted min-h-screen p-4">
-        {/* {/* Debug info - remove after testing 
-        <div className="mb-2 text-xs text-gray-500">
-          Debug: Lang={language}, Loaded={isLoaded ? 'yes' : 'no'}, Test={t('username')}
-        </div> */}
-        
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t("users")}</h1>
           <div className="flex items-center gap-2">
+            <Button size="sm" onClick={onRefresh}>{t("refresh")}</Button>
             <div
               className={cn(
                 "flex items-center gap-2 h-9",
@@ -316,7 +344,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 onClick={() => setConfirmMassBan(true)}
               >
                 {(() => {
-                  const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                  const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
                   const bannedCount = selectedUsers.filter(user => user.banned).length
                   const unbannedCount = selectedUsers.length - bannedCount
                   return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
@@ -339,12 +367,144 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </Sheet>
           </div>
         </div>
+
+        {/* Filters */}
+        <div className="mb-4 flex flex-wrap gap-2 items-end bg-card p-4 rounded-lg border">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("username") || "Username"}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_user") || "Filter by user..."}
+                value={usernameFilter}
+                onChange={(e) => setUsernameFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {usernameFilter && (
+                <button
+                  onClick={() => setUsernameFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("email") || "Email"}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_user") || "Filter by email..."}
+                value={emailFilter}
+                onChange={(e) => setEmailFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {emailFilter && (
+                <button
+                  onClick={() => setEmailFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[180px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("team") || "Team"}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_team") || "Filter by team..."}
+                value={teamFilter}
+                onChange={(e) => setTeamFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {teamFilter && (
+                <button
+                  onClick={() => setTeamFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[160px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("role") || "Role"}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_role") || "Filter by role..."}
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {roleFilter && (
+                <button
+                  onClick={() => setRoleFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[160px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("status") || "Status"}
+            </label>
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+              >
+                <option value="">{t("all") || "All"}</option>
+                <option value="active">{t("active") || "Active"}</option>
+                <option value="banned">{t("banned") || "Banned"}</option>
+              </select>
+            </div>
+          </div>
+
+          {(usernameFilter || emailFilter || teamFilter || roleFilter || statusFilter) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setUsernameFilter("")
+                setEmailFilter("")
+                setTeamFilter("")
+                setRoleFilter("")
+                setStatusFilter("")
+              }}
+              className="mb-0.5"
+            >
+              {t("clear") || "Clear"} {t("all") || "All"}
+            </Button>
+          )}
+        </div>
+
+        <div className="mb-2 text-sm text-muted-foreground">
+          {t("showing") || "Showing"} {filteredUsers.length} {t("of") || "of"} {users.length} {t("users")?.toLowerCase() || "users"}
+        </div>
+
         <DataTable
           columns={columns}
-          data={users}
+          data={filteredUsers}
           enableRowSelection
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
+          enablePagination={true}
+          defaultPageSize={25}
         />
       </div>
 
@@ -374,7 +534,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("delete_user")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("delete_user_confirm", { username: deleting?.username || "" })}
+              {t("delete_user_confirm", { username: deleting?.username || "" }) || `Are you sure you want to delete ${deleting?.username}?`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -433,7 +593,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
@@ -441,7 +601,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban_users_confirm") : t("temp_ban_users_confirm")
@@ -452,7 +612,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={doTempBanSelected}>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban") : t("temp_ban")
