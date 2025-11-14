@@ -84,7 +84,6 @@ export default function CategoryPage() {
       try {
         const data = e?.detail ?? (typeof e?.data === 'string' ? JSON.parse(e.data) : e?.data);
         if (data && data.event === 'team_solve') {
-          console.log('[TeamSolve] received event', data, 'updating challenges for category', cat);
 
           // Instantly update local state to mark the challenge as solved if it's in the current list
           let foundInList = false;

@@ -494,8 +494,6 @@ async function createAccountAndFlagChallengeAPI(page, accountNumber: number) {
         } else {
           const errorText = await flagResponse.text();
         }
-      } else {
-        console.log(`No challenges available for account ${accountNumber}`);
       }
     } else {
       const errorText = await challengesResponse.text();
