@@ -32,10 +32,13 @@ export function useChallengeOrder() {
       await axios.put(`/api/challenge-categories/${categoryId}/reorder`, {
         challengeIds
       });
+      // Dismiss all previous toasts before showing new success toast to avoid spam
+      toast.dismiss();
       toast.success(t('challenge_order_updated_success'));
       return true;
     } catch (error: any) {
       console.error("Failed to reorder challenges:", error);
+      toast.dismiss();
       toast.error(t(error.response?.data?.error) || t('failed_to_update_challenge_order'));
       return false;
     } finally {
