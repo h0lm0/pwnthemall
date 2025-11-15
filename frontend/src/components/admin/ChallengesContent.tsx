@@ -32,7 +32,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
   const [filterDifficulty, setFilterDifficulty] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 13
+  const itemsPerPage = 12
 
   // Get unique values for filters
   const categories = useMemo(() => {
@@ -257,7 +257,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
 
               {/* Results Count */}
               <div className="text-sm text-gray-600">
-                Showing {filteredAndSortedChallenges.length} of {challenges.length} challenges
+                Showing {Math.min(filteredAndSortedChallenges.length, paginatedChallenges.length)} of {filteredAndSortedChallenges.length} filtered challenges ({challenges.length} total)
               </div>
             </div>
           </CardHeader>
@@ -364,7 +364,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
             </TableBody>
           </Table>
           
-          {filteredAndSortedChallenges.length > itemsPerPage && (
+          {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 px-2">
               <div className="text-sm text-muted-foreground">
                 Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedChallenges.length)} of {filteredAndSortedChallenges.length}
