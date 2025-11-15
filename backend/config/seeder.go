@@ -3,11 +3,11 @@ package config
 import (
 	"log"
 	"os"
-	"pwnthemall/models"
 	"strconv"
 	"time"
 
 	"github.com/casbin/casbin/v2"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -270,17 +270,17 @@ func seedDecayFormulas() {
 	decayFormulas := []models.DecayFormula{
 		{
 			Name:      "Linear Decay",
-			Step: 10,
+			Step:      10,
 			MinPoints: 50,
 		},
 		{
 			Name:      "Exponential Decay",
-			Step: 10,
+			Step:      10,
 			MinPoints: 50,
 		},
 		{
 			Name:      "Logarithmic Decay",
-			Step: 20,
+			Step:      20,
 			MinPoints: 50,
 		},
 	}

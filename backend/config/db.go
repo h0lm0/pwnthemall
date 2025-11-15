@@ -4,8 +4,7 @@ import (
 	"log"
 	"os"
 
-	"pwnthemall/models"
-
+	"github.com/pwnthemall/pwnthemall/backend/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

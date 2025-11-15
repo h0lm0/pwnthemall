@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"errors"
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
@@ -39,6 +40,18 @@ type RouteRegistrar interface {
 	RegisterRoute(method, path, handlerName string)
 }
 
+type RPCError struct {
+	Error string
+}
+
+type InitializeResponse struct {
+	Error string // Vide si pas d'erreur
+}
+
+type ShutdownResponse struct {
+	Error string // Vide si pas d'erreur
+}
+
 type PluginRPC struct {
 	client *rpc.Client
 }
@@ -63,15 +76,27 @@ func (p *PluginRPC) RegisterRoutes(registrar RouteRegistrar) error {
 }
 
 func (p *PluginRPC) Initialize(config map[string]interface{}) error {
-	var resp error
-	p.client.Call("Plugin.Initialize", config, &resp)
-	return resp
+	var resp InitializeResponse
+	err := p.client.Call("Plugin.Initialize", config, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Error != "" {
+		return errors.New(resp.Error)
+	}
+	return nil
 }
 
 func (p *PluginRPC) Shutdown() error {
-	var resp error
-	p.client.Call("Plugin.Shutdown", new(interface{}), &resp)
-	return resp
+	var resp ShutdownResponse
+	err := p.client.Call("Plugin.Shutdown", new(interface{}), &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Error != "" {
+		return errors.New(resp.Error)
+	}
+	return nil
 }
 
 func (p *PluginRPC) HandleRequest(handlerName string, request RequestData) (ResponseData, error) {
@@ -119,13 +144,19 @@ func (s *PluginRPCServer) GetRoutes(args interface{}, resp *[]RouteInfo) error {
 	return err
 }
 
-func (s *PluginRPCServer) Initialize(config map[string]interface{}, resp *error) error {
-	*resp = s.Impl.Initialize(config)
+func (s *PluginRPCServer) Initialize(config map[string]interface{}, resp *InitializeResponse) error {
+	err := s.Impl.Initialize(config)
+	if err != nil {
+		resp.Error = err.Error()
+	}
 	return nil
 }
 
-func (s *PluginRPCServer) Shutdown(args interface{}, resp *error) error {
-	*resp = s.Impl.Shutdown()
+func (s *PluginRPCServer) Shutdown(args interface{}, resp *ShutdownResponse) error {
+	err := s.Impl.Shutdown()
+	if err != nil {
+		resp.Error = err.Error()
+	}
 	return nil
 }
 

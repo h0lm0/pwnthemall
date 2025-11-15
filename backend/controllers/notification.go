@@ -3,14 +3,15 @@ package controllers
 import (
 	"encoding/json"
 	"log"
-	"pwnthemall/config"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
+
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 // WebSocketHub is a global variable to manage WebSocket connections
@@ -226,7 +227,6 @@ func GetSentNotifications(c *gin.Context) {
 	log.Printf("Raw notifications from DB: %+v", notifications)
 
 	// Convert to response format with user info
-	
 
 	var response []dto.SentNotificationResponse
 	for _, notification := range notifications {

@@ -10,22 +10,22 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"pwnthemall/config"
-	"pwnthemall/controllers"
-	"pwnthemall/debug"
-	"pwnthemall/routes"
-	"pwnthemall/shared"
-	"pwnthemall/utils"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/hashicorp/go-plugin"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/controllers"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/routes"
+	"github.com/pwnthemall/pwnthemall/backend/shared"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func loadPlugins(pluginDir string, router *gin.Engine) {
-	files, err := filepath.Glob(filepath.Join(pluginDir, "*/main.go"))
+	files, err := filepath.Glob(filepath.Join(pluginDir, "bin-*"))
 	if err != nil {
 		debug.Log("Failed to list plugins: %v", err)
 		return
@@ -199,7 +199,7 @@ func main() {
 	routes.RegisterSubmissionRoutes(router)
 
 	debug.Log("Loading plugins...")
-	loadPlugins("./plugins", router)
+	loadPlugins("/app/plugins/bin", router)
 	routes.RegisterPluginRoutes(router)
 
 	port := os.Getenv("PORT")

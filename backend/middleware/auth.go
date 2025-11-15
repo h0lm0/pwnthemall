@@ -6,10 +6,11 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"pwnthemall/config"
-	"pwnthemall/models"
-	"pwnthemall/utils"
 	"strings"
+
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"

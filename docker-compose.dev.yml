@@ -59,6 +59,7 @@ services:
     volumes:
       - ./backend:/app
       - ./shared/worker:/home/app/.ssh/worker
+      - /var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock
     networks:
       public:
       private:

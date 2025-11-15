@@ -1,10 +1,9 @@
 package controllers
 
 import (
-	"pwnthemall/shared"
-	"pwnthemall/utils"
-
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/shared"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func GetLoadedPlugins(c *gin.Context) {

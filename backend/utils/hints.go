@@ -2,9 +2,10 @@ package utils
 
 import (
 	"log"
-	"pwnthemall/config"
-	"pwnthemall/models"
 	"time"
+
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 )
 
 // HintScheduler manages the automatic activation of hints

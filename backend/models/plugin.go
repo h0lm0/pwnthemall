@@ -1,7 +1,7 @@
 package models
 
 // import (
-// 	"pwnthemall/shared"
+// 	"github.com/pwnthemall/pwnthemall/backend/backend/shared"
 
 // 	"github.com/hashicorp/go-plugin"
 // )

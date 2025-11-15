@@ -1,16 +1,21 @@
-FROM golang:1.24.9-alpine AS go_builder
+# ============================================
+# Build main application
+# ============================================
+FROM golang:1.24-alpine AS go_builder
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
+COPY . .
 RUN go mod download
 
-COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o pwnthemall
 
-#region Dev stage
-FROM golang:1.24.9-alpine AS dev
+# ============================================
+# Dev stage
+# ============================================
+FROM golang:1.24-alpine AS dev
 
 WORKDIR /app
 
@@ -24,20 +29,22 @@ RUN adduser -D -u 1000 -s /sbin/nologin app && \
 
 USER app
 
-RUN mkdir -p /app/tmp
+RUN mkdir -p /app/tmp /app/plugins
 RUN go install github.com/air-verse/air@v1.61.7
+
+COPY . .
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
 COPY entrypoint.dev.sh /entrypoint.sh
 
 EXPOSE 8080
 
 CMD ["sh", "/entrypoint.sh"]
-#endregion
 
-#region Prod stage
+# ============================================
+# Prod stage
+# ============================================
 FROM alpine:3.22 AS prod
 
 ARG DOCKER_GID
@@ -47,7 +54,7 @@ WORKDIR /app
 
 RUN apk --no-cache add ca-certificates openssh-client
 
-RUN mkdir -p /app/config
+RUN mkdir -p /app/config /app/plugins
 
 RUN adduser -D -u 1000 -s /sbin/nologin app && \ 
     mkdir -p /home/app/.ssh && \
@@ -60,16 +67,18 @@ RUN adduser -D -u 1000 -s /sbin/nologin app && \
     else \
       GROUP_TO_USE=$EXISTING_GROUP; \
     fi && \
-    adduser app $GROUP_TO_USE
+    adduser app $GROUP_TO_USE && \
+    chown -R app:app /app/plugins
 
 USER app
 
+COPY --from=go_builder /app/pwnthemall /app/pwnthemall
+
 COPY config/casbin_model.conf /app/config/
 COPY config/casbin_policies.csv /app/config/
-COPY --from=go_builder /app/pwnthemall /app/pwnthemall
 COPY entrypoint.prod.sh /entrypoint.sh
+COPY ./.dockerignore plugins/ /app/plugins/
 
 EXPOSE 8080
 
 CMD ["sh", "/entrypoint.sh"]
-#endregion

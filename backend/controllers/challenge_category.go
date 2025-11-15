@@ -1,16 +1,13 @@
 package controllers
 
 import (
-	"pwnthemall/config"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
-
-
 
 func GetChallengeCategories(c *gin.Context) {
 	user, ok := utils.GetAuthenticatedUser(c)
@@ -101,8 +98,6 @@ func DeleteChallengeCategory(c *gin.Context) {
 	utils.OKResponse(c, gin.H{"message": "Challenge category deleted"})
 }
 
-
-
 func ReorderChallenges(c *gin.Context) {
 	categoryId := c.Param("id")
 
@@ -121,10 +116,9 @@ func ReorderChallenges(c *gin.Context) {
 	for index, challengeId := range req.ChallengeIDs {
 		var challenge models.Challenge
 		if err := config.DB.First(&challenge, challengeId).Error; err != nil {
-			continue 
+			continue
 		}
 
-	
 		if challenge.ChallengeCategoryID != category.ID {
 			utils.BadRequestError(c, "Challenge does not belong to this category")
 			return

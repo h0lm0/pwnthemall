@@ -1,6 +1,6 @@
 package dto
 
-import "pwnthemall/models"
+import "github.com/pwnthemall/pwnthemall/backend/models"
 
 // FlagInput represents flag submission request
 type FlagInput struct {
@@ -15,24 +15,24 @@ type GeoFlagInput struct {
 
 // ChallengeAdminUpdateRequest represents admin challenge update request
 type ChallengeAdminUpdateRequest struct {
-	Name                *string       `json:"name"`
-	Description         *string       `json:"description"`
-	Difficulty          *uint         `json:"difficulty"`
-	Category            *uint         `json:"category"`
-	Type                *uint         `json:"type"`
-	Hidden              *bool         `json:"hidden"`
-	Points              *int          `json:"points"`
-	DecayFormulaID      *uint         `json:"decayFormulaId"`
-	EnableFirstBlood    *bool         `json:"enableFirstBlood"`
-	FirstBloodBonuses   *[]int64      `json:"firstBloodBonuses"`
-	FirstBloodBadges    *[]string     `json:"firstBloodBadges"`
-	Hints               *[]models.Hint `json:"hints"`
+	Name              *string        `json:"name"`
+	Description       *string        `json:"description"`
+	Difficulty        *uint          `json:"difficulty"`
+	Category          *uint          `json:"category"`
+	Type              *uint          `json:"type"`
+	Hidden            *bool          `json:"hidden"`
+	Points            *int           `json:"points"`
+	DecayFormulaID    *uint          `json:"decayFormulaId"`
+	EnableFirstBlood  *bool          `json:"enableFirstBlood"`
+	FirstBloodBonuses *[]int64       `json:"firstBloodBonuses"`
+	FirstBloodBadges  *[]string      `json:"firstBloodBadges"`
+	Hints             *[]models.Hint `json:"hints"`
 }
 
 // ChallengeGeneralUpdateRequest represents general challenge info update
 type ChallengeGeneralUpdateRequest struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description" binding:"required"`
+	Name         string `json:"name" binding:"required"`
+	Description  string `json:"description" binding:"required"`
 	Author       string `json:"author"`
 	Hidden       *bool  `json:"hidden"`
 	CategoryID   *uint  `json:"categoryId"`
@@ -62,8 +62,8 @@ type ChallengeWithSolved struct {
 // SolveWithUser represents a solve with user information
 type SolveWithUser struct {
 	models.Solve
-	Username   string               `json:"username"`
-	FirstBlood *models.FirstBlood   `json:"firstBlood,omitempty"`
+	Username   string             `json:"username"`
+	FirstBlood *models.FirstBlood `json:"firstBlood,omitempty"`
 }
 
 // TeamSolveEvent represents a team solve WebSocket event

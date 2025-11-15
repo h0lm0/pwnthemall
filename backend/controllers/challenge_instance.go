@@ -6,16 +6,17 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"pwnthemall/config"
-	"pwnthemall/debug"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
+
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 	"gorm.io/gorm"
 )
 

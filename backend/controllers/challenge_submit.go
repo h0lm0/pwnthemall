@@ -3,15 +3,16 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"pwnthemall/config"
-	"pwnthemall/debug"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
+
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 // SubmitChallenge handles challenge flag submission
