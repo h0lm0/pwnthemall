@@ -21,5 +21,24 @@ func GetAllSubmissions(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, submissions)
+	// Add isCorrect field to each submission
+	type SubmissionResponse struct {
+		models.Submission
+		IsCorrect bool `json:"isCorrect"`
+	}
+
+	var response []SubmissionResponse
+	for _, submission := range submissions {
+		var solveCount int64
+		config.DB.Model(&models.Solve{}).
+			Where("user_id = ? AND challenge_id = ?", submission.UserID, submission.ChallengeID).
+			Count(&solveCount)
+
+		response = append(response, SubmissionResponse{
+			Submission: submission,
+			IsCorrect:  solveCount > 0,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
 }

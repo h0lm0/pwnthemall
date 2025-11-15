@@ -44,6 +44,7 @@ interface DashboardStats {
 interface Submission {
   id: number;
   value: string;
+  isCorrect: boolean;
   createdAt: string;
   user?: {
     id: number;
@@ -293,7 +294,6 @@ export default function DashboardContent() {
                         {recentSubmissions
                           .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                           .map((submission) => {
-                            const isCorrect = submission.value === "correct" || submission.value.toLowerCase().includes("correct");
                             return (
                               <TableRow key={submission.id}>
                                 <TableCell className="font-medium">
@@ -306,8 +306,8 @@ export default function DashboardContent() {
                                   {submission.challenge?.name || "Unknown"}
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant={isCorrect ? "default" : "destructive"}>
-                                    {isCorrect ? t("dashboard.correct") : t("dashboard.incorrect")}
+                                  <Badge variant={submission.isCorrect ? "default" : "destructive"}>
+                                    {submission.isCorrect ? t("dashboard.correct") : t("dashboard.incorrect")}
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="text-right text-xs text-muted-foreground">
