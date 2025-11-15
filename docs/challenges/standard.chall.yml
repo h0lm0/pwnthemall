@@ -8,5 +8,5 @@ difficulty: "easy"
 type: "standard"
 author: "Kevin'MIT"
 hidden: false
-flags: ["PwnThatDemo"]
+flags: ["flag"]
 points: 123
