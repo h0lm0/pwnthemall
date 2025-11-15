@@ -81,6 +81,7 @@ func main() {
 	routes.RegisterNotificationRoutes(router)
 	routes.RegisterDecayFormulaRoutes(router)
 	routes.RegisterSubmissionRoutes(router)
+	routes.RegisterDashboardRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {

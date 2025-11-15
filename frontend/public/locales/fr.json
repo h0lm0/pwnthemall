@@ -244,9 +244,16 @@
     "invalid_server_response": "Réponse du serveur invalide. Veuillez réessayer.",
     "learn_more": "En savoir plus.",
     "please_fill_fields": "Veuillez remplir tous les champs",
-    "tip": "Conseil",
-    "warning": "Avertissement",
+    "tip": "Astuce",
+    "warning": "Attention",
     "welcome_back": "Bon retour"
+  },
+  "pagination": {
+    "showing": "Affichage de",
+    "to": "à",
+    "of": "sur",
+    "previous": "Précédent",
+    "next": "Suivant"
   },
   "misc": {
     "create_account": "Créez un nouveau compte pour continuer",
@@ -400,5 +407,34 @@
     "username_or_email": "Nom d'utilisateur ou E-mail",
     "username_too_long": "Nom d'utilisateur trop long (32 caractères max)",
     "username_updated": "Nom d'utilisateur mis à jour avec succès !"
+  },
+  "dashboard": {
+    "statistics": "Statistiques",
+    "total_challenges": "Défis totaux",
+    "total_users": "Utilisateurs totaux",
+    "total_teams": "Équipes totales",
+    "total_submissions": "Soumissions totales",
+    "active_users": "Utilisateurs actifs",
+    "banned_users": "Utilisateurs bannis",
+    "success_rate": "Taux de réussite",
+    "recent_activity": "Activité récente",
+    "difficulty_distribution": "Distribution par difficulté",
+    "submission_trend": "Tendance des soumissions",
+    "challenge_categories": "Catégories de défis",
+    "running_instances": "Instances actives",
+    "no_recent_submissions": "Aucune soumission récente",
+    "last_7_days": "7 derniers jours",
+    "last_48_hours": "48 dernières heures",
+    "easy": "Facile",
+    "medium": "Moyen",
+    "hard": "Difficile",
+    "hidden": "Caché",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "result": "Résultat",
+    "total_instances": "Instances totales",
+    "by_difficulty": "Par difficulté",
+    "by_category": "Par catégorie",
+    "submissions_over_time": "Soumissions au fil du temps"
   }
 }
