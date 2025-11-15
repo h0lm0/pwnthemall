@@ -111,7 +111,9 @@ export default function DashboardContent() {
 
   const formatShortDate = (dateString: string) => {
     const date = new Date(dateString);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${date.getMonth() + 1}/${date.getDate()} ${hours}:${minutes}`;
   };
 
   if (loading) {
@@ -349,7 +351,7 @@ export default function DashboardContent() {
             <Card>
               <CardHeader>
                 <CardTitle>{t("dashboard.submissions_over_time")}</CardTitle>
-                <CardDescription>{t("dashboard.last_7_days")}</CardDescription>
+                <CardDescription>{t("dashboard.last_48_hours")}</CardDescription>
               </CardHeader>
               <CardContent>
                 {submissionTrend.length > 0 ? (
