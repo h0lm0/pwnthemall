@@ -399,6 +399,7 @@
     "delete_users": "Supprimer les utilisateurs",
     "delete_users_confirm": "Êtes-vous sûr de vouloir supprimer les utilisateurs sélectionnés ?",
     "edit_user": "Modifier l'utilisateur",
+    "filter_by_email": "Filtrer par email...",
     "filter_by_role": "Filtrer par rôle...",
     "filter_by_status": "Filtrer par statut...",
     "filter_by_team": "Filtrer par équipe...",

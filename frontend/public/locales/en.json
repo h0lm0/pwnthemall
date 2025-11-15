@@ -398,6 +398,7 @@
     "delete_users": "Delete users",
     "delete_users_confirm": "Are you sure you want to delete the selected users?",
     "edit_user": "Edit user",
+    "filter_by_email": "Filter by email...",
     "filter_by_role": "Filter by role...",
     "filter_by_status": "Filter by status...",
     "filter_by_team": "Filter by team...",

@@ -1,5 +1,5 @@
 import Head from "next/head"
-import { useEffect, useState, useMemo } from "react"
+import { useState, useMemo } from "react"
 import axios from "@/lib/axios";
 
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
@@ -52,7 +52,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [usernameFilter, setUsernameFilter] = useState("")
   const [emailFilter, setEmailFilter] = useState("")
   const [teamFilter, setTeamFilter] = useState("")
-  const [roleFilter, setRoleFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("") // "banned" | "active" | ""
 
   // Filtered users
@@ -67,16 +66,13 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       const teamMatch = !teamFilter || 
         user.team?.name?.toLowerCase().includes(teamFilter.toLowerCase())
       
-      const roleMatch = !roleFilter || 
-        user.role?.toLowerCase() === roleFilter.toLowerCase()
-      
       const statusMatch = !statusFilter || 
         (statusFilter === "banned" && user.banned) || 
         (statusFilter === "active" && !user.banned)
       
-      return usernameMatch && emailMatch && teamMatch && roleMatch && statusMatch
+      return usernameMatch && emailMatch && teamMatch && statusMatch
     })
-  }, [users, usernameFilter, emailFilter, teamFilter, roleFilter, statusFilter])
+  }, [users, usernameFilter, emailFilter, teamFilter, statusFilter])
 
   const columns: ColumnDef<User>[] = [
     {
@@ -324,7 +320,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t("users")}</h1>
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={onRefresh}>{t("refresh")}</Button>
             <div
               className={cn(
                 "flex items-center gap-2 h-9",
@@ -398,7 +393,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </label>
             <div className="relative">
               <Input
-                placeholder={t("filter_by_user") || "Filter by email..."}
+                placeholder={t("filter_by_email") || "Filter by email..."}
                 value={emailFilter}
                 onChange={(e) => setEmailFilter(e.target.value)}
                 className="pr-8 bg-background"
@@ -438,28 +433,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
 
           <div className="flex-1 min-w-[160px]">
             <label className="text-sm font-medium mb-1 block">
-              {t("role") || "Role"}
-            </label>
-            <div className="relative">
-              <Input
-                placeholder={t("filter_by_role") || "Filter by role..."}
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="pr-8 bg-background"
-              />
-              {roleFilter && (
-                <button
-                  onClick={() => setRoleFilter("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-[160px]">
-            <label className="text-sm font-medium mb-1 block">
               {t("status") || "Status"}
             </label>
             <div className="relative">
@@ -475,7 +448,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </div>
           </div>
 
-          {(usernameFilter || emailFilter || teamFilter || roleFilter || statusFilter) && (
+          {(usernameFilter || emailFilter || teamFilter || statusFilter) && (
             <Button
               variant="outline"
               size="sm"
@@ -483,7 +456,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 setUsernameFilter("")
                 setEmailFilter("")
                 setTeamFilter("")
-                setRoleFilter("")
                 setStatusFilter("")
               }}
               className="mb-0.5"
