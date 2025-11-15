@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"pwnthemall/config"
 	"pwnthemall/models"
+	"pwnthemall/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +16,7 @@ func GetAllSubmissions(c *gin.Context) {
 	if err := config.DB.
 		Preload("User.Team").
 		Preload("Challenge").
+		Preload("Challenge.Flags").
 		Order("created_at DESC").
 		Find(&submissions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions"})
@@ -29,14 +31,22 @@ func GetAllSubmissions(c *gin.Context) {
 
 	var response []SubmissionResponse
 	for _, submission := range submissions {
-		var solveCount int64
-		config.DB.Model(&models.Solve{}).
-			Where("user_id = ? AND challenge_id = ?", submission.UserID, submission.ChallengeID).
-			Count(&solveCount)
+		isCorrect := false
+		
+		// Check if this specific submission value matches any flag
+		if submission.Challenge != nil && len(submission.Challenge.Flags) > 0 {
+			for _, flag := range submission.Challenge.Flags {
+				// Check if the submission value matches the flag (using hash comparison)
+				if flag.Value == utils.HashFlag(submission.Value) {
+					isCorrect = true
+					break
+				}
+			}
+		}
 
 		response = append(response, SubmissionResponse{
 			Submission: submission,
-			IsCorrect:  solveCount > 0,
+			IsCorrect:  isCorrect,
 		})
 	}
 

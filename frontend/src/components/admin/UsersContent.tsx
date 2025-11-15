@@ -7,7 +7,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { X } from "lucide-react"
+import { X, ArrowUpDown } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -53,10 +53,14 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [emailFilter, setEmailFilter] = useState("")
   const [teamFilter, setTeamFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("") // "banned" | "active" | ""
+  
+  // Sorting state
+  const [sortBy, setSortBy] = useState("id")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
-  // Filtered users
+  // Filtered and sorted users
   const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
+    let filtered = users.filter((user) => {
       const usernameMatch = !usernameFilter || 
         user.username?.toLowerCase().includes(usernameFilter.toLowerCase())
       
@@ -72,22 +76,70 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       
       return usernameMatch && emailMatch && teamMatch && statusMatch
     })
-  }, [users, usernameFilter, emailFilter, teamFilter, statusFilter])
+    
+    // Sort users
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortBy) {
+        case "username":
+          aValue = a.username || ""
+          bValue = b.username || ""
+          break
+        case "email":
+          aValue = a.email || ""
+          bValue = b.email || ""
+          break
+        case "team":
+          aValue = a.team?.name || ""
+          bValue = b.team?.name || ""
+          break
+        case "role":
+          aValue = a.role || ""
+          bValue = b.role || ""
+          break
+        case "banned":
+          aValue = a.banned ? 1 : 0
+          bValue = b.banned ? 1 : 0
+          break
+        default:
+          return 0
+      }
+      
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        const comparison = aValue.localeCompare(bValue)
+        return sortOrder === "asc" ? comparison : -comparison
+      } else {
+        const comparison = aValue - bValue
+        return sortOrder === "asc" ? comparison : -comparison
+      }
+    })
+    
+    return filtered
+  }, [users, usernameFilter, emailFilter, teamFilter, statusFilter, sortBy, sortOrder])
+  
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(field)
+      setSortOrder("asc")
+    }
+  }
 
   const columns: ColumnDef<User>[] = [
     {
-      accessorKey: "id",
-      header: t("id"),
-      cell: ({ getValue }) => (
-        <span className="block text-center w-10 min-w-[40px]">
-          {getValue() as string}
-        </span>
-      ),
-      size: 40,
-    },
-    {
       accessorKey: "username",
-      header: t("username"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("username")}
+        >
+          {t("username")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[120px] truncate">
           {getValue() as string}
@@ -96,7 +148,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "email",
-      header: t("email"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("email")}
+        >
+          {t("email")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[150px] truncate">
           {getValue() as string}
@@ -105,7 +166,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "team",
-      header: t("team"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("team")}
+        >
+          {t("team")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
         const team = row.original.team;
         return (
@@ -154,7 +224,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "role",
-      header: t("role"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("role")}
+        >
+          {t("role")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[80px]">
           {getValue() as string}
@@ -163,7 +242,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "banned",
-      header: t("banned"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("banned")}
+        >
+          {t("banned")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => {
         const isBanned = getValue() as boolean
         return (
@@ -476,7 +564,8 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           enablePagination={true}
-          defaultPageSize={25}
+          defaultPageSize={12}
+          hidePageSizeSelector={true}
         />
       </div>
 

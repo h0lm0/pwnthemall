@@ -1,5 +1,5 @@
 import Head from "next/head"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Challenge } from "@/models/Challenge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -31,6 +31,8 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
   const [filterCategory, setFilterCategory] = useState("all")
   const [filterDifficulty, setFilterDifficulty] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 13
 
   // Get unique values for filters
   const categories = useMemo(() => {
@@ -106,6 +108,20 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
 
     return filtered
   }, [challenges, searchTerm, sortBy, sortOrder, filterCategory, filterDifficulty, filterStatus])
+
+  // Paginated challenges
+  const paginatedChallenges = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredAndSortedChallenges.slice(startIndex, endIndex)
+  }, [filteredAndSortedChallenges, currentPage, itemsPerPage])
+
+  const totalPages = Math.ceil(filteredAndSortedChallenges.length / itemsPerPage)
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterCategory, filterDifficulty, filterStatus])
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -305,14 +321,14 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAndSortedChallenges.length === 0 ? (
+              {paginatedChallenges.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                     No challenges found matching your search criteria.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredAndSortedChallenges.map((challenge) => (
+                paginatedChallenges.map((challenge) => (
                   <TableRow key={challenge.id}>
                     <TableCell className="font-medium">{challenge.name}</TableCell>
                     <TableCell>{challenge.category?.name || "N/A"}</TableCell>
@@ -347,6 +363,35 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
               )}
             </TableBody>
           </Table>
+          
+          {filteredAndSortedChallenges.length > itemsPerPage && (
+            <div className="flex items-center justify-between mt-4 px-2">
+              <div className="text-sm text-muted-foreground">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedChallenges.length)} of {filteredAndSortedChallenges.length}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-2 text-sm">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
           </CardContent>
         </Card>
 
