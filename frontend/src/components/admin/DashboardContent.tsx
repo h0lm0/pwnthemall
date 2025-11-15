@@ -95,6 +95,13 @@ export default function DashboardContent() {
     };
 
     fetchDashboardData();
+
+    // Poll for updates every 10 seconds (only updates the data, not the entire page)
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const difficultyData = stats
