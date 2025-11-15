@@ -191,15 +191,18 @@ export default function DashboardContent() {
                 {stats?.users.total || 0}
               </div>
               {stats && stats.users.total > 0 && (
-                <div className="mt-3 flex gap-2">
-                  <Badge variant="outline" className="text-green-600 border-green-600">
-                    {t("dashboard.active_users")}: {stats.users.active}
-                  </Badge>
-                  {stats.users.banned > 0 && (
-                    <Badge variant="outline" className="text-red-600 border-red-600">
-                      {t("dashboard.banned_users")}: {stats.users.banned}
+                <div className="mt-3 space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {t("dashboard.by_status")}:
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      {t("dashboard.active")}: {stats.users.active}
                     </Badge>
-                  )}
+                    <Badge variant="outline" className="text-red-600 border-red-600">
+                      {t("dashboard.banned")}: {stats.users.banned}
+                    </Badge>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -234,15 +237,7 @@ export default function DashboardContent() {
               </div>
               {stats && stats.submissions.total > 0 && (
                 <div className="mt-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {t("dashboard.success_rate")}:
-                    </span>
-                    <Badge variant="outline" className="text-green-600 border-green-600">
-                      {stats.submissions.success_rate.toFixed(1)}%
-                    </Badge>
-                  </div>
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex gap-2">
                     <Badge variant="outline" className="text-green-600 border-green-600">
                       {t("dashboard.correct")}: {stats.submissions.correct}
                     </Badge>

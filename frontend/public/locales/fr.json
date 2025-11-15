@@ -458,6 +458,9 @@
     "total_instances": "Instances totales",
     "by_difficulty": "Par difficulté",
     "by_category": "Par catégorie",
+    "by_status": "Par statut",
+    "active": "Actifs",
+    "banned": "Bannis",
     "submissions_over_time": "Soumissions au fil du temps"
   }
 }
