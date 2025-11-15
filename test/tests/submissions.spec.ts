@@ -210,13 +210,11 @@ test('Add teams and submissions', async ({ page }) => {
         });
       }
       
-      if (challenge.flags && challenge.flags.length > 0) {
-        const correctFlag = challenge.flags[0].value;
-        await page.request.post(`https://pwnthemall.local/api/challenges/${challenge.id}/submit`, {
-          data: { flag: correctFlag },
-          headers: { 'Cookie': cookie }
-        });
-      }
+      // Submit the correct flag (all challenges use "flag" as the flag value)
+      await page.request.post(`https://pwnthemall.local/api/challenges/${challenge.id}/submit`, {
+        data: { flag: 'flag' },
+        headers: { 'Cookie': cookie }
+      });
       
       await page.request.post('https://pwnthemall.local/api/logout', {
         headers: { 'Cookie': cookie }

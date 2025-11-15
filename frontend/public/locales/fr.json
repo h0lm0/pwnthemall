@@ -124,9 +124,12 @@
     "leave": "Quitter",
     "loading": "Chargement...",
     "name": "Nom",
+    "next": "Suivant",
     "no": "non",
     "of": "de",
     "on": "le",
+    "page": "Page",
+    "previous": "Précédent",
     "public": "Public",
     "refresh": "Actualiser",
     "save": "Enregistrer",
@@ -206,7 +209,9 @@
   "flag": {
     "enter_your_flag": "Entrez votre flag",
     "flag_submission_no_longer_available": "La soumission de flags n'est plus disponible",
-    "submit": "Valider"
+    "submit": "Valider",
+    "wrong_flag": "Mauvais flag !",
+    "challenge_solved": "Défi résolu !"
   },
   "hints": {
     "available": "Disponible",
@@ -303,7 +308,25 @@
   },
   "scoreboard": {
     "no_badges_yet": "Aucun badge pour le moment",
-    "scoreboard": "Classement"
+    "scoreboard": "Classement",
+    "scoreboard_description": "Voir les classements des joueurs et des équipes",
+    "individual": "Individuel",
+    "individual_leaderboard": "Classement Individuel",
+    "team_leaderboard": "Classement des Équipes",
+    "rank": "Rang",
+    "player": "Joueur",
+    "points": "Points",
+    "solves": "Résolutions",
+    "members": "Membres",
+    "you": "Vous",
+    "your_team": "Votre Équipe",
+    "no_team": "Pas d'équipe",
+    "no_players_yet": "Aucun joueur n'a encore marqué",
+    "no_teams_yet": "Aucune équipe n'a encore marqué",
+    "no_solve_data": "Aucune donnée de résolution disponible",
+    "search": "Rechercher",
+    "solve_activity": "Activité de Résolution au Fil du Temps",
+    "solve_activity_description": "Suivez la progression des équipes à travers les défis"
   },
   "team": {
     "create_team": "Créer une équipe",

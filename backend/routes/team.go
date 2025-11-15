@@ -13,6 +13,7 @@ func RegisterTeamRoutes(router *gin.Engine) {
 		teams.GET("", middleware.CheckPolicy("/teams", "read"), controllers.GetTeams)
 		teams.GET("/:id", middleware.CheckPolicy("/teams/:id", "read"), controllers.GetTeam)
 		teams.GET("/leaderboard", middleware.CheckPolicy("/teams", "read"), controllers.GetLeaderboard)
+		teams.GET("/timeline", middleware.CheckPolicy("/teams", "read"), controllers.GetTeamTimeline)
 		teams.POST("", middleware.CheckPolicy("/teams", "write"), controllers.CreateTeam)
 		teams.POST("/join", middleware.CheckPolicy("/teams", "write"), middleware.RateLimitJoinTeam(), controllers.JoinTeam)
 		teams.POST("/leave", middleware.CheckPolicy("/teams", "write"), controllers.LeaveTeam)

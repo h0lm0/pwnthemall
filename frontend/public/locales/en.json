@@ -124,9 +124,12 @@
     "leave": "Leave",
     "loading": "Loading...",
     "name": "Name",
+    "next": "Next",
     "no": "no",
     "of": "of",
     "on": "on",
+    "page": "Page",
+    "previous": "Previous",
     "public": "Public",
     "refresh": "Refresh",
     "save": "Save",
@@ -206,7 +209,9 @@
   "flag": {
     "enter_your_flag": "Enter your flag",
     "flag_submission_no_longer_available": "Flag submission is no longer available",
-    "submit": "Submit"
+    "submit": "Submit",
+    "wrong_flag": "Wrong flag!",
+    "challenge_solved": "Challenge solved!"
   },
   "hints": {
     "available": "Available",
@@ -303,7 +308,25 @@
   },
   "scoreboard": {
     "no_badges_yet": "No badges yet",
-    "scoreboard": "Scoreboard"
+    "scoreboard": "Scoreboard",
+    "scoreboard_description": "View rankings for individuals and teams",
+    "individual": "Individual",
+    "individual_leaderboard": "Individual Leaderboard",
+    "team_leaderboard": "Team Leaderboard",
+    "rank": "Rank",
+    "player": "Player",
+    "points": "Points",
+    "solves": "Solves",
+    "members": "Members",
+    "you": "You",
+    "your_team": "Your Team",
+    "no_team": "No team",
+    "no_players_yet": "No players have scored yet",
+    "no_teams_yet": "No teams have scored yet",
+    "no_solve_data": "No solve data available yet",
+    "search": "Search",
+    "solve_activity": "Solve Activity Over Time",
+    "solve_activity_description": "Track how teams progress through challenges"
   },
   "team": {
     "create_team": "Create a team",
