@@ -29,7 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeoPicker from "./GeoPicker";
 import { useInstances } from "@/hooks/use-instances";
 import { useHints } from "@/hooks/use-hints";
-import { debugError } from "@/lib/debug";
+import { debugError, debugLog } from "@/lib/debug";
 import type { User } from "@/models/User";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -258,10 +258,6 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
   };
 
   const handleChallengeSelect = (challenge: Challenge) => {
-    console.log("Selected challenge:", challenge);
-    console.log("Challenge hints:", challenge.hints);
-    console.log("Hints length:", challenge.hints?.length);
-    
     setSelectedChallenge(challenge);
     setFlag("");
     setOpen(true);

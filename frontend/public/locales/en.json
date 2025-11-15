@@ -253,6 +253,13 @@
     "warning": "Warning",
     "welcome_back": "Welcome back"
   },
+  "pagination": {
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "previous": "Previous",
+    "next": "Next"
+  },
   "misc": {
     "create_account": "Create a new account to continue",
     "pwn": "pwn",
@@ -422,5 +429,34 @@
     "username_or_email": "Username or Email",
     "username_too_long": "Username too long (max 32 characters)",
     "username_updated": "Username updated successfully!"
+  },
+  "dashboard": {
+    "statistics": "Statistics",
+    "total_challenges": "Total Challenges",
+    "total_users": "Total Users",
+    "total_teams": "Total Teams",
+    "total_submissions": "Total Submissions",
+    "active_users": "Active Users",
+    "banned_users": "Banned Users",
+    "success_rate": "Success Rate",
+    "recent_activity": "Recent Activity",
+    "difficulty_distribution": "Difficulty Distribution",
+    "submission_trend": "Submission Trend",
+    "challenge_categories": "Challenge Categories",
+    "running_instances": "Running Instances",
+    "no_recent_submissions": "No recent submissions yet",
+    "last_7_days": "Last 7 Days",
+    "last_48_hours": "Last 48 Hours",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "hidden": "Hidden",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "result": "Result",
+    "total_instances": "Total Instances",
+    "by_difficulty": "By Difficulty",
+    "by_category": "By Category",
+    "submissions_over_time": "Submissions Over Time"
   }
 }
