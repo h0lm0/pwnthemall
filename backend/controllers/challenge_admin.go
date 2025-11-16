@@ -3,19 +3,13 @@ package controllers
 import (
 	"encoding/json"
 	"pwnthemall/config"
-	"pwnthemall/dto"
 	"pwnthemall/debug"
+	"pwnthemall/dto"
 	"pwnthemall/models"
 	"pwnthemall/utils"
 
 	"github.com/gin-gonic/gin"
 )
-
-
-
-
-
-
 
 func UpdateChallengeAdmin(c *gin.Context) {
 	var challenge models.Challenge
@@ -62,12 +56,12 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	}
 
 	// Broadcast category update (challenge modified affects category)
-	if UpdatesHub != nil {
+	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event": "category_update",
+			"event":  "category_update",
 			"action": "challenge_update",
 		}); err == nil {
-			UpdatesHub.SendToAll(payload)
+			utils.UpdatesHub.SendToAll(payload)
 		}
 	}
 
@@ -81,39 +75,39 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	// Process hints from request
 	if req.Hints != nil {
 		for _, hintReq := range *req.Hints {
-		debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
-		if hintReq.ID > 0 {
-			// Update existing hint
-			var hint models.Hint
-			if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
-				hint.Title = hintReq.Title
-				hint.Content = hintReq.Content
-				hint.Cost = hintReq.Cost
-				hint.IsActive = hintReq.IsActive
-				hint.AutoActiveAt = hintReq.AutoActiveAt
-				if err := config.DB.Save(&hint).Error; err != nil {
-					debug.Log("Failed to update hint %d: %v", hint.ID, err)
+			debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
+			if hintReq.ID > 0 {
+				// Update existing hint
+				var hint models.Hint
+				if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
+					hint.Title = hintReq.Title
+					hint.Content = hintReq.Content
+					hint.Cost = hintReq.Cost
+					hint.IsActive = hintReq.IsActive
+					hint.AutoActiveAt = hintReq.AutoActiveAt
+					if err := config.DB.Save(&hint).Error; err != nil {
+						debug.Log("Failed to update hint %d: %v", hint.ID, err)
+					} else {
+						debug.Log("Successfully updated hint %d", hint.ID)
+					}
+				}
+			} else if hintReq.Content != "" {
+				// Create new hint
+				hint := models.Hint{
+					ChallengeID:  challenge.ID,
+					Title:        hintReq.Title,
+					Content:      hintReq.Content,
+					Cost:         hintReq.Cost,
+					IsActive:     hintReq.IsActive,
+					AutoActiveAt: hintReq.AutoActiveAt,
+				}
+				if err := config.DB.Create(&hint).Error; err != nil {
+					debug.Log("Failed to create hint: %v", err)
 				} else {
-					debug.Log("Successfully updated hint %d", hint.ID)
+					debug.Log("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
 				}
 			}
-		} else if hintReq.Content != "" {
-			// Create new hint
-			hint := models.Hint{
-				ChallengeID:  challenge.ID,
-				Title:        hintReq.Title,
-				Content:      hintReq.Content,
-				Cost:         hintReq.Cost,
-				IsActive:     hintReq.IsActive,
-				AutoActiveAt: hintReq.AutoActiveAt,
-			}
-			if err := config.DB.Create(&hint).Error; err != nil {
-				debug.Log("Failed to create hint: %v", err)
-			} else {
-				debug.Log("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
-			}
 		}
-	}
 	}
 
 	if err := config.DB.Preload("DecayFormula").Preload("Hints").Preload("FirstBlood").First(&challenge, challenge.ID).Error; err != nil {
@@ -157,12 +151,12 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	}
 
 	// Broadcast category update (challenge modified affects category)
-	if UpdatesHub != nil {
+	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event": "category_update",
+			"event":  "category_update",
 			"action": "challenge_update",
 		}); err == nil {
-			UpdatesHub.SendToAll(payload)
+			utils.UpdatesHub.SendToAll(payload)
 		}
 	}
 

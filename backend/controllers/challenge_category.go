@@ -11,8 +11,6 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-
-
 func GetChallengeCategories(c *gin.Context) {
 	user, ok := utils.GetAuthenticatedUser(c)
 	if !ok {
@@ -62,12 +60,12 @@ func CreateChallengeCategory(c *gin.Context) {
 	}
 
 	// Broadcast category update to all connected clients
-	if UpdatesHub != nil {
+	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event": "category_update",
+			"event":  "category_update",
 			"action": "create",
 		}); err == nil {
-			UpdatesHub.SendToAll(payload)
+			utils.UpdatesHub.SendToAll(payload)
 		}
 	}
 
@@ -97,12 +95,12 @@ func UpdateChallengeCategory(c *gin.Context) {
 	config.DB.Save(&challengeCategory)
 
 	// Broadcast category update to all connected clients
-	if UpdatesHub != nil {
+	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event": "category_update",
+			"event":  "category_update",
 			"action": "update",
 		}); err == nil {
-			UpdatesHub.SendToAll(payload)
+			utils.UpdatesHub.SendToAll(payload)
 		}
 	}
 
@@ -121,19 +119,17 @@ func DeleteChallengeCategory(c *gin.Context) {
 	config.DB.Delete(&challengeCategory)
 
 	// Broadcast category update to all connected clients
-	if UpdatesHub != nil {
+	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event": "category_update",
+			"event":  "category_update",
 			"action": "delete",
 		}); err == nil {
-			UpdatesHub.SendToAll(payload)
+			utils.UpdatesHub.SendToAll(payload)
 		}
 	}
 
 	utils.OKResponse(c, gin.H{"message": "Challenge category deleted"})
 }
-
-
 
 func ReorderChallenges(c *gin.Context) {
 	categoryId := c.Param("id")
@@ -153,10 +149,9 @@ func ReorderChallenges(c *gin.Context) {
 	for index, challengeId := range req.ChallengeIDs {
 		var challenge models.Challenge
 		if err := config.DB.First(&challenge, challengeId).Error; err != nil {
-			continue 
+			continue
 		}
 
-	
 		if challenge.ChallengeCategoryID != category.ID {
 			utils.BadRequestError(c, "Challenge does not belong to this category")
 			return

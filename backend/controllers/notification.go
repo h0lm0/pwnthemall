@@ -13,22 +13,6 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-// WebSocketHub is a global variable to manage WebSocket connections for notifications
-var WebSocketHub *utils.Hub
-
-// UpdatesHub is a global variable to manage WebSocket connections for real-time updates
-// (categories, challenges, CTF status, instances)
-var UpdatesHub *utils.Hub
-
-// InitWebSocketHub initializes the WebSocket hubs
-func InitWebSocketHub() {
-	WebSocketHub = utils.NewHub()
-	go WebSocketHub.Run()
-	
-	UpdatesHub = utils.NewHub()
-	go UpdatesHub.Run()
-}
-
 // SendNotification sends a notification to users
 func SendNotification(c *gin.Context) {
 	var input dto.NotificationInput
@@ -63,13 +47,13 @@ func SendNotification(c *gin.Context) {
 	// Send via WebSocket
 	if input.UserID != nil {
 		// Send to specific user
-		WebSocketHub.SendToUser(*input.UserID, messageBytes)
+		utils.WebSocketHub.SendToUser(*input.UserID, messageBytes)
 	} else if input.TeamID != nil {
 		// Send to all users in the team
-		WebSocketHub.SendToTeam(*input.TeamID, messageBytes)
+		utils.WebSocketHub.SendToTeam(*input.TeamID, messageBytes)
 	} else {
 		// Send to all connected users except the sender
-		WebSocketHub.SendToAllExcept(messageBytes, senderID)
+		utils.WebSocketHub.SendToAllExcept(messageBytes, senderID)
 	}
 
 	utils.CreatedResponse(c, notificationMsg)
@@ -233,7 +217,6 @@ func GetSentNotifications(c *gin.Context) {
 	log.Printf("Raw notifications from DB: %+v", notifications)
 
 	// Convert to response format with user info
-	
 
 	var response []dto.SentNotificationResponse
 	for _, notification := range notifications {
