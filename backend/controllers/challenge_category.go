@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"pwnthemall/config"
 	"pwnthemall/dto"
 	"pwnthemall/models"
@@ -60,6 +61,16 @@ func CreateChallengeCategory(c *gin.Context) {
 		return
 	}
 
+	// Broadcast category update to all connected clients
+	if UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event": "category_update",
+			"action": "create",
+		}); err == nil {
+			UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.CreatedResponse(c, gin.H{
 		"id":   challengeCategory.ID,
 		"name": challengeCategory.Name,
@@ -85,6 +96,16 @@ func UpdateChallengeCategory(c *gin.Context) {
 	challengeCategory.Name = input.Name
 	config.DB.Save(&challengeCategory)
 
+	// Broadcast category update to all connected clients
+	if UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event": "category_update",
+			"action": "update",
+		}); err == nil {
+			UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.OKResponse(c, challengeCategory)
 }
 
@@ -98,6 +119,17 @@ func DeleteChallengeCategory(c *gin.Context) {
 	}
 
 	config.DB.Delete(&challengeCategory)
+
+	// Broadcast category update to all connected clients
+	if UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event": "category_update",
+			"action": "delete",
+		}); err == nil {
+			UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.OKResponse(c, gin.H{"message": "Challenge category deleted"})
 }
 

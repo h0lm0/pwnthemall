@@ -73,6 +73,7 @@
     "delete_challenge_categories": "Delete challenge categories",
     "delete_challenge_categories_confirm": "Are you sure you want to delete the selected challenge categories?",
     "delete_challenge_category": "Delete challenge category",
+    "delete_challenge_category_confirm": "Are you sure you want to delete the challenge category '{{name}}'?",
     "edit_challenge_category": "Edit challenge category",
     "new_challenge_category": "New challenge category"
   },

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"log"
 	"os"
@@ -20,7 +21,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SyncChallengesFromMinIO(ctx context.Context, key string) error {
+func SyncChallengesFromMinIO(ctx context.Context, key string, updatesHub *Hub) error {
 	const bucketName = "challenges"
 	// Key can be in two forms depending on MinIO webhook config:
 	// 1) "challenges/<slug>/chall.yml" (includes bucket)
@@ -118,7 +119,7 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	}
 	// Update or create the challenge in the database
 	slug := strings.Split(objectKey, "/")[0]
-	if err := updateOrCreateChallengeInDB(metaData, slug, ports); err != nil {
+	if err := updateOrCreateChallengeInDB(metaData, slug, ports, updatesHub); err != nil {
 		log.Printf("Error updating or creating challenge in DB: %v", err)
 		return err
 	}
@@ -135,7 +136,7 @@ func deleteChallengeFromDB(slug string) error {
 	return nil
 }
 
-func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int) error {
+func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int, updatesHub *Hub) error {
 	var cCategory models.ChallengeCategory
 	if err := config.DB.FirstOrCreate(&cCategory, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
 		return err
@@ -213,6 +214,16 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		return err
+	}
+
+	// Broadcast category update (MinIO sync affects challenges/categories)
+	if updatesHub != nil {
+		if payload, err := json.Marshal(map[string]interface{}{
+			"event":  "category_update",
+			"action": "minio_sync",
+		}); err == nil {
+			updatesHub.SendToAll(payload)
+		}
 	}
 
 	if err := config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.Flag{}).Error; err != nil {

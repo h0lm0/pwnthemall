@@ -15,6 +15,12 @@ func RegisterNotificationRoutes(router *gin.Engine) {
 		utils.ServeWs(controllers.WebSocketHub, userID, c.Writer, c.Request)
 	})
 
+	// WebSocket endpoint for real-time updates (categories, challenges, status)
+	router.GET("/ws/updates", middleware.AuthRequired(false), func(c *gin.Context) {
+		userID := c.GetUint("user_id")
+		utils.ServeWs(controllers.UpdatesHub, userID, c.Writer, c.Request)
+	})
+
 	// User notification endpoints
 	notifications := router.Group("/notifications", middleware.AuthRequired(false))
 	{
