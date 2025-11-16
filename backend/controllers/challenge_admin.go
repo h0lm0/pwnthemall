@@ -58,7 +58,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	// Broadcast category update (challenge modified affects category)
 	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event":  "category_update",
+			"event":  "challenge-category",
 			"action": "challenge_update",
 		}); err == nil {
 			utils.UpdatesHub.SendToAll(payload)
@@ -153,7 +153,7 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	// Broadcast category update (challenge modified affects category)
 	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event":  "category_update",
+			"event":  "challenge-category",
 			"action": "challenge_update",
 		}); err == nil {
 			utils.UpdatesHub.SendToAll(payload)

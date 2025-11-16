@@ -2,14 +2,14 @@
 import { useEffect, useRef, useState } from 'react';
 
 export type UpdateEvent = {
-  event: 'category_update' | 'ctf_status_change' | 'instance_status';
+  event: 'challenge-category' | 'ctf_status' | 'instance';
   action?: string;
   data?: any;
 };
 
 type UpdateCallback = (event: UpdateEvent) => void;
 
-export function useRealtimeUpdates(onUpdate?: UpdateCallback) {
+export function useRealtimeUpdates(onUpdate?: UpdateCallback, enabled: boolean = true) {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
@@ -21,6 +21,15 @@ export function useRealtimeUpdates(onUpdate?: UpdateCallback) {
   }, [onUpdate]);
 
   useEffect(() => {
+    if (!enabled) {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      setIsConnected(false);
+      return;
+    }
+
     let isMounted = true;
 
     const connect = () => {
@@ -89,7 +98,7 @@ export function useRealtimeUpdates(onUpdate?: UpdateCallback) {
         wsRef.current = null;
       }
     };
-  }, []);
+  }, [enabled]);
 
   return { isConnected };
 }

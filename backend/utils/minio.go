@@ -219,7 +219,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	// Broadcast category update (MinIO sync affects challenges/categories)
 	if updatesHub != nil {
 		if payload, err := json.Marshal(map[string]interface{}{
-			"event":  "category_update",
+			"event":  "challenge-category",
 			"action": "minio_sync",
 		}); err == nil {
 			updatesHub.SendToAll(payload)

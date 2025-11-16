@@ -62,7 +62,7 @@ func CreateChallengeCategory(c *gin.Context) {
 	// Broadcast category update to all connected clients
 	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event":  "category_update",
+			"event":  "challenge-category",
 			"action": "create",
 		}); err == nil {
 			utils.UpdatesHub.SendToAll(payload)
@@ -97,7 +97,7 @@ func UpdateChallengeCategory(c *gin.Context) {
 	// Broadcast category update to all connected clients
 	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event":  "category_update",
+			"event":  "challenge-category",
 			"action": "update",
 		}); err == nil {
 			utils.UpdatesHub.SendToAll(payload)
@@ -121,7 +121,7 @@ func DeleteChallengeCategory(c *gin.Context) {
 	// Broadcast category update to all connected clients
 	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
-			"event":  "category_update",
+			"event":  "challenge-category",
 			"action": "delete",
 		}); err == nil {
 			utils.UpdatesHub.SendToAll(payload)
