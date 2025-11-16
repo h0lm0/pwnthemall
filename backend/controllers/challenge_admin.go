@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"pwnthemall/config"
 	"pwnthemall/dto"
 	"pwnthemall/debug"
@@ -58,6 +59,16 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		utils.InternalServerError(c, "Failed to update challenge")
 		return
+	}
+
+	// Broadcast category update (challenge modified affects category)
+	if UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event": "category_update",
+			"action": "challenge_update",
+		}); err == nil {
+			UpdatesHub.SendToAll(payload)
+		}
 	}
 
 	// Recalculate points for all solves of this challenge with new values
@@ -143,6 +154,16 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		utils.InternalServerError(c, "Failed to update challenge")
 		return
+	}
+
+	// Broadcast category update (challenge modified affects category)
+	if UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event": "category_update",
+			"action": "challenge_update",
+		}); err == nil {
+			UpdatesHub.SendToAll(payload)
+		}
 	}
 
 	utils.OKResponse(c, challenge)

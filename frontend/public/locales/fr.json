@@ -68,11 +68,12 @@
     "select_category": "Sélectionner une catégorie"
   },
   "challenge_category": {
-    "challenge_categories": "Catégories de Challenge",
+    "challenge_categories": "Catégories de challenges",
     "create_challenge_category": "Créer une catégorie de challenge",
     "delete_challenge_categories": "Supprimer les catégories de challenge",
     "delete_challenge_categories_confirm": "Êtes-vous sûr de vouloir supprimer les catégories de challenge sélectionnées ?",
     "delete_challenge_category": "Supprimer la catégorie de challenge",
+    "delete_challenge_category_confirm": "Êtes-vous sûr de vouloir supprimer la catégorie de challenge '{{name}}' ?",
     "edit_challenge_category": "Modifier la catégorie de challenge",
     "new_challenge_category": "Nouvelle catégorie de challenge"
   },

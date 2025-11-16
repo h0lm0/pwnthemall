@@ -13,13 +13,20 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-// WebSocketHub is a global variable to manage WebSocket connections
+// WebSocketHub is a global variable to manage WebSocket connections for notifications
 var WebSocketHub *utils.Hub
 
-// InitWebSocketHub initializes the WebSocket hub
+// UpdatesHub is a global variable to manage WebSocket connections for real-time updates
+// (categories, challenges, CTF status, instances)
+var UpdatesHub *utils.Hub
+
+// InitWebSocketHub initializes the WebSocket hubs
 func InitWebSocketHub() {
 	WebSocketHub = utils.NewHub()
 	go WebSocketHub.Run()
+	
+	UpdatesHub = utils.NewHub()
+	go UpdatesHub.Run()
 }
 
 // SendNotification sends a notification to users
