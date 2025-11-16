@@ -6,6 +6,7 @@ import { useCTFStatus } from "@/hooks/use-ctf-status";
 import { Card } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 import Head from "next/head";
+import ScoreboardContent from "@/components/ScoreboardContent";
 
 export default function ScoreboardPage() {
   const router = useRouter();
@@ -94,13 +95,9 @@ export default function ScoreboardPage() {
   return (
     <>
       <Head>
-        <title>{getSiteName()}</title>
+        <title>{`${getSiteName()} - Scoreboard`}</title>
       </Head>
-    <div className="bg-muted flex min-h-screen items-center justify-center">
-      <h1 className="text-3xl font-bold dark:text-cyan-400">
-        Scoreboard page
-      </h1>
-    </div>
+      <ScoreboardContent />
     </>
   );
 }

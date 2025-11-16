@@ -209,3 +209,178 @@ func GetTeamScore(c *gin.Context) {
 		"spentOnHints":   int(totalSpent),
 	})
 }
+
+// GetTeamTimeline returns solve activity timeline for top teams (CTFd/TryHackMe style)
+func GetTeamTimeline(c *gin.Context) {
+	// Get top 3 teams from leaderboard
+	var teams []models.Team
+	if err := config.DB.Preload("Users").Find(&teams).Error; err != nil {
+		utils.InternalServerError(c, "failed_to_fetch_teams")
+		return
+	}
+
+	decayService := utils.NewDecay()
+	type teamScore struct {
+		team  models.Team
+		score int
+	}
+	var teamScores []teamScore
+
+	// Calculate scores for all teams
+	for _, team := range teams {
+		var solves []models.Solve
+		if err := config.DB.Where("team_id = ?", team.ID).Find(&solves).Error; err != nil {
+			continue
+		}
+
+		totalScore := 0
+		for _, solve := range solves {
+			var challenge models.Challenge
+			if err := config.DB.First(&challenge, solve.ChallengeID).Error; err != nil {
+				continue
+			}
+
+			var position int64
+			config.DB.Model(&models.Solve{}).
+				Where("challenge_id = ? AND created_at < ?", challenge.ID, solve.CreatedAt).
+				Count(&position)
+
+			currentPoints := decayService.CalculateDecayedPoints(&challenge, int(position))
+			totalScore += currentPoints
+
+			if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+				pos := int(position)
+				if pos < len(challenge.FirstBloodBonuses) {
+					bonusValue := int(challenge.FirstBloodBonuses[pos])
+					totalScore += bonusValue
+				}
+			}
+		}
+
+		var totalSpent int64
+		config.DB.Model(&models.HintPurchase{}).
+			Where("team_id = ?", team.ID).
+			Select("COALESCE(SUM(cost), 0)").
+			Scan(&totalSpent)
+
+		finalScore := totalScore - int(totalSpent)
+		teamScores = append(teamScores, teamScore{team: team, score: finalScore})
+	}
+
+	// Sort by score to get top 3
+	for i := 0; i < len(teamScores)-1; i++ {
+		for j := i + 1; j < len(teamScores); j++ {
+			if teamScores[j].score > teamScores[i].score {
+				teamScores[i], teamScores[j] = teamScores[j], teamScores[i]
+			}
+		}
+	}
+
+	// Get top 3 teams
+	topTeams := make([]models.Team, 0, 3)
+	for i := 0; i < len(teamScores) && i < 3; i++ {
+		topTeams = append(topTeams, teamScores[i].team)
+	}
+
+	if len(topTeams) == 0 {
+		utils.OKResponse(c, []interface{}{})
+		return
+	}
+
+	// Get all solves for top teams ordered by time
+	var allSolves []models.Solve
+	teamIDs := make([]uint, len(topTeams))
+	for i, team := range topTeams {
+		teamIDs[i] = team.ID
+	}
+
+	if err := config.DB.Where("team_id IN ?", teamIDs).
+		Order("created_at ASC").
+		Find(&allSolves).Error; err != nil {
+		utils.InternalServerError(c, "failed_to_fetch_solves")
+		return
+	}
+
+	// Build timeline data
+	type timelinePoint struct {
+		Time      string         `json:"time"`
+		Team1     int            `json:"team1"`
+		Team2     int            `json:"team2"`
+		Team3     int            `json:"team3"`
+		Team1Name string         `json:"team1Name"`
+		Team2Name string         `json:"team2Name"`
+		Team3Name string         `json:"team3Name"`
+	}
+
+	timeline := []timelinePoint{}
+	teamScoresMap := make(map[uint]int) // Current cumulative score per team
+	
+	// Initialize team names
+	var team1Name, team2Name, team3Name string
+	if len(topTeams) > 0 {
+		team1Name = topTeams[0].Name
+	}
+	if len(topTeams) > 1 {
+		team2Name = topTeams[1].Name
+	}
+	if len(topTeams) > 2 {
+		team3Name = topTeams[2].Name
+	}
+
+	// Process each solve chronologically
+	for _, solve := range allSolves {
+		var challenge models.Challenge
+		if err := config.DB.First(&challenge, solve.ChallengeID).Error; err != nil {
+			continue
+		}
+
+		// Calculate points for this solve
+		var position int64
+		config.DB.Model(&models.Solve{}).
+			Where("challenge_id = ? AND created_at <= ?", challenge.ID, solve.CreatedAt).
+			Count(&position)
+		position-- // Convert to 0-based
+
+		points := decayService.CalculateDecayedPoints(&challenge, int(position))
+
+		if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
+			pos := int(position)
+			if pos < len(challenge.FirstBloodBonuses) {
+				bonusValue := int(challenge.FirstBloodBonuses[pos])
+				points += bonusValue
+			}
+		}
+
+		// Update team score
+		teamScoresMap[solve.TeamID] += points
+
+		// Create timeline point with all team scores
+		point := timelinePoint{
+			Time:      solve.CreatedAt.Format("15:04"),
+			Team1Name: team1Name,
+			Team2Name: team2Name,
+			Team3Name: team3Name,
+		}
+
+		// Get current scores for all top teams
+		if len(topTeams) > 0 {
+			point.Team1 = teamScoresMap[topTeams[0].ID]
+		}
+		if len(topTeams) > 1 {
+			point.Team2 = teamScoresMap[topTeams[1].ID]
+		}
+		if len(topTeams) > 2 {
+			point.Team3 = teamScoresMap[topTeams[2].ID]
+		}
+
+		timeline = append(timeline, point)
+	}
+
+	// If no solves yet, return empty array
+	if len(timeline) == 0 {
+		utils.OKResponse(c, []interface{}{})
+		return
+	}
+
+	utils.OKResponse(c, timeline)
+}

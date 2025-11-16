@@ -6,11 +6,13 @@ import { useLanguage } from "@/context/LanguageContext"
 import { useSiteConfig } from "@/context/SiteConfigContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
 
 interface Submission {
   id: number
   value: string
+  isCorrect: boolean
   createdAt: string
   user?: { 
     id: number
@@ -37,6 +39,7 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
 
   // Filter submissions based on user, team, and challenge
   const filteredSubmissions = useMemo(() => {
+    if (!submissions) return []
     return submissions.filter((submission) => {
       const userMatch = !userFilter || 
         submission.user?.username?.toLowerCase().includes(userFilter.toLowerCase())
@@ -52,16 +55,6 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
   }, [submissions, userFilter, teamFilter, challengeFilter])
 
   const columns: ColumnDef<Submission>[] = [
-    {
-      accessorKey: "id",
-      header: t("id") || "ID",
-      cell: ({ getValue }) => (
-        <span className="block text-center w-10 min-w-[40px] font-mono">
-          {getValue() as number}
-        </span>
-      ),
-      size: 40,
-    },
     {
       accessorKey: "user.username",
       header: t("username") || "User",
@@ -96,6 +89,15 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
         <span className="block min-w-[200px] font-mono truncate max-w-[300px]">
           {getValue() as string}
         </span>
+      ),
+    },
+    {
+      accessorKey: "isCorrect",
+      header: t("dashboard.result") || "Result",
+      cell: ({ row }) => (
+        <Badge variant={row.original.isCorrect ? "default" : "destructive"} className="text-xs">
+          {row.original.isCorrect ? t("dashboard.correct") || "Correct" : t("dashboard.incorrect") || "Incorrect"}
+        </Badge>
       ),
     },
     {
@@ -220,10 +222,10 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
         </div>
 
         <div className="mb-2 text-sm text-muted-foreground">
-          {t("showing") || "Showing"} {filteredSubmissions.length} {t("of") || "of"} {submissions.length} {t("admin.submissions")?.toLowerCase() || "submissions"}
+          {t("showing") || "Showing"} {filteredSubmissions.length} {t("of") || "of"} {submissions?.length || 0} {t("admin.submissions")?.toLowerCase() || "submissions"}
         </div>
 
-        <DataTable columns={columns} data={filteredSubmissions} enablePagination={true} defaultPageSize={25} />
+        <DataTable columns={columns} data={filteredSubmissions} enablePagination={true} defaultPageSize={15} hidePageSizeSelector={true} />
       </div>
     </>
   )

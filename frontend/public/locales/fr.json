@@ -124,9 +124,12 @@
     "leave": "Quitter",
     "loading": "Chargement...",
     "name": "Nom",
+    "next": "Suivant",
     "no": "non",
     "of": "de",
     "on": "le",
+    "page": "Page",
+    "previous": "Précédent",
     "public": "Public",
     "refresh": "Actualiser",
     "save": "Enregistrer",
@@ -206,7 +209,9 @@
   "flag": {
     "enter_your_flag": "Entrez votre flag",
     "flag_submission_no_longer_available": "La soumission de flags n'est plus disponible",
-    "submit": "Valider"
+    "submit": "Valider",
+    "wrong_flag": "Mauvais flag !",
+    "challenge_solved": "Défi résolu !"
   },
   "hints": {
     "available": "Disponible",
@@ -244,9 +249,16 @@
     "invalid_server_response": "Réponse du serveur invalide. Veuillez réessayer.",
     "learn_more": "En savoir plus.",
     "please_fill_fields": "Veuillez remplir tous les champs",
-    "tip": "Conseil",
-    "warning": "Avertissement",
+    "tip": "Astuce",
+    "warning": "Attention",
     "welcome_back": "Bon retour"
+  },
+  "pagination": {
+    "showing": "Affichage de",
+    "to": "à",
+    "of": "sur",
+    "previous": "Précédent",
+    "next": "Suivant"
   },
   "misc": {
     "create_account": "Créez un nouveau compte pour continuer",
@@ -303,7 +315,25 @@
   },
   "scoreboard": {
     "no_badges_yet": "Aucun badge pour le moment",
-    "scoreboard": "Classement"
+    "scoreboard": "Classement",
+    "scoreboard_description": "Voir les classements des joueurs et des équipes",
+    "individual": "Individuel",
+    "individual_leaderboard": "Classement Individuel",
+    "team_leaderboard": "Classement des Équipes",
+    "rank": "Rang",
+    "player": "Joueur",
+    "points": "Points",
+    "solves": "Résolutions",
+    "members": "Membres",
+    "you": "Vous",
+    "your_team": "Votre Équipe",
+    "no_team": "Pas d'équipe",
+    "no_players_yet": "Aucun joueur n'a encore marqué",
+    "no_teams_yet": "Aucune équipe n'a encore marqué",
+    "no_solve_data": "Aucune donnée de résolution disponible",
+    "search": "Rechercher",
+    "solve_activity": "Activité de Résolution au Fil du Temps",
+    "solve_activity_description": "Suivez la progression des équipes à travers les défis"
   },
   "team": {
     "create_team": "Créer une équipe",
@@ -369,6 +399,7 @@
     "delete_users": "Supprimer les utilisateurs",
     "delete_users_confirm": "Êtes-vous sûr de vouloir supprimer les utilisateurs sélectionnés ?",
     "edit_user": "Modifier l'utilisateur",
+    "filter_by_email": "Filtrer par email...",
     "filter_by_role": "Filtrer par rôle...",
     "filter_by_status": "Filtrer par statut...",
     "filter_by_team": "Filtrer par équipe...",
@@ -400,5 +431,37 @@
     "username_or_email": "Nom d'utilisateur ou E-mail",
     "username_too_long": "Nom d'utilisateur trop long (32 caractères max)",
     "username_updated": "Nom d'utilisateur mis à jour avec succès !"
+  },
+  "dashboard": {
+    "statistics": "Statistiques",
+    "total_challenges": "Défis totaux",
+    "total_users": "Utilisateurs totaux",
+    "total_teams": "Équipes totales",
+    "total_submissions": "Soumissions totales",
+    "active_users": "Utilisateurs actifs",
+    "banned_users": "Utilisateurs bannis",
+    "success_rate": "Taux de réussite",
+    "recent_activity": "Activité récente",
+    "difficulty_distribution": "Distribution par difficulté",
+    "submission_trend": "Tendance des soumissions",
+    "challenge_categories": "Catégories de défis",
+    "running_instances": "Instances actives",
+    "no_recent_submissions": "Aucune soumission récente",
+    "last_7_days": "7 derniers jours",
+    "last_48_hours": "48 dernières heures",
+    "easy": "Facile",
+    "medium": "Moyen",
+    "hard": "Difficile",
+    "hidden": "Caché",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "result": "Résultat",
+    "total_instances": "Instances totales",
+    "by_difficulty": "Par difficulté",
+    "by_category": "Par catégorie",
+    "by_status": "Par statut",
+    "active": "Actifs",
+    "banned": "Bannis",
+    "submissions_over_time": "Soumissions au fil du temps"
   }
 }
