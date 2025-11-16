@@ -161,7 +161,7 @@ export default function DashboardContent() {
               <Flag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="px-3 pb-3">
-              <div className="text-2xl font-bold text-cyan-400">
+              <div className="text-2xl font-bold">
                 {stats?.challenges.total || 0}
               </div>
               {stats && stats.challenges.total > 0 && (
@@ -197,7 +197,7 @@ export default function DashboardContent() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-cyan-400">
+              <div className="text-3xl font-bold">
                 {stats?.users.total || 0}
               </div>
               {stats && stats.users.total > 0 && (
@@ -227,7 +227,7 @@ export default function DashboardContent() {
               <Trophy className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-cyan-400">
+              <div className="text-3xl font-bold">
                 {stats?.teams.total || 0}
               </div>
             </CardContent>
@@ -242,7 +242,7 @@ export default function DashboardContent() {
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-cyan-400">
+              <div className="text-3xl font-bold">
                 {stats?.submissions.total || 0}
               </div>
               {stats && stats.submissions.total > 0 && (
@@ -452,7 +452,7 @@ export default function DashboardContent() {
                   {t("dashboard.total_instances")}: {stats.instances.total}
                 </CardDescription>
               </div>
-              <div className="text-2xl font-bold text-cyan-400">
+              <div className="text-2xl font-bold">
                 {stats.instances.running}
               </div>
             </CardHeader>
