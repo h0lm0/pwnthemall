@@ -141,6 +141,8 @@ services:
     build:
       context: caddy/
       dockerfile: Dockerfile
+      args:
+        CADDY_ENV: ${CADDY_ENV}  
     ports:
       - "8080:80"
       - "127.0.0.1:443:443"

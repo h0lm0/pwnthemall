@@ -46,12 +46,9 @@ PLUGINS_DIR="backend/plugins"
 PLUGINS_OUTPUT_DIR="${PLUGINS_DIR}/bin"
 PLUGINS_IMAGE="pwnthemall-plugins:latest"
 
-# Worker system needs: automatically retrieve docker gid & libvirt keys id
+# Worker system needs: automatically retrieve docker gid
 DOCKER_GID=$(getent group docker | cut -d: -f3)
 export DOCKER_GID
-
-LIBVIRT_UID=$(stat -c %u shared/libvirt-worker.pub)
-export LIBVIRT_UID
 
 function minio_alias() {
     local env="${1:-prod}" # default to prod
@@ -343,6 +340,8 @@ function compose_up() {
         echo "WARN: Private key file shared/libvirt-worker not found, generating new one..."
         generate_key "libvirt-worker"
     fi
+    LIBVIRT_UID=$(stat -c %u shared/libvirt-worker.pub)
+    export LIBVIRT_UID
 
     while [[ $# -gt 0 ]]; do
         case "$1" in

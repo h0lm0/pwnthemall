@@ -85,6 +85,33 @@ services:
       timeout: 3s
       retries: 5
 
+  libvirt-worker:
+    container_name: libvirt-worker
+    build:
+      context: ./libvirt-worker
+      dockerfile: Dockerfile
+      args:
+        LIBVIRT_UID: ${LIBVIRT_UID}
+        LIBVIRT_WORKER_PASSWORD: ${LIBVIRT_WORKER_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    privileged: true
+    volumes:
+      - ./shared/libvirt-worker.pub:/home/libvirt-user/.ssh/authorized_keys
+      # - libvirt-data:/var/lib/libvirt
+    devices:
+      - /dev/kvm:/dev/kvm
+    networks:
+      private:
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 22 && virsh -c qemu:///system version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   db:
     container_name: db
     image: postgres:15
