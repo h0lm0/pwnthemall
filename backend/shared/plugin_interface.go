@@ -32,13 +32,42 @@ type PluginMetadata struct {
 }
 
 type RouteInfo struct {
-	Method  string // "GET", "POST", etc.
-	Path    string
-	Handler string
+	Method      string // "GET", "POST", etc.
+	Path        string
+	Handler     string
+	RequireAuth bool
+	RequireRole string // "member", "admin", ou "" pour tout le monde
+	Permission  string // Permission casbin custom (optionnel)
 }
 
 type RouteRegistrar interface {
 	RegisterRoute(method, path, handlerName string)
+	RegisterRouteWithAuth(method, path, handlerName, requireRole string)
+}
+
+// Adapter pour la collecte des routes (pour GetRoutes RPC)
+type routeCollector struct {
+	routes []RouteInfo
+}
+
+func (r *routeCollector) RegisterRoute(method, path, handlerName string) {
+	r.routes = append(r.routes, RouteInfo{
+		Method:      method,
+		Path:        path,
+		Handler:     handlerName,
+		RequireAuth: false,
+		RequireRole: "",
+	})
+}
+
+func (r *routeCollector) RegisterRouteWithAuth(method, path, handlerName, requireRole string) {
+	r.routes = append(r.routes, RouteInfo{
+		Method:      method,
+		Path:        path,
+		Handler:     handlerName,
+		RequireAuth: true,
+		RequireRole: requireRole,
+	})
 }
 
 type RPCError struct {
@@ -71,7 +100,11 @@ func (p *PluginRPC) RegisterRoutes(registrar RouteRegistrar) error {
 	}
 
 	for _, route := range routes {
-		registrar.RegisterRoute(route.Method, route.Path, route.Handler)
+		if route.RequireAuth {
+			registrar.RegisterRouteWithAuth(route.Method, route.Path, route.Handler, route.RequireRole)
+		} else {
+			registrar.RegisterRoute(route.Method, route.Path, route.Handler)
+		}
 	}
 	return nil
 }
@@ -172,18 +205,6 @@ func (s *PluginRPCServer) HandleRequest(args *HandleRequestArgs, resp *ResponseD
 
 type RequestHandler interface {
 	HandleRequest(handlerName string, request RequestData) (ResponseData, error)
-}
-
-type routeCollector struct {
-	routes []RouteInfo
-}
-
-func (r *routeCollector) RegisterRoute(method, path, handlerName string) {
-	r.routes = append(r.routes, RouteInfo{
-		Method:  method,
-		Path:    path,
-		Handler: handlerName,
-	})
 }
 
 type GenericPlugin struct {
