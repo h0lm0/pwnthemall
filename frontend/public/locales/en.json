@@ -68,7 +68,7 @@
     "select_category": "Select Category"
   },
   "challenge_category": {
-    "challenge_categories": "Challenge Categories",
+    "challenge_categories": "Challenge categories",
     "create_challenge_category": "Create challenge category",
     "delete_challenge_categories": "Delete challenge categories",
     "delete_challenge_categories_confirm": "Are you sure you want to delete the selected challenge categories?",
@@ -78,7 +78,7 @@
     "new_challenge_category": "New challenge category"
   },
   "challenge_order": {
-    "challenge_order_management": "Challenge Order Management",
+    "challenge_order_management": "Challenge order management",
     "challenge_order_updated_success": "Challenge order updated successfully",
     "challenges_count": "{count} challenges",
     "drag_drop_reorder_description": "Drag and drop to reorder challenges within each category",
@@ -179,10 +179,16 @@
     "ctf_not_started": "CTF Not Started",
     "ctf_not_started_message": "The CTF competition has not started yet. Please wait for the competition to begin.",
     "ctf_start_time_description": "Set when the CTF competition starts. Leave empty for no time restrictions.",
+    "ctf_end_time_description": "Set when the CTF competition ends. Leave empty for no time restrictions.",
     "ctf_status": "CTF Status",
+    "ctf_status_active": "CTF Active",
+    "ctf_status_active_desc": "The CTF competition is currently active. Good luck!",
+    "ctf_status_ended": "CTF Ended",
+    "ctf_status_ended_desc": "The CTF competition has ended. Thanks for participating!",
     "ctf_status_no_timing": "No Timing Configured",
     "ctf_status_no_timing_desc": "No start or end times are configured. The CTF operates without time restrictions.",
     "CTF_START_TIME": "CTF Start Time",
+    "CTF_END_TIME": "CTF End Time",
     "loading_ctf_status": "Loading CTF status...",
     "unable_to_load_ctf_status": "Unable to load CTF status"
   },
