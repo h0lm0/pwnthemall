@@ -68,7 +68,7 @@
     "select_category": "Select Category"
   },
   "challenge_category": {
-    "challenge_categories": "Challenge Categories",
+    "challenge_categories": "Challenge categories",
     "create_challenge_category": "Create challenge category",
     "delete_challenge_categories": "Delete challenge categories",
     "delete_challenge_categories_confirm": "Are you sure you want to delete the selected challenge categories?",
@@ -78,7 +78,7 @@
     "new_challenge_category": "New challenge category"
   },
   "challenge_order": {
-    "challenge_order_management": "Challenge Order Management",
+    "challenge_order_management": "Challenge order management",
     "challenge_order_updated_success": "Challenge order updated successfully",
     "challenges_count": "{count} challenges",
     "drag_drop_reorder_description": "Drag and drop to reorder challenges within each category",
