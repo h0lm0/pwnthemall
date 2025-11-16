@@ -7,8 +7,8 @@ RUN apk add --no-cache openssh bash docker docker-compose openrc shadow
 ARG DOCKER_GID
 ENV DOCKER_GID $DOCKER_GID
 
-ARG WORKER_PASSWORD
-ENV WORKER_PASSWORD $WORKER_PASSWORD
+ARG DOCKER_WORKER_PASSWORD
+ENV DOCKER_WORKER_PASSWORD $DOCKER_WORKER_PASSWORD
 
 # Create docker group with dynamic GID or use existing group with that GID
 RUN EXISTING_GROUP=$(getent group ${DOCKER_GID} | cut -d: -f1) && \
@@ -24,7 +24,7 @@ RUN EXISTING_GROUP=$(getent group ${DOCKER_GID} | cut -d: -f1) && \
     chmod 700 /home/docker/.ssh
 
 # Set password for docker user, mandatory !
-RUN echo "docker:${WORKER_PASSWORD}" | chpasswd
+RUN echo "docker:${DOCKER_WORKER_PASSWORD}" | chpasswd
 
 # SSH server config: disable root login, enable pubkey auth
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \

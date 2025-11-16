@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
@@ -30,14 +31,35 @@ func loadPlugins(pluginDir string, router *gin.Engine) {
 		debug.Log("Failed to list plugins: %v", err)
 		return
 	}
+
+	if len(files) == 0 {
+		debug.Log("No plugins found in %s", pluginDir)
+		return
+	}
+
 	debug.Log("Found these plugins files: %v", files)
+
 	handshakeConfig := plugin.HandshakeConfig{
 		ProtocolVersion:  1,
 		MagicCookieKey:   "PWNTHEMALL_PLUGIN",
-		MagicCookieValue: "plugin_system",
+		MagicCookieValue: os.Getenv("PTA_PLUGIN_MAGIC_VALUE"),
 	}
 
 	for _, file := range files {
+		pluginName := filepath.Base(file)
+		debug.Log("Loading plugin: %s", pluginName)
+
+		// Charger le .env du plugin
+		envVars, err := shared.LoadPluginEnv(file)
+		if err != nil {
+			debug.Log("Failed to load .env for %s: %v", pluginName, err)
+			continue
+		}
+
+		if len(envVars) > 0 {
+			debug.Log("Loaded %d environment variables for %s", len(envVars), pluginName)
+		}
+
 		client := plugin.NewClient(&plugin.ClientConfig{
 			HandshakeConfig: handshakeConfig,
 			Plugins: map[string]plugin.Plugin{
@@ -60,13 +82,17 @@ func loadPlugins(pluginDir string, router *gin.Engine) {
 
 		plug := raw.(shared.Plugin)
 		metadata := plug.GetMetadata()
+		metadata.EnvVars = envVars
 
-		config := map[string]interface{}{
-			"db_connection": "...",
-			// autres configs si besoin
-		}
-		if err := plug.Initialize(config); err != nil {
+		plugConfig := map[string]interface{}{}
+
+		plugConfig = shared.MergeEnvToConfig(plugConfig, envVars)
+
+		debug.Log("Initializing plugin %s with config", metadata.Name)
+
+		if err := plug.Initialize(plugConfig); err != nil {
 			debug.Log("Failed to initialize plugin %s: %v", metadata.Name, err)
+			client.Kill()
 			continue
 		}
 
@@ -74,8 +100,10 @@ func loadPlugins(pluginDir string, router *gin.Engine) {
 			router: router,
 			plugin: plug,
 		}
+
 		if err := plug.RegisterRoutes(registrar); err != nil {
 			debug.Log("Failed to register routes for %s: %v", metadata.Name, err)
+			client.Kill()
 			continue
 		}
 
@@ -85,7 +113,7 @@ func loadPlugins(pluginDir string, router *gin.Engine) {
 			Metadata: metadata,
 		}
 
-		debug.Log("Loaded plugin: %s v%s (%s)", metadata.Name, metadata.Version, metadata.Type)
+		debug.Log("✓ Loaded plugin: %s v%s (%s)", metadata.Name, metadata.Version, metadata.Type)
 	}
 }
 
@@ -96,7 +124,35 @@ type ginRouteRegistrar struct {
 
 func (g *ginRouteRegistrar) RegisterRoute(method, path, handlerName string) {
 	handler := func(c *gin.Context) {
-		// Convertir la requête Gin en RequestData
+		if config.CEF != nil {
+			err := config.CEF.LoadPolicy()
+			claims, _ := utils.GetClaimsFromCookie(c)
+			role := "anonymous"
+			if claims != nil {
+				role = claims.Role
+			}
+
+			action := strings.ToLower(method)
+			switch method {
+			case "GET":
+				action = "read"
+			case "POST", "PUT", "DELETE":
+				action = "write"
+			}
+
+			ok, err := config.CEF.Enforce(role, path, action)
+			if err != nil {
+				log.Printf("Casbin error for plugin route %s: %v", path, err)
+				c.JSON(500, gin.H{"error": "authorization error"})
+				return
+			}
+
+			if !ok {
+				c.JSON(403, gin.H{"error": "unauthorized: wrong permissions"})
+				return
+			}
+		}
+
 		body, _ := io.ReadAll(c.Request.Body)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
@@ -134,7 +190,7 @@ func (g *ginRouteRegistrar) RegisterRoute(method, path, handlerName string) {
 		g.router.DELETE(path, handler)
 	}
 
-	debug.Log("Registered route: %s %s", method, path)
+	debug.Log("Registered route: %s %s (with Casbin)", method, path)
 }
 
 func generateRandomString(n int) (string, error) {

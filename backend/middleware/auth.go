@@ -14,7 +14,6 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 // getClientIP extracts the real client IP from the request
@@ -120,25 +119,9 @@ func SessionAuthRequired(needTeam bool) gin.HandlerFunc {
 	}
 }
 
-func getClaimsFromCookie(c *gin.Context) (*utils.TokenClaims, string) {
-	tokenStr, err := c.Cookie("access_token")
-	if err != nil {
-		return nil, "missing_token"
-	}
-
-	token, err := jwt.ParseWithClaims(tokenStr, &utils.TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return utils.AccessSecret, nil
-	})
-	if err != nil || !token.Valid {
-		return nil, "expired_token"
-	}
-
-	return token.Claims.(*utils.TokenClaims), ""
-}
-
 func CheckPolicy(obj string, act string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, errMsg := getClaimsFromCookie(c)
+		claims, errMsg := utils.GetClaimsFromCookie(c)
 		if claims == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": errMsg})
 			return
@@ -177,7 +160,7 @@ func CheckPolicy(obj string, act string) gin.HandlerFunc {
 
 func AuthRequired(needTeam bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := getClaimsFromCookie(c)
+		claims, err := utils.GetClaimsFromCookie(c)
 		if claims == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err})
 			return
@@ -209,7 +192,7 @@ func AuthRequired(needTeam bool) gin.HandlerFunc {
 
 func AuthRequiredTeamOrAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		claims, err := getClaimsFromCookie(c)
+		claims, err := utils.GetClaimsFromCookie(c)
 		if claims == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err})
 			return

@@ -27,7 +27,8 @@ type PluginMetadata struct {
 	Version     string
 	Description string
 	Author      string
-	Type        string // "vm", "sso", "storage", etc.
+	Type        string            // "vm", "sso", "storage", etc.
+	EnvVars     map[string]string // Variables d'environnement du plugin
 }
 
 type RouteInfo struct {

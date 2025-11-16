@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 ssh-keygen -A
 
 # chmod 755 /home/docker/.ssh/authorized_keys
