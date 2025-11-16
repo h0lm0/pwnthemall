@@ -80,11 +80,6 @@ func SubmitChallenge(c *gin.Context) {
 		}
 	}
 
-	var submission models.Submission
-	if err := config.DB.FirstOrCreate(&submission, models.Submission{Value: submittedValue, UserID: user.ID, ChallengeID: challenge.ID}).Error; err != nil {
-		utils.InternalServerError(c, "submission_create_failed")
-	}
-
 	found := false
 	// Standard flag check and geo check
 	for _, flag := range challenge.Flags {
@@ -124,6 +119,19 @@ func SubmitChallenge(c *gin.Context) {
 			}
 		}
 	}
+
+	// Create submission with IsCorrect field set based on validation result
+	var submission models.Submission
+	if err := config.DB.FirstOrCreate(&submission, models.Submission{
+		Value:       submittedValue,
+		IsCorrect:   found,
+		UserID:      user.ID,
+		ChallengeID: challenge.ID,
+	}).Error; err != nil {
+		utils.InternalServerError(c, "submission_create_failed")
+		return
+	}
+
 	if found {
 		// Calculate solve position and first blood bonus before creating solve
 		var position int64

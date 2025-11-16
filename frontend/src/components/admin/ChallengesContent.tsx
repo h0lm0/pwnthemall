@@ -32,7 +32,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
   const [filterDifficulty, setFilterDifficulty] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 12
+  const itemsPerPage = 8
 
   // Get unique values for filters
   const categories = useMemo(() => {
@@ -253,11 +253,6 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                     <SelectItem value="points-desc">Points (High to Low)</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              {/* Results Count */}
-              <div className="text-sm text-gray-600">
-                Showing {Math.min(filteredAndSortedChallenges.length, paginatedChallenges.length)} of {filteredAndSortedChallenges.length} filtered challenges ({challenges.length} total)
               </div>
             </div>
           </CardHeader>
