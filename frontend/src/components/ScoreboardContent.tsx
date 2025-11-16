@@ -236,7 +236,7 @@ export default function ScoreboardContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              {t('scoreboard.solve_activity') || 'Solve Activity Over Time'}
+              {t('scoreboard.solve_activity') || 'Solve activity over time'}
             </CardTitle>
             <CardDescription>
               {t('scoreboard.solve_activity_description') || 'Track how teams progress through challenges'}

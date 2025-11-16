@@ -68,11 +68,12 @@
     "select_category": "Sélectionner une catégorie"
   },
   "challenge_category": {
-    "challenge_categories": "Catégories de Challenge",
+    "challenge_categories": "Catégories de challenges",
     "create_challenge_category": "Créer une catégorie de challenge",
     "delete_challenge_categories": "Supprimer les catégories de challenge",
     "delete_challenge_categories_confirm": "Êtes-vous sûr de vouloir supprimer les catégories de challenge sélectionnées ?",
     "delete_challenge_category": "Supprimer la catégorie de challenge",
+    "delete_challenge_category_confirm": "Êtes-vous sûr de vouloir supprimer la catégorie de challenge '{{name}}' ?",
     "edit_challenge_category": "Modifier la catégorie de challenge",
     "new_challenge_category": "Nouvelle catégorie de challenge"
   },
@@ -318,22 +319,22 @@
     "scoreboard": "Classement",
     "scoreboard_description": "Voir les classements des joueurs et des équipes",
     "individual": "Individuel",
-    "individual_leaderboard": "Classement Individuel",
-    "team_leaderboard": "Classement des Équipes",
+    "individual_leaderboard": "Classement individuel",
+    "team_leaderboard": "Classement des équipes",
     "rank": "Rang",
     "player": "Joueur",
     "points": "Points",
     "solves": "Résolutions",
     "members": "Membres",
     "you": "Vous",
-    "your_team": "Votre Équipe",
+    "your_team": "Votre équipe",
     "no_team": "Pas d'équipe",
     "no_players_yet": "Aucun joueur n'a encore marqué",
     "no_teams_yet": "Aucune équipe n'a encore marqué",
     "no_solve_data": "Aucune donnée de résolution disponible",
     "search": "Rechercher",
-    "solve_activity": "Activité de Résolution au Fil du Temps",
-    "solve_activity_description": "Suivez la progression des équipes à travers les défis"
+    "solve_activity": "Résolution au fil du temps",
+    "solve_activity_description": "Suivez la progression des équipes"
   },
   "team": {
     "create_team": "Créer une équipe",

@@ -16,6 +16,13 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// WebSocketHub is a global variable to manage WebSocket connections for notifications
+var WebSocketHub *Hub
+
+// UpdatesHub is a global variable to manage WebSocket connections for real-time updates
+// (categories, challenges, CTF status, instances)
+var UpdatesHub *Hub
+
 // Client represents a connected WebSocket client
 type Client struct {
 	ID   uint

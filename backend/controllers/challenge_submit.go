@@ -199,9 +199,9 @@ func SubmitChallenge(c *gin.Context) {
 				Username:      user.Username,
 				Timestamp:     time.Now().UTC().Unix(),
 			}
-			if WebSocketHub != nil {
+			if utils.WebSocketHub != nil {
 				if payload, err := json.Marshal(event); err == nil {
-					WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
+					utils.WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 				}
 			}
 
@@ -221,7 +221,7 @@ func SubmitChallenge(c *gin.Context) {
 					}
 
 					// Notify team listeners that instance stopped
-					if WebSocketHub != nil {
+					if utils.WebSocketHub != nil {
 
 						evt := dto.InstanceEvent{
 							Event:       "instance_update",
@@ -233,7 +233,7 @@ func SubmitChallenge(c *gin.Context) {
 							UpdatedAt:   time.Now().UTC().Unix(),
 						}
 						if payload, err := json.Marshal(evt); err == nil {
-							WebSocketHub.SendToTeamExcept(teamID, actorID, payload)
+							utils.WebSocketHub.SendToTeamExcept(teamID, actorID, payload)
 						}
 					}
 				}
