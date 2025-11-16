@@ -50,7 +50,9 @@
     "user_banned_success": "Utilisateur banni avec succès !",
     "user_unbanned_success": "Utilisateur débanni avec succès !",
     "users_banned_success": "Utilisateurs sélectionnés bannis avec succès !",
-    "users_unbanned_success": "Utilisateurs sélectionnés débannis avec succès !"
+    "users_unbanned_success": "Utilisateurs sélectionnés débannis avec succès !",
+    "you_have_been_banned": "Vous avez été banni",
+    "banned_from_competition": "Vous avez été banni de cette compétition. Veuillez contacter un administrateur si vous pensez qu'il s'agit d'une erreur."
   },
   "challenge": {
     "author": "Auteur",
