@@ -65,6 +65,21 @@ func SubmitChallenge(c *gin.Context) {
 		return
 	}
 
+	// Check attempts limit if configured (MaxAttempts > 0)
+	if challenge.MaxAttempts > 0 {
+		var failedAttempts int64
+		config.DB.Model(&models.Submission{}).
+			Joins("JOIN users ON users.id = submissions.user_id").
+			Where("users.team_id = ? AND submissions.challenge_id = ? AND submissions.is_correct = ?",
+				user.Team.ID, challenge.ID, false).
+			Count(&failedAttempts)
+
+		if int(failedAttempts) >= challenge.MaxAttempts {
+			utils.ForbiddenError(c, "max_attempts_reached")
+			return
+		}
+	}
+
 	submittedValue := ""
 	if v, ok := inputRaw["flag"]; ok {
 		if s, ok := v.(string); ok {
