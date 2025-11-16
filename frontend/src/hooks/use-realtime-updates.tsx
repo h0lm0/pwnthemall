@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState } from 'react';
 
 export type UpdateEvent = {
-  event: 'challenge-category' | 'ctf-status' | 'instance';
+  event: 'challenge-category' | 'ctf-status' | 'instance' | 'user-banned';
   action?: string;
   data?: any;
+  user_id?: number;
 };
 
 type UpdateCallback = (event: UpdateEvent) => void;
@@ -76,6 +77,14 @@ export function useRealtimeUpdates(onUpdate?: UpdateCallback, enabled: boolean =
               const data: UpdateEvent = JSON.parse(event.data);
               console.log('Received update:', data);
               
+              // Handle user-banned event specially - dispatch to window
+              if (data.event === 'user-banned') {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('user:banned', { detail: data }));
+                }
+                return; // Don't call other callbacks for ban events
+              }
+              
               // Call all registered callbacks
               callbacks.forEach(callback => callback(data));
             } catch (error) {
@@ -129,10 +138,30 @@ export function useRealtimeUpdates(onUpdate?: UpdateCallback, enabled: boolean =
       setIsConnected(true);
     }
 
+    // Listen for WebSocket close event from logout
+    const handleWebSocketClose = () => {
+      console.log('Closing WebSocket due to logout');
+      if (globalWs) {
+        globalWs.close(1000, 'User logout');
+        globalWs = null;
+        globalIsConnected = false;
+        isConnecting = false;
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('websocket:close', handleWebSocketClose);
+    }
+
     // Cleanup: remove callback when component unmounts
     return () => {
       callbacks.delete(callbackIdRef.current);
       connectionListeners.delete(connectionListener);
+
+      // Remove WebSocket close listener
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('websocket:close', handleWebSocketClose);
+      }
 
       // Clear any pending close timeout
       if (closeTimeout) {

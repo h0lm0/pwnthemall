@@ -50,7 +50,9 @@
     "user_banned_success": "User banned successfully!",
     "user_unbanned_success": "User unbanned successfully!",
     "users_banned_success": "Selected users banned successfully!",
-    "users_unbanned_success": "Selected users unbanned successfully!"
+    "users_unbanned_success": "Selected users unbanned successfully!",
+    "you_have_been_banned": "You have been banned",
+    "banned_from_competition": "You have been banned from this competition. Please contact an administrator if you believe this is a mistake."
   },
   "challenge": {
     "author": "Author",

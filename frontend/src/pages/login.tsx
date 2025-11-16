@@ -23,6 +23,18 @@ const LoginPage = () => {
       const query = new URLSearchParams(rest as Record<string, string>).toString();
       router.replace(`/login${query ? `?${query}` : ""}`, undefined, { shallow: true });
     }
+    
+    // Show ban message if user was banned
+    if (router.query.banned === "true") {
+      toast.error(t("banned_from_competition"), {
+        duration: Infinity,
+        className: "bg-red-600 text-white",
+      });
+      // Remove banned param from URL
+      const { banned, ...rest } = router.query;
+      const query = new URLSearchParams(rest as Record<string, string>).toString();
+      router.replace(`/login${query ? `?${query}` : ""}`, undefined, { shallow: true });
+    }
   }, [router.query, t, router, language]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
