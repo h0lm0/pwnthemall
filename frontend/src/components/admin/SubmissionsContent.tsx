@@ -39,6 +39,7 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
 
   // Filter submissions based on user, team, and challenge
   const filteredSubmissions = useMemo(() => {
+    if (!submissions) return []
     return submissions.filter((submission) => {
       const userMatch = !userFilter || 
         submission.user?.username?.toLowerCase().includes(userFilter.toLowerCase())
@@ -221,7 +222,7 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
         </div>
 
         <div className="mb-2 text-sm text-muted-foreground">
-          {t("showing") || "Showing"} {filteredSubmissions.length} {t("of") || "of"} {submissions.length} {t("admin.submissions")?.toLowerCase() || "submissions"}
+          {t("showing") || "Showing"} {filteredSubmissions.length} {t("of") || "of"} {submissions?.length || 0} {t("admin.submissions")?.toLowerCase() || "submissions"}
         </div>
 
         <DataTable columns={columns} data={filteredSubmissions} enablePagination={true} defaultPageSize={15} hidePageSizeSelector={true} />

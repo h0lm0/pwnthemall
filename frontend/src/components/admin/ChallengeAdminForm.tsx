@@ -108,8 +108,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     description: challenge.description || "",
     author: challenge.author || "",
     hidden: challenge.hidden || false,
-    categoryId: challenge.categoryId || 1,
-    difficultyId: challenge.difficultyId || 1,
+    categoryId: challenge.categoryId || undefined,
+    difficultyId: challenge.difficultyId || undefined,
   })
   const [newHint, setNewHint] = useState({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null as string | null })
   const [editingHints, setEditingHints] = useState<{[key: number]: {title: string, content: string, cost: number, isActive: boolean, autoActiveAt: string | null}}>({})
@@ -422,7 +422,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               <div>
                 <Label htmlFor="category">Category</Label>
                 <Select
-                  value={generalData.categoryId?.toString() || ""}
+                  key={`category-${challenge.id}`}
+                  value={generalData.categoryId?.toString()}
                   onValueChange={(value) => setGeneralData(prev => ({ ...prev, categoryId: parseInt(value) }))}
                 >
                   <SelectTrigger>
@@ -441,7 +442,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               <div>
                 <Label htmlFor="difficulty">Difficulty</Label>
                 <Select
-                  value={generalData.difficultyId?.toString() || ""}
+                  key={`difficulty-${challenge.id}`}
+                  value={generalData.difficultyId?.toString()}
                   onValueChange={(value) => setGeneralData(prev => ({ ...prev, difficultyId: parseInt(value) }))}
                 >
                   <SelectTrigger>
