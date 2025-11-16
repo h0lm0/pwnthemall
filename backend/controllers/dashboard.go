@@ -9,52 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type DashboardStats struct {
-	Challenges  ChallengeStats  `json:"challenges"`
-	Users       UserStats       `json:"users"`
-	Teams       TeamStats       `json:"teams"`
-	Submissions SubmissionStats `json:"submissions"`
-	Instances   InstanceStats   `json:"instances"`
-}
-
-type ChallengeStats struct {
-	Total      int64                  `json:"total"`
-	Hidden     int64                  `json:"hidden"`
-	Easy       int64                  `json:"easy"`
-	Medium     int64                  `json:"medium"`
-	Hard       int64                  `json:"hard"`
-	Categories map[string]int64       `json:"categories"`
-}
-
-type UserStats struct {
-	Total  int64 `json:"total"`
-	Active int64 `json:"active"`
-	Banned int64 `json:"banned"`
-}
-
-type TeamStats struct {
-	Total int64 `json:"total"`
-}
-
-type SubmissionStats struct {
-	Total       int64   `json:"total"`
-	Correct     int64   `json:"correct"`
-	Incorrect   int64   `json:"incorrect"`
-	SuccessRate float64 `json:"success_rate"`
-}
-
-type InstanceStats struct {
-	Running int64 `json:"running"`
-	Total   int64 `json:"total"`
-}
-
-type SubmissionTrend struct {
-	Date  string `json:"date"`
-	Count int64  `json:"count"`
-}
-
 func GetDashboardStats(c *gin.Context) {
-	var stats DashboardStats
+	var stats models.DashboardStats
 
 	// Challenge statistics
 	var totalChallenges int64
@@ -138,7 +94,7 @@ func GetDashboardStats(c *gin.Context) {
 func GetSubmissionTrend(c *gin.Context) {
 	// Get submissions for the last 48 hours
 	hours := 48
-	trends := make([]SubmissionTrend, 0, hours)
+	trends := make([]models.SubmissionTrend, 0, hours)
 	
 	now := time.Now()
 	for i := hours - 1; i >= 0; i-- {
@@ -150,7 +106,7 @@ func GetSubmissionTrend(c *gin.Context) {
 			Where("created_at >= ? AND created_at < ?", startOfHour, endOfHour).
 			Count(&count)
 		
-		trends = append(trends, SubmissionTrend{
+		trends = append(trends, models.SubmissionTrend{
 			Date:  startOfHour.Format("2006-01-02 15:04"),
 			Count: count,
 		})
