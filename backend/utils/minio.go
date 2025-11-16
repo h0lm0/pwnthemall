@@ -171,6 +171,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
+	challenge.MaxAttempts = metaData.Attempts // Transfer attempts from YAML to database
 	challenge.DecayFormula = &cDecayFormula
 	ports64 := make(pq.Int64Array, len(ports))
 	for i, p := range ports {

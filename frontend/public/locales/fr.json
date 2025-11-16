@@ -220,7 +220,9 @@
     "flag_submission_no_longer_available": "La soumission de flags n'est plus disponible",
     "submit": "Valider",
     "wrong_flag": "Mauvais flag !",
-    "challenge_solved": "Défi résolu !"
+    "challenge_solved": "Défi résolu !",
+    "max_attempts_reached": "Nombre maximum de tentatives atteint ! Ce défi est maintenant verrouillé pour votre équipe.",
+    "attempts_left": "tentatives restantes"
   },
   "hints": {
     "available": "Disponible",
@@ -365,10 +367,13 @@
     "team_creation_failed": "Échec de la création de l'équipe",
     "team_disband_failed": "Échec de la dissolution de l'équipe.",
     "team_disband_success": "Équipe dissoute avec succès !",
-    "team_join_failed": "Échec de l'adhésion à l'équipe",
-    "team_joined_success": "Équipe rejointe avec succès !",
+    "team_join_failed": "Échec de la jonction à l'équipe",
+    "team_joined_success": "Vous avez rejoint l'équipe avec succès !",
     "team_leave_failed": "Échec de la sortie de l'équipe.",
     "team_left_successfully": "Vous avez quitté l'équipe.",
+    "team_not_found": "Équipe introuvable. Veuillez vérifier le nom ou l'ID de l'équipe.",
+    "invalid_password": "Mot de passe d'équipe incorrect. Veuillez réessayer.",
+    "too_many_attempts": "Trop de tentatives échouées. Veuillez attendre avant de réessayer.",,
     "team_name": "Nom de l'équipe",
     "team_name_or_id": "Nom ou ID de l'équipe",
     "team_name_required": "Le nom de l'équipe est requis",

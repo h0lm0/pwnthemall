@@ -220,7 +220,9 @@
     "flag_submission_no_longer_available": "Flag submission is no longer available",
     "submit": "Submit",
     "wrong_flag": "Wrong flag!",
-    "challenge_solved": "Challenge solved!"
+    "challenge_solved": "Challenge solved!",
+    "max_attempts_reached": "Maximum attempts reached! This challenge is now locked for your team.",
+    "attempts_left": "attempts left"
   },
   "hints": {
     "available": "Available",
@@ -369,6 +371,9 @@
     "team_joined_success": "Joined team successfully!",
     "team_leave_failed": "Failed to leave team.",
     "team_left_successfully": "You have left the team.",
+    "team_not_found": "Team not found. Please check the team name or ID.",
+    "invalid_password": "Invalid team password. Please try again.",
+    "too_many_attempts": "Too many failed attempts. Please wait before trying again.",
     "team_name": "Team name",
     "team_name_or_id": "Team name or ID",
     "team_name_required": "Team name is required",

@@ -34,4 +34,5 @@ type Challenge struct {
 	EnableFirstBlood      bool                 `gorm:"default:false" json:"enableFirstBlood"`
 	FirstBloodBonuses     pq.Int64Array        `gorm:"type:integer[]" json:"firstBloodBonuses"`
 	FirstBloodBadges      pq.StringArray       `gorm:"type:text[]" json:"firstBloodBadges"`
+	MaxAttempts           int                  `gorm:"default:0" json:"maxAttempts"` // 0 = unlimited attempts
 }
