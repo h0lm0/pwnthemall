@@ -680,13 +680,13 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                 {loading ? t('submitting') : t('submit')}
                               </Button>
                               {/* Attempts indicator - small, subtle, under submit button */}
-                              {selectedChallenge?.maxAttempts && selectedChallenge.maxAttempts > 0 && (
+                              {selectedChallenge?.maxAttempts != null && selectedChallenge.maxAttempts > 0 ? (
                                 <div className="text-center -mt-2">
                                   <span className="text-xs text-muted-foreground opacity-70">
                                     {t('attempts_left')}: {selectedChallenge.maxAttempts - (selectedChallenge.teamFailedAttempts || 0)}/{selectedChallenge.maxAttempts}
                                   </span>
                                 </div>
-                              )}
+                              ) : null}
                             </div>
                           )}
                         </div>
