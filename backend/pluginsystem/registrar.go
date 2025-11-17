@@ -28,11 +28,19 @@ func NewGinRouteRegistrar(router *gin.Engine, plugin shared.Plugin, enforcer *ca
 }
 
 func (g *GinRouteRegistrar) RegisterRoute(method, path, handlerName string) {
-	g.RegisterRouteWithAuth(method, path, handlerName, "")
+	g.RegisterRouteWithMiddlewares(method, path, handlerName, "", []string{})
 }
 
 func (g *GinRouteRegistrar) RegisterRouteWithAuth(method, path, handlerName, requireRole string) {
+	g.RegisterRouteWithMiddlewares(method, path, handlerName, requireRole, []string{})
+}
+
+func (g *GinRouteRegistrar) RegisterRouteWithMiddlewares(method, path, handlerName, requireRole string, middlewareNames []string) {
 	var middlewares []gin.HandlerFunc
+
+	if len(middlewareNames) > 0 {
+		middlewares = append(middlewares, GetMiddlewares(middlewareNames)...)
+	}
 
 	if requireRole != "" {
 		middlewares = append(middlewares, g.createAuthMiddleware(path, method, requireRole))
@@ -52,7 +60,11 @@ func (g *GinRouteRegistrar) RegisterRouteWithAuth(method, path, handlerName, req
 		g.router.DELETE(path, handlers...)
 	}
 
-	debug.Log("Registered route: %s %s (role: %s)", method, path, requireRole)
+	if len(middlewareNames) > 0 {
+		debug.Log("Registered route: %s %s (role: %s, middlewares: %v)", method, path, requireRole, middlewareNames)
+	} else {
+		debug.Log("Registered route: %s %s (role: %s, no extra middlewares)", method, path, requireRole)
+	}
 }
 
 func (g *GinRouteRegistrar) createAuthMiddleware(path, method, requireRole string) gin.HandlerFunc {

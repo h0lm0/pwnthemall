@@ -36,16 +36,16 @@ type RouteInfo struct {
 	Path        string
 	Handler     string
 	RequireAuth bool
-	RequireRole string // "member", "admin", ou "" pour tout le monde
-	Permission  string // Permission casbin custom (optionnel)
+	RequireRole string // "member", "admin", or "" for everyone
+	Middlewares []string
 }
 
 type RouteRegistrar interface {
 	RegisterRoute(method, path, handlerName string)
 	RegisterRouteWithAuth(method, path, handlerName, requireRole string)
+	RegisterRouteWithMiddlewares(method, path, handlerName, requireRole string, middlewares []string)
 }
 
-// Adapter pour la collecte des routes (pour GetRoutes RPC)
 type routeCollector struct {
 	routes []RouteInfo
 }
@@ -57,29 +57,31 @@ func (r *routeCollector) RegisterRoute(method, path, handlerName string) {
 		Handler:     handlerName,
 		RequireAuth: false,
 		RequireRole: "",
+		Middlewares: []string{},
 	})
 }
 
 func (r *routeCollector) RegisterRouteWithAuth(method, path, handlerName, requireRole string) {
+	r.RegisterRouteWithMiddlewares(method, path, handlerName, requireRole, []string{})
+}
+
+func (r *routeCollector) RegisterRouteWithMiddlewares(method, path, handlerName, requireRole string, middlewares []string) {
 	r.routes = append(r.routes, RouteInfo{
 		Method:      method,
 		Path:        path,
 		Handler:     handlerName,
-		RequireAuth: true,
+		RequireAuth: requireRole != "",
 		RequireRole: requireRole,
+		Middlewares: middlewares,
 	})
 }
 
-type RPCError struct {
+type InitializeResponse struct {
 	Error string
 }
 
-type InitializeResponse struct {
-	Error string // Vide si pas d'erreur
-}
-
 type ShutdownResponse struct {
-	Error string // Vide si pas d'erreur
+	Error string
 }
 
 type PluginRPC struct {
@@ -101,7 +103,11 @@ func (p *PluginRPC) RegisterRoutes(registrar RouteRegistrar) error {
 
 	for _, route := range routes {
 		if route.RequireAuth {
-			registrar.RegisterRouteWithAuth(route.Method, route.Path, route.Handler, route.RequireRole)
+			if len(route.Middlewares) > 0 {
+				registrar.RegisterRouteWithMiddlewares(route.Method, route.Path, route.Handler, route.RequireRole, route.Middlewares)
+			} else {
+				registrar.RegisterRouteWithAuth(route.Method, route.Path, route.Handler, route.RequireRole)
+			}
 		} else {
 			registrar.RegisterRoute(route.Method, route.Path, route.Handler)
 		}
