@@ -1,10 +1,6 @@
 package controllers
 
 import (
-	"pwnthemall/config"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
 	"strconv"
 	"strings"
 
@@ -13,6 +9,10 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jinzhu/copier"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 

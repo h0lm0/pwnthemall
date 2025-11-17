@@ -6,15 +6,17 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"pwnthemall/config"
-	"pwnthemall/debug"
-	"pwnthemall/routes"
-	"pwnthemall/utils"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/controllers"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/pluginsystem"
+	"github.com/pwnthemall/pwnthemall/backend/routes"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func generateRandomString(n int) (string, error) {
@@ -40,7 +42,7 @@ func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
 	config.InitCasbin()
-	// config.SynchronizeEnvWithDb()
+
 	if err := config.ConnectDocker(); err != nil {
 		log.Printf("Failed to connect to docker host: %s", err.Error())
 	}
@@ -90,12 +92,17 @@ func main() {
 	routes.RegisterNotificationRoutes(router)
 	routes.RegisterDecayFormulaRoutes(router)
 	routes.RegisterSubmissionRoutes(router)
-	routes.RegisterDashboardRoutes(router)
+
+	debug.Log("Loading plugins...")
+	pluginsystem.LoadAllPlugins("/app/plugins/bin", router, config.CEF)
+	routes.RegisterPluginRoutes(router)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
+	defer pluginsystem.ShutdownAllPlugins()
 
 	debug.Log("Starting server on port %s", port)
 	log.Printf("Server starting on port %s", port)

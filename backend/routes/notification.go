@@ -1,11 +1,10 @@
 package routes
 
 import (
-	"pwnthemall/controllers"
-	"pwnthemall/middleware"
-	"pwnthemall/utils"
-
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/controllers"
+	"github.com/pwnthemall/pwnthemall/backend/middleware"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func RegisterNotificationRoutes(router *gin.Engine) {

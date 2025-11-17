@@ -2,13 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
-	"pwnthemall/config"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func GetChallengeCategories(c *gin.Context) {

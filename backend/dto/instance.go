@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"pwnthemall/models"
 	"time"
+
+	"github.com/pwnthemall/pwnthemall/backend/models"
 )
 
 type InstanceDTO struct {

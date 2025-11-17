@@ -5,9 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"pwnthemall/controllers"
-
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/controllers"
 )
 
 func tokenAuthMiddleware() gin.HandlerFunc {

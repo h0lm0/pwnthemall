@@ -3,11 +3,11 @@ package controllers
 import (
 	"errors"
 	"log"
-	"pwnthemall/config"
-	"pwnthemall/models"
-	"pwnthemall/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )

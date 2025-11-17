@@ -27,7 +27,7 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      worker:
+      docker-worker:
         condition: service_healthy
     environment:
       DATABASE_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable'
@@ -52,21 +52,23 @@ services:
       PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
       PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS: ${PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS}
       PTA_DEBUG_ENABLED: ${PTA_DEBUG_ENABLED}
+      PTA_PLUGIN_MAGIC_VALUE: ${PTA_PLUGIN_MAGIC_VALUE}
     volumes:
-      - ./shared/worker:/home/app/.ssh/worker
+      - ./shared/docker-worker:/home/app/.ssh/docker-worker
+      - ./shared/libvirt-worker:/home/app/.ssh/libvirt-worker
       # - /var/run/docker.sock:/var/run/docker.sock
     networks:
       public:
       private:
 
-  worker:
-    container_name: worker
+  docker-worker:
+    container_name: docker-worker
     build:
-      context: ./worker
+      context: ./docker-worker
       dockerfile: Dockerfile
       args:
         DOCKER_GID: ${DOCKER_GID}
-        WORKER_PASSWORD: ${WORKER_PASSWORD}
+        DOCKER_WORKER_PASSWORD: ${DOCKER_WORKER_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
@@ -74,13 +76,40 @@ services:
         condition: service_healthy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./shared/worker.pub:/home/docker/.ssh/authorized_keys
+      - ./shared/docker-worker.pub:/home/docker/.ssh/authorized_keys
     networks:
       private:
     healthcheck:
       test: ["CMD", "nc", "127.0.0.1", "22"]
       interval: 5s
       timeout: 3s
+      retries: 5
+
+  libvirt-worker:
+    container_name: libvirt-worker
+    build:
+      context: ./libvirt-worker
+      dockerfile: Dockerfile
+      args:
+        LIBVIRT_UID: ${LIBVIRT_UID}
+        LIBVIRT_WORKER_PASSWORD: ${LIBVIRT_WORKER_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    privileged: true
+    volumes:
+      - ./shared/libvirt-worker.pub:/home/libvirt-user/.ssh/authorized_keys
+      # - libvirt-data:/var/lib/libvirt
+    devices:
+      - /dev/kvm:/dev/kvm
+    networks:
+      private:
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 22 && virsh -c qemu:///system version"]
+      interval: 10s
+      timeout: 5s
       retries: 5
 
   db:

@@ -5,9 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"pwnthemall/utils"
-
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func MinioWebhook(c *gin.Context) {

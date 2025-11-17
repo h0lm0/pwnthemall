@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"pwnthemall/config"
-	"pwnthemall/meta"
-	"pwnthemall/models"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/meta"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 
 	"github.com/lib/pq"
 	"github.com/minio/minio-go/v7"

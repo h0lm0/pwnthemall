@@ -2,10 +2,11 @@ package utils
 
 import (
 	"net/http"
-	"pwnthemall/config"
-	"pwnthemall/debug"
-	"pwnthemall/models"
 	"sync"
+
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 
 	"github.com/gorilla/websocket"
 )
