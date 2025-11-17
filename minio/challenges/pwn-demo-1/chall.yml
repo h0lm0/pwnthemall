@@ -8,5 +8,5 @@ difficulty: "easy"
 type: "standard"
 author: "H0lm0"
 hidden: false
-flags: ["PwnThatDemo"]
+flags: ["flag"]
 points: 123

@@ -11,40 +11,78 @@ if (typeof window !== 'undefined') {
   banHandled = false; // Reset on page load
 }
 
+let isRefreshing = false;
+let refreshFailed = false; // Prevent multiple refresh attempts
+let failedQueue: Array<{resolve: Function, reject: Function}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 instance.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Only handle ban logic for specific endpoints, not logout requests
-    const isLogoutRequest = error.config?.url?.includes('/api/logout');
-    const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
-    
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Don't intercept auth-related endpoints to avoid loops
     if (
-      error.response?.status === 401 &&
-      error.response?.data?.error === "banned" &&
-      typeof window !== "undefined" &&
-      !isLogoutRequest &&
-      !isLoginPage
+      originalRequest.url?.includes('/api/login') ||
+      originalRequest.url?.includes('/api/logout') ||
+      originalRequest.url?.includes('/api/refresh') ||
+      originalRequest.url?.includes('/api/me')
     ) {
-      if (!banHandled) {
-        banHandled = true;
-        debugLog("User is banned, triggering logout");
-        
-        // Clear translation cache
-        Object.keys(localStorage).forEach((key) => {
-          if (key.startsWith("translations_")) {
-            localStorage.removeItem(key);
-          }
-        });
-        
-        // Dispatch auth refresh event
-        window.dispatchEvent(new CustomEvent("auth:refresh"));
-        
-        // Redirect to login
-        window.location.href = "/login";
-      }
-      // Do nothing on subsequent triggers
       return Promise.reject(error);
     }
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // If already failed once or on login page, don't retry
+      const isOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
+      if (refreshFailed || isOnLoginPage) {
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return instance(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Use native axios to avoid interceptor recursion
+        await axios.post('/api/refresh', {}, { withCredentials: true });
+        processQueue(null, null);
+        refreshFailed = false; // Reset on successful refresh
+        return instance(originalRequest);
+      } catch (refreshError) {
+        refreshFailed = true; // Mark refresh as failed
+        processQueue(refreshError, null);
+        
+        // Only redirect if not already on login page
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     return Promise.reject(error);
   }
 );

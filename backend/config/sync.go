@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"pwnthemall/models"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 )
 
 func SynchronizeEnvWithDb() {

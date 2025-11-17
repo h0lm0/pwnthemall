@@ -1,10 +1,9 @@
 package routes
 
 import (
-	"pwnthemall/controllers"
-	"pwnthemall/middleware"
-
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/controllers"
+	"github.com/pwnthemall/pwnthemall/backend/middleware"
 )
 
 func RegisterSubmissionRoutes(router *gin.Engine) {

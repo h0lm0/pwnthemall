@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"pwnthemall/config"
-	"pwnthemall/models"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 )
 
 type DecayService struct{}

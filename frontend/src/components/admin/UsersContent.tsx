@@ -1,11 +1,13 @@
 import Head from "next/head"
-import { useEffect, useState } from "react"
+import { useState, useMemo } from "react"
 import axios from "@/lib/axios";
 
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { X, ArrowUpDown } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -45,21 +47,99 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [confirmMassBan, setConfirmMassBan] = useState(false)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [createError, setCreateError] = useState<string | null>(null)
+  
+  // Filter states
+  const [usernameFilter, setUsernameFilter] = useState("")
+  const [emailFilter, setEmailFilter] = useState("")
+  const [teamFilter, setTeamFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState("") // "banned" | "active" | ""
+  
+  // Sorting state
+  const [sortBy, setSortBy] = useState("id")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+
+  // Filtered and sorted users
+  const filteredUsers = useMemo(() => {
+    let filtered = users.filter((user) => {
+      const usernameMatch = !usernameFilter || 
+        user.username?.toLowerCase().includes(usernameFilter.toLowerCase())
+      
+      const emailMatch = !emailFilter || 
+        user.email?.toLowerCase().includes(emailFilter.toLowerCase())
+      
+      const teamMatch = !teamFilter || 
+        user.team?.name?.toLowerCase().includes(teamFilter.toLowerCase())
+      
+      const statusMatch = !statusFilter || 
+        (statusFilter === "banned" && user.banned) || 
+        (statusFilter === "active" && !user.banned)
+      
+      return usernameMatch && emailMatch && teamMatch && statusMatch
+    })
+    
+    // Sort users
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortBy) {
+        case "username":
+          aValue = a.username || ""
+          bValue = b.username || ""
+          break
+        case "email":
+          aValue = a.email || ""
+          bValue = b.email || ""
+          break
+        case "team":
+          aValue = a.team?.name || ""
+          bValue = b.team?.name || ""
+          break
+        case "role":
+          aValue = a.role || ""
+          bValue = b.role || ""
+          break
+        case "banned":
+          aValue = a.banned ? 1 : 0
+          bValue = b.banned ? 1 : 0
+          break
+        default:
+          return 0
+      }
+      
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        const comparison = aValue.localeCompare(bValue)
+        return sortOrder === "asc" ? comparison : -comparison
+      } else {
+        const comparison = aValue - bValue
+        return sortOrder === "asc" ? comparison : -comparison
+      }
+    })
+    
+    return filtered
+  }, [users, usernameFilter, emailFilter, teamFilter, statusFilter, sortBy, sortOrder])
+  
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(field)
+      setSortOrder("asc")
+    }
+  }
 
   const columns: ColumnDef<User>[] = [
     {
-      accessorKey: "id",
-      header: t("id"),
-      cell: ({ getValue }) => (
-        <span className="block text-center w-10 min-w-[40px]">
-          {getValue() as string}
-        </span>
-      ),
-      size: 40,
-    },
-    {
       accessorKey: "username",
-      header: t("username"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("username")}
+        >
+          {t("username")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[120px] truncate">
           {getValue() as string}
@@ -68,7 +148,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "email",
-      header: t("email"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("email")}
+        >
+          {t("email")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[150px] truncate">
           {getValue() as string}
@@ -77,7 +166,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "team",
-      header: t("team"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("team")}
+        >
+          {t("team")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
         const team = row.original.team;
         return (
@@ -126,7 +224,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "role",
-      header: t("role"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("role")}
+        >
+          {t("role")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[80px]">
           {getValue() as string}
@@ -135,7 +242,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "banned",
-      header: t("banned"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("banned")}
+        >
+          {t("banned")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => {
         const isBanned = getValue() as boolean
         return (
@@ -241,7 +357,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doDeleteSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)].id)
+    const ids = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)].id)
     await Promise.all(ids.map((id) => axios.delete(`/api/users/${id}`)))
     setRowSelection({})
     setConfirmMassDelete(false)
@@ -250,7 +366,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doTempBanSelected = async () => {
-    const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+    const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
     const ids = selectedUsers.map(user => user.id)
     const bannedCount = selectedUsers.filter(user => user.banned).length
     const unbannedCount = selectedUsers.length - bannedCount
@@ -289,11 +405,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         <title>{getSiteName()}</title>
       </Head>
       <div className="bg-muted min-h-screen p-4">
-        {/* {/* Debug info - remove after testing 
-        <div className="mb-2 text-xs text-gray-500">
-          Debug: Lang={language}, Loaded={isLoaded ? 'yes' : 'no'}, Test={t('username')}
-        </div> */}
-        
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t("users")}</h1>
           <div className="flex items-center gap-2">
@@ -316,7 +427,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 onClick={() => setConfirmMassBan(true)}
               >
                 {(() => {
-                  const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                  const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
                   const bannedCount = selectedUsers.filter(user => user.banned).length
                   const unbannedCount = selectedUsers.length - bannedCount
                   return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
@@ -339,12 +450,122 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </Sheet>
           </div>
         </div>
+
+        {/* Filters */}
+        <div className="mb-4 flex flex-wrap gap-2 items-end bg-card p-4 rounded-lg border">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("username") || "Username"}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_user") || "Filter by user..."}
+                value={usernameFilter}
+                onChange={(e) => setUsernameFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {usernameFilter && (
+                <button
+                  onClick={() => setUsernameFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("email") || "Email"}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_email") || "Filter by email..."}
+                value={emailFilter}
+                onChange={(e) => setEmailFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {emailFilter && (
+                <button
+                  onClick={() => setEmailFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[180px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("team") || "Team"}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_team") || "Filter by team..."}
+                value={teamFilter}
+                onChange={(e) => setTeamFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {teamFilter && (
+                <button
+                  onClick={() => setTeamFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[160px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("status") || "Status"}
+            </label>
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+              >
+                <option value="">{t("all") || "All"}</option>
+                <option value="active">{t("active") || "Active"}</option>
+                <option value="banned">{t("banned") || "Banned"}</option>
+              </select>
+            </div>
+          </div>
+
+          {(usernameFilter || emailFilter || teamFilter || statusFilter) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setUsernameFilter("")
+                setEmailFilter("")
+                setTeamFilter("")
+                setStatusFilter("")
+              }}
+              className="mb-0.5"
+            >
+              {t("clear") || "Clear"} {t("all") || "All"}
+            </Button>
+          )}
+        </div>
+
+        <div className="mb-2 text-sm text-muted-foreground">
+          {t("showing") || "Showing"} {filteredUsers.length} {t("of") || "of"} {users.length} {t("users")?.toLowerCase() || "users"}
+        </div>
+
         <DataTable
           columns={columns}
-          data={users}
+          data={filteredUsers}
           enableRowSelection
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
+          enablePagination={true}
+          defaultPageSize={12}
+          hidePageSizeSelector={true}
         />
       </div>
 
@@ -374,7 +595,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("delete_user")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("delete_user_confirm", { username: deleting?.username || "" })}
+              {t("delete_user_confirm", { username: deleting?.username || "" }) || `Are you sure you want to delete ${deleting?.username}?`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -433,7 +654,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
@@ -441,7 +662,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban_users_confirm") : t("temp_ban_users_confirm")
@@ -452,7 +673,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={doTempBanSelected}>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => users[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban") : t("temp_ban")

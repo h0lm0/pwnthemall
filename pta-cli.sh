@@ -2,6 +2,26 @@
 
 set -euo pipefail
 
+echo ""
+
+ansi_art_lines=(
+    "          [38;2;255;153;255m█[0m[38;2;255;153;255m█[0m                               [38;2;255;153;255m█[0m[38;2;255;153;255m█[0m   [38;2;255;153;255m█[0m[38;2;255;153;255m█[0m"
+    "[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m    [38;2;215;155;246m▄[0m[38;2;215;155;246m█[0m[38;2;215;155;246m█[0m[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m    [38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m             [38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m    [38;2;215;155;246m█[0m[38;2;215;155;246m█[0m   [38;2;215;155;246m▄[0m[38;2;215;155;246m▄[0m"
+    "[38;2;175;158;238m█[0m[38;2;175;158;238m█[0m  [38;2;175;158;238m█[0m[38;2;175;158;238m█[0m    [38;2;175;158;238m█[0m[38;2;175;158;238m█[0m     [38;2;175;158;238m▀[0m[38;2;175;158;238m▄[0m[38;2;175;158;238m▄[0m[38;2;175;158;238m▄[0m[38;2;175;158;238m█[0m[38;2;175;158;238m█[0m   [38;2;175;158;238m▀[0m[38;2;175;158;238m▀[0m[38;2;175;158;238m▀[0m[38;2;175;158;238m▀[0m[38;2;175;158;238m▀[0m   [38;2;175;158;238m█[0m[38;2;175;158;238m█[0m  [38;2;175;158;238m▀[0m[38;2;175;158;238m▀[0m   [38;2;175;158;238m█[0m[38;2;175;158;238m█[0m   [38;2;175;158;238m█[0m[38;2;175;158;238m█[0m"
+    "[38;2;136;160;230m█[0m[38;2;136;160;230m█[0m  [38;2;136;160;230m█[0m[38;2;136;160;230m█[0m    [38;2;136;160;230m█[0m[38;2;136;160;230m█[0m     [38;2;136;160;230m█[0m[38;2;136;160;230m█[0m  [38;2;136;160;230m█[0m[38;2;136;160;230m█[0m           [38;2;136;160;230m█[0m[38;2;136;160;230m█[0m       [38;2;136;160;230m█[0m[38;2;136;160;230m█[0m   [38;2;136;160;230m█[0m[38;2;136;160;230m█[0m"
+    "[38;2;96;163;221m█[0m[38;2;96;163;221m█[0m[38;2;96;163;221m▄[0m[38;2;96;163;221m▄[0m[38;2;96;163;221m█[0m[38;2;96;163;221m▀[0m    [38;2;96;163;221m▀[0m[38;2;96;163;221m█[0m[38;2;96;163;221m▄[0m[38;2;96;163;221m▄[0m   [38;2;96;163;221m▀[0m[38;2;96;163;221m█[0m[38;2;96;163;221m▄[0m[38;2;96;163;221m▄[0m[38;2;96;163;221m█[0m[38;2;96;163;221m█[0m           [38;2;96;163;221m▀[0m[38;2;96;163;221m█[0m[38;2;96;163;221m▄[0m[38;2;96;163;221m▄[0m[38;2;96;163;221m█[0m[38;2;96;163;221m▀[0m   [38;2;96;163;221m█[0m[38;2;96;163;221m█[0m   [38;2;96;163;221m█[0m[38;2;96;163;221m█[0m"
+    "[38;2;56;165;213m█[0m[38;2;56;165;213m█[0m                                                "
+    "[38;2;17;168;205m▀[0m[38;2;17;168;205m▀[0m                                                "
+)
+
+display_ansi_art() {
+    for line in "${ansi_art_lines[@]}"; do
+        echo -e "$line"
+    done
+}
+
+display_ansi_art
+
 ENV_FILE="./.env"
 if [[ -f "$ENV_FILE" ]]; then
     sed -i 's/\r$//' "$ENV_FILE"
@@ -21,7 +41,12 @@ MINIO_ALIAS="localminio"
 MINIO_ENDPOINT="http://localhost:9000"
 MOUNT_PATH="/data"
 
-# Worker  system needs: automatically retrieve docker gid 
+# Plugins configuration
+PLUGINS_DIR="backend/plugins"
+PLUGINS_OUTPUT_DIR="${PLUGINS_DIR}/bin"
+PLUGINS_IMAGE="pwnthemall-plugins:latest"
+
+# Worker system needs: automatically retrieve docker gid
 DOCKER_GID=$(getent group docker | cut -d: -f3)
 export DOCKER_GID
 
@@ -70,7 +95,6 @@ function minio_sync() {
     echo "[✓] Sync successful"
 }
 
-
 function env_randomize() {
     local env_file="$ENV_FILE"
     if [[ ! -f "$env_file" ]]; then
@@ -91,20 +115,233 @@ function env_randomize() {
         -e "s|^\(REFRESH_SECRET=\).*|\1$(rand_str 30)|" \
         -e "s|^\(MINIO_ROOT_PASSWORD=\).*|\1$(rand_str 40)|" \
         -e "s|^\(MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_DBSYNC=\).*|\1$(rand_str 40)|" \
-        -e "s|^\(WORKER_PASSWORD=\).*|\1$(rand_str 25)|" \
+        -e "s|^\(DOCKER_WORKER_PASSWORD=\).*|\1$(rand_str 25)|" \
         "$env_file"
 
     echo "[✓] Randomization complete"
+}
+
+function plugins_check() {
+    if [[ ! -d "$PLUGINS_DIR" ]] || [[ ! "$(ls -A $PLUGINS_DIR 2>/dev/null)" ]]; then
+        echo "[⚠] No plugins directory found or empty"
+        echo "    Path: $PLUGINS_DIR"
+        if git submodule status 2>/dev/null | grep -q "^-.*plugins"; then
+            echo "    Hint: Initialize the submodule with:"
+            echo "    git submodule update --init --recursive"
+        fi
+        return 1
+    fi
+    return 0
+}
+
+function plugins_build() {
+    if ! plugins_check; then
+        echo ""
+        echo "[✗] Cannot build plugins - directory not found"
+        exit 1
+    fi
+
+    if ! command -v docker &> /dev/null; then
+        echo "[✗] Docker is required to build plugins"
+        exit 1
+    fi
+
+    mkdir -p "$PLUGINS_OUTPUT_DIR"
+
+    echo "[+] Building plugins Docker image..."
+    if docker build \
+        -f "$PLUGINS_DIR/Dockerfile" \
+        -t "$PLUGINS_IMAGE" \
+        ./backend; then
+        echo "[✓] Docker image built successfully"
+    else
+        echo "[✗] Failed to build Docker image"
+        exit 1
+    fi
+
+    echo ""
+    echo "[+] Extracting plugin binaries..."
+    
+    local output_path
+    output_path=$(realpath "$PLUGINS_OUTPUT_DIR")
+    
+    if docker run --rm \
+        -v "${output_path}:/output" \
+        "$PLUGINS_IMAGE" \
+        sh -c "cp -r /plugins/* /output/ 2>/dev/null || echo 'No plugins to copy'"; then
+        echo "[✓] Binaries extracted to $PLUGINS_OUTPUT_DIR"
+    else
+        echo "[✗] Failed to extract binaries"
+        exit 1
+    fi
+
+    echo ""
+    echo "[+] Compiled plugins"
+    if [[ -d "$PLUGINS_OUTPUT_DIR" ]] && [[ "$(ls -A $PLUGINS_OUTPUT_DIR 2>/dev/null)" ]]; then
+        ls -lah "$PLUGINS_OUTPUT_DIR" | grep "^-" || echo "No plugins found"
+    else
+        echo "No plugins found"
+    fi
+    
+    echo ""
+    echo "[+] Verifying binaries are static..."
+    local any_plugin=false
+    for plugin in "$PLUGINS_OUTPUT_DIR"/bin-*; do
+        if [[ -f "$plugin" ]]; then
+            any_plugin=true
+            local plugin_name
+            plugin_name=$(basename "$plugin")
+            echo "  • $plugin_name"
+            if file "$plugin" | grep -q 'statically linked'; then
+                echo "    ✓ Static binary"
+            else
+                echo "    ⚠ Not a static binary (may have issues)"
+            fi
+        fi
+    done
+
+    if [[ "$any_plugin" == "false" ]]; then
+        echo "[⚠] No plugins were built"
+        echo "    Check that plugins have valid go.mod files"
+    fi
+
+    echo ""
+    echo "[✓] Plugins build complete!"
+}
+
+
+function plugins_clean() {
+    echo "[+] Cleaning plugin binaries..."
+    
+    if [[ -d "$PLUGINS_OUTPUT_DIR" ]]; then
+        rm -rf "${PLUGINS_OUTPUT_DIR:?}"/*
+        echo "[✓] Plugin binaries removed"
+    else
+        echo "[✓] No binaries to clean"
+    fi
+
+    echo "[+] Removing Docker image..."
+    if docker rmi "$PLUGINS_IMAGE" 2>/dev/null; then
+        echo "[✓] Docker image removed"
+    else
+        echo "[✓] No Docker image to remove"
+    fi
+}
+
+function plugins_list() {
+    echo ""
+
+    if ! plugins_check; then
+        return 1
+    fi
+
+    # List source plugins
+    echo "Source plugins (in $PLUGINS_DIR):"
+    local found_source=false
+    for plugin_dir in "$PLUGINS_DIR"/*; do
+        if [[ -d "$plugin_dir" ]] && [[ -f "$plugin_dir/go.mod" ]]; then
+            found_source=true
+            local plugin_name
+            plugin_name=$(basename "$plugin_dir")
+            echo "  • $plugin_name"
+            
+            # Try to extract version from main.go if exists
+            if [[ -f "$plugin_dir/main.go" ]]; then
+                local version
+                version=$(grep -oP 'Version:\s*"\K[^"]+' "$plugin_dir/main.go" 2>/dev/null || echo "unknown")
+                echo "    Version: $version"
+            fi
+        fi
+    done
+    
+    if [[ "$found_source" == "false" ]]; then
+        echo "  (none)"
+    fi
+
+    echo ""
+    
+    # List compiled plugins
+    echo "Compiled plugins (in $PLUGINS_OUTPUT_DIR):"
+    if [[ -d "$PLUGINS_OUTPUT_DIR" ]] && [[ "$(ls -A $PLUGINS_OUTPUT_DIR 2>/dev/null)" ]]; then
+        for plugin in "$PLUGINS_OUTPUT_DIR"/bin-*; do
+            if [[ -f "$plugin" ]]; then
+                local plugin_name
+                plugin_name=$(basename "$plugin")
+                local size
+                size=$(du -h "$plugin" | cut -f1)
+                echo "  • $plugin_name ($size)"
+            fi
+        done
+    else
+        echo "  (none - run './pta-cli.sh plugins build' to compile)"
+    fi
+}
+
+function plugins_status() {
+    echo ""
+    
+    if plugins_check; then
+        echo "✓ Plugins directory: $PLUGINS_DIR"
+        
+        # Count source plugins
+        local source_count=0
+        for plugin_dir in "$PLUGINS_DIR"/*; do
+            if [[ -d "$plugin_dir" ]] && [[ -f "$plugin_dir/go.mod" ]]; then
+                ((source_count++))
+            fi
+        done
+        echo "  Source plugins: $source_count"
+    else
+        echo "✗ Plugins directory not found"
+        return 1
+    fi
+
+    # Check compiled plugins
+    if [[ -d "$PLUGINS_OUTPUT_DIR" ]]; then
+        local compiled_count=0
+        for plugin in "$PLUGINS_OUTPUT_DIR"/bin-*; do
+            if [[ -f "$plugin" ]]; then
+                ((compiled_count++))
+            fi
+        done
+        echo "  Compiled plugins: $compiled_count"
+        
+        if [[ $compiled_count -eq 0 ]] && [[ $source_count -gt 0 ]]; then
+            echo ""
+            echo "⚠ You have source plugins but no compiled binaries"
+            echo "  Run: ./pta-cli.sh plugins build"
+        fi
+    else
+        echo "  Compiled plugins: 0"
+    fi
+
+    # Check if plugins are enabled in env
+    echo ""
+    echo "Configuration:"
+    local plugins_enabled
+    plugins_enabled=$(grep "^PTA_PLUGINS_ENABLED=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2 || echo "not set")
+    echo "  PTA_PLUGINS_ENABLED: $plugins_enabled"
+    
+    if [[ "$plugins_enabled" == "false" ]] || [[ "$plugins_enabled" == "not set" ]]; then
+        echo "  ⚠ Plugins are disabled - set PTA_PLUGINS_ENABLED=true in .env to enable"
+    fi
 }
 
 function compose_up() {
     local env="prod"
     local build="false"
 
-    if [ ! -f ./shared/worker ]; then
-        echo "WARN: Private key file shared/worker not found, generating new one..."
-        generate_key
+    if [ ! -f ./shared/docker-worker ]; then
+        echo "WARN: Private key file shared/docker-worker not found, generating new one..."
+        generate_key "docker-worker"
     fi
+
+    if [ ! -f ./shared/libvirt-worker ]; then
+        echo "WARN: Private key file shared/libvirt-worker not found, generating new one..."
+        generate_key "libvirt-worker"
+    fi
+    LIBVIRT_UID=$(stat -c %u shared/libvirt-worker.pub)
+    export LIBVIRT_UID
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -131,6 +368,26 @@ function compose_up() {
     if [[ ! -f "$compose_file" ]]; then
         echo "[✗] Compose file not found: $compose_file"
         exit 1
+    fi
+
+    # Check if plugins should be built
+    local plugins_enabled
+    plugins_enabled=$(grep "^PTA_PLUGINS_ENABLED=" "$ENV_FILE" 2>/dev/null | cut -d'=' -f2 || echo "false")
+    
+    if [[ "$plugins_enabled" == "true" ]]; then
+        echo "[+] Plugins are enabled, checking if they need to be built..."
+        if [[ ! -d "$PLUGINS_OUTPUT_DIR" ]] || [[ ! "$(ls -A $PLUGINS_OUTPUT_DIR 2>/dev/null)" ]]; then
+            echo "[⚠] No compiled plugins found"
+            read -p "    Build plugins now? (Y/n) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
+                plugins_build
+            else
+                echo "[⚠] Continuing without building plugins"
+            fi
+        else
+            echo "[✓] Compiled plugins found"
+        fi
     fi
 
     if [[ "$build" == "true" ]]; then
@@ -188,22 +445,48 @@ function compose_down() {
 
 function generate_key() {
     mkdir -p ./shared
-    ssh-keygen -C '' -t ed25519 -N '' -f ./shared/worker
-    chmod 400 ./shared/worker
+    ssh-keygen -C '' -t ed25519 -N '' -f "./shared/$1"
+    chmod 400 "./shared/$1"
 }
 
 function remove_key() {
-    rm -rf ./shared/worker*
+    rm -rf ./shared/*worker*
 }
 
 function usage() {
-    echo "Usage:"
-    echo "  $0 minio sync <folder>"
-    echo "  $0 compose up [--build] [--env dev|prod|demo]"
-    echo "  $0 compose down [--env dev|prod|demo]"
-    echo "  $0 keys -g|gen"
-    echo "  $0 keys -r|remove"
-    echo "  $0 env randomize"
+    cat <<EOF
+
+Usage:
+  $0 minio sync [--env dev|prod|demo] <folder>
+  $0 compose up [--build] [--env dev|prod|demo]
+  $0 compose down [--env dev|prod|demo]
+  $0 plugins build
+  $0 plugins clean
+  $0 plugins list
+  $0 plugins status
+  $0 keys -g|gen
+  $0 keys -r|remove
+  $0 env randomize
+
+Commands:
+  minio sync       Synchronize a folder to MinIO bucket
+  compose up       Start the application stack
+  compose down     Stop the application stack
+  plugins build    Compile all plugins to binaries
+  plugins clean    Remove compiled plugins and Docker image
+  plugins list     List available plugins
+  plugins status   Show plugins status and configuration
+  keys gen         Generate SSH keys for worker
+  keys remove      Remove SSH keys
+  env randomize    Randomize sensitive values in .env
+
+Examples:
+  $0 plugins build
+  $0 plugins status
+  $0 compose up --build --env dev
+  $0 minio sync --env prod ./minio/challenges
+
+EOF
     exit 1
 }
 
@@ -245,6 +528,33 @@ case "${1:-}" in
                 ;;
         esac
         ;;
+    plugins)
+        shift
+        case "${1:-}" in
+            build|-b)
+                plugins_build
+                ;;
+            clean|-c)
+                plugins_clean
+                ;;
+            list|-l)
+                plugins_list
+                ;;
+            status|-s)
+                plugins_status
+                ;;
+            *)
+                echo "[✗] Unknown plugins command: ${1:-}"
+                echo ""
+                echo "Available commands:"
+                echo "  build   - Compile plugins"
+                echo "  clean   - Remove compiled plugins"
+                echo "  list    - List available plugins"
+                echo "  status  - Show plugins status"
+                exit 1
+                ;;
+        esac
+        ;;
     keys)
         shift
         case "${1:-}" in
@@ -269,6 +579,9 @@ case "${1:-}" in
                 usage
                 ;;
         esac
+        ;;
+    help|-h|--help)
+        usage
         ;;
     *)
         usage

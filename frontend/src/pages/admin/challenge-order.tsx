@@ -115,7 +115,7 @@ export default function ChallengeOrderPage() {
                   onValueChange={handleCategoryChange}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t('select_a_category')} />
+                    <SelectValue placeholder={t('select_category')} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (

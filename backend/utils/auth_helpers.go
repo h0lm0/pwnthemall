@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"pwnthemall/models"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 
 	"github.com/gin-gonic/gin"
 )

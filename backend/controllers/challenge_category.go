@@ -1,16 +1,14 @@
 package controllers
 
 import (
-	"pwnthemall/config"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
-
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
-
-
 
 func GetChallengeCategories(c *gin.Context) {
 	user, ok := utils.GetAuthenticatedUser(c)
@@ -60,6 +58,16 @@ func CreateChallengeCategory(c *gin.Context) {
 		return
 	}
 
+	// Broadcast category update to all connected clients
+	if utils.UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event":  "challenge-category",
+			"action": "create",
+		}); err == nil {
+			utils.UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.CreatedResponse(c, gin.H{
 		"id":   challengeCategory.ID,
 		"name": challengeCategory.Name,
@@ -85,6 +93,16 @@ func UpdateChallengeCategory(c *gin.Context) {
 	challengeCategory.Name = input.Name
 	config.DB.Save(&challengeCategory)
 
+	// Broadcast category update to all connected clients
+	if utils.UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event":  "challenge-category",
+			"action": "update",
+		}); err == nil {
+			utils.UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.OKResponse(c, challengeCategory)
 }
 
@@ -98,10 +116,19 @@ func DeleteChallengeCategory(c *gin.Context) {
 	}
 
 	config.DB.Delete(&challengeCategory)
+
+	// Broadcast category update to all connected clients
+	if utils.UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event":  "challenge-category",
+			"action": "delete",
+		}); err == nil {
+			utils.UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.OKResponse(c, gin.H{"message": "Challenge category deleted"})
 }
-
-
 
 func ReorderChallenges(c *gin.Context) {
 	categoryId := c.Param("id")
@@ -121,10 +148,9 @@ func ReorderChallenges(c *gin.Context) {
 	for index, challengeId := range req.ChallengeIDs {
 		var challenge models.Challenge
 		if err := config.DB.First(&challenge, challengeId).Error; err != nil {
-			continue 
+			continue
 		}
 
-	
 		if challenge.ChallengeCategoryID != category.ID {
 			utils.BadRequestError(c, "Challenge does not belong to this category")
 			return

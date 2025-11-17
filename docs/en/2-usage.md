@@ -30,7 +30,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       type: "standard"
       author: "Kevin'MIT"
       hidden: false
-      flags: ["PwnThatDemo"]
+      flags: ["flag"]
       points: 123
       ```
 
@@ -47,7 +47,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       difficulty: easy
       type: docker
       author: "Kevin'MITDocker"
-      flags: ["whatsthis?aDockerContainer!"]
+      flags: ["flag"]
       hidden: false
       points: 500
       ports: [5001]
@@ -89,7 +89,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       type: "compose"
       author: "h0lm0"
       hidden: false
-      flags: ["really?ComposeChallenges!"]
+      flags: ["flag"]
       points: 123
       ports: [80,22]
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]

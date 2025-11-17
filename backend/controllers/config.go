@@ -1,16 +1,14 @@
 package controllers
 
 import (
-	"pwnthemall/config"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
-
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
-
-
 
 func GetConfigs(c *gin.Context) {
 	var configs []models.Config
@@ -51,7 +49,7 @@ func CreateConfig(c *gin.Context) {
 		cfg.SyncWithEnv = *input.SyncWithEnv
 	}
 
-	if err := config.DB.Create(&cfg).Error; err != nil {
+	if err := config.DB.Save(&cfg).Error; err != nil {
 		utils.InternalServerError(c, err.Error())
 		return
 	}
@@ -61,7 +59,19 @@ func CreateConfig(c *gin.Context) {
 		config.SynchronizeEnvWithDb()
 	}
 
-	utils.CreatedResponse(c, cfg)
+	// Broadcast CTF status update if timing-related config changed
+	if cfg.Key == "CTF_START_TIME" || cfg.Key == "CTF_END_TIME" {
+		if utils.UpdatesHub != nil {
+			if payload, err := json.Marshal(gin.H{
+				"event":  "ctf-status",
+				"action": "config_update",
+			}); err == nil {
+				utils.UpdatesHub.SendToAll(payload)
+			}
+		}
+	}
+
+	utils.OKResponse(c, cfg)
 }
 
 func UpdateConfig(c *gin.Context) {
@@ -96,6 +106,18 @@ func UpdateConfig(c *gin.Context) {
 	// Sync environment variables if this is a SyncWithEnv config
 	if cfg.SyncWithEnv {
 		config.SynchronizeEnvWithDb()
+	}
+
+	// Broadcast CTF status update if timing-related config changed
+	if key == "CTF_START_TIME" || key == "CTF_END_TIME" {
+		if utils.UpdatesHub != nil {
+			if payload, err := json.Marshal(gin.H{
+				"event":  "ctf-status",
+				"action": "config_update",
+			}); err == nil {
+				utils.UpdatesHub.SendToAll(payload)
+			}
+		}
 	}
 
 	utils.OKResponse(c, cfg)

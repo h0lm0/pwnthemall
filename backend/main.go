@@ -6,16 +6,16 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"pwnthemall/config"
-	"pwnthemall/controllers"
-	"pwnthemall/debug"
-	"pwnthemall/routes"
-	"pwnthemall/utils"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/pluginsystem"
+	"github.com/pwnthemall/pwnthemall/backend/routes"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func generateRandomString(n int) (string, error) {
@@ -26,17 +26,25 @@ func generateRandomString(n int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
+// initWebSocketHub initializes the WebSocket hubs
+func initWebSocketHub() {
+	utils.WebSocketHub = utils.NewHub()
+	go utils.WebSocketHub.Run()
+
+	utils.UpdatesHub = utils.NewHub()
+	go utils.UpdatesHub.Run()
+}
+
 func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
 	config.InitCasbin()
-	// config.SynchronizeEnvWithDb()
+
 	if err := config.ConnectDocker(); err != nil {
 		log.Printf("Failed to connect to docker host: %s", err.Error())
 	}
 
-	// Initialize WebSocket hub for notifications
-	controllers.InitWebSocketHub()
+	initWebSocketHub()
 
 	// Start hint activation scheduler
 	utils.StartHintScheduler()
@@ -82,10 +90,16 @@ func main() {
 	routes.RegisterDecayFormulaRoutes(router)
 	routes.RegisterSubmissionRoutes(router)
 
+	debug.Log("Loading plugins...")
+	pluginsystem.LoadAllPlugins("/app/plugins/bin", router, config.CEF)
+	routes.RegisterPluginRoutes(router)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
+	defer pluginsystem.ShutdownAllPlugins()
 
 	debug.Log("Starting server on port %s", port)
 	log.Printf("Server starting on port %s", port)

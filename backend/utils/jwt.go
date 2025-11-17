@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -24,7 +25,7 @@ func GenerateAccessToken(userID uint, role string) (string, error) {
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(45 * time.Minute)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -38,4 +39,20 @@ func GenerateRefreshToken(userID uint) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(RefreshSecret)
+}
+
+func GetClaimsFromCookie(c *gin.Context) (*TokenClaims, error) {
+	tokenStr, err := c.Cookie("access_token")
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return AccessSecret, nil
+	})
+	if err != nil || !token.Valid {
+		return nil, err
+	}
+
+	return token.Claims.(*TokenClaims), nil
 }

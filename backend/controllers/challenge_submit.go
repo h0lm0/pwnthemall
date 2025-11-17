@@ -3,15 +3,16 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"pwnthemall/config"
-	"pwnthemall/debug"
-	"pwnthemall/dto"
-	"pwnthemall/models"
-	"pwnthemall/utils"
+
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 // SubmitChallenge handles challenge flag submission
@@ -43,7 +44,7 @@ func SubmitChallenge(c *gin.Context) {
 
 	// Block all users (including admins) from submitting if not in a team
 	if user.Team == nil || user.TeamID == nil {
-		utils.ForbiddenError(c, "team_required_to_submit")
+		utils.ForbiddenError(c, "team_required")
 		return
 	}
 
@@ -65,6 +66,21 @@ func SubmitChallenge(c *gin.Context) {
 		return
 	}
 
+	// Check attempts limit if configured (MaxAttempts > 0)
+	if challenge.MaxAttempts > 0 {
+		var failedAttempts int64
+		config.DB.Model(&models.Submission{}).
+			Joins("JOIN users ON users.id = submissions.user_id").
+			Where("users.team_id = ? AND submissions.challenge_id = ? AND submissions.is_correct = ?",
+				user.Team.ID, challenge.ID, false).
+			Count(&failedAttempts)
+
+		if int(failedAttempts) >= challenge.MaxAttempts {
+			utils.ForbiddenError(c, "max_attempts_reached")
+			return
+		}
+	}
+
 	submittedValue := ""
 	if v, ok := inputRaw["flag"]; ok {
 		if s, ok := v.(string); ok {
@@ -78,11 +94,6 @@ func SubmitChallenge(c *gin.Context) {
 				submittedValue = fmt.Sprintf("geo:%f,%f", latV, lngV)
 			}
 		}
-	}
-
-	var submission models.Submission
-	if err := config.DB.FirstOrCreate(&submission, models.Submission{Value: submittedValue, UserID: user.ID, ChallengeID: challenge.ID}).Error; err != nil {
-		utils.InternalServerError(c, "submission_create_failed")
 	}
 
 	found := false
@@ -124,6 +135,19 @@ func SubmitChallenge(c *gin.Context) {
 			}
 		}
 	}
+
+	// Create submission with IsCorrect field set based on validation result
+	var submission models.Submission
+	if err := config.DB.FirstOrCreate(&submission, models.Submission{
+		Value:       submittedValue,
+		IsCorrect:   found,
+		UserID:      user.ID,
+		ChallengeID: challenge.ID,
+	}).Error; err != nil {
+		utils.InternalServerError(c, "submission_create_failed")
+		return
+	}
+
 	if found {
 		// Calculate solve position and first blood bonus before creating solve
 		var position int64
@@ -191,9 +215,9 @@ func SubmitChallenge(c *gin.Context) {
 				Username:      user.Username,
 				Timestamp:     time.Now().UTC().Unix(),
 			}
-			if WebSocketHub != nil {
+			if utils.WebSocketHub != nil {
 				if payload, err := json.Marshal(event); err == nil {
-					WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
+					utils.WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 				}
 			}
 
@@ -213,7 +237,7 @@ func SubmitChallenge(c *gin.Context) {
 					}
 
 					// Notify team listeners that instance stopped
-					if WebSocketHub != nil {
+					if utils.WebSocketHub != nil {
 
 						evt := dto.InstanceEvent{
 							Event:       "instance_update",
@@ -225,7 +249,7 @@ func SubmitChallenge(c *gin.Context) {
 							UpdatedAt:   time.Now().UTC().Unix(),
 						}
 						if payload, err := json.Marshal(evt); err == nil {
-							WebSocketHub.SendToTeamExcept(teamID, actorID, payload)
+							utils.WebSocketHub.SendToTeamExcept(teamID, actorID, payload)
 						}
 					}
 				}

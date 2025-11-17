@@ -86,7 +86,7 @@ function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, 
               <span className="font-semibold">{typeof totalPoints === 'number' ? totalPoints : 0}</span>
               <span className="text-xs text-muted-foreground uppercase tracking-wide">{t('points') || 'Points'}</span>
             </div>
-            {spentOnHints && spentOnHints > 0 && (
+            {(spentOnHints ?? 0) > 0 && (
               <div className="flex items-center gap-2 rounded-full border bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800 px-3 py-1">
                 <span className="text-orange-600 dark:text-orange-400 text-xs">-</span>
                 <span className="font-semibold text-orange-700 dark:text-orange-300">{spentOnHints}</span>
@@ -105,10 +105,10 @@ function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, 
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
-              <th className="py-3 px-4 text-left font-medium">Member</th>
-              <th className="py-3 px-4 text-left font-medium">Role</th>
-              <th className="py-3 px-4 text-left font-medium">Score</th>
-              <th className="py-3 px-4 text-right font-medium">Actions</th>
+              <th className="py-3 px-4 text-left font-medium">{t('team_members.member')}</th>
+              <th className="py-3 px-4 text-left font-medium">{t('team_members.role')}</th>
+              <th className="py-3 px-4 text-left font-medium">{t('team_members.score')}</th>
+              <th className="py-3 px-4 text-right font-medium">{t('team_members.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -125,10 +125,10 @@ function ClassicTeamView({ team, members, currentUser, isCreator, otherMembers, 
                 <td className="py-3 px-4">
                   {m.id === team.creatorId ? (
                     <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                      Creator
+                      {t('team_members.creator')}
                     </Badge>
                   ) : (
-                    <span className="text-muted-foreground">Member</span>
+                    <span className="text-muted-foreground">{t('team_members.member')}</span>
                   )}
                 </td>
                 <td className="py-3 px-4">

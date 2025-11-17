@@ -1,6 +1,6 @@
 package dto
 
-import "pwnthemall/models"
+import "github.com/pwnthemall/pwnthemall/backend/models"
 
 // CreateTeamInput represents team creation request
 type CreateTeamInput struct {

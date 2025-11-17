@@ -29,7 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeoPicker from "./GeoPicker";
 import { useInstances } from "@/hooks/use-instances";
 import { useHints } from "@/hooks/use-hints";
-import { debugError } from "@/lib/debug";
+import { debugError, debugLog } from "@/lib/debug";
 import type { User } from "@/models/User";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -226,6 +226,10 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;
       toast.error(t(errorKey) || 'Try again');
+      // Refresh challenges to update attempts count on failed submission
+      if (onChallengeUpdate) {
+        onChallengeUpdate();
+      }
     } finally {
       setLoading(false);
       setFlag("");
@@ -258,10 +262,6 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
   };
 
   const handleChallengeSelect = (challenge: Challenge) => {
-    console.log("Selected challenge:", challenge);
-    console.log("Challenge hints:", challenge.hints);
-    console.log("Hints length:", challenge.hints?.length);
-    
     setSelectedChallenge(challenge);
     setFlag("");
     setOpen(true);
@@ -435,7 +435,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   : ''
               }`}
             >
-              {/* Solved check (moved to top-left to avoid overlap with points badge) */}
+              {/* Solved check */}
               {challenge.solved && (
                 <div className="absolute top-2 left-2">
                   <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -446,7 +446,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
               {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
                 <div className="absolute top-2 right-2 z-10 pointer-events-none select-none">
                   <div className="flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 shadow-sm">
-                    <Star className="w-5 h-5 text-yellow-400" />
+                    <Star className="w-5 h-5 0" />
                     <span className="text-sm font-semibold leading-none">
                       {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points}
                     </span>
@@ -463,7 +463,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-left p-4 pt-10 pb-3">
+              <CardContent className="text-left p-4 pt-2 pb-3">
                 <div className="flex flex-wrap gap-2 mt-2">
                   <Badge
                     variant="secondary"
@@ -670,11 +670,23 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                               )}
                               <Button
                                 onClick={handleSubmit}
-                                disabled={loading || (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim())}
+                                disabled={
+                                  loading || 
+                                  (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim()) ||
+                                  !!(selectedChallenge?.maxAttempts && selectedChallenge.maxAttempts > 0 && (selectedChallenge.teamFailedAttempts || 0) >= selectedChallenge.maxAttempts)
+                                }
                                 className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
                               >
                                 {loading ? t('submitting') : t('submit')}
                               </Button>
+                              {/* Attempts indicator - small, subtle, under submit button */}
+                              {selectedChallenge?.maxAttempts != null && selectedChallenge.maxAttempts > 0 ? (
+                                <div className="text-center -mt-2">
+                                  <span className="text-xs text-muted-foreground opacity-70">
+                                    {t('attempts_left')}: {selectedChallenge.maxAttempts - (selectedChallenge.teamFailedAttempts || 0)}/{selectedChallenge.maxAttempts}
+                                  </span>
+                                </div>
+                              ) : null}
                             </div>
                           )}
                         </div>
@@ -689,19 +701,19 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                 <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
                                   <h3 className="font-semibold text-lg text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
                                     <Trophy className="w-5 h-5" />
-                                    Score de l&apos;équipe
+                                    {t('hints.team_score') || 'Team Score'}
                                   </h3>
                                   <div className="grid grid-cols-3 gap-4 text-sm">
                                     <div>
-                                      <span className="text-blue-600 dark:text-blue-400 font-medium">Total:</span>
+                                      <span className="text-blue-600 dark:text-blue-400 font-medium">{t('hints.total') || 'Total'}:</span>
                                       <div className="font-bold text-blue-800 dark:text-blue-200">{teamScore.totalScore} pts</div>
                                     </div>
                                     <div>
-                                      <span className="text-green-600 dark:text-green-400 font-medium">Disponible:</span>
+                                      <span className="text-green-600 dark:text-green-400 font-medium">{t('hints.available') || 'Available'}:</span>
                                       <div className="font-bold text-green-800 dark:text-green-200">{teamScore.availableScore} pts</div>
                                     </div>
                                     <div>
-                                      <span className="text-orange-600 dark:text-orange-400 font-medium">Dépensé:</span>
+                                      <span className="text-orange-600 dark:text-orange-400 font-medium">{t('hints.spent') || 'Spent'}:</span>
                                       <div className="font-bold text-orange-800 dark:text-orange-200">{teamScore.spentOnHints} pts</div>
                                     </div>
                                   </div>
@@ -737,7 +749,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                           </div>
                                           {hint.purchased && (
                                             <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-600">
-                                              ✓ Acheté
+                                              ✓ {t('hints.purchased') || 'Purchased'}
                                             </Badge>
                                           )}
                                         </div>
@@ -750,7 +762,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                       ) : (
                                         <div className="space-y-3">
                                           <div className="text-sm text-muted-foreground leading-relaxed italic">
-                                            Cet indice est verrouillé. Achetez-le pour révéler son contenu.
+                                            {t('hints.hint_locked') || 'This hint is locked. Buy it to reveal its content.'}
                                           </div>
                                           <Button
                                             onClick={async () => {
@@ -797,12 +809,12 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                             {hintsLoading ? (
                                               <>
                                                 <Settings className="w-4 h-4 mr-2 animate-spin" />
-                                                Achat en cours...
+                                                {t('hints.purchasing') || 'Purchasing...'}
                                               </>
                                             ) : teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost ? (
-                                              `Points insuffisants (${hint.cost} requis)`
+                                              t('hints.insufficient_points', { cost: hint.cost }) || `Insufficient points (${hint.cost} required)`
                                             ) : (
-                                              `Acheter pour ${hint.cost} points`
+                                              t('hints.buy_for_points', { cost: hint.cost }) || `Buy for ${hint.cost} points`
                                             )}
                                           </Button>
                                         </div>

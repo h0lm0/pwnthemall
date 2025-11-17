@@ -8,7 +8,7 @@ difficulty: "easy"
 type: "compose"
 author: "h0lm0"
 hidden: false
-flags: ["PwnThatDemo"]
+flags: ["flag"]
 points: 123
 ports: [80,22]
 connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]

@@ -5,9 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"pwnthemall/utils"
-
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func MinioWebhook(c *gin.Context) {
@@ -21,7 +20,7 @@ func MinioWebhook(c *gin.Context) {
 		if strings.Contains(key, "/chall.yml") {
 			go func() {
 				ctx := context.Background()
-				if err := utils.SyncChallengesFromMinIO(ctx, key); err != nil {
+				if err := utils.SyncChallengesFromMinIO(ctx, key, utils.UpdatesHub); err != nil {
 					log.Printf("MinIO sync error: %v", err)
 				}
 			}()

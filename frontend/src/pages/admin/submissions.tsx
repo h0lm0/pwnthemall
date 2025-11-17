@@ -6,6 +6,7 @@ import SubmissionsContent from "@/components/admin/SubmissionsContent"
 type Submission = {
   id: number
   value: string
+  isCorrect: boolean
   createdAt: string
   user?: { 
     id: number

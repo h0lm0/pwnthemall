@@ -2,10 +2,11 @@ package utils
 
 import (
 	"net/http"
-	"pwnthemall/config"
-	"pwnthemall/debug"
-	"pwnthemall/models"
 	"sync"
+
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 
 	"github.com/gorilla/websocket"
 )
@@ -15,6 +16,13 @@ var upgrader = websocket.Upgrader{
 		return true // Allow all origins for now, can be restricted later
 	},
 }
+
+// WebSocketHub is a global variable to manage WebSocket connections for notifications
+var WebSocketHub *Hub
+
+// UpdatesHub is a global variable to manage WebSocket connections for real-time updates
+// (categories, challenges, CTF status, instances)
+var UpdatesHub *Hub
 
 // Client represents a connected WebSocket client
 type Client struct {

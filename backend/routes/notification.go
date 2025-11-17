@@ -1,18 +1,23 @@
 package routes
 
 import (
-	"pwnthemall/controllers"
-	"pwnthemall/middleware"
-	"pwnthemall/utils"
-
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/controllers"
+	"github.com/pwnthemall/pwnthemall/backend/middleware"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
 func RegisterNotificationRoutes(router *gin.Engine) {
 	// WebSocket endpoint for real-time notifications
 	router.GET("/ws/notifications", middleware.AuthRequired(false), func(c *gin.Context) {
 		userID := c.GetUint("user_id")
-		utils.ServeWs(controllers.WebSocketHub, userID, c.Writer, c.Request)
+		utils.ServeWs(utils.WebSocketHub, userID, c.Writer, c.Request)
+	})
+
+	// WebSocket endpoint for real-time updates (categories, challenges, status)
+	router.GET("/ws/updates", middleware.AuthRequired(false), func(c *gin.Context) {
+		userID := c.GetUint("user_id")
+		utils.ServeWs(utils.UpdatesHub, userID, c.Writer, c.Request)
 	})
 
 	// User notification endpoints

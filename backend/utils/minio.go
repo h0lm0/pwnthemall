@@ -3,24 +3,27 @@ package utils
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
-	"pwnthemall/config"
-	"pwnthemall/meta"
-	"pwnthemall/models"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/meta"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 
 	"github.com/lib/pq"
 	"github.com/minio/minio-go/v7"
 	"gopkg.in/yaml.v2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-func SyncChallengesFromMinIO(ctx context.Context, key string) error {
+func SyncChallengesFromMinIO(ctx context.Context, key string, updatesHub *Hub) error {
 	const bucketName = "challenges"
 	// Key can be in two forms depending on MinIO webhook config:
 	// 1) "challenges/<slug>/chall.yml" (includes bucket)
@@ -118,7 +121,7 @@ func SyncChallengesFromMinIO(ctx context.Context, key string) error {
 	}
 	// Update or create the challenge in the database
 	slug := strings.Split(objectKey, "/")[0]
-	if err := updateOrCreateChallengeInDB(metaData, slug, ports); err != nil {
+	if err := updateOrCreateChallengeInDB(metaData, slug, ports, updatesHub); err != nil {
 		log.Printf("Error updating or creating challenge in DB: %v", err)
 		return err
 	}
@@ -135,19 +138,34 @@ func deleteChallengeFromDB(slug string) error {
 	return nil
 }
 
-func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int) error {
-	var cCategory models.ChallengeCategory
-	if err := config.DB.FirstOrCreate(&cCategory, models.ChallengeCategory{Name: metaData.Category}).Error; err != nil {
+func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int, updatesHub *Hub) error {
+
+	createOrGet := func(dest interface{}, where map[string]interface{}) error {
+		result := config.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(dest)
+		if result.Error != nil {
+			return result.Error
+		}
+
+		idField := reflect.Indirect(reflect.ValueOf(dest)).FieldByName("ID")
+		if idField.Uint() == 0 {
+			return config.DB.Where(where).First(dest).Error
+		}
+
+		return nil
+	}
+
+	cCategory := models.ChallengeCategory{Name: metaData.Category}
+	if err := createOrGet(&cCategory, map[string]interface{}{"name": metaData.Category}); err != nil {
 		return err
 	}
 
-	var cDifficulty models.ChallengeDifficulty
-	if err := config.DB.FirstOrCreate(&cDifficulty, models.ChallengeDifficulty{Name: metaData.Difficulty}).Error; err != nil {
+	cDifficulty := models.ChallengeDifficulty{Name: metaData.Difficulty}
+	if err := createOrGet(&cDifficulty, map[string]interface{}{"name": metaData.Difficulty}); err != nil {
 		return err
 	}
 
-	var cType models.ChallengeType
-	if err := config.DB.FirstOrCreate(&cType, models.ChallengeType{Name: metaData.Type}).Error; err != nil {
+	cType := models.ChallengeType{Name: metaData.Type}
+	if err := createOrGet(&cType, map[string]interface{}{"name": metaData.Type}); err != nil {
 		return err
 	}
 
@@ -155,6 +173,7 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	if err := config.DB.FirstOrCreate(&cDecayFormula, models.DecayFormula{Name: cDecayFormula.Name, Step: cDecayFormula.Step, MinPoints: cDecayFormula.MinPoints}).Error; err != nil {
 		return err
 	}
+
 	var challenge models.Challenge
 	if err := config.DB.Where("slug = ?", slug).First(&challenge).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
@@ -170,14 +189,15 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.Author = metaData.Author
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
+	challenge.MaxAttempts = metaData.Attempts
 	challenge.DecayFormula = &cDecayFormula
+
 	ports64 := make(pq.Int64Array, len(ports))
 	for i, p := range ports {
 		ports64[i] = int64(p)
 	}
 	challenge.Ports = ports64
 
-	// Handle connection_info
 	if len(metaData.ConnectionInfo) > 0 {
 		connInfo := make(pq.StringArray, len(metaData.ConnectionInfo))
 		copy(connInfo, metaData.ConnectionInfo)
@@ -186,7 +206,6 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		challenge.ConnectionInfo = pq.StringArray{}
 	}
 
-	// Handle First Blood configuration
 	challenge.EnableFirstBlood = metaData.EnableFirstBlood
 	if metaData.FirstBlood != nil {
 		if len(metaData.FirstBlood.Bonuses) > 0 {
@@ -215,6 +234,15 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		return err
 	}
 
+	if updatesHub != nil {
+		if payload, err := json.Marshal(map[string]interface{}{
+			"event":  "challenge-category",
+			"action": "minio_sync",
+		}); err == nil {
+			updatesHub.SendToAll(payload)
+		}
+	}
+
 	if err := config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.Flag{}).Error; err != nil {
 		return err
 	}
@@ -230,22 +258,15 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 		}
 	}
 
-	// Handle hints from YAML
 	if len(metaData.Hints) > 0 {
-		// Delete existing hints to replace them with YAML configuration
 		if err := config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.Hint{}).Error; err != nil {
 			return err
 		}
 
-		// Create hints from YAML metadata
 		for _, hintMeta := range metaData.Hints {
-			// Default IsActive to true if not explicitly set
 			isActive := true
 			if hintMeta.IsActive != nil {
 				isActive = *hintMeta.IsActive
-				log.Printf("Hint '%s': IsActive explicitly set to %v", hintMeta.Title, isActive)
-			} else {
-				log.Printf("Hint '%s': IsActive not set, using default true", hintMeta.Title)
 			}
 
 			hint := models.Hint{
@@ -256,28 +277,14 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 				IsActive:    isActive,
 			}
 
-			// Parse AutoActiveAt if provided
 			if hintMeta.AutoActiveAt != nil {
 				if autoActiveTime, err := time.Parse(time.RFC3339, *hintMeta.AutoActiveAt); err == nil {
 					hint.AutoActiveAt = &autoActiveTime
-					log.Printf("Hint '%s': AutoActiveAt set to %v", hintMeta.Title, autoActiveTime)
-				} else {
-					log.Printf("Hint '%s': Failed to parse AutoActiveAt '%s': %v", hintMeta.Title, *hintMeta.AutoActiveAt, err)
 				}
 			}
 
-			log.Printf("About to create hint '%s' with IsActive=%v", hintMeta.Title, hint.IsActive)
 			if err := config.DB.Select("ChallengeID", "Title", "Content", "Cost", "IsActive", "AutoActiveAt").Create(&hint).Error; err != nil {
-				log.Printf("Failed to create hint '%s': %v", hintMeta.Title, err)
 				return err
-			} else {
-				log.Printf("Successfully created hint '%s' with IsActive=%v (ID: %d)", hintMeta.Title, hint.IsActive, hint.ID)
-
-				// Verify by reading back from database
-				var dbHint models.Hint
-				if err := config.DB.First(&dbHint, hint.ID).Error; err == nil {
-					log.Printf("DB verification for hint '%s': IsActive=%v", hintMeta.Title, dbHint.IsActive)
-				}
 			}
 		}
 	}

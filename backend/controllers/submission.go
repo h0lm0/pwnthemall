@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"net/http"
-	"pwnthemall/config"
-	"pwnthemall/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/models"
 )
 
 // GetAllSubmissions returns all submissions with user and challenge info (admin only)
