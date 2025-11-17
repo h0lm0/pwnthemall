@@ -1,11 +1,15 @@
+<div align="center">
+
 ![logo no text](frontend/public/logo-no-text.png)
 
 # pwnthemall
 
-[![Docker](https://img.shields.io/badge/docker-ready-blue?style=flat-square&logo=docker)](https://www.docker.com/)
-[![Demo status](https://img.shields.io/github/actions/workflow/status/h0lm0/pwnthemall/demo-deploy.yml?branch=main&label=🚀%20Demo%20status)](https://demo.pwnthemall.com)
-[![Stars](https://img.shields.io/github/stars/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/stargazers)
-[![Issues](https://img.shields.io/github/issues/h0lm0/pwnthemall?style=flat-square)](https://github.com/h0lm0/pwnthemall/issues)
+[![Docker](https://img.shields.io/badge/docker-ready-blue?style=for-the-badge&logo=docker)](https://www.docker.com/)
+[![Stars](https://img.shields.io/github/stars/pwnthemall/pwnthemall?style=for-the-badge)](https://github.com/pwnthemall/pwnthemall/stargazers)
+[![Demo status](https://img.shields.io/github/actions/workflow/status/pwnthemall/pwnthemall/demo-deploy.yml?branch=main&label=🚀%20Demo%20status&style=for-the-badge)](https://demo.pwnthemall.com)
+[![Discord server](https://dcbadge.limes.pink/api/server/EsW8r6EXDf?compact=true)](https://discord.gg/EsW8r6EXDf)
+
+</div>
 
 > Open-source **Capture The Flag (CTF)** platform to host, manage, and deploy your own cybersecurity challenges.  
 > Designed for self-hosted events and built with modern tools, it makes running CTFs fun and efficient.

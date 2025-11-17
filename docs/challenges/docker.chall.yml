@@ -7,7 +7,7 @@ category: web
 difficulty: easy
 type: docker
 author: "Kevin'MITDocker"
-flags: ["whatsthis?aDockerContainer!"]
+flags: ["flag"]
 hidden: false
 points: 500
 ports: [5001]

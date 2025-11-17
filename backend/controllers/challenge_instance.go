@@ -149,7 +149,7 @@ func KillChallengeInstance(c *gin.Context) {
 	}
 
 	// Broadcast instance stopped event to team (except the actor)
-	if WebSocketHub != nil {
+	if utils.WebSocketHub != nil {
 		event := dto.InstanceEvent{
 			Event:       "instance_update",
 			TeamID:      user.Team.ID,
@@ -160,7 +160,7 @@ func KillChallengeInstance(c *gin.Context) {
 			UpdatedAt:   time.Now().UTC().Unix(),
 		}
 		if payload, err := json.Marshal(event); err == nil {
-			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
+			utils.WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 		}
 	}
 
@@ -347,7 +347,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 	}
 
 	// Broadcast instance start event to the whole team (except the starter)
-	if WebSocketHub != nil {
+	if utils.WebSocketHub != nil {
 		var connectionInfo []string
 		if len(challenge.ConnectionInfo) > 0 {
 			ip := os.Getenv("PTA_PUBLIC_IP")
@@ -398,7 +398,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 		}
 
 		if payload, err := json.Marshal(event); err == nil {
-			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
+			utils.WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 		}
 	}
 
@@ -541,7 +541,7 @@ func StartComposeChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	if WebSocketHub != nil {
+	if utils.WebSocketHub != nil {
 		event := map[string]interface{}{
 			"event":       "instance_update",
 			"teamId":      user.Team.ID,
@@ -555,7 +555,7 @@ func StartComposeChallengeInstance(c *gin.Context) {
 			"ports":       ports,
 		}
 		if payload, err := json.Marshal(event); err == nil {
-			WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
+			utils.WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 		}
 	}
 
@@ -645,7 +645,7 @@ func StopChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	if WebSocketHub != nil {
+	if utils.WebSocketHub != nil {
 		var user models.User
 		if err := config.DB.Select("id, username, team_id").First(&user, userID).Error; err == nil && user.TeamID != nil {
 			type InstanceEvent struct {
@@ -667,7 +667,7 @@ func StopChallengeInstance(c *gin.Context) {
 				UpdatedAt:   time.Now().UTC(),
 			}
 			if payload, err := json.Marshal(event); err == nil {
-				WebSocketHub.SendToTeamExcept(*user.TeamID, user.ID, payload)
+				utils.WebSocketHub.SendToTeamExcept(*user.TeamID, user.ID, payload)
 			}
 		}
 	}

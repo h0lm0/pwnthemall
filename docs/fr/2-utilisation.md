@@ -31,7 +31,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       type: "standard"
       author: "Kevin'MIT"
       hidden: false
-      flags: ["PwnThatDemo"]
+      flags: ["flag"]
       points: 123
       ```
 
@@ -48,7 +48,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       difficulty: easy
       type: docker
       author: "Kevin'MITDocker"
-      flags: ["whatsthis?aDockerContainer!"]
+      flags: ["flag"]
       hidden: false
       points: 500
       ports: [5001]
@@ -90,7 +90,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       type: "compose"
       author: "h0lm0"
       hidden: false
-      flags: ["really?ComposeChallenges!"]
+      flags: ["flag"]
       points: 123
       ports: [80,22]
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]

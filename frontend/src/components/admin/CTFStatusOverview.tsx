@@ -61,7 +61,7 @@ export default function CTFStatusOverview() {
       case "active":
         return t("ctf_status_active_desc") || "The CTF competition is currently active. Participants can access challenges and submit flags.";
       case "ended":
-        return t("ctf_status_ended_desc") || "The CTF competition has ended. Challenges are visible but flag submission is disabled.";
+        return t("ctf_status_ended_desc");
       case "no_timing":
         return t("ctf_status_no_timing_desc") || "No start or end times are configured. The CTF operates without time restrictions.";
       default:

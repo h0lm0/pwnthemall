@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/pwnthemall/pwnthemall/backend/config"
@@ -57,6 +58,16 @@ func CreateChallengeCategory(c *gin.Context) {
 		return
 	}
 
+	// Broadcast category update to all connected clients
+	if utils.UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event":  "challenge-category",
+			"action": "create",
+		}); err == nil {
+			utils.UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.CreatedResponse(c, gin.H{
 		"id":   challengeCategory.ID,
 		"name": challengeCategory.Name,
@@ -82,6 +93,16 @@ func UpdateChallengeCategory(c *gin.Context) {
 	challengeCategory.Name = input.Name
 	config.DB.Save(&challengeCategory)
 
+	// Broadcast category update to all connected clients
+	if utils.UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event":  "challenge-category",
+			"action": "update",
+		}); err == nil {
+			utils.UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.OKResponse(c, challengeCategory)
 }
 
@@ -95,6 +116,17 @@ func DeleteChallengeCategory(c *gin.Context) {
 	}
 
 	config.DB.Delete(&challengeCategory)
+
+	// Broadcast category update to all connected clients
+	if utils.UpdatesHub != nil {
+		if payload, err := json.Marshal(gin.H{
+			"event":  "challenge-category",
+			"action": "delete",
+		}); err == nil {
+			utils.UpdatesHub.SendToAll(payload)
+		}
+	}
+
 	utils.OKResponse(c, gin.H{"message": "Challenge category deleted"})
 }
 

@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"strings"
-
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/pwnthemall/pwnthemall/backend/config"
@@ -205,6 +205,15 @@ func BanOrUnbanUser(c *gin.Context) {
 
 	user.Banned = !user.Banned
 	config.DB.Save(&user)
+
+	// Broadcast ban event to the specific user via WebSocket
+	if user.Banned && utils.UpdatesHub != nil {
+		payload, _ := json.Marshal(gin.H{
+			"event":  "user-banned",
+			"user_id": user.ID,
+		})
+		utils.UpdatesHub.SendToUser(user.ID, payload)
+	}
 
 	utils.OKResponse(c, gin.H{"banned": user.Banned})
 }

@@ -46,6 +46,8 @@ export interface Challenge {
     challengeId: number
     purchased?: boolean
   }[]
+  maxAttempts?: number
+  teamFailedAttempts?: number
 }
 
 export interface FirstBlood {

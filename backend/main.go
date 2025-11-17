@@ -27,6 +27,17 @@ func generateRandomString(n int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
+
+
+// initWebSocketHub initializes the WebSocket hubs
+func initWebSocketHub() {
+	utils.WebSocketHub = utils.NewHub()
+	go utils.WebSocketHub.Run()
+
+	utils.UpdatesHub = utils.NewHub()
+	go utils.UpdatesHub.Run()
+}
+
 func main() {
 	config.ConnectDB()
 	config.ConnectMinio()
@@ -36,7 +47,9 @@ func main() {
 		log.Printf("Failed to connect to docker host: %s", err.Error())
 	}
 
-	controllers.InitWebSocketHub()
+	initWebSocketHub()
+
+	// Start hint activation scheduler
 	utils.StartHintScheduler()
 
 	router := gin.Default()

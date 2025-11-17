@@ -226,6 +226,10 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;
       toast.error(t(errorKey) || 'Try again');
+      // Refresh challenges to update attempts count on failed submission
+      if (onChallengeUpdate) {
+        onChallengeUpdate();
+      }
     } finally {
       setLoading(false);
       setFlag("");
@@ -431,7 +435,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   : ''
               }`}
             >
-              {/* Solved check (moved to top-left to avoid overlap with points badge) */}
+              {/* Solved check */}
               {challenge.solved && (
                 <div className="absolute top-2 left-2">
                   <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -442,7 +446,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
               {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
                 <div className="absolute top-2 right-2 z-10 pointer-events-none select-none">
                   <div className="flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 shadow-sm">
-                    <Star className="w-5 h-5 text-yellow-400" />
+                    <Star className="w-5 h-5 0" />
                     <span className="text-sm font-semibold leading-none">
                       {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points}
                     </span>
@@ -459,7 +463,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-left p-4 pt-10 pb-3">
+              <CardContent className="text-left p-4 pt-2 pb-3">
                 <div className="flex flex-wrap gap-2 mt-2">
                   <Badge
                     variant="secondary"
@@ -666,11 +670,23 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                               )}
                               <Button
                                 onClick={handleSubmit}
-                                disabled={loading || (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim())}
+                                disabled={
+                                  loading || 
+                                  (selectedChallenge?.type?.name?.toLowerCase() === 'geo' ? !geoCoords : !flag.trim()) ||
+                                  !!(selectedChallenge?.maxAttempts && selectedChallenge.maxAttempts > 0 && (selectedChallenge.teamFailedAttempts || 0) >= selectedChallenge.maxAttempts)
+                                }
                                 className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600"
                               >
                                 {loading ? t('submitting') : t('submit')}
                               </Button>
+                              {/* Attempts indicator - small, subtle, under submit button */}
+                              {selectedChallenge?.maxAttempts && selectedChallenge.maxAttempts > 0 && (
+                                <div className="text-center -mt-2">
+                                  <span className="text-xs text-muted-foreground opacity-70">
+                                    {t('attempts_left')}: {selectedChallenge.maxAttempts - (selectedChallenge.teamFailedAttempts || 0)}/{selectedChallenge.maxAttempts}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

@@ -108,6 +108,22 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	// Check and activate scheduled hints before processing
 	utils.CheckAndActivateHintsForChallenges(challenges)
 
+	// Get failed attempts count for team's challenges (if user has a team)
+	failedAttemptsMap := make(map[uint]int64)
+	if user.Team != nil {
+		for _, challenge := range challenges {
+			if challenge.MaxAttempts > 0 {
+				var count int64
+				config.DB.Model(&models.Submission{}).
+					Joins("JOIN users ON users.id = submissions.user_id").
+					Where("users.team_id = ? AND submissions.challenge_id = ? AND submissions.is_correct = ?",
+						user.Team.ID, challenge.ID, false).
+					Count(&count)
+				failedAttemptsMap[challenge.ID] = count
+			}
+		}
+	}
+
 	for _, challenge := range challenges {
 		solved := false
 		for _, solvedId := range solvedChallengeIds {
@@ -143,9 +159,10 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		}
 
 		item := dto.ChallengeWithSolved{
-			Challenge: challenge,
-			Solved:    solved,
-			Hints:     hintsWithPurchased,
+			Challenge:          challenge,
+			Solved:             solved,
+			Hints:              hintsWithPurchased,
+			TeamFailedAttempts: failedAttemptsMap[challenge.ID],
 		}
 		if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
 			var spec models.GeoSpec

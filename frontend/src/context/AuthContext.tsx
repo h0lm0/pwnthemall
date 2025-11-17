@@ -43,6 +43,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Hard logout: Force logout with full cleanup (for ban events)
+  const hardLogout = useCallback(async (reason = 'banned') => {
+    debugLog('Hard logout triggered:', reason);
+    
+    try {
+      await axios.post("/api/logout");
+    } catch (error) {
+      // Ignore errors
+    }
+    
+    // Clear all state
+    setLoggedIn(false);
+    clearTranslationCache();
+    
+    // Close WebSocket by dispatching close event
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('websocket:close'));
+      window.dispatchEvent(new CustomEvent('auth:refresh'));
+    }
+    
+    // Force full page redirect to clear all cached state
+    if (typeof window !== 'undefined') {
+      const message = reason === 'banned' ? '?banned=true' : '';
+      window.location.href = `/login${message}`;
+    }
+  }, []);
+
   const checkAuth = useCallback(async () => {
     if (authCheckedRef.current || isCheckingRef.current) {
       return;
@@ -80,6 +107,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
     }
   }, []);
+
+  // Listen for user-banned events from WebSocket
+  useEffect(() => {
+    const handleBanEvent = (event: any) => {
+      debugLog('User banned event received');
+      hardLogout('banned');
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('user:banned', handleBanEvent);
+      return () => {
+        window.removeEventListener('user:banned', handleBanEvent);
+      };
+    }
+  }, [hardLogout]);
 
   return (
     <AuthContext.Provider

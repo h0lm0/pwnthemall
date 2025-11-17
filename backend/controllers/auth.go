@@ -174,6 +174,11 @@ func Refresh(c *gin.Context) {
 		return
 	}
 
+	if user.Banned {
+		utils.UnauthorizedError(c, "banned")
+		return
+	}
+
 	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role)
 	if err != nil {
 		utils.InternalServerError(c, "failed to generate access token")

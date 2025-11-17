@@ -54,9 +54,10 @@ type HintWithPurchased struct {
 // ChallengeWithSolved represents a challenge with solve status and hints
 type ChallengeWithSolved struct {
 	models.Challenge
-	Solved      bool                `json:"solved"`
-	Hints       []HintWithPurchased `json:"hints,omitempty"`
-	GeoRadiusKm *float64            `json:"geoRadiusKm,omitempty"`
+	Solved             bool                `json:"solved"`
+	Hints              []HintWithPurchased `json:"hints,omitempty"`
+	GeoRadiusKm        *float64            `json:"geoRadiusKm,omitempty"`
+	TeamFailedAttempts int64               `json:"teamFailedAttempts,omitempty"`
 }
 
 // SolveWithUser represents a solve with user information

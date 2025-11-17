@@ -15,6 +15,7 @@ type BaseChallengeMetadata struct {
 	Hints            []HintMetadata      `yaml:"hints,omitempty"`
 	EnableFirstBlood bool                `yaml:"enableFirstBlood"`
 	FirstBlood       *FirstBloodMetadata `yaml:"firstBlood,omitempty"`
+	Attempts         int                 `yaml:"attempts,omitempty"` // Max submission attempts (0 = unlimited)
 }
 
 type HintMetadata struct {

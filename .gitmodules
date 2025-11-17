@@ -1,3 +1,0 @@
-[submodule "backend/plugins"]
-	path = backend/plugins
-	url = git@github.com:pwnthemall/pwnthemall-plugins.git

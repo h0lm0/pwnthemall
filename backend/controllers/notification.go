@@ -14,15 +14,6 @@ import (
 	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
-// WebSocketHub is a global variable to manage WebSocket connections
-var WebSocketHub *utils.Hub
-
-// InitWebSocketHub initializes the WebSocket hub
-func InitWebSocketHub() {
-	WebSocketHub = utils.NewHub()
-	go WebSocketHub.Run()
-}
-
 // SendNotification sends a notification to users
 func SendNotification(c *gin.Context) {
 	var input dto.NotificationInput
@@ -57,13 +48,13 @@ func SendNotification(c *gin.Context) {
 	// Send via WebSocket
 	if input.UserID != nil {
 		// Send to specific user
-		WebSocketHub.SendToUser(*input.UserID, messageBytes)
+		utils.WebSocketHub.SendToUser(*input.UserID, messageBytes)
 	} else if input.TeamID != nil {
 		// Send to all users in the team
-		WebSocketHub.SendToTeam(*input.TeamID, messageBytes)
+		utils.WebSocketHub.SendToTeam(*input.TeamID, messageBytes)
 	} else {
 		// Send to all connected users except the sender
-		WebSocketHub.SendToAllExcept(messageBytes, senderID)
+		utils.WebSocketHub.SendToAllExcept(messageBytes, senderID)
 	}
 
 	utils.CreatedResponse(c, notificationMsg)

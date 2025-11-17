@@ -1,5 +1,5 @@
 import Head from "next/head"
-import { useEffect, useState, useMemo } from "react"
+import { useState, useMemo } from "react"
 import axios from "@/lib/axios";
 
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
@@ -7,7 +7,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { X } from "lucide-react"
+import { X, ArrowUpDown } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -52,12 +52,15 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   const [usernameFilter, setUsernameFilter] = useState("")
   const [emailFilter, setEmailFilter] = useState("")
   const [teamFilter, setTeamFilter] = useState("")
-  const [roleFilter, setRoleFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("") // "banned" | "active" | ""
+  
+  // Sorting state
+  const [sortBy, setSortBy] = useState("id")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
-  // Filtered users
+  // Filtered and sorted users
   const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
+    let filtered = users.filter((user) => {
       const usernameMatch = !usernameFilter || 
         user.username?.toLowerCase().includes(usernameFilter.toLowerCase())
       
@@ -67,31 +70,76 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       const teamMatch = !teamFilter || 
         user.team?.name?.toLowerCase().includes(teamFilter.toLowerCase())
       
-      const roleMatch = !roleFilter || 
-        user.role?.toLowerCase() === roleFilter.toLowerCase()
-      
       const statusMatch = !statusFilter || 
         (statusFilter === "banned" && user.banned) || 
         (statusFilter === "active" && !user.banned)
       
-      return usernameMatch && emailMatch && teamMatch && roleMatch && statusMatch
+      return usernameMatch && emailMatch && teamMatch && statusMatch
     })
-  }, [users, usernameFilter, emailFilter, teamFilter, roleFilter, statusFilter])
+    
+    // Sort users
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortBy) {
+        case "username":
+          aValue = a.username || ""
+          bValue = b.username || ""
+          break
+        case "email":
+          aValue = a.email || ""
+          bValue = b.email || ""
+          break
+        case "team":
+          aValue = a.team?.name || ""
+          bValue = b.team?.name || ""
+          break
+        case "role":
+          aValue = a.role || ""
+          bValue = b.role || ""
+          break
+        case "banned":
+          aValue = a.banned ? 1 : 0
+          bValue = b.banned ? 1 : 0
+          break
+        default:
+          return 0
+      }
+      
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        const comparison = aValue.localeCompare(bValue)
+        return sortOrder === "asc" ? comparison : -comparison
+      } else {
+        const comparison = aValue - bValue
+        return sortOrder === "asc" ? comparison : -comparison
+      }
+    })
+    
+    return filtered
+  }, [users, usernameFilter, emailFilter, teamFilter, statusFilter, sortBy, sortOrder])
+  
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(field)
+      setSortOrder("asc")
+    }
+  }
 
   const columns: ColumnDef<User>[] = [
     {
-      accessorKey: "id",
-      header: t("id"),
-      cell: ({ getValue }) => (
-        <span className="block text-center w-10 min-w-[40px]">
-          {getValue() as string}
-        </span>
-      ),
-      size: 40,
-    },
-    {
       accessorKey: "username",
-      header: t("username"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("username")}
+        >
+          {t("username")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[120px] truncate">
           {getValue() as string}
@@ -100,7 +148,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "email",
-      header: t("email"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("email")}
+        >
+          {t("email")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[150px] truncate">
           {getValue() as string}
@@ -109,7 +166,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "team",
-      header: t("team"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("team")}
+        >
+          {t("team")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
         const team = row.original.team;
         return (
@@ -158,7 +224,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "role",
-      header: t("role"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("role")}
+        >
+          {t("role")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
         <span className="block min-w-[80px]">
           {getValue() as string}
@@ -167,7 +242,16 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     },
     {
       accessorKey: "banned",
-      header: t("banned"),
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("banned")}
+        >
+          {t("banned")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => {
         const isBanned = getValue() as boolean
         return (
@@ -324,7 +408,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t("users")}</h1>
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={onRefresh}>{t("refresh")}</Button>
             <div
               className={cn(
                 "flex items-center gap-2 h-9",
@@ -398,7 +481,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </label>
             <div className="relative">
               <Input
-                placeholder={t("filter_by_user") || "Filter by email..."}
+                placeholder={t("filter_by_email") || "Filter by email..."}
                 value={emailFilter}
                 onChange={(e) => setEmailFilter(e.target.value)}
                 className="pr-8 bg-background"
@@ -438,28 +521,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
 
           <div className="flex-1 min-w-[160px]">
             <label className="text-sm font-medium mb-1 block">
-              {t("role") || "Role"}
-            </label>
-            <div className="relative">
-              <Input
-                placeholder={t("filter_by_role") || "Filter by role..."}
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="pr-8 bg-background"
-              />
-              {roleFilter && (
-                <button
-                  onClick={() => setRoleFilter("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-[160px]">
-            <label className="text-sm font-medium mb-1 block">
               {t("status") || "Status"}
             </label>
             <div className="relative">
@@ -475,7 +536,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </div>
           </div>
 
-          {(usernameFilter || emailFilter || teamFilter || roleFilter || statusFilter) && (
+          {(usernameFilter || emailFilter || teamFilter || statusFilter) && (
             <Button
               variant="outline"
               size="sm"
@@ -483,7 +544,6 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 setUsernameFilter("")
                 setEmailFilter("")
                 setTeamFilter("")
-                setRoleFilter("")
                 setStatusFilter("")
               }}
               className="mb-0.5"
@@ -504,7 +564,8 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           enablePagination={true}
-          defaultPageSize={25}
+          defaultPageSize={12}
+          hidePageSizeSelector={true}
         />
       </div>
 
