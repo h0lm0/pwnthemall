@@ -12,7 +12,6 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/pwnthemall/pwnthemall/backend/config"
-	"github.com/pwnthemall/pwnthemall/backend/controllers"
 	"github.com/pwnthemall/pwnthemall/backend/debug"
 	"github.com/pwnthemall/pwnthemall/backend/pluginsystem"
 	"github.com/pwnthemall/pwnthemall/backend/routes"
@@ -26,8 +25,6 @@ func generateRandomString(n int) (string, error) {
 	}
 	return hex.EncodeToString(bytes), nil
 }
-
-
 
 // initWebSocketHub initializes the WebSocket hubs
 func initWebSocketHub() {

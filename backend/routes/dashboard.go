@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"pwnthemall/controllers"
-	"pwnthemall/middleware"
+	"github.com/pwnthemall/pwnthemall/backend/controllers"
+	"github.com/pwnthemall/pwnthemall/backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )

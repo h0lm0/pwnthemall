@@ -1,10 +1,11 @@
 package controllers
 
 import (
-	"pwnthemall/config"
-	"pwnthemall/models"
-	"pwnthemall/utils"
 	"time"
+
+	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -64,14 +65,14 @@ func GetDashboardStats(c *gin.Context) {
 	// Submission statistics
 	var totalSubmissions int64
 	var correctSubmissions int64
-	
+
 	config.DB.Model(&models.Submission{}).Count(&totalSubmissions)
 	config.DB.Model(&models.Solve{}).Count(&correctSubmissions)
-	
+
 	stats.Submissions.Total = totalSubmissions
 	stats.Submissions.Correct = correctSubmissions
 	stats.Submissions.Incorrect = totalSubmissions - correctSubmissions
-	
+
 	if totalSubmissions > 0 {
 		stats.Submissions.SuccessRate = float64(correctSubmissions) / float64(totalSubmissions) * 100
 	} else {
@@ -81,10 +82,10 @@ func GetDashboardStats(c *gin.Context) {
 	// Instance statistics
 	var runningInstances int64
 	var totalInstances int64
-	
+
 	config.DB.Model(&models.Instance{}).Where("status = ?", "running").Count(&runningInstances)
 	config.DB.Model(&models.Instance{}).Count(&totalInstances)
-	
+
 	stats.Instances.Running = runningInstances
 	stats.Instances.Total = totalInstances
 
@@ -95,22 +96,22 @@ func GetSubmissionTrend(c *gin.Context) {
 	// Get submissions for the last 48 hours
 	hours := 48
 	trends := make([]models.SubmissionTrend, 0, hours)
-	
+
 	now := time.Now()
 	for i := hours - 1; i >= 0; i-- {
 		startOfHour := now.Add(time.Duration(-i) * time.Hour).Truncate(time.Hour)
 		endOfHour := startOfHour.Add(time.Hour)
-		
+
 		var count int64
 		config.DB.Model(&models.Submission{}).
 			Where("created_at >= ? AND created_at < ?", startOfHour, endOfHour).
 			Count(&count)
-		
+
 		trends = append(trends, models.SubmissionTrend{
 			Date:  startOfHour.Format("2006-01-02 15:04"),
 			Count: count,
 		})
 	}
-	
+
 	utils.OKResponse(c, trends)
 }

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pwnthemall/pwnthemall/backend/config"
 	"github.com/pwnthemall/pwnthemall/backend/debug"
@@ -74,39 +75,6 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	// Process hints from request
 	if req.Hints != nil {
 		for _, hintReq := range *req.Hints {
-			debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
-			if hintReq.ID > 0 {
-				// Update existing hint
-				var hint models.Hint
-				if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
-					hint.Title = hintReq.Title
-					hint.Content = hintReq.Content
-					hint.Cost = hintReq.Cost
-					hint.IsActive = hintReq.IsActive
-					hint.AutoActiveAt = hintReq.AutoActiveAt
-					if err := config.DB.Save(&hint).Error; err != nil {
-						debug.Log("Failed to update hint %d: %v", hint.ID, err)
-					} else {
-						debug.Log("Successfully updated hint %d", hint.ID)
-					}
-				}
-			} else if hintReq.Content != "" {
-				// Create new hint
-				hint := models.Hint{
-					ChallengeID:  challenge.ID,
-					Title:        hintReq.Title,
-					Content:      hintReq.Content,
-					Cost:         hintReq.Cost,
-					IsActive:     hintReq.IsActive,
-					AutoActiveAt: hintReq.AutoActiveAt,
-				}
-				if err := config.DB.Create(&hint).Error; err != nil {
-					debug.Log("Failed to create hint: %v", err)
-				} else {
-					debug.Log("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
-				}
-			}
-		}
 			debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
 			if hintReq.ID > 0 {
 				// Update existing hint
