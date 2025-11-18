@@ -1,7 +1,7 @@
 <div align="center">
 
-<img src="frontend/public/logo-v2-no-text.png" width=250>
-
+<img src="frontend/public/logo-v2-no-text.png" width=250>  
+<br>
 <img src="frontend/public/logo-v2-text.png" width=400>
 
 
