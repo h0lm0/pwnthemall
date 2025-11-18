@@ -440,6 +440,84 @@ func StartDockerChallengeInstance(c *gin.Context) {
 	})
 }
 
+func StopDockerChallengeInstance(c *gin.Context) {
+	challengeID := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.Select("id, team_id").First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	var instance models.Instance
+	teamID := uint(0)
+	if user.TeamID != nil {
+		teamID = *user.TeamID
+	}
+
+	if err := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, teamID).First(&instance).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
+		return
+	}
+
+	if instance.UserID != user.ID && (user.TeamID == nil || instance.TeamID != *user.TeamID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	if instance.TeamID != 0 {
+		now := time.Now().UTC()
+		var cd models.InstanceCooldown
+		if err := config.DB.Where("team_id = ? AND challenge_id = ?", instance.TeamID, instance.ChallengeID).First(&cd).Error; err == nil {
+			cd.LastStoppedAt = now
+			_ = config.DB.Save(&cd).Error
+		} else {
+			_ = config.DB.Create(&models.InstanceCooldown{
+				TeamID:        instance.TeamID,
+				ChallengeID:   instance.ChallengeID,
+				LastStoppedAt: now,
+			}).Error
+		}
+	}
+
+	go func() {
+		if err := utils.StopDockerInstance(instance.Container); err != nil {
+			debug.Log("Failed to stop Docker instance: %v", err)
+		}
+		if err := config.DB.Delete(&instance).Error; err != nil {
+			debug.Log("Failed to delete instance from DB: %v", err)
+		}
+	}()
+
+	if utils.WebSocketHub != nil {
+		var user models.User
+		if err := config.DB.Select("id, username, team_id").First(&user, userID).Error; err == nil && user.TeamID != nil {
+			event := dto.InstanceEvent{
+				Event:       "instance_update",
+				TeamID:      *user.TeamID,
+				UserID:      user.ID,
+				Username:    user.Username,
+				ChallengeID: instance.ChallengeID,
+				Status:      "stopped",
+				UpdatedAt:   time.Now().UTC().Unix(),
+			}
+			if payload, err := json.Marshal(event); err == nil {
+				utils.WebSocketHub.SendToTeamExcept(*user.TeamID, user.ID, payload)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "instance_stopped",
+		"container": instance.Container,
+	})
+}
+
 func StartComposeChallengeInstance(c *gin.Context) {
 	id := c.Param("id")
 	debug.Log("Starting instance for compose challenge ID: %s", id)
@@ -594,6 +672,87 @@ func StartComposeChallengeInstance(c *gin.Context) {
 		"expires_at": expiresAt,
 		"ports":      ports,
 	})
+}
+
+func StopComposeChallengeInstance(c *gin.Context) {
+    challengeID := c.Param("id")
+    userID, ok := c.Get("user_id")
+    if !ok {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+        return
+    }
+
+    var user models.User
+    if err := config.DB.Select("id, team_id").First(&user, userID).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+        return
+    }
+
+    var instance models.Instance
+    teamID := uint(0)
+    if user.TeamID != nil {
+        teamID = *user.TeamID
+    }
+    
+    if err := config.DB.Where("challenge_id = ? AND team_id = ?", challengeID, teamID).First(&instance).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "instance_not_found"})
+        return
+    }
+
+    if instance.UserID != user.ID && (user.TeamID == nil || instance.TeamID != *user.TeamID) {
+        c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+        return
+    }
+
+    if instance.TeamID != 0 {
+        now := time.Now().UTC()
+        var cd models.InstanceCooldown
+        if err := config.DB.Where("team_id = ? AND challenge_id = ?", instance.TeamID, instance.ChallengeID).First(&cd).Error; err == nil {
+            cd.LastStoppedAt = now
+            _ = config.DB.Save(&cd).Error
+        } else {
+            _ = config.DB.Create(&models.InstanceCooldown{
+                TeamID:        instance.TeamID,
+                ChallengeID:   instance.ChallengeID,
+                LastStoppedAt: now,
+            }).Error
+        }
+    }
+
+    if err := utils.StopComposeInstance(instance.Container); err != nil {
+        debug.Log("Failed to stop Compose instance: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "compose_stop_failed"})
+        return
+    }
+
+    if err := config.DB.Delete(&instance).Error; err != nil {
+        debug.Log("Failed to delete Compose instance from DB: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "db_delete_failed"})
+        return
+    }
+
+    if utils.WebSocketHub != nil {
+        var user models.User
+        if err := config.DB.Select("id, username, team_id").First(&user, userID).Error; err == nil && user.TeamID != nil {
+            event := dto.InstanceEvent{
+                Event:       "instance_update",
+                TeamID:      *user.TeamID,
+                UserID:      user.ID,
+                Username:    user.Username,
+                ChallengeID: instance.ChallengeID,
+                Status:      "stopped",
+                UpdatedAt:   time.Now().UTC().Unix(),
+            }
+            if payload, err := json.Marshal(event); err == nil {
+                utils.WebSocketHub.SendToTeamExcept(*user.TeamID, user.ID, payload)
+            }
+        }
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message":   "instance_stopped",
+        "container": instance.Container,
+    })
 }
 
 // old

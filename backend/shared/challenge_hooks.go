@@ -3,7 +3,7 @@ package shared
 // ChallengeData contient les données d'un challenge à traiter
 type ChallengeData struct {
 	ID              uint
-	Title           string
+	Slug           string
 	ChallengeType   string
 	ChallengeConfig map[string]interface{}
 }
