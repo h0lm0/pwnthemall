@@ -274,7 +274,7 @@
   "misc": {
     "create_account": "Créez un nouveau compte pour continuer",
     "pwn": "pwn",
-    "will_you_pwn_them": "Will you pwn them ?"
+    "will_you_pwn_them": "will you pwn them ?"
   },
   "notification_send": {
     "no_notifications_sent": "Aucune notification envoyée pour le moment",
