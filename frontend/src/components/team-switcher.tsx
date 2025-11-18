@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from 'next/link';
 
 import {
   useSidebar,
@@ -31,7 +32,7 @@ export function TeamSwitcher({
 
   return (
     <div className="p-2">
-      <a href="/">
+      <Link href="/">
       <div className={`flex items-center rounded-lg p-2 transition-all duration-200 ${
         open ? 'gap-2' : 'justify-center'
       }`}>
@@ -45,7 +46,7 @@ export function TeamSwitcher({
               </div>
         )}
       </div>
-        </a>
+        </Link>
                 </div>
   )
 }
