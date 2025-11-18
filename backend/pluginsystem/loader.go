@@ -75,7 +75,11 @@ func loadSinglePlugin(file string, router *gin.Engine, enforcer *casbin.Enforcer
 	metadata := plug.GetMetadata()
 	metadata.EnvVars = envVars
 
-	plugConfig := shared.MergeEnvToConfig(map[string]interface{}{}, envVars)
+    plugConfig := map[string]interface{}{
+        "db_connection": os.Getenv("DATABASE_URL"),
+    }
+
+	plugConfig = shared.MergeEnvToConfig(plugConfig, envVars)
 
 	debug.Log("Initializing plugin %s with config", metadata.Name)
 
