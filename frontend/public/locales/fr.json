@@ -93,6 +93,7 @@
     "be_the_first": "Soyez le premier à résoudre ce challenge !",
     "challenge_already_solved": "Vous avez déjà résolu ce challenge !",
     "challenges_completed": "Challenges complétés",
+    "flag_already_submitted": "Vous avez déjà soumis ce flag. Essayez-en un autre !",
     "no_solves_yet": "Aucune résolution pour le moment",
     "solved": "Résolu",
     "solved_by": "Résolu par",
