@@ -89,6 +89,7 @@ func main() {
 	routes.RegisterNotificationRoutes(router)
 	routes.RegisterDecayFormulaRoutes(router)
 	routes.RegisterSubmissionRoutes(router)
+	routes.RegisterDashboardRoutes(router)
 
 	debug.Log("Loading plugins...")
 	pluginsystem.LoadAllPlugins("/app/plugins/bin", router, config.CEF)

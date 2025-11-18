@@ -136,14 +136,29 @@ func SubmitChallenge(c *gin.Context) {
 		}
 	}
 
+	// Check if this exact submission already exists
+	var existingSubmission models.Submission
+	alreadySubmitted := config.DB.Where("user_id = ? AND challenge_id = ? AND value = ?",
+		user.ID, challenge.ID, submittedValue).First(&existingSubmission).Error == nil
+
+	if alreadySubmitted {
+		// Same flag already submitted by this user
+		if existingSubmission.IsCorrect {
+			utils.ConflictError(c, "challenge_already_solved")
+		} else {
+			utils.ConflictError(c, "flag_already_submitted")
+		}
+		return
+	}
+
 	// Create submission with IsCorrect field set based on validation result
-	var submission models.Submission
-	if err := config.DB.FirstOrCreate(&submission, models.Submission{
+	submission := models.Submission{
 		Value:       submittedValue,
 		IsCorrect:   found,
 		UserID:      user.ID,
 		ChallengeID: challenge.ID,
-	}).Error; err != nil {
+	}
+	if err := config.DB.Create(&submission).Error; err != nil {
 		utils.InternalServerError(c, "submission_create_failed")
 		return
 	}
