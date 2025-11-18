@@ -38,8 +38,8 @@
 
 Check out the official documentation:
 
-- 🔧 [Installation Guide](https://docs.pwnthemall.com/1-installation)
-- 🕹️ [Usage Guide](https://docs.pwnthemall.com/2-usage)
+- 🔧 [Installation Guide](https://docs-pwnthemall.gitbook.io/pta/1-installation)
+- 🕹️ [Usage Guide](https://docs-pwnthemall.gitbook.io/pta/2-usage)
 
 ## 💬 Community & Support
 
