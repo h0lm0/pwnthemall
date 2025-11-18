@@ -1,8 +1,9 @@
 <div align="center">
 
-![logo no text](frontend/public/logo-no-text.png)
+<img src="frontend/public/logo-v2-no-text.png" width=250>
 
-# pwnthemall
+<img src="frontend/public/logo-v2-text.png" width=400>
+
 
 [![Docker](https://img.shields.io/badge/docker-ready-blue?style=for-the-badge&logo=docker)](https://www.docker.com/)
 [![Stars](https://img.shields.io/github/stars/pwnthemall/pwnthemall?style=for-the-badge)](https://github.com/pwnthemall/pwnthemall/stargazers)
