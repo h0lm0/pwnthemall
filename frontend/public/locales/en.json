@@ -93,6 +93,7 @@
     "be_the_first": "Be the first to solve this challenge!",
     "challenge_already_solved": "You have already solved this challenge!",
     "challenges_completed": "Challenges Completed",
+    "flag_already_submitted": "You already submitted this flag. Try a different one!",
     "no_solves_yet": "No solves yet",
     "solved": "Solved",
     "solved_by": "Solved by",
@@ -274,7 +275,7 @@
   "misc": {
     "create_account": "Create a new account to continue",
     "pwn": "pwn",
-    "will_you_pwn_them": "Will you pwn them ?"
+    "will_you_pwn_them": "will you pwn them ?"
   },
   "notification_send": {
     "no_notifications_sent": "No notifications sent yet",

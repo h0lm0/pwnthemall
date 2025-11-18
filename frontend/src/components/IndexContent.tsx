@@ -32,7 +32,7 @@ const IndexContent = ({ ctfStatus, ctfLoading, isLoggedIn, hasTeam, userRole }: 
         <main className="bg-muted flex flex-col items-center justify-center min-h-screen px-6 text-center">
           <div className="flex flex-col items-center justify-center mb-8">
             <Image
-              src="/logo-no-text.png"
+              src="/logo-v2.jpg"
               alt="CTF logo"
               className="opacity-100"
               width={120}
@@ -88,7 +88,7 @@ const IndexContent = ({ ctfStatus, ctfLoading, isLoggedIn, hasTeam, userRole }: 
         <div className="w-full max-w-4xl">
           <div className="flex flex-col items-center justify-center mb-8">
             <Image
-              src="/logo-no-text.png"
+              src="/logo-v2-no-text.png"
               alt="CTF logo"
               className="opacity-100"
               width={180}

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Home, Swords, LogIn, UserPlus, User, List, ShieldUser, Bell } from "lucide-react";
+import { Home, Swords, LogIn, UserPlus, User, List, ShieldUser, Bell, Flag } from "lucide-react";
 import { useRouter } from "next/router";
 
 import { NavMain } from "@/components/nav-main";

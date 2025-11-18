@@ -31,6 +31,7 @@ export function TeamSwitcher({
 
   return (
     <div className="p-2">
+      <a href="/">
       <div className={`flex items-center rounded-lg p-2 transition-all duration-200 ${
         open ? 'gap-2' : 'justify-center'
       }`}>
@@ -44,6 +45,7 @@ export function TeamSwitcher({
               </div>
         )}
       </div>
+        </a>
                 </div>
   )
 }
