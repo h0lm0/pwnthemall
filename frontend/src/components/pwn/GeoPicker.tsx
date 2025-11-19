@@ -192,10 +192,11 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
                       const lat = Number.parseFloat(r.lat);
                       const lon = Number.parseFloat(r.lon);
                       moveTo(lat, lon);
-                    // Set the input text but suppress the next search effect
-                    ignoreSearchOnceRef.current = true;
-                    setQuery(r.display_name);
-                    setResults([]);
+                      // Set the input text but suppress the next search effect
+                      ignoreSearchOnceRef.current = true;
+                      setQuery(r.display_name);
+                      setResults([]);
+                    }
                   }}
                 >
                   {r.display_name}

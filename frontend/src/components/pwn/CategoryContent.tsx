@@ -602,8 +602,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                 {t('challenge_already_solved')}
                               </p>
                             </div>
-                          ) : (
-                            !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') && (
+                          ) : !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') ? (
                             <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-lg">
                               <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
                                 <Clock className="w-5 h-5" />
@@ -762,19 +761,11 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                                     }
                                                   } catch (error) {
                                                     console.error('Failed to refresh challenge data:', error);
-                                                    }
-                                                } catch (error) {
-                                                  console.error('Failed to refresh challenge data:', error);
-                                                  // La mise à jour locale est déjà faite, donc pas de problème
-                                                }
-                                              }
-                                            } catch (error) {
-                                              console.error('Error purchasing hint:', error);
-                                            }
+                                                    // La mise à jour locale est déjà faite, donc pas de problème
                                                   }
                                                 }
                                               } catch (error) {
-                                                // Error handling is done in the hook
+                                                console.error('Error purchasing hint:', error);
                                               }
                                             }}
                                             disabled={hintsLoading || (teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost)}
@@ -814,8 +805,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 dark:border-cyan-400 mx-auto mb-2"></div>
                               <p className="text-muted-foreground">{t('loading') || 'Loading...'}</p>
                             </div>
-                          ) : (
-                            !solves || solves.length === 0 ? (
+                          ) : !solves || solves.length === 0 ? (
                             <div className="text-center py-8">
                               <Trophy className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
                               <p className="text-lg font-medium text-foreground mb-2">{t('no_solves_yet')}</p>
