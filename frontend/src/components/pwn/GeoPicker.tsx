@@ -61,7 +61,10 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
         try { map.fitBounds(circleRef.current.getBounds(), { padding: [16, 16] }); } catch {}
       }
       
-      setupMapEventHandlers(map, markerRef.current, circleRef.current, onChange);
+      setupMapEventHandlers(map, markerRef.current, circleRef.current, onChange, () => {
+        setResults([]);
+        setQuery('');
+      });
 
       setTimeout(() => {
         try { map.invalidateSize(); } catch {}
@@ -185,6 +188,10 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
                     const lat = Number.parseFloat(r.lat);
                     const lon = Number.parseFloat(r.lon);
                     moveTo(lat, lon);
+                    // Close search results
+                    ignoreSearchOnceRef.current = true;
+                    setQuery(r.display_name);
+                    setResults([]);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
