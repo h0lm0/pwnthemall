@@ -243,7 +243,7 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
     if (bIndex !== -1) return 1;
     
     // Otherwise, sort alphabetically
-    return a.key.localeCompare(b.key);
+    return a.key.localeCompare(b.key, 'en', { sensitivity: 'base' });
   });
 
   return (

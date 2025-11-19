@@ -33,6 +33,8 @@ import { debugError, debugLog } from "@/lib/debug";
 import type { User } from "@/models/User";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useChallengeInstances } from "@/hooks/use-challenge-instances";
+import { buildSubmitPayload, formatDate, GeoCoords } from "./category-helpers";
 
 interface CategoryContentProps {
   cat: string;
@@ -188,52 +190,33 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     if (!selectedChallenge) return;
     setLoading(true);
     try {
-      let payload: any = { flag };
-      if (selectedChallenge.type?.name?.toLowerCase() === 'geo') {
-        if (geoCoords && !Number.isNaN(geoCoords.lat) && !Number.isNaN(geoCoords.lng)) {
-          payload = { lat: geoCoords.lat, lng: geoCoords.lng };
-        } else {
-          const parts = flag.split(',').map((p) => p.trim());
-          if (parts.length === 2) {
-            const lat = parseFloat(parts[0]);
-            const lng = parseFloat(parts[1]);
-            if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-              payload = { lat, lng };
-            }
-          }
-        }
-      }
+      const payload = buildSubmitPayload(selectedChallenge, flag, geoCoords);
+      console.log('🗺️ Submitting geo challenge:', selectedChallenge.id, 'with payload:', payload);
       const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, payload);
 
       toast.success(t(res.data.message) || 'Challenge solved!');
-      // Refresh challenges after successful submission
-      if (onChallengeUpdate) {
-        onChallengeUpdate();
-      }
-      // Refresh solves after successful submission
-      if (selectedChallenge) {
-        fetchSolves(selectedChallenge.id);
-        // Also stop any running instance for this challenge (best-effort UX)
-        try {
-          if (getLocalInstanceStatus(selectedChallenge.id) === 'running') {
-            await stopInstance(selectedChallenge.id.toString());
-            setInstanceStatus(prev => ({ ...prev, [selectedChallenge.id]: 'stopped' }));
-            // Show a local toast only to the solver about the instance being stopped
-            toast.success(t('instance_stopped_success') || 'Instance stopped successfully');
-          }
-        } catch {}
-      }
+      if (onChallengeUpdate) onChallengeUpdate();
+      
+      fetchSolves(selectedChallenge.id);
+      await handlePostSubmitInstanceCleanup(selectedChallenge.id);
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;
       toast.error(t(errorKey) || 'Try again');
-      // Refresh challenges to update attempts count on failed submission
-      if (onChallengeUpdate) {
-        onChallengeUpdate();
-      }
+      if (onChallengeUpdate) onChallengeUpdate();
     } finally {
       setLoading(false);
       setFlag("");
     }
+  };
+
+  const handlePostSubmitInstanceCleanup = async (challengeId: number) => {
+    try {
+      if (getLocalInstanceStatus(challengeId) === 'running') {
+        await stopInstance(challengeId.toString());
+        setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+        toast.success(t('instance_stopped_success') || 'Instance stopped successfully');
+      }
+    } catch {}
   };
 
   const fetchSolves = async (challengeId: number) => {
@@ -274,21 +257,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     refreshTeamScore();
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'Unknown date';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      debugError('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
+
 
   const handleStartInstance = async (challengeId: number) => {
     try {

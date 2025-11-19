@@ -107,7 +107,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       }
       
       if (typeof aValue === "string" && typeof bValue === "string") {
-        const comparison = aValue.localeCompare(bValue)
+        const comparison = aValue.localeCompare(bValue, 'en', { sensitivity: 'base' })
         return sortOrder === "asc" ? comparison : -comparison
       } else {
         const comparison = aValue - bValue

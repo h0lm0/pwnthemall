@@ -1,5 +1,12 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
+import {
+  loadLeafletLibrary,
+  setupMapEventHandlers,
+  setupMapResizeHandlers,
+  searchNominatim,
+  NominatimResult
+} from "./geo-picker-helpers";
 
 type GeoPickerProps = {
   value?: { lat: number; lng: number } | null;
@@ -17,64 +24,29 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
   const circleRef = React.useRef<any>(null);
 
   const [query, setQuery] = React.useState("");
-  const [results, setResults] = React.useState<Array<{ place_id?: number | string; display_name: string; lat: string; lon: string }>>([]);
+  const [results, setResults] = React.useState<NominatimResult[]>([]);
   const [searching, setSearching] = React.useState(false);
   const debounceRef = React.useRef<any>(null);
   const ignoreSearchOnceRef = React.useRef(false);
-  const resizeObserverRef = React.useRef<ResizeObserver | null>(null);
+  const cleanupRef = React.useRef<(() => void) | null>(null);
 
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const ensureLeaflet = () =>
-      new Promise<void>((resolve) => {
-        if ((window as any).L) {
-          resolve();
-          return;
-        }
-        // CSS
-        const cssId = "leaflet-css-cdn";
-        if (!document.getElementById(cssId)) {
-          const link = document.createElement("link");
-          link.id = cssId;
-          link.rel = "stylesheet";
-          link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-          link.integrity = "sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H";
-          link.crossOrigin = "anonymous";
-          document.head.appendChild(link);
-        }
-        // JS
-        const jsId = "leaflet-js-cdn";
-        if (!document.getElementById(jsId)) {
-          const script = document.createElement("script");
-          script.id = jsId;
-          script.async = true;
-          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-          script.integrity = "sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH";
-          script.crossOrigin = "anonymous";
-          script.onload = () => resolve();
-          script.onerror = () => {
-            console.error("Failed to load Leaflet with integrity verification");
-          };
-          document.body.appendChild(script);
-        } else {
-          // already present but not yet loaded
-          const existing = document.getElementById(jsId) as HTMLScriptElement;
-          if ((window as any).L) resolve();
-          else existing.addEventListener("load", () => resolve());
-        }
-      });
+    if (typeof globalThis.window === "undefined") return;
 
     let destroyed = false;
     (async () => {
-      await ensureLeaflet();
+      await loadLeafletLibrary();
       if (destroyed || !mapRef.current) return;
-      const L = (window as any).L;
+      const L = (globalThis.window as any).L;
       leafletReadyRef.current = true;
 
-      // Default to Deux-Verges (Cantal)
-      const initial = value || { lat: 44.8067, lng: 3.0236 };
-      const map = L.map(mapRef.current).setView([initial.lat, initial.lng], 13);
+      // Default to random location if no value provided
+      const getRandomLocation = () => ({
+        lat: (Math.random() * 180) - 90,  // Random latitude between -90 and 90
+        lng: (Math.random() * 360) - 180  // Random longitude between -180 and 180
+      });
+      const initial = value || getRandomLocation();
+      const map = L.map(mapRef.current).setView([initial.lat, initial.lng], 50);
       instanceRef.current = map;
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -88,52 +60,20 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
         circleRef.current = L.circle([initial.lat, initial.lng], { radius: radiusKm * 1000, color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.15 }).addTo(map);
         try { map.fitBounds(circleRef.current.getBounds(), { padding: [16, 16] }); } catch {}
       }
-      markerRef.current.on("dragend", (e: any) => {
-        const ll = e.target.getLatLng();
-        onChange({ lat: ll.lat, lng: ll.lng });
-        if (circleRef.current) circleRef.current.setLatLng([ll.lat, ll.lng]);
-      });
-      map.on("click", (e: any) => {
-        const { lat, lng } = e.latlng || {};
-        if (typeof lat === "number" && typeof lng === "number") {
-          markerRef.current.setLatLng([lat, lng]);
-          onChange({ lat, lng });
-          if (circleRef.current) circleRef.current.setLatLng([lat, lng]);
-        }
-      });
+      
+      setupMapEventHandlers(map, markerRef.current, circleRef.current, onChange);
 
-      // Give the browser a tick to lay out the dialog/tabs, then fix map size
       setTimeout(() => {
         try { map.invalidateSize(); } catch {}
       }, 100);
 
-      // Keep the map responsive: observe container resize and window events
-      if (mapRef.current && 'ResizeObserver' in window) {
-        resizeObserverRef.current = new ResizeObserver(() => {
-          try { map.invalidateSize(); } catch {}
-        });
-        resizeObserverRef.current.observe(mapRef.current);
-      }
-      const handleResize = () => { try { map.invalidateSize(); } catch {} };
-      window.addEventListener('resize', handleResize);
-      window.addEventListener('orientationchange', handleResize);
-      // Store cleanup hooks on the map instance for later removal
-      (map as any)._ptaCleanup = () => {
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('orientationchange', handleResize);
-        if (resizeObserverRef.current) {
-          try { resizeObserverRef.current.disconnect(); } catch {}
-          resizeObserverRef.current = null;
-        }
-      };
+      cleanupRef.current = setupMapResizeHandlers(map, mapRef.current);
     })();
 
     return () => {
       destroyed = true;
       try {
-        if (instanceRef.current && (instanceRef.current as any)._ptaCleanup) {
-          try { (instanceRef.current as any)._ptaCleanup(); } catch {}
-        }
+        if (cleanupRef.current) cleanupRef.current();
         if (instanceRef.current) instanceRef.current.remove();
       } catch {}
     };
@@ -154,27 +94,8 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
     debounceRef.current = setTimeout(async () => {
       try {
         setSearching(true);
-        const params = new URLSearchParams({ q: query.trim(), format: "json", addressdetails: "0", limit: "8", dedupe: "1" });
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
-          headers: { "Accept-Language": (typeof navigator !== 'undefined' ? navigator.language : 'en') as string },
-        });
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          const seenByName: Record<string, boolean> = {};
-          const seenByRoundedCoords: Record<string, boolean> = {};
-          const unique = [] as Array<{ place_id?: number | string; display_name: string; lat: string; lon: string }>;
-          for (const r of data) {
-            const nameKey = (r.display_name || '').toLowerCase();
-            const latNum = parseFloat(r.lat);
-            const lonNum = parseFloat(r.lon);
-            const coordKey = `${isFinite(latNum) ? latNum.toFixed(3) : r.lat}|${isFinite(lonNum) ? lonNum.toFixed(3) : r.lon}`;
-            if (seenByName[nameKey] || seenByRoundedCoords[coordKey]) continue;
-            seenByName[nameKey] = true;
-            seenByRoundedCoords[coordKey] = true;
-            unique.push(r);
-          }
-          setResults(unique.slice(0, 5));
-        }
+        const results = await searchNominatim(query);
+        setResults(results);
       } catch {
         setResults([]);
       } finally {
@@ -259,8 +180,8 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
                   key={`${r.lat}-${r.lon}-${i}`}
                   style={{ padding: "8px 10px", cursor: "pointer" }}
                   onClick={() => {
-                    const lat = parseFloat(r.lat);
-                    const lon = parseFloat(r.lon);
+                    const lat = Number.parseFloat(r.lat);
+                    const lon = Number.parseFloat(r.lon);
                     moveTo(lat, lon);
                     // Set the input text but suppress the next search effect
                     ignoreSearchOnceRef.current = true;

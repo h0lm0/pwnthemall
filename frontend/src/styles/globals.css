@@ -1003,8 +1003,8 @@ html, body {
 .theme-preview .custom-radio-dot {
   width: 16px;
   height: 16px;
-  border-radius: 9999px;
   border: 2px solid #a1a1aa; /* zinc-400 */
+  border-radius: 9999px;
   background: transparent;
   display: inline-block;
   position: relative;
@@ -1037,19 +1037,25 @@ html, body {
 .notification-toast.notification-info {
   border-left-color: #3b82f6;
   background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%) !important;
-  border: 1px solid #bfdbfe !important;
+  border-top: 1px solid #bfdbfe !important;
+  border-right: 1px solid #bfdbfe !important;
+  border-bottom: 1px solid #bfdbfe !important;
 }
 
 .notification-toast.notification-warning {
   border-left-color: #f59e0b;
   background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%) !important;
-  border: 1px solid #fde68a !important;
+  border-top: 1px solid #fde68a !important;
+  border-right: 1px solid #fde68a !important;
+  border-bottom: 1px solid #fde68a !important;
 }
 
 .notification-toast.notification-error {
   border-left-color: #ef4444;
   background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%) !important;
-  border: 1px solid #fecaca !important;
+  border-top: 1px solid #fecaca !important;
+  border-right: 1px solid #fecaca !important;
+  border-bottom: 1px solid #fecaca !important;
 }
 
 /* Success toast for admin actions */
@@ -1095,6 +1101,7 @@ html, body {
 .dark .toaster .toast button[data-close-button] {
   background: rgba(255, 255, 255, 0.15) !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 50% !important;
   color: rgba(255, 255, 255, 0.8) !important;
   backdrop-filter: blur(4px) !important;
 }
