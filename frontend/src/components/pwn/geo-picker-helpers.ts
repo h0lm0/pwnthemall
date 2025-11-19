@@ -54,7 +54,8 @@ export function setupMapEventHandlers(
   map: any,
   marker: any,
   circle: any,
-  onChange: (coords: { lat: number; lng: number }) => void
+  onChange: (coords: { lat: number; lng: number }) => void,
+  onMapClick?: () => void
 ): void {
   marker.on("dragend", (e: any) => {
     const ll = e.target.getLatLng();
@@ -69,6 +70,8 @@ export function setupMapEventHandlers(
       onChange({ lat, lng });
       if (circle) circle.setLatLng([lat, lng]);
     }
+    // Close search dropdown when clicking on map
+    if (onMapClick) onMapClick();
   });
 }
 
