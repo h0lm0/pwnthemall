@@ -39,14 +39,14 @@ func extractSubmittedValue(inputRaw map[string]interface{}) string {
 			return s
 		}
 	}
-	
+
 	// Check for geo submission
 	if latV, ok := inputRaw["lat"].(float64); ok {
 		if lngV, ok2 := inputRaw["lng"].(float64); ok2 {
 			return fmt.Sprintf("geo:%f,%f", latV, lngV)
 		}
 	}
-	
+
 	return ""
 }
 
@@ -55,7 +55,7 @@ func validateStandardFlag(submittedValue string, flags []models.Flag) bool {
 	if submittedValue == "" {
 		return false
 	}
-	
+
 	for _, flag := range flags {
 		if !utils.IsGeoFlag(flag.Value) && flag.Value == utils.HashFlag(submittedValue) {
 			return true
@@ -68,11 +68,11 @@ func validateStandardFlag(submittedValue string, flags []models.Flag) bool {
 func validateGeoFlag(inputRaw map[string]interface{}, flags []models.Flag) bool {
 	lat, ok1 := inputRaw["lat"].(float64)
 	lng, ok2 := inputRaw["lng"].(float64)
-	
+
 	if !ok1 || !ok2 {
 		return false
 	}
-	
+
 	for _, flag := range flags {
 		if utils.IsGeoFlag(flag.Value) {
 			if targetLat, targetLng, radius, ok := utils.ParseGeoSpecFromHashed(flag.Value); ok {
@@ -89,26 +89,26 @@ func validateGeoFlag(inputRaw map[string]interface{}, flags []models.Flag) bool 
 func validateGeoSpec(inputRaw map[string]interface{}, challengeID uint) bool {
 	lat, ok1 := inputRaw["lat"].(float64)
 	lng, ok2 := inputRaw["lng"].(float64)
-	
+
 	if !ok1 || !ok2 {
 		debug.Log("GeoValidation: No lat/lng coordinates found in submission for challenge %d", challengeID)
 		return false
 	}
-	
+
 	var spec models.GeoSpec
 	if err := config.DB.Where(queryChallengeID, challengeID).First(&spec).Error; err != nil {
 		debug.Log("GeoValidation: No GeoSpec found for challenge %d: %v", challengeID, err)
 		return false
 	}
-	
+
 	debug.Log("GeoValidation: Checking challenge %d submission (lat=%f,lng=%f) against target (lat=%f,lng=%f) radius=%fkm",
 		challengeID, lat, lng, spec.TargetLat, spec.TargetLng, spec.RadiusKm)
-	
+
 	if utils.IsWithinRadiusKm(spec.TargetLat, spec.TargetLng, lat, lng, spec.RadiusKm) {
 		debug.Log("GeoValidation: CORRECT - Submission within radius for challenge %d", challengeID)
 		return true
 	}
-	
+
 	debug.Log("GeoValidation: INCORRECT - Submission outside radius for challenge %d", challengeID)
 	return false
 }
@@ -119,12 +119,12 @@ func validateFlagSubmission(inputRaw map[string]interface{}, challenge models.Ch
 	if validateStandardFlag(submittedValue, challenge.Flags) {
 		return true
 	}
-	
+
 	// Check geo flags from flags table
 	if validateGeoFlag(inputRaw, challenge.Flags) {
 		return true
 	}
-	
+
 	// Check alternative flag format from inputRaw
 	if v, ok := inputRaw["flag"].(string); ok {
 		for _, flag := range challenge.Flags {
@@ -133,14 +133,14 @@ func validateFlagSubmission(inputRaw map[string]interface{}, challenge models.Ch
 			}
 		}
 	}
-	
+
 	// Check geo spec for geo challenges
 	if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
 		if validateGeoSpec(inputRaw, challenge.ID) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -150,13 +150,13 @@ func calculateFirstBloodBonus(challenge models.Challenge, position int64) int {
 		debug.Log("FirstBlood: FirstBlood not enabled or no bonuses configured")
 		return 0
 	}
-	
+
 	pos := int(position)
 	if pos >= len(challenge.FirstBloodBonuses) {
 		debug.Log("FirstBlood: Position %d beyond configured bonuses (%d available)", pos, len(challenge.FirstBloodBonuses))
 		return 0
 	}
-	
+
 	bonus := int(challenge.FirstBloodBonuses[pos])
 	debug.Log("FirstBlood: Position %d gets bonus %d points", pos, bonus)
 	return bonus
@@ -167,12 +167,12 @@ func createFirstBloodEntry(challenge models.Challenge, user *models.User, positi
 	if bonus <= 0 {
 		return nil
 	}
-	
+
 	badge := "trophy" // default badge
 	if int(position) < len(challenge.FirstBloodBadges) {
 		badge = challenge.FirstBloodBadges[position]
 	}
-	
+
 	firstBlood := models.FirstBlood{
 		ChallengeID: challenge.ID,
 		TeamID:      user.Team.ID,
@@ -180,12 +180,12 @@ func createFirstBloodEntry(challenge models.Challenge, user *models.User, positi
 		Bonuses:     []int64{int64(bonus)},
 		Badges:      []string{badge},
 	}
-	
+
 	if err := config.DB.Create(&firstBlood).Error; err != nil {
 		debug.Log("Failed to create FirstBlood entry: %v", err)
 		return err
 	}
-	
+
 	debug.Log("Created FirstBlood entry for user %d, challenge %d, position %d, bonus %d points",
 		user.ID, challenge.ID, position, bonus)
 	return nil
@@ -196,7 +196,7 @@ func broadcastTeamSolve(user *models.User, challenge models.Challenge, totalPoin
 	if utils.WebSocketHub == nil {
 		return
 	}
-	
+
 	event := dto.TeamSolveEvent{
 		Event:         "team_solve",
 		TeamID:        user.Team.ID,
@@ -207,7 +207,7 @@ func broadcastTeamSolve(user *models.User, challenge models.Challenge, totalPoin
 		Username:      user.Username,
 		Timestamp:     time.Now().UTC().Unix(),
 	}
-	
+
 	if payload, err := json.Marshal(event); err == nil {
 		utils.WebSocketHub.SendToTeamExcept(user.Team.ID, user.ID, payload)
 	}
@@ -219,19 +219,19 @@ func stopInstanceOnSolve(teamID uint, challengeID uint, actorID uint, actorName 
 	if err := config.DB.Where(queryTeamAndChallengeID, teamID, challengeID).First(&instance).Error; err != nil {
 		return
 	}
-	
+
 	// Try stopping the container
 	if instance.Container != "" {
 		if err := utils.StopDockerInstance(instance.Container); err != nil {
 			debug.Log("Failed to stop Docker instance on solve: %v", err)
 		}
 	}
-	
+
 	// Remove instance record to free the slot
 	if err := config.DB.Delete(&instance).Error; err != nil {
 		debug.Log("Failed to delete instance on solve: %v", err)
 	}
-	
+
 	// Notify team listeners that instance stopped
 	if utils.WebSocketHub != nil {
 		evt := dto.InstanceEvent{
@@ -260,14 +260,14 @@ func checkAttemptsLimit(teamID uint, challenge models.Challenge) bool {
 	if challenge.MaxAttempts <= 0 {
 		return false
 	}
-	
+
 	var failedAttempts int64
 	config.DB.Model(&models.Submission{}).
 		Joins("JOIN users ON users.id = submissions.user_id").
 		Where("users.team_id = ? AND submissions.challenge_id = ? AND submissions.is_correct = ?",
 			teamID, challenge.ID, false).
 		Count(&failedAttempts)
-	
+
 	return int(failedAttempts) >= challenge.MaxAttempts
 }
 
@@ -276,7 +276,7 @@ func checkDuplicateSubmission(userID uint, challengeID uint, submittedValue stri
 	var existingSubmission models.Submission
 	err := config.DB.Where("user_id = ? AND challenge_id = ? AND value = ?",
 		userID, challengeID, submittedValue).First(&existingSubmission).Error
-	
+
 	if err == nil {
 		return true, existingSubmission.IsCorrect
 	}
@@ -288,14 +288,14 @@ func handleCorrectSubmission(c *gin.Context, user *models.User, challenge models
 	// Calculate solve position
 	var position int64
 	config.DB.Model(&models.Solve{}).Where(queryChallengeID, challenge.ID).Count(&position)
-	
+
 	debug.Log("FirstBlood: Challenge %d, Position %d, EnableFirstBlood: %v, Bonuses count: %d",
 		challenge.ID, position, challenge.EnableFirstBlood, len(challenge.FirstBloodBonuses))
-	
+
 	// Calculate first blood bonus
 	firstBloodBonus := calculateFirstBloodBonus(challenge, position)
 	totalPoints := challenge.Points + firstBloodBonus
-	
+
 	// Create solve record
 	var solve models.Solve
 	if err := config.DB.FirstOrCreate(&solve,
@@ -308,16 +308,16 @@ func handleCorrectSubmission(c *gin.Context, user *models.User, challenge models
 		utils.InternalServerError(c, errSolveCreateFail)
 		return
 	}
-	
+
 	// Create FirstBlood entry if applicable
 	createFirstBloodEntry(challenge, user, position, firstBloodBonus)
-	
+
 	// Broadcast team solve event
 	broadcastTeamSolve(user, challenge, totalPoints)
-	
+
 	// Stop instance asynchronously
 	go stopInstanceOnSolve(user.Team.ID, challenge.ID, user.ID, user.Username)
-	
+
 	utils.OKResponse(c, gin.H{"message": msgChallengeSolved})
 }
 
@@ -420,6 +420,10 @@ func SubmitChallenge(c *gin.Context) {
 
 	// Validate flag
 	isCorrect := validateFlagSubmission(inputRaw, challenge, submittedValue)
+
+	if isCorrect {
+		submittedValue = utils.HashFlag(submittedValue)
+	}
 
 	// Create submission record
 	submission := models.Submission{
