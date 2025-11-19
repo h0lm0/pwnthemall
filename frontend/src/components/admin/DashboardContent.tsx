@@ -16,9 +16,11 @@ interface DashboardStats {
   challenges: {
     total: number;
     hidden: number;
+    intro: number;
     easy: number;
     medium: number;
     hard: number;
+    insane: number;
     categories: Record<string, number>;
   };
   users: {
@@ -109,9 +111,11 @@ export default function DashboardContent() {
 
   const difficultyData = stats
     ? [
+        { name: t("dashboard.intro"), value: stats.challenges.intro, color: "#60a5fa" },
         { name: t("dashboard.easy"), value: stats.challenges.easy, color: "#22c55e" },
         { name: t("dashboard.medium"), value: stats.challenges.medium, color: "#f59e0b" },
         { name: t("dashboard.hard"), value: stats.challenges.hard, color: "#ef4444" },
+        { name: t("dashboard.insane"), value: stats.challenges.insane, color: "#a855f7" },
       ]
     : [];
 
@@ -170,6 +174,9 @@ export default function DashboardContent() {
                     {t("dashboard.by_difficulty")}:
                   </p>
                   <div className="flex gap-2 flex-wrap">
+                    <Badge variant="outline" className="text-blue-600 border-blue-600">
+                      {t("dashboard.intro")}: {stats.challenges.intro}
+                    </Badge>
                     <Badge variant="outline" className="text-green-600 border-green-600">
                       {t("dashboard.easy")}: {stats.challenges.easy}
                     </Badge>
@@ -178,6 +185,9 @@ export default function DashboardContent() {
                     </Badge>
                     <Badge variant="outline" className="text-red-600 border-red-600">
                       {t("dashboard.hard")}: {stats.challenges.hard}
+                    </Badge>
+                    <Badge variant="outline" className="text-purple-600 border-purple-600">
+                      {t("dashboard.insane")}: {stats.challenges.insane}
                     </Badge>
                     <Badge variant="outline" className="text-gray-600 border-gray-600">
                       {t("dashboard.hidden")}: {stats.challenges.hidden}
@@ -407,16 +417,16 @@ export default function DashboardContent() {
                   <ResponsiveContainer width="100%" height={160}>
                     <PieChart>
                       <Pie
-                        data={difficultyData}
+                        data={difficultyData.filter(d => d.value > 0)}
                         cx="50%"
                         cy="50%"
                         innerRadius={45}
                         outerRadius={65}
                         paddingAngle={5}
                         dataKey="value"
-                        label={(entry) => `${entry.name}: ${entry.value}`}
+                        label={(entry) => entry.value > 0 ? `${entry.name}: ${entry.value}` : null}
                       >
-                        {difficultyData.map((entry) => (
+                        {difficultyData.filter(d => d.value > 0).map((entry) => (
                           <Cell key={entry.name} fill={entry.color} />
                         ))}
                       </Pie>

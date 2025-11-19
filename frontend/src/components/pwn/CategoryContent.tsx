@@ -191,7 +191,6 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     setLoading(true);
     try {
       const payload = buildSubmitPayload(selectedChallenge, flag, geoCoords);
-      console.log('🗺️ Submitting geo challenge:', selectedChallenge.id, 'with payload:', payload);
       const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, payload);
 
       toast.success(t(res.data.message) || 'Challenge solved!');

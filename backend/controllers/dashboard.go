@@ -21,19 +21,32 @@ func GetDashboardStats(c *gin.Context) {
 	// Count hidden challenges
 	config.DB.Model(&models.Challenge{}).Where("hidden = ?", true).Count(&stats.Challenges.Hidden)
 
-	// Count by difficulty (join with ChallengeDifficulty table)
+	// Count by difficulty (join with ChallengeDifficulty table), excluding hidden challenges
+	config.DB.Model(&models.Challenge{}).
+		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
+		Where("LOWER(challenge_difficulties.name) = ?", "intro").
+		Where("hidden = ?", false).
+		Count(&stats.Challenges.Intro)
 	config.DB.Model(&models.Challenge{}).
 		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
 		Where("LOWER(challenge_difficulties.name) = ?", "easy").
+		Where("hidden = ?", false).
 		Count(&stats.Challenges.Easy)
 	config.DB.Model(&models.Challenge{}).
 		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
 		Where("LOWER(challenge_difficulties.name) = ?", "medium").
+		Where("hidden = ?", false).
 		Count(&stats.Challenges.Medium)
 	config.DB.Model(&models.Challenge{}).
 		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
 		Where("LOWER(challenge_difficulties.name) = ?", "hard").
+		Where("hidden = ?", false).
 		Count(&stats.Challenges.Hard)
+	config.DB.Model(&models.Challenge{}).
+		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
+		Where("LOWER(challenge_difficulties.name) = ?", "insane").
+		Where("hidden = ?", false).
+		Count(&stats.Challenges.Insane)
 
 	// Count by category
 	type CategoryCount struct {
