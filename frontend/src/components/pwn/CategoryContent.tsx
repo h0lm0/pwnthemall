@@ -33,6 +33,8 @@ import { debugError, debugLog } from "@/lib/debug";
 import type { User } from "@/models/User";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useChallengeInstances } from "@/hooks/use-challenge-instances";
+import { buildSubmitPayload, formatDate, GeoCoords } from "./category-helpers";
 
 interface CategoryContentProps {
   cat: string;
@@ -188,52 +190,32 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     if (!selectedChallenge) return;
     setLoading(true);
     try {
-      let payload: any = { flag };
-      if (selectedChallenge.type?.name?.toLowerCase() === 'geo') {
-        if (geoCoords && !Number.isNaN(geoCoords.lat) && !Number.isNaN(geoCoords.lng)) {
-          payload = { lat: geoCoords.lat, lng: geoCoords.lng };
-        } else {
-          const parts = flag.split(',').map((p) => p.trim());
-          if (parts.length === 2) {
-            const lat = parseFloat(parts[0]);
-            const lng = parseFloat(parts[1]);
-            if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-              payload = { lat, lng };
-            }
-          }
-        }
-      }
+      const payload = buildSubmitPayload(selectedChallenge, flag, geoCoords);
       const res = await axios.post(`/api/challenges/${selectedChallenge.id}/submit`, payload);
 
       toast.success(t(res.data.message) || 'Challenge solved!');
-      // Refresh challenges after successful submission
-      if (onChallengeUpdate) {
-        onChallengeUpdate();
-      }
-      // Refresh solves after successful submission
-      if (selectedChallenge) {
-        fetchSolves(selectedChallenge.id);
-        // Also stop any running instance for this challenge (best-effort UX)
-        try {
-          if (getLocalInstanceStatus(selectedChallenge.id) === 'running') {
-            await stopInstance(selectedChallenge.id.toString());
-            setInstanceStatus(prev => ({ ...prev, [selectedChallenge.id]: 'stopped' }));
-            // Show a local toast only to the solver about the instance being stopped
-            toast.success(t('instance_stopped_success') || 'Instance stopped successfully');
-          }
-        } catch {}
-      }
+      if (onChallengeUpdate) onChallengeUpdate();
+      
+      fetchSolves(selectedChallenge.id);
+      await handlePostSubmitInstanceCleanup(selectedChallenge.id);
     } catch (err: any) {
       const errorKey = err.response?.data?.error || err.response?.data?.result;
       toast.error(t(errorKey) || 'Try again');
-      // Refresh challenges to update attempts count on failed submission
-      if (onChallengeUpdate) {
-        onChallengeUpdate();
-      }
+      if (onChallengeUpdate) onChallengeUpdate();
     } finally {
       setLoading(false);
       setFlag("");
     }
+  };
+
+  const handlePostSubmitInstanceCleanup = async (challengeId: number) => {
+    try {
+      if (getLocalInstanceStatus(challengeId) === 'running') {
+        await stopInstance(challengeId.toString());
+        setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+        toast.success(t('instance_stopped_success') || 'Instance stopped successfully');
+      }
+    } catch {}
   };
 
   const fetchSolves = async (challengeId: number) => {
@@ -274,21 +256,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
     refreshTeamScore();
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'Unknown date';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      debugError('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
+
 
   const handleStartInstance = async (challengeId: number) => {
     try {
@@ -573,7 +541,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="underline dark:text-cyan-300 hover:text-cyan-800 dark:hover:text-cyan-200"
-                                />
+                                >
+                                  {props.children}
+                                </a>
                               ),
                               code: (props: any) => (
                                 <code
@@ -594,9 +564,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                               ol: (props: any) => (
                                 <ol className="list-decimal ml-6 space-y-1" {...props}>{props.children}</ol>
                               ),
-                              h1: (props: any) => <h1 className="text-2xl font-bold mt-2 mb-2" {...props} />,
-                              h2: (props: any) => <h2 className="text-xl font-semibold mt-2 mb-2" {...props} />,
-                              h3: (props: any) => <h3 className="text-lg font-semibold mt-2 mb-2" {...props} />,
+                              h1: (props: any) => <h1 className="text-2xl font-bold mt-2 mb-2" {...props}>{props.children}</h1>,
+                              h2: (props: any) => <h2 className="text-xl font-semibold mt-2 mb-2" {...props}>{props.children}</h2>,
+                              h3: (props: any) => <h3 className="text-lg font-semibold mt-2 mb-2" {...props}>{props.children}</h3>,
                               p: (props: any) => <p className="mb-2" {...props} />,
                               table: (props: any) => (
                                 <div className="overflow-x-auto my-3">
@@ -795,7 +765,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                                   }
                                                 }
                                               } catch (error) {
-                                                // Error handling is done in the hook
+                                                console.error('Error purchasing hint:', error);
                                               }
                                             }}
                                             disabled={hintsLoading || (teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost)}
@@ -811,10 +781,10 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                                 <Settings className="w-4 h-4 mr-2 animate-spin" />
                                                 {t('hints.purchasing') || 'Purchasing...'}
                                               </>
-                                            ) : teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost ? (
-                                              t('hints.insufficient_points', { cost: hint.cost }) || `Insufficient points (${hint.cost} required)`
                                             ) : (
-                                              t('hints.buy_for_points', { cost: hint.cost }) || `Buy for ${hint.cost} points`
+                                              teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost
+                                                ? t('hints.insufficient_points', { cost: hint.cost }) || `Insufficient points (${hint.cost} required)`
+                                                : t('hints.buy_for_points', { cost: hint.cost }) || `Buy for ${hint.cost} points`
                                             )}
                                           </Button>
                                         </div>
@@ -856,7 +826,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                   <span>FirstBlood bonus</span>
                                 </div>
                               </div>
-                              {solves && solves.map((solve, index) => (
+                              {solves?.map((solve, index) => (
                                 <div 
                                   key={`${solve.teamId}-${solve.challengeId}`} 
                                   className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors duration-200"
@@ -866,7 +836,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white font-bold text-sm shadow-sm">
                                         {index < 3 ? (
                                           <span className="text-lg">
-                                            {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                                            {index === 0 && '🥇'}
+                                            {index === 1 && '🥈'}
+                                            {index === 2 && '🥉'}
                                           </span>
                                         ) : (
                                           index + 1

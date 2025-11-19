@@ -20,8 +20,8 @@ import {
 import { FirstBloodManager } from "./FirstBloodManager"
 
 interface ChallengeAdminFormProps {
-  challenge: Challenge
-  onClose: () => void
+  readonly challenge: Challenge
+  readonly onClose: () => void
 }
 
 interface DecayFormula {
@@ -160,7 +160,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
         name: formula.name,
         step: formula.step || 10,
         minPoints: formula.minPoints || 10,
-        maxDecay: formula.maxDecay || 90.0
+        maxDecay: formula.maxDecay || 90
       }))
       setDecayFormulas(validFormulas)
     } catch (error) {
@@ -423,7 +423,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={generalData.categoryId?.toString() || ""}
-                  onValueChange={(value) => setGeneralData(prev => ({ ...prev, categoryId: parseInt(value) }))}
+                  onValueChange={(value) => setGeneralData(prev => ({ ...prev, categoryId: Number.parseInt(value) }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
@@ -442,7 +442,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                 <Label htmlFor="difficulty">Difficulty</Label>
                 <Select
                   value={generalData.difficultyId?.toString() || ""}
-                  onValueChange={(value) => setGeneralData(prev => ({ ...prev, difficultyId: parseInt(value) }))}
+                  onValueChange={(value) => setGeneralData(prev => ({ ...prev, difficultyId: Number.parseInt(value) }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a difficulty" />
@@ -491,7 +491,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                   type="number"
                   min="0"
                   value={formData.points}
-                  onChange={(e) => setFormData(prev => ({ ...prev, points: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, points: Number.parseInt(e.target.value) || 0 }))}
                 />
               </div>
 
@@ -499,7 +499,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                 <Label htmlFor="decayFormula">Decay Formula</Label>
                 <Select
                   value={formData.decayFormulaId?.toString() || "none"}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, decayFormulaId: value === "none" ? null : parseInt(value) }))}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, decayFormulaId: value === "none" ? null : Number.parseInt(value) }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a decay formula" />
@@ -581,6 +581,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                         }))
                       }
                     } catch (error) {
+                      console.error('Error activating scheduled hints:', error);
                       toast.error('Failed to activate scheduled hints')
                     }
                   }}
@@ -616,7 +617,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     type="number"
                     min="0"
                     value={newHint.cost}
-                    onChange={(e) => setNewHint(prev => ({ ...prev, cost: parseInt(e.target.value) || 0 }))}
+                    onChange={(e) => setNewHint(prev => ({ ...prev, cost: Number.parseInt(e.target.value) || 0 }))}
                   />
                 </div>
                 
@@ -685,7 +686,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                   ...prev,
                                   [hint.id]: { 
                                     ...prev[hint.id],
-                                    cost: parseInt(e.target.value) || 0
+                                    cost: Number.parseInt(e.target.value) || 0
                                   }
                                 }))}
                               />
@@ -780,7 +781,6 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                           </div>
                         </>
                       ) : (
-                        <>
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h5 className="font-medium text-sm">{hint.title || "Hint"}</h5>
@@ -822,11 +822,10 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                 size="sm"
                                 onClick={() => handleDeleteHint(hint.id)}
                               >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </>
+                        </div>
                       )}
                     </div>
                   ))}
