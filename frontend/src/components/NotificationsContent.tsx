@@ -69,12 +69,20 @@ export default function NotificationsContent() {
   const renderNotification = (notification: Notification) => (
     <div
       key={notification.id}
+      role="button"
+      tabIndex={0}
       className={cn(
         "p-4 hover:bg-muted/50 transition-colors cursor-pointer border-l-4",
         !notification.readAt && "bg-muted/30 border-l-primary",
         notification.readAt && "border-l-transparent"
       )}
       onClick={() => !notification.readAt && markAsRead(notification.id)}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !notification.readAt) {
+          e.preventDefault();
+          markAsRead(notification.id);
+        }
+      }}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
@@ -193,7 +201,7 @@ export default function NotificationsContent() {
               <CardDescription>
                 {notifications.length === 0 
                   ? t('no_notifications_yet')
-                  : `${notifications.length} ${t('notification')}${notifications.length !== 1 ? 's' : ''}`
+                  : `${notifications.length} ${t('notification')}${notifications.length === 1 ? '' : 's'}`
                 }
               </CardDescription>
             </CardHeader>
@@ -219,7 +227,7 @@ export default function NotificationsContent() {
               <CardDescription>
                 {unreadCount === 0 
                   ? t('all_caught_up')
-                  : `${unreadCount} ${t('unread_notification')}${unreadCount !== 1 ? 's' : ''}`
+                  : `${unreadCount} ${t('unread_notification')}${unreadCount === 1 ? '' : 's'}`
                 }
               </CardDescription>
             </CardHeader>
@@ -245,7 +253,7 @@ export default function NotificationsContent() {
               <CardDescription>
                 {readNotifications.length === 0 
                   ? t('no_read_notifications')
-                  : `${readNotifications.length} ${t('read_notification')}${readNotifications.length !== 1 ? 's' : ''}`
+                  : `${readNotifications.length} ${t('read_notification')}${readNotifications.length === 1 ? '' : 's'}`
                 }
               </CardDescription>
             </CardHeader>

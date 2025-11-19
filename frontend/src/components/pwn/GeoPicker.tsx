@@ -178,11 +178,20 @@ export default function GeoPicker({ value, onChange, height = 320, radiusKm }: G
               {results.map((r, i) => (
                 <li
                   key={`${r.lat}-${r.lon}-${i}`}
+                  role="button"
+                  tabIndex={0}
                   style={{ padding: "8px 10px", cursor: "pointer" }}
                   onClick={() => {
                     const lat = Number.parseFloat(r.lat);
                     const lon = Number.parseFloat(r.lon);
                     moveTo(lat, lon);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const lat = Number.parseFloat(r.lat);
+                      const lon = Number.parseFloat(r.lon);
+                      moveTo(lat, lon);
                     // Set the input text but suppress the next search effect
                     ignoreSearchOnceRef.current = true;
                     setQuery(r.display_name);

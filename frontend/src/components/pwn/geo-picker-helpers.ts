@@ -119,7 +119,7 @@ export function deduplicateNominatimResults(
     const nameKey = (r.display_name || '').toLowerCase();
     const latNum = Number.parseFloat(r.lat);
     const lonNum = Number.parseFloat(r.lon);
-    const coordKey = `${isFinite(latNum) ? latNum.toFixed(3) : r.lat}|${isFinite(lonNum) ? lonNum.toFixed(3) : r.lon}`;
+    const coordKey = `${Number.isFinite(latNum) ? latNum.toFixed(3) : r.lat}|${Number.isFinite(lonNum) ? lonNum.toFixed(3) : r.lon}`;
     
     if (seenByName[nameKey] || seenByRoundedCoords[coordKey]) continue;
     

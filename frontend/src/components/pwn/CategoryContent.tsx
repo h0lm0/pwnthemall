@@ -541,7 +541,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="underline dark:text-cyan-300 hover:text-cyan-800 dark:hover:text-cyan-200"
-                                />
+                                >
+                                  {props.children}
+                                </a>
                               ),
                               code: (props: any) => (
                                 <code
@@ -562,9 +564,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                               ol: (props: any) => (
                                 <ol className="list-decimal ml-6 space-y-1" {...props}>{props.children}</ol>
                               ),
-                              h1: (props: any) => <h1 className="text-2xl font-bold mt-2 mb-2" {...props} />,
-                              h2: (props: any) => <h2 className="text-xl font-semibold mt-2 mb-2" {...props} />,
-                              h3: (props: any) => <h3 className="text-lg font-semibold mt-2 mb-2" {...props} />,
+                              h1: (props: any) => <h1 className="text-2xl font-bold mt-2 mb-2" {...props}>{props.children}</h1>,
+                              h2: (props: any) => <h2 className="text-xl font-semibold mt-2 mb-2" {...props}>{props.children}</h2>,
+                              h3: (props: any) => <h3 className="text-lg font-semibold mt-2 mb-2" {...props}>{props.children}</h3>,
                               p: (props: any) => <p className="mb-2" {...props} />,
                               table: (props: any) => (
                                 <div className="overflow-x-auto my-3">
@@ -600,7 +602,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                 {t('challenge_already_solved')}
                               </p>
                             </div>
-                          ) : !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') ? (
+                          ) : (
+                            !ctfLoading && (ctfStatus.status === 'not_started' || ctfStatus.status === 'ended') && (
                             <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-lg">
                               <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
                                 <Clock className="w-5 h-5" />
@@ -759,7 +762,15 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                                     }
                                                   } catch (error) {
                                                     console.error('Failed to refresh challenge data:', error);
-                                                    // La mise à jour locale est déjà faite, donc pas de problème
+                                                    }
+                                                } catch (error) {
+                                                  console.error('Failed to refresh challenge data:', error);
+                                                  // La mise à jour locale est déjà faite, donc pas de problème
+                                                }
+                                              }
+                                            } catch (error) {
+                                              console.error('Error purchasing hint:', error);
+                                            }
                                                   }
                                                 }
                                               } catch (error) {
@@ -779,10 +790,10 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                                 <Settings className="w-4 h-4 mr-2 animate-spin" />
                                                 {t('hints.purchasing') || 'Purchasing...'}
                                               </>
-                                            ) : teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost ? (
-                                              t('hints.insufficient_points', { cost: hint.cost }) || `Insufficient points (${hint.cost} required)`
                                             ) : (
-                                              t('hints.buy_for_points', { cost: hint.cost }) || `Buy for ${hint.cost} points`
+                                              teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost
+                                                ? t('hints.insufficient_points', { cost: hint.cost }) || `Insufficient points (${hint.cost} required)`
+                                                : t('hints.buy_for_points', { cost: hint.cost }) || `Buy for ${hint.cost} points`
                                             )}
                                           </Button>
                                         </div>
@@ -803,7 +814,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 dark:border-cyan-400 mx-auto mb-2"></div>
                               <p className="text-muted-foreground">{t('loading') || 'Loading...'}</p>
                             </div>
-                          ) : !solves || solves.length === 0 ? (
+                          ) : (
+                            !solves || solves.length === 0 ? (
                             <div className="text-center py-8">
                               <Trophy className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
                               <p className="text-lg font-medium text-foreground mb-2">{t('no_solves_yet')}</p>
@@ -824,7 +836,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                   <span>FirstBlood bonus</span>
                                 </div>
                               </div>
-                              {solves && solves.map((solve, index) => (
+                              {solves?.map((solve, index) => (
                                 <div 
                                   key={`${solve.teamId}-${solve.challengeId}`} 
                                   className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors duration-200"
@@ -834,7 +846,9 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white font-bold text-sm shadow-sm">
                                         {index < 3 ? (
                                           <span className="text-lg">
-                                            {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                                            {index === 0 && '🥇'}
+                                            {index === 1 && '🥈'}
+                                            {index === 2 && '🥉'}
                                           </span>
                                         ) : (
                                           index + 1

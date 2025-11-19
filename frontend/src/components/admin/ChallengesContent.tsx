@@ -37,12 +37,12 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
   // Get unique values for filters
   const categories = useMemo(() => {
     const uniqueCategories = Array.from(new Set(challenges.map(c => c.category?.name).filter(Boolean)))
-    return uniqueCategories.sort()
+    return uniqueCategories.sort((a, b) => a.localeCompare(b))
   }, [challenges])
 
   const difficulties = useMemo(() => {
     const uniqueDifficulties = Array.from(new Set(challenges.map(c => c.difficulty?.name).filter(Boolean)))
-    return uniqueDifficulties.sort()
+    return uniqueDifficulties.sort((a, b) => a.localeCompare(b))
   }, [challenges])
 
   // Filter and sort challenges

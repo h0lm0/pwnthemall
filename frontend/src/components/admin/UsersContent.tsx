@@ -357,7 +357,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doDeleteSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)].id)
+    const ids = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)].id)
     await Promise.all(ids.map((id) => axios.delete(`/api/users/${id}`)))
     setRowSelection({})
     setConfirmMassDelete(false)
@@ -366,7 +366,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doTempBanSelected = async () => {
-    const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
+    const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
     const ids = selectedUsers.map(user => user.id)
     const bannedCount = selectedUsers.filter(user => user.banned).length
     const unbannedCount = selectedUsers.length - bannedCount
@@ -427,7 +427,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 onClick={() => setConfirmMassBan(true)}
               >
                 {(() => {
-                  const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
+                  const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
                   const bannedCount = selectedUsers.filter(user => user.banned).length
                   const unbannedCount = selectedUsers.length - bannedCount
                   return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
@@ -654,7 +654,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
@@ -662,7 +662,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban_users_confirm") : t("temp_ban_users_confirm")
@@ -673,7 +673,7 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={doTempBanSelected}>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban") : t("temp_ban")

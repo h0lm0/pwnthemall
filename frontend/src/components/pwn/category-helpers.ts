@@ -17,8 +17,8 @@ export function parseGeoCoords(
   // Try parsing from flag text (lat,lng format)
   const parts = flag.split(',').map((p) => p.trim());
   if (parts.length === 2) {
-    const lat = parseFloat(parts[0]);
-    const lng = parseFloat(parts[1]);
+    const lat = Number.parseFloat(parts[0]);
+    const lng = Number.parseFloat(parts[1]);
     if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
       return { lat, lng };
     }
