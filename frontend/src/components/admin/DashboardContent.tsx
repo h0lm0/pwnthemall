@@ -301,57 +301,59 @@ export default function DashboardContent() {
               ) : (
                 <>
                   <div className="min-h-[452px] flex flex-col">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-xs py-1.5">{t("user.user")}</TableHead>
-                          <TableHead className="text-xs py-1.5">{t("team.team")}</TableHead>
-                          <TableHead className="text-xs py-1.5">{t("challenge.challenge")}</TableHead>
-                          <TableHead className="text-xs py-1.5">{t("dashboard.result")}</TableHead>
-                          <TableHead className="text-right text-xs py-1.5">{t("time")}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentSubmissions
-                          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                          .map((submission) => {
-                            return (
-                              <TableRow key={submission.id}>
-                                <TableCell className="font-medium text-xs py-1.5">
-                                  {submission.user?.username || "Unknown"}
-                                </TableCell>
-                                <TableCell className="text-xs py-1.5">
-                                  {submission.user?.team?.name || "-"}
-                                </TableCell>
-                                <TableCell className="text-xs py-1.5">
-                                  {submission.challenge?.name || "Unknown"}
-                                </TableCell>
-                                <TableCell className="py-1.5">
-                                  <Badge variant={submission.isCorrect ? "default" : "destructive"} className="text-xs py-0">
-                                    {submission.isCorrect ? t("dashboard.correct") : t("dashboard.incorrect")}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-right text-xs text-muted-foreground py-1.5">
-                                  {formatDate(submission.createdAt)}
-                                </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table className="table-fixed">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[120px] text-xs py-1.5">{t("user.user")}</TableHead>
+                            <TableHead className="w-[140px] text-xs py-1.5">{t("team.team")}</TableHead>
+                            <TableHead className="w-[160px] text-xs py-1.5">{t("challenge.challenge")}</TableHead>
+                            <TableHead className="w-[100px] text-xs py-1.5">{t("dashboard.result")}</TableHead>
+                            <TableHead className="w-[140px] text-right text-xs py-1.5">{t("time")}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {recentSubmissions
+                            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                            .map((submission) => {
+                              return (
+                                <TableRow key={submission.id}>
+                                  <TableCell className="w-[120px] font-medium text-xs py-1.5 truncate">
+                                    {submission.user?.username || "Unknown"}
+                                  </TableCell>
+                                  <TableCell className="w-[140px] text-xs py-1.5 truncate">
+                                    {submission.user?.team?.name || "-"}
+                                  </TableCell>
+                                  <TableCell className="w-[160px] text-xs py-1.5 truncate">
+                                    {submission.challenge?.name || "Unknown"}
+                                  </TableCell>
+                                  <TableCell className="w-[100px] py-1.5">
+                                    <Badge variant={submission.isCorrect ? "default" : "destructive"} className="text-xs py-0">
+                                      {submission.isCorrect ? t("dashboard.correct") : t("dashboard.incorrect")}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="w-[140px] text-right text-xs text-muted-foreground py-1.5 truncate">
+                                    {formatDate(submission.createdAt)}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          {(() => {
+                            const currentPageItems = recentSubmissions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).length;
+                            const emptyRows = itemsPerPage - currentPageItems;
+                            return Array.from({ length: emptyRows }).map((_, index) => (
+                              <TableRow key={`empty-row-${currentPage}-${index}`}>
+                                <TableCell className="w-[120px] py-1.5 h-[33px]"></TableCell>
+                                <TableCell className="w-[140px] py-1.5 h-[33px]"></TableCell>
+                                <TableCell className="w-[160px] py-1.5 h-[33px]"></TableCell>
+                                <TableCell className="w-[100px] py-1.5 h-[33px]"></TableCell>
+                                <TableCell className="w-[140px] py-1.5 h-[33px]"></TableCell>
                               </TableRow>
-                            );
-                          })}
-                        {(() => {
-                          const currentPageItems = recentSubmissions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).length;
-                          const emptyRows = itemsPerPage - currentPageItems;
-                          return Array.from({ length: emptyRows }).map((_, index) => (
-                            <TableRow key={`empty-row-${currentPage}-${index}`}>
-                              <TableCell className="py-1.5 h-[33px]"></TableCell>
-                              <TableCell className="py-1.5 h-[33px]"></TableCell>
-                              <TableCell className="py-1.5 h-[33px]"></TableCell>
-                              <TableCell className="py-1.5 h-[33px]"></TableCell>
-                              <TableCell className="py-1.5 h-[33px]"></TableCell>
-                            </TableRow>
-                          ));
-                        })()}
-                      </TableBody>
-                    </Table>
+                            ));
+                          })()}
+                        </TableBody>
+                      </Table>
+                    </div>
                     <div className="flex-1"></div>
                   </div>
                   {recentSubmissions.length > itemsPerPage && (

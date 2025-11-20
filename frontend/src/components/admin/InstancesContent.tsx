@@ -277,10 +277,10 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
       ),
       cell: ({ getValue, row }) => {
         if (row.original.id < 0) return <div className="w-[220px] h-[52px]">&nbsp;</div>
-        const containerId = getValue() as string
+        const containerName = getValue() as string
         return (
           <span className="block w-[220px] h-[52px] font-mono text-xs text-muted-foreground flex items-center">
-            {containerId}
+            {containerName}
           </span>
         )
       },
