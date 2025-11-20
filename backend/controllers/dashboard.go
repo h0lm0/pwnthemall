@@ -3,7 +3,9 @@ package controllers
 import (
 	"time"
 
+	"github.com/jinzhu/copier"
 	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
 	"github.com/pwnthemall/pwnthemall/backend/models"
 	"github.com/pwnthemall/pwnthemall/backend/utils"
 
@@ -145,39 +147,21 @@ func GetRunningInstances(c *gin.Context) {
 		return
 	}
 
-	// Transform to a simplified DTO
-	type RunningInstanceDTO struct {
-		ID            uint      `json:"id"`
-		Container     string    `json:"container"`
-		UserID        uint      `json:"userId"`
-		Username      string    `json:"username"`
-		TeamID        uint      `json:"teamId"`
-		TeamName      string    `json:"teamName"`
-		ChallengeID   uint      `json:"challengeId"`
-		ChallengeName string    `json:"challengeName"`
-		Category      string    `json:"category"`
-		CreatedAt     time.Time `json:"createdAt"`
-		ExpiresAt     time.Time `json:"expiresAt"`
-	}
-
-	var runningInstances []RunningInstanceDTO
+	var runningInstances []dto.AdminInstanceDTO
 	for _, instance := range instances {
-		dto := RunningInstanceDTO{
-			ID:            instance.ID,
-			Container:     instance.Container,
-			UserID:        instance.UserID,
-			Username:      instance.User.Username,
-			TeamID:        instance.TeamID,
-			TeamName:      instance.Team.Name,
-			ChallengeID:   instance.ChallengeID,
-			ChallengeName: instance.Challenge.Name,
-			CreatedAt:     instance.CreatedAt,
-			ExpiresAt:     instance.ExpiresAt,
-		}
+		var instanceDTO dto.AdminInstanceDTO
+		copier.Copy(&instanceDTO, &instance)
+		
+		// Manually set nested fields that copier can't automatically map
+		instanceDTO.Username = instance.User.Username
+		instanceDTO.TeamName = instance.Team.Name
+		instanceDTO.ChallengeName = instance.Challenge.Name
+		
 		if instance.Challenge.ChallengeCategory != nil {
-			dto.Category = instance.Challenge.ChallengeCategory.Name
+			instanceDTO.Category = instance.Challenge.ChallengeCategory.Name
 		}
-		runningInstances = append(runningInstances, dto)
+		
+		runningInstances = append(runningInstances, instanceDTO)
 	}
 
 	utils.OKResponse(c, runningInstances)

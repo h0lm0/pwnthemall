@@ -58,49 +58,21 @@ func GetAllInstancesAdmin(c *gin.Context) {
 		return
 	}
 
-	type AdminInstanceDTO struct {
-		ID            uint   `json:"id"`
-		Container     string `json:"container"`
-		UserID        uint   `json:"userId"`
-		Username      string `json:"username"`
-		TeamID        uint   `json:"teamId"`
-		TeamName      string `json:"teamName"`
-		ChallengeID   uint   `json:"challengeId"`
-		ChallengeName string `json:"challengeName"`
-		Category      string `json:"category"`
-		Status        string `json:"status"`
-		CreatedAt     string `json:"createdAt"`
-		ExpiresAt     string `json:"expiresAt"`
-	}
-
-	var instanceDTOs []AdminInstanceDTO
+	var instanceDTOs []dto.AdminInstanceDTO
 	for _, instance := range instances {
-		dto := AdminInstanceDTO{
-			ID:            instance.ID,
-			Container:     instance.Container,
-			UserID:        instance.UserID,
-			Status:        instance.Status,
-			CreatedAt:     instance.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-			ExpiresAt:     instance.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
-		}
-
-		// User is loaded via Preload
-		dto.Username = instance.User.Username
-
-		// Team is loaded via Preload
-		dto.TeamID = instance.Team.ID
-		dto.TeamName = instance.Team.Name
-
-		// Challenge is loaded via Preload
-		dto.ChallengeID = instance.Challenge.ID
-		dto.ChallengeName = instance.Challenge.Name
+		var instanceDTO dto.AdminInstanceDTO
+		copier.Copy(&instanceDTO, &instance)
 		
-		// ChallengeCategory is loaded via nested Preload
+		// Manually set nested fields that copier can't automatically map
+		instanceDTO.Username = instance.User.Username
+		instanceDTO.TeamName = instance.Team.Name
+		instanceDTO.ChallengeName = instance.Challenge.Name
+		
 		if instance.Challenge.ChallengeCategory != nil {
-			dto.Category = instance.Challenge.ChallengeCategory.Name
+			instanceDTO.Category = instance.Challenge.ChallengeCategory.Name
 		}
 
-		instanceDTOs = append(instanceDTOs, dto)
+		instanceDTOs = append(instanceDTOs, instanceDTO)
 	}
 
 	utils.OKResponse(c, instanceDTOs)
