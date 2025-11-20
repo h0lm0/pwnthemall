@@ -11,7 +11,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-
 	"strconv"
 	"strings"
 
@@ -244,7 +243,20 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 		},
 	}
 
+	debug.Log("Creating Docker network for team %d", teamId)
+	networkName, err := EnsureTeamNetworkExists(teamId)
+	if err != nil {
+		return fmt.Sprintf("failed to ensure team %d", teamId), err
+	}
+	debug.Log("Docker network created: %s", networkName)
+
 	containerTimeout := 60
+	networkingConfig := &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			networkName: {},
+		},
+	}
+
 	resp, err := config.DockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -254,7 +266,7 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 			StopTimeout:  &containerTimeout,
 		},
 		hostConfig,
-		&network.NetworkingConfig{},
+		networkingConfig,
 		nil,
 		containerName,
 	)
@@ -306,11 +318,29 @@ func EnsureTeamNetworkExists(teamId int) (string, error) {
 		Filters: filters.NewArgs(filters.Arg("name", networkName)),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to list networks: %w", err)
+		debug.Log(err.Error())
+		return "", fmt.Errorf("docker_network_unavailable")
 	}
 
 	if len(networks) > 0 {
 		return networkName, nil
+	}
+
+	subnet, gateway, err := GetTeamSubnet(teamId)
+	if err != nil {
+		debug.Log(err.Error())
+		return "", fmt.Errorf("docker_network_unavailable")
+	}
+
+	debug.Log("Team %d | subnet: %s | gateway: %s", teamId, subnet, gateway)
+
+	ipamConfig := &network.IPAMConfig{
+		Subnet:  subnet,  // exemple: "172.18.0.0/24"
+		Gateway: gateway, // exemple: "172.18.0.1"
+	}
+	ipam := &network.IPAM{
+		Driver: "default",
+		Config: []network.IPAMConfig{*ipamConfig},
 	}
 
 	_, err = config.DockerClient.NetworkCreate(
@@ -319,12 +349,14 @@ func EnsureTeamNetworkExists(teamId int) (string, error) {
 		network.CreateOptions{
 			Driver:     "bridge",
 			Attachable: true,
+			IPAM:       ipam,
+			// Internal: true, // using iptables instead
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to create network: %w", err)
+		debug.Log(err.Error())
+		return "", fmt.Errorf("docker_network_unavailable")
 	}
-
 	return networkName, nil
 }
 

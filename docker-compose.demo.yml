@@ -51,6 +51,7 @@ services:
       PTA_DOCKER_INSTANCES_BY_USER: ${PTA_DOCKER_INSTANCES_BY_USER}
       PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
       PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS: ${PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS}
+      PTA_CHALL_BASE_CIDR: ${PTA_CHALL_BASE_CIDR}
       PTA_DEBUG_ENABLED: ${PTA_DEBUG_ENABLED}
       PTA_PLUGIN_MAGIC_VALUE: ${PTA_PLUGIN_MAGIC_VALUE}
     volumes:
@@ -170,6 +171,15 @@ services:
     networks:
       public:
       private:
+
+  agent:
+    container_name: agent
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
 
 volumes:
   postgres_data:
