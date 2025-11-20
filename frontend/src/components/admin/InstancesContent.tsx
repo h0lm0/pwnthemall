@@ -3,7 +3,6 @@ import { useState, useMemo } from "react"
 import axios from "@/lib/axios";
 
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
-import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -62,6 +61,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
 
   // Filtered and sorted instances
   const filteredInstances = useMemo(() => {
+    if (!instances) return []
     let filtered = instances.filter((instance) => {
       const usernameMatch = !usernameFilter || 
         instance.username?.toLowerCase().includes(usernameFilter.toLowerCase())
@@ -122,6 +122,43 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
     
     return filtered
   }, [instances, usernameFilter, challengeFilter, categoryFilter, statusFilter, sortBy, sortOrder])
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageSize = 10
+
+  // Get current page data and pad to 10 rows
+  const paginatedData = useMemo(() => {
+    const start = currentPage * pageSize
+    const end = start + pageSize
+    const pageData = filteredInstances.slice(start, end)
+    
+    // Pad with empty rows to always have 10 rows
+    const emptyRowsNeeded = pageSize - pageData.length
+    const emptyRows = new Array(emptyRowsNeeded).fill(null).map((_, i) => ({
+      id: -(start + pageData.length + i + 1),
+      container: "",
+      userId: 0,
+      username: "",
+      teamId: 0,
+      teamName: "",
+      challengeId: 0,
+      challengeName: "",
+      category: "",
+      status: "",
+      createdAt: "",
+      expiresAt: "",
+    }))
+    
+    return [...pageData, ...emptyRows]
+  }, [filteredInstances, currentPage])
+
+  const totalPages = Math.max(1, Math.ceil(filteredInstances.length / pageSize))
+
+  // Reset to first page when filters change
+  useMemo(() => {
+    setCurrentPage(0)
+  }, [usernameFilter, challengeFilter, categoryFilter, statusFilter])
   
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -156,14 +193,21 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ getValue, row }) => (
-        <div className="min-w-[120px]">
-          <div className="font-medium">{getValue() as string}</div>
-          {row.original.teamName && (
-            <div className="text-xs text-muted-foreground">{row.original.teamName}</div>
-          )}
-        </div>
-      ),
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[140px] h-[52px]">&nbsp;</div>
+        return (
+          <div className="w-[140px] h-[52px]">
+            <div className="font-medium overflow-hidden text-ellipsis whitespace-nowrap" style={{ textOverflow: 'ellipsis' }} title={getValue() as string}>
+              {(getValue() as string).length > 16 ? (getValue() as string).substring(0, 14) + '..' : getValue() as string}
+            </div>
+            {row.original.teamName && (
+              <div className="text-xs text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap" title={row.original.teamName}>
+                {row.original.teamName.length > 16 ? row.original.teamName.substring(0, 14) + '..' : row.original.teamName}
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
       accessorKey: "challengeName",
@@ -177,14 +221,19 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ getValue, row }) => (
-        <div className="min-w-[150px]">
-          <div className="font-medium">{getValue() as string}</div>
-          <Badge variant="outline" className="text-xs mt-1">
-            {row.original.category}
-          </Badge>
-        </div>
-      ),
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[180px] h-[52px]">&nbsp;</div>
+        return (
+          <div className="w-[180px] h-[52px]">
+            <div className="font-medium overflow-hidden text-ellipsis whitespace-nowrap" title={getValue() as string}>
+              {(getValue() as string).length > 20 ? (getValue() as string).substring(0, 18) + '..' : getValue() as string}
+            </div>
+            <Badge variant="outline" className="text-xs mt-1 overflow-hidden text-ellipsis whitespace-nowrap max-w-full">
+              {row.original.category.length > 18 ? row.original.category.substring(0, 16) + '..' : row.original.category}
+            </Badge>
+          </div>
+        )
+      },
     },
     {
       accessorKey: "status",
@@ -198,15 +247,18 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ getValue }) => {
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[80px] h-[52px]">&nbsp;</div>
         const status = getValue() as string
         return (
-          <Badge 
-            variant={status === "running" ? "default" : "secondary"}
-            className={cn("min-w-[80px] justify-center")}
-          >
-            {status}
-          </Badge>
+          <div className="h-[52px] flex items-center">
+            <Badge 
+              variant={status === "running" ? "default" : "secondary"}
+              className={cn("w-[80px] justify-center")}
+            >
+              {status}
+            </Badge>
+          </div>
         )
       },
     },
@@ -222,11 +274,15 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ getValue }) => (
-        <span className="block min-w-[140px] text-sm text-muted-foreground">
-          {formatDate(getValue() as string)}
-        </span>
-      ),
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[150px] h-[52px]">&nbsp;</div>
+        const dateStr = formatDate(getValue() as string)
+        return (
+          <span className="block w-[150px] h-[52px] text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap flex items-center" title={dateStr}>
+            {dateStr.length > 18 ? dateStr.substring(0, 16) + '..' : dateStr}
+          </span>
+        )
+      },
     },
     {
       accessorKey: "expiresAt",
@@ -241,15 +297,18 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
         </Button>
       ),
       cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[60px] h-[52px]">&nbsp;</div>
         const timeLeft = getTimeRemaining(getValue() as string)
         const isExpiringSoon = timeLeft <= 5
         return (
-          <Badge 
-            variant={isExpiringSoon ? "destructive" : "outline"}
-            className="min-w-[60px] justify-center"
-          >
-            {timeLeft}m
-          </Badge>
+          <div className="h-[52px] flex items-center">
+            <Badge 
+              variant={isExpiringSoon ? "destructive" : "outline"}
+              className="w-[60px] justify-center"
+            >
+              {timeLeft}m
+            </Badge>
+          </div>
         )
       },
     },
@@ -260,26 +319,34 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
           {t("container_id")}
         </div>
       ),
-      cell: ({ getValue }) => (
-        <span className="block min-w-[120px] font-mono text-xs text-muted-foreground truncate">
-          {(getValue() as string).substring(0, 12)}
-        </span>
-      ),
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[110px] h-[52px]">&nbsp;</div>
+        const containerId = getValue() as string
+        return (
+          <span className="block w-[110px] h-[52px] font-mono text-xs text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap flex items-center" title={containerId}>
+            {containerId.length > 12 ? containerId.substring(0, 10) + '..' : containerId}
+          </span>
+        )
+      },
     },
     {
       id: "actions",
       header: t("actions"),
-      cell: ({ row }) => (
-        <div className="flex gap-1">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setDeleting(row.original)}
-          >
-            {t("stop")}
-          </Button>
-        </div>
-      ),
+      cell: ({ row }) => {
+        if (row.original.id < 0) return <div className="w-[80px] h-[52px]">&nbsp;</div>
+        return (
+          <div className="flex gap-1 w-[80px] h-[52px] items-center">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleting(row.original)}
+              className="w-full"
+            >
+              {t("stop")}
+            </Button>
+          </div>
+        )
+      },
     },
   ]
 
@@ -298,7 +365,9 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
   }
 
   const doDeleteSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => filteredInstances[Number.parseInt(key, 10)].id)
+    const ids = Object.keys(rowSelection)
+      .map((key) => paginatedData[Number.parseInt(key, 10)].id)
+      .filter((id) => id >= 0) // Filter out empty placeholder rows
     try {
       await Promise.all(ids.map((id) => axios.delete(`/api/admin/instances/${id}`)))
       setRowSelection({})
@@ -347,7 +416,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
         </div>
 
         {/* Filters */}
-        <div className="mb-4 flex flex-wrap gap-2 items-end bg-card p-4 rounded-lg border">
+        <div className="mb-4 flex flex-wrap gap-2 items-end bg-card px-4 py-3 rounded-lg border">
           <div className="flex-1 min-w-[200px]">
             <label className="text-sm font-medium mb-1 block">
               {t("user.user")}
@@ -449,12 +518,82 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
         </div>
 
         {/* Data Table */}
-        <DataTable
-          columns={columns}
-          data={filteredInstances}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-        />
+        <div className="bg-background rounded-md border">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b">
+                <tr>
+                  {columns.map((column) => (
+                    <th key={column.id || (column as any).accessorKey} className="px-3 py-1.5 text-left font-medium align-middle">
+                      {typeof column.header === 'function' ? column.header({} as any) : column.header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.map((row) => (
+                  <tr key={row.id} className="border-b last:border-b-0">
+                    {columns.map((column) => {
+                      const cellKey = column.id || (column as any).accessorKey
+                      const cellContent = typeof column.cell === 'function' 
+                        ? column.cell({ 
+                            row: { original: row } as any, 
+                            getValue: () => (row as any)[(column as any).accessorKey || ''] 
+                          } as any)
+                        : null
+                      return (
+                        <td key={cellKey} className="px-3 py-2 align-middle">
+                          {cellContent}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Fixed Pagination */}
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage + 1} of {totalPages}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(0)}
+                disabled={currentPage === 0}
+              >
+                ««
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={currentPage === 0}
+              >
+                «
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                disabled={currentPage >= totalPages - 1}
+              >
+                »
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={currentPage >= totalPages - 1}
+              >
+                »»
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>

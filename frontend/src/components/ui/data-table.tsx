@@ -74,7 +74,7 @@ export function DataTable<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {enableRowSelection && (
-                  <th className="w-[48px] px-3 py-2 align-middle text-center">
+                  <th className="w-[48px] px-3 py-1.5 align-middle text-center">
                     <Checkbox
                     aria-label="Select all"
                     checked={
@@ -91,7 +91,7 @@ export function DataTable<TData, TValue>({
                 </th>
               )}
                 {headerGroup.headers.map((header) => (
-                <th key={header.id} className="px-3 py-2 text-left font-medium align-middle" style={equalWidthStyle}>
+                <th key={header.id} className="px-3 py-1.5 text-left font-medium align-middle" style={equalWidthStyle}>
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -108,17 +108,21 @@ export function DataTable<TData, TValue>({
             <tr key={row.id} className="border-b last:border-b-0">
               {enableRowSelection && (
                 <td className="w-[48px] px-3 py-2 align-middle text-center">
-                  <Checkbox
-                    aria-label="Select row"
-                    checked={
-                      row.getIsSelected()
-                        ? true
-                        : row.getIsSomeSelected()
-                        ? "indeterminate"
-                        : false
-                    }
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
-                  />
+                  {(row.original as any).id >= 0 ? (
+                    <Checkbox
+                      aria-label="Select row"
+                      checked={
+                        row.getIsSelected()
+                          ? true
+                          : row.getIsSomeSelected()
+                          ? "indeterminate"
+                          : false
+                      }
+                      onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    />
+                  ) : (
+                    <div className="h-5"></div>
+                  )}
                 </td>
               )}
               {row.getVisibleCells().map((cell) => (
