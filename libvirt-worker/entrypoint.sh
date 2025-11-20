@@ -6,6 +6,7 @@ ssh-keygen -A
 
 mkdir -p /var/run/dbus
 rm -f /var/run/dbus/pid
+rm -f /var/run/dbus/dbus.pid
 dbus-daemon --system --fork
 
 echo "[+] Waiting for D-Bus..."
