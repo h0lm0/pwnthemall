@@ -270,7 +270,7 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 		"Started container %s for team %d user %d on host ports %v mapping to internal %v",
 		containerName, teamId, userId, hostPorts, internalPorts,
 	)
-	return resp.ID, nil
+	return containerName, nil
 }
 
 func StopDockerInstance(containerID string) error {
