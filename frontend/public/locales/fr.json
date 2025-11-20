@@ -491,5 +491,22 @@
     "active": "Actifs",
     "banned": "Bannis",
     "submissions_over_time": "Soumissions au fil du temps"
-  }
+  },
+  "instances": "Instances",
+  "instance_stopped_success": "Instance arrêtée avec succès !",
+  "instance_stop_failed": "Échec de l'arrêt de l'instance",
+  "instances_stopped_success": "Instances sélectionnées arrêtées avec succès !",
+  "instances_stop_failed": "Échec de l'arrêt des instances sélectionnées",
+  "confirm_stop_instance": "Confirmer l'arrêt de l'instance",
+  "confirm_stop_instance_description": "Êtes-vous sûr de vouloir arrêter cette instance ? Cette action est irréversible.",
+  "confirm_stop_instances": "Confirmer l'arrêt des instances",
+  "confirm_stop_instances_description": "Êtes-vous sûr de vouloir arrêter {count} instances sélectionnées ? Cette action est irréversible.",
+  "stop_selected": "Arrêter la sélection",
+  "stop": "Arrêter",
+  "running": "En cours",
+  "stopped": "Arrêté",
+  "time_remaining": "Temps restant",
+  "container_id": "ID du conteneur",
+  "filter_by_challenge": "Filtrer par défi...",
+  "filter_by_category": "Filtrer par catégorie..."
 }

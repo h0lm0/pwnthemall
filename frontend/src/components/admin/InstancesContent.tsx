@@ -1,0 +1,499 @@
+import Head from "next/head"
+import { useState, useMemo } from "react"
+import axios from "@/lib/axios";
+
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
+import { DataTable } from "@/components/ui/data-table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+import { X, ArrowUpDown, Server } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useLanguage } from "@/context/LanguageContext"
+import { useSiteConfig } from "@/context/SiteConfigContext"
+import { toast } from "sonner"
+
+interface Instance {
+  id: number;
+  container: string;
+  userId: number;
+  username: string;
+  teamId: number;
+  teamName: string;
+  challengeId: number;
+  challengeName: string;
+  category: string;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+interface InstancesContentProps {
+  readonly instances: Instance[]
+  readonly onRefresh: () => void
+}
+
+export default function InstancesContent({ instances, onRefresh }: Readonly<InstancesContentProps>) {
+  const { t } = useLanguage()
+  const { getSiteName } = useSiteConfig()
+  const [deleting, setDeleting] = useState<Instance | null>(null)
+  const [confirmMassDelete, setConfirmMassDelete] = useState(false)
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  
+  // Filter states
+  const [usernameFilter, setUsernameFilter] = useState("")
+  const [challengeFilter, setChallengeFilter] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState("")
+  
+  // Sorting state
+  const [sortBy, setSortBy] = useState("createdAt")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+
+  // Filtered and sorted instances
+  const filteredInstances = useMemo(() => {
+    let filtered = instances.filter((instance) => {
+      const usernameMatch = !usernameFilter || 
+        instance.username?.toLowerCase().includes(usernameFilter.toLowerCase())
+      
+      const challengeMatch = !challengeFilter || 
+        instance.challengeName?.toLowerCase().includes(challengeFilter.toLowerCase())
+      
+      const categoryMatch = !categoryFilter || 
+        instance.category?.toLowerCase().includes(categoryFilter.toLowerCase())
+      
+      const statusMatch = !statusFilter || 
+        instance.status?.toLowerCase() === statusFilter.toLowerCase()
+      
+      return usernameMatch && challengeMatch && categoryMatch && statusMatch
+    })
+    
+    // Sort instances
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortBy) {
+        case "username":
+          aValue = a.username || ""
+          bValue = b.username || ""
+          break
+        case "challengeName":
+          aValue = a.challengeName || ""
+          bValue = b.challengeName || ""
+          break
+        case "category":
+          aValue = a.category || ""
+          bValue = b.category || ""
+          break
+        case "status":
+          aValue = a.status || ""
+          bValue = b.status || ""
+          break
+        case "createdAt":
+          aValue = new Date(a.createdAt).getTime()
+          bValue = new Date(b.createdAt).getTime()
+          break
+        case "expiresAt":
+          aValue = new Date(a.expiresAt).getTime()
+          bValue = new Date(b.expiresAt).getTime()
+          break
+        default:
+          return 0
+      }
+      
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        const comparison = aValue.localeCompare(bValue, 'en', { sensitivity: 'base' })
+        return sortOrder === "asc" ? comparison : -comparison
+      } else {
+        const comparison = aValue - bValue
+        return sortOrder === "asc" ? comparison : -comparison
+      }
+    })
+    
+    return filtered
+  }, [instances, usernameFilter, challengeFilter, categoryFilter, statusFilter, sortBy, sortOrder])
+  
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(field)
+      setSortOrder("asc")
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString()
+  }
+
+  const getTimeRemaining = (expiresAt: string) => {
+    const now = new Date()
+    const expires = new Date(expiresAt)
+    const timeLeft = Math.max(0, Math.floor((expires.getTime() - now.getTime()) / 1000 / 60))
+    return timeLeft
+  }
+
+  const columns: ColumnDef<Instance>[] = [
+    {
+      accessorKey: "username",
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("username")}
+        >
+          {t("user.user")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ getValue, row }) => (
+        <div className="min-w-[120px]">
+          <div className="font-medium">{getValue() as string}</div>
+          {row.original.teamName && (
+            <div className="text-xs text-muted-foreground">{row.original.teamName}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "challengeName",
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("challengeName")}
+        >
+          {t("challenge.challenge")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ getValue, row }) => (
+        <div className="min-w-[150px]">
+          <div className="font-medium">{getValue() as string}</div>
+          <Badge variant="outline" className="text-xs mt-1">
+            {row.original.category}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("status")}
+        >
+          {t("status")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ getValue }) => {
+        const status = getValue() as string
+        return (
+          <Badge 
+            variant={status === "running" ? "default" : "secondary"}
+            className={cn("min-w-[80px] justify-center")}
+          >
+            {status}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("createdAt")}
+        >
+          {t("dashboard.started")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ getValue }) => (
+        <span className="block min-w-[140px] text-sm text-muted-foreground">
+          {formatDate(getValue() as string)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "expiresAt",
+      header: () => (
+        <Button
+          variant="ghost"
+          className="h-auto p-0 font-semibold hover:bg-transparent"
+          onClick={() => handleSort("expiresAt")}
+        >
+          {t("time_remaining")}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ getValue, row }) => {
+        const timeLeft = getTimeRemaining(getValue() as string)
+        const isExpiringSoon = timeLeft <= 5
+        return (
+          <Badge 
+            variant={isExpiringSoon ? "destructive" : "outline"}
+            className="min-w-[60px] justify-center"
+          >
+            {timeLeft}m
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "container",
+      header: () => (
+        <div className="font-semibold">
+          {t("container_id")}
+        </div>
+      ),
+      cell: ({ getValue }) => (
+        <span className="block min-w-[120px] font-mono text-xs text-muted-foreground truncate">
+          {(getValue() as string).substring(0, 12)}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: t("actions"),
+      cell: ({ row }) => (
+        <div className="flex gap-1">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setDeleting(row.original)}
+          >
+            {t("stop")}
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
+  const handleDelete = async () => {
+    if (!deleting) return
+    try {
+      await axios.delete(`/api/admin/instances/${deleting.id}`)
+      setDeleting(null)
+      toast.success(t("instance_stopped_success"))
+      onRefresh()
+    } catch (err: any) {
+      console.error("Failed to stop instance:", err)
+      toast.error(t("instance_stop_failed"))
+      setDeleting(null)
+    }
+  }
+
+  const doDeleteSelected = async () => {
+    const ids = Object.keys(rowSelection).map((key) => filteredInstances[Number.parseInt(key, 10)].id)
+    try {
+      await Promise.all(ids.map((id) => axios.delete(`/api/admin/instances/${id}`)))
+      setRowSelection({})
+      setConfirmMassDelete(false)
+      toast.success(t("instances_stopped_success"))
+      onRefresh()
+    } catch (err: any) {
+      console.error("Failed to stop instances:", err)
+      toast.error(t("instances_stop_failed"))
+      setConfirmMassDelete(false)
+    }
+  }
+
+  return (
+    <>
+      <Head>
+        <title>{getSiteName()} - {t("instances")}</title>
+      </Head>
+      <div className="bg-muted min-h-screen p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Server className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">{t("instances")}</h1>
+              <p className="text-sm text-muted-foreground">
+                {filteredInstances.length} {t("active_instances")}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                "flex items-center gap-2 h-9",
+                Object.keys(rowSelection).length === 0 && "invisible"
+              )}
+            >
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setConfirmMassDelete(true)}
+              >
+                {t("stop_selected")}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-4 flex flex-wrap gap-2 items-end bg-card p-4 rounded-lg border">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("user.user")}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_user")}
+                value={usernameFilter}
+                onChange={(e) => setUsernameFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {usernameFilter && (
+                <button
+                  onClick={() => setUsernameFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("challenge.challenge")}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_challenge")}
+                value={challengeFilter}
+                onChange={(e) => setChallengeFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {challengeFilter && (
+                <button
+                  onClick={() => setChallengeFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[160px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("category")}
+            </label>
+            <div className="relative">
+              <Input
+                placeholder={t("filter_by_category")}
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="pr-8 bg-background"
+              />
+              {categoryFilter && (
+                <button
+                  onClick={() => setCategoryFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-[140px]">
+            <label className="text-sm font-medium mb-1 block">
+              {t("status")}
+            </label>
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
+              >
+                <option value="">{t("all")}</option>
+                <option value="running">{t("running")}</option>
+                <option value="stopped">{t("stopped")}</option>
+              </select>
+            </div>
+          </div>
+
+          {(usernameFilter || challengeFilter || categoryFilter || statusFilter) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setUsernameFilter("")
+                setChallengeFilter("")
+                setCategoryFilter("")
+                setStatusFilter("")
+              }}
+              className="mb-0.5"
+            >
+              {t("clear_filters")}
+            </Button>
+          )}
+        </div>
+
+        {/* Data Table */}
+        <DataTable
+          columns={columns}
+          data={filteredInstances}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deleting} onOpenChange={() => setDeleting(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("confirm_stop_instance")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("confirm_stop_instance_description")}
+                <br />
+                <span className="font-semibold">{deleting?.challengeName}</span> - {deleting?.username}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {t("stop")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Mass Delete Confirmation Dialog */}
+        <AlertDialog open={confirmMassDelete} onOpenChange={setConfirmMassDelete}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("confirm_stop_instances")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("confirm_stop_instances_description", { count: Object.keys(rowSelection).length.toString() })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+              <AlertDialogAction onClick={doDeleteSelected} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {t("stop")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </>
+  )
+}
