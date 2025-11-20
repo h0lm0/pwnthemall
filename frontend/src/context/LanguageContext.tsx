@@ -36,9 +36,6 @@ const LanguageContext = createContext<LanguageContextProps>({
   clearTranslationCache: () => {},
 });
 
-// Translation cache version - increment this when you update translations
-const TRANSLATION_VERSION = '1.0.12';
-
 // Flatten nested object into dot notation keys
 // Supports both nested (auth.login) and flat (login) key access
 // e.g., { auth: { login: "Login" } } -> { "auth.login": "Login", "login": "Login" }
@@ -84,18 +81,23 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // Helper functions for ETag-based caching
+  const getCacheKey = (lang: Language) => `translations_${lang}`;
+  const getETagKey = (lang: Language) => `translations_etag_${lang}`;
+
   // On mount, clear other language caches and load cached translations if available
   useEffect(() => {
     if (globalThis.window !== undefined) {
-      // Clear other language caches on app load (when user logs in)
+      // Clear other language caches on app load
       for (const key of Object.keys(localStorage)) {
-        if (key.startsWith('translations_') && !key.includes(`_${language}_v`)) {
+        if ((key.startsWith('translations_') || key.startsWith('translations_etag_')) && 
+            !key.includes(`_${language}`)) {
           localStorage.removeItem(key);
         }
       }
       
-      // Try to load cached translations
-      const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
+      // Try to load cached translations (will be validated in background)
+      const cacheKey = getCacheKey(language);
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -105,15 +107,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } catch (e) {
           console.error('Failed to parse cached translations:', e);
           localStorage.removeItem(cacheKey);
+          localStorage.removeItem(getETagKey(language));
         }
       }
     }
-  }, [language]); // Re-run when language changes to handle cache invalidation
+  }, [language]);
 
-  const tryLoadCachedTranslations = (cacheKey: string) => {
+  const tryLoadCachedTranslations = (lang: Language) => {
     if (globalThis.window === undefined) return false;
     
-    const cached = localStorage.getItem(cacheKey);
+    const cached = localStorage.getItem(getCacheKey(lang));
     if (!cached) return false;
     
     try {
@@ -124,26 +127,55 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return true;
     } catch (e) {
       console.error('Failed to parse cached translations:', e);
-      localStorage.removeItem(cacheKey);
+      localStorage.removeItem(getCacheKey(lang));
+      localStorage.removeItem(getETagKey(lang));
       return false;
     }
   };
 
-  const cleanupOldCaches = (cacheKey: string) => {
+  const cacheTranslations = (lang: Language, data: Record<string, string>, etag: string | null) => {
     if (globalThis.window === undefined) return;
     
-    for (const key of Object.keys(localStorage)) {
-      if (key.startsWith(`translations_${language}_v`) && key !== cacheKey) {
-        localStorage.removeItem(key);
-      }
+    localStorage.setItem(getCacheKey(lang), JSON.stringify(data));
+    if (etag) {
+      localStorage.setItem(getETagKey(lang), etag);
     }
   };
 
-  const cacheTranslations = (data: Record<string, string>) => {
+  const validateCache = async (lang: Language) => {
+    // Perform background validation using HEAD request for efficiency
     if (globalThis.window === undefined) return;
     
-    const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
-    localStorage.setItem(cacheKey, JSON.stringify(data));
+    const cachedETag = localStorage.getItem(getETagKey(lang));
+    if (!cachedETag) return; // No ETag stored, skip validation
+    
+    try {
+      // Use HEAD request to check ETag without downloading full file
+      const res = await fetch(`/locales/${lang}.json`, { 
+        method: 'HEAD',
+        cache: 'no-cache' // Force fresh ETag check
+      });
+      
+      const serverETag = res.headers.get('etag');
+      
+      // If ETags don't match, fetch and update cache
+      if (serverETag && serverETag !== cachedETag) {
+        const dataRes = await fetch(`/locales/${lang}.json`, { cache: 'no-cache' });
+        if (dataRes.ok) {
+          const data = await dataRes.json();
+          const flattenedData = flattenTranslations(data);
+          
+          // Update cache and state
+          cacheTranslations(lang, flattenedData, serverETag);
+          if (lang === language) {
+            setTranslations(flattenedData);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Cache validation failed:', error);
+      // Silently fail - keep using cached version
+    }
   };
 
   const handleLoadingDelay = async () => {
@@ -155,32 +187,36 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const loadTranslations = async () => {
-      const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
+      // Try loading from cache first (stale-while-revalidate pattern)
+      const hasCached = tryLoadCachedTranslations(language);
       
-      if (tryLoadCachedTranslations(cacheKey)) {
-        return;
-      }
-      
-      cleanupOldCaches(cacheKey);
-      setIsLoaded(false);
-      
-      try {
-        const res = await fetch(`/locales/${language}.json`);
-        if (!res.ok) {
-          throw new Error(`Failed to load translations: ${res.status}`);
-        }
-        const data = await res.json();
-        const flattenedData = flattenTranslations(data);
+      if (!hasCached) {
+        // No cache - fetch fresh data
+        setIsLoaded(false);
         
-        setTranslations(flattenedData);
-        cacheTranslations(flattenedData);
-        await handleLoadingDelay();
-        setIsLoaded(true);
-      } catch (error) {
-        console.error('Failed to load translations:', error);
-        setTranslations({});
-        await handleLoadingDelay();
-        setIsLoaded(true);
+        try {
+          const res = await fetch(`/locales/${language}.json`, { cache: 'no-cache' });
+          if (!res.ok) {
+            throw new Error(`Failed to load translations: ${res.status}`);
+          }
+          
+          const etag = res.headers.get('etag');
+          const data = await res.json();
+          const flattenedData = flattenTranslations(data);
+          
+          setTranslations(flattenedData);
+          cacheTranslations(language, flattenedData, etag);
+          await handleLoadingDelay();
+          setIsLoaded(true);
+        } catch (error) {
+          console.error('Failed to load translations:', error);
+          setTranslations({});
+          await handleLoadingDelay();
+          setIsLoaded(true);
+        }
+      } else {
+        // We have cache - serve immediately and validate in background
+        validateCache(language);
       }
     };
     
@@ -193,7 +229,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem('language', lang);
       // Clear other language caches when switching languages
       for (const key of Object.keys(localStorage)) {
-        if (key.startsWith('translations_') && !key.includes(`_${lang}_v`)) {
+        if ((key.startsWith('translations_') || key.startsWith('translations_etag_')) && 
+            !key.includes(`_${lang}`)) {
           localStorage.removeItem(key);
         }
       }
