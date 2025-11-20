@@ -1,13 +1,11 @@
 import Head from "next/head"
 import { useState, useMemo } from "react"
-import { ColumnDef } from "@tanstack/react-table"
-import { DataTable } from "@/components/ui/data-table"
 import { useLanguage } from "@/context/LanguageContext"
 import { useSiteConfig } from "@/context/SiteConfigContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { X } from "lucide-react"
+import { X, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react"
 
 interface Submission {
   id: number
@@ -26,8 +24,8 @@ interface Submission {
 }
 
 interface SubmissionsContentProps {
-  submissions: Submission[]
-  onRefresh: () => void
+  readonly submissions: Submission[]
+  readonly onRefresh: () => void
 }
 
 export default function SubmissionsContent({ submissions, onRefresh }: SubmissionsContentProps) {
@@ -54,73 +52,36 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
     })
   }, [submissions, userFilter, teamFilter, challengeFilter])
 
-  const columns: ColumnDef<Submission>[] = [
-    {
-      accessorKey: "user.username",
-      header: t("username") || "User",
-      cell: ({ row }) => (
-        <span className="block min-w-[120px] truncate">
-          {row.original.user?.username || "-"}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "user.team.name",
-      header: t("team") || "Team",
-      cell: ({ row }) => (
-        <span className="block min-w-[120px] truncate">
-          {row.original.user?.team?.name || "-"}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "challenge.name",
-      header: t("challenge.challenge") || t("challenge") || "Challenge",
-      cell: ({ row }) => (
-        <span className="block min-w-[150px] truncate">
-          {row.original.challenge?.name || "-"}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "value",
-      header: t("value") || "Value",
-      cell: ({ getValue }) => (
-        <span className="block min-w-[200px] font-mono truncate max-w-[300px]">
-          {getValue() as string}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "isCorrect",
-      header: t("dashboard.result") || "Result",
-      cell: ({ row }) => (
-        <Badge variant={row.original.isCorrect ? "default" : "destructive"} className="text-xs">
-          {row.original.isCorrect ? t("dashboard.correct") || "Correct" : t("dashboard.incorrect") || "Incorrect"}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: "createdAt",
-      header: t("time") || "Time",
-      cell: ({ getValue }) => {
-        const date = new Date(getValue() as string)
-        return (
-          <span className="block min-w-[150px]">
-            {date.toLocaleDateString('fr-FR', {
-              day: '2-digit',
-              month: '2-digit',
-              year: '2-digit'
-            })} {date.toLocaleTimeString('fr-FR', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            })}
-          </span>
-        )
-      },
-    },
-  ]
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageSize = 16
+
+  // Get current page data and pad to 16 rows
+  const paginatedData = useMemo(() => {
+    const start = currentPage * pageSize
+    const end = start + pageSize
+    const pageData = filteredSubmissions.slice(start, end)
+    
+    // Pad with empty rows to always have 16 rows
+    const emptyRowsNeeded = pageSize - pageData.length
+    const emptyRows = new Array(emptyRowsNeeded).fill(null).map((_, i) => ({
+      id: -(start + pageData.length + i + 1),
+      value: "",
+      isCorrect: false,
+      createdAt: "",
+      user: undefined,
+      challenge: undefined,
+    }))
+    
+    return [...pageData, ...emptyRows]
+  }, [filteredSubmissions, currentPage])
+
+  const totalPages = Math.max(1, Math.ceil(filteredSubmissions.length / pageSize))
+
+    // Reset to first page when filters change
+  useMemo(() => {
+    setCurrentPage(0)
+  }, [userFilter, teamFilter, challengeFilter])
 
   const hasActiveFilters = userFilter || teamFilter || challengeFilter
 
@@ -221,11 +182,93 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
           )}
         </div>
 
-        <div className="mb-2 text-sm text-muted-foreground">
-          {t("showing") || "Showing"} {filteredSubmissions.length} {t("of") || "of"} {submissions?.length || 0} {t("admin.submissions")?.toLowerCase() || "submissions"}
+        <div className="bg-background rounded-md border">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm table-fixed">
+              <thead className="border-b">
+                <tr>
+                  <th className="w-[180px] px-3 py-1.5 text-left font-medium align-middle">{t("username") || "User"}</th>
+                  <th className="w-[180px] px-3 py-1.5 text-left font-medium align-middle">{t("team") || "Team"}</th>
+                  <th className="w-[220px] px-3 py-1.5 text-left font-medium align-middle">{t("challenge.challenge") || "Challenge"}</th>
+                  <th className="w-[150px] px-3 py-1.5 text-left font-medium align-middle">{t("value") || "Value"}</th>
+                  <th className="w-[100px] px-3 py-1.5 text-left font-medium align-middle">{t("result") || "Result"}</th>
+                  <th className="w-[170px] px-3 py-1.5 text-left font-medium align-middle">{t("time") || "Time"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.map((submission) => (
+                  <tr key={submission.id} className="border-b last:border-b-0">
+                    <td className="w-[180px] px-3 py-2 align-middle truncate">
+                      {submission.id >= 0 ? submission.user?.username || "-" : ""}
+                    </td>
+                    <td className="w-[180px] px-3 py-2 align-middle truncate">
+                      {submission.id >= 0 ? submission.user?.team?.name || "-" : ""}
+                    </td>
+                    <td className="w-[220px] px-3 py-2 align-middle truncate">
+                      {submission.id >= 0 ? submission.challenge?.name || "-" : ""}
+                    </td>
+                    <td className="w-[150px] px-3 py-2 align-middle font-mono text-muted-foreground truncate">
+                      {submission.id >= 0 ? submission.value || "-" : ""}
+                    </td>
+                    <td className="w-[100px] px-3 py-2 align-middle">
+                      {submission.id >= 0 && (
+                        <Badge variant={submission.isCorrect ? "default" : "destructive"} className="text-xs">
+                          {submission.isCorrect ? (t("dashboard.correct") || "Correct") : (t("dashboard.incorrect") || "Incorrect")}
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="w-[170px] px-3 py-2 align-middle text-muted-foreground">
+                      {submission.id >= 0 ? (
+                        new Date(submission.createdAt).toLocaleString()
+                      ) : ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Fixed Pagination */}
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage + 1} of {totalPages}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(0)}
+                disabled={currentPage === 0}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={currentPage === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                disabled={currentPage >= totalPages - 1}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={currentPage >= totalPages - 1}
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
-
-        <DataTable columns={columns} data={filteredSubmissions} enablePagination={true} defaultPageSize={15} hidePageSizeSelector={true} />
       </div>
     </>
   )

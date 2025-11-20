@@ -264,8 +264,8 @@ test('Add teams and submissions', async ({ page }) => {
   if (dockerChallenges.length > 0) {
     console.log(`Found ${dockerChallenges.length} docker/compose challenges`);
     
-    // Start instances for 2-3 random teams (to create variety)
-    const teamsForInstances = teams.slice(0, 3);
+    // Start instances for all teams (to create more variety and handle parallel workers)
+    const teamsForInstances = teams;
     
     for (const team of teamsForInstances) {
       const member = team.members[0];
@@ -284,8 +284,8 @@ test('Add teams and submissions', async ({ page }) => {
 
       const cookie = getCookieHeader(loginResp);
       
-      // Select 2 random docker challenges per team
-      const numInstances = Math.min(2, dockerChallenges.length);
+      // Select 3 random docker challenges per team (increased from 2)
+      const numInstances = Math.min(3, dockerChallenges.length);
       const selectedChallenges = [...dockerChallenges]
         .sort(() => Math.random() - 0.5)
         .slice(0, numInstances);
@@ -307,8 +307,9 @@ test('Add teams and submissions', async ({ page }) => {
           } else {
             const errorText = await instanceResp.text();
             if (errorText.includes('already has a running instance') || 
-                errorText.includes('cooldown')) {
-              console.log(`  ⚠ ${challenge.name}: ${errorText}`);
+                errorText.includes('cooldown') ||
+                errorText.includes('instance_already_running')) {
+              console.log(`  ⚠ ${challenge.name}: Already running (skipped)`);
             } else {
               console.log(`  ✗ Failed: ${challenge.name}: ${errorText}`);
             }

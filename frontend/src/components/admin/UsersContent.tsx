@@ -3,11 +3,11 @@ import { useState, useMemo } from "react"
 import axios from "@/lib/axios";
 
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
-import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { X, ArrowUpDown } from "lucide-react"
+import { X, ArrowUpDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Sheet,
   SheetContent,
@@ -117,6 +117,40 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
     
     return filtered
   }, [users, usernameFilter, emailFilter, teamFilter, statusFilter, sortBy, sortOrder])
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageSize = 9
+
+  // Get current page data and pad to 9 rows
+  const paginatedData = useMemo(() => {
+    const start = currentPage * pageSize
+    const end = start + pageSize
+    const pageData = filteredUsers.slice(start, end)
+    
+    // Pad with empty rows to always have 9 rows
+    const emptyRowsNeeded = pageSize - pageData.length
+    const emptyRows = new Array(emptyRowsNeeded).fill(null).map((_, i) => ({
+      id: -(start + pageData.length + i + 1),
+      username: "",
+      email: "",
+      team: null,
+      role: "",
+      banned: false,
+      ipAddresses: [],
+      createdAt: "",
+      updatedAt: "",
+    }))
+    
+    return [...pageData, ...emptyRows]
+  }, [filteredUsers, currentPage])
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize))
+
+  // Reset to first page when filters change
+  useMemo(() => {
+    setCurrentPage(0)
+  }, [usernameFilter, emailFilter, teamFilter, statusFilter])
   
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -140,11 +174,14 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ getValue }) => (
-        <span className="block min-w-[120px] truncate">
-          {getValue() as string}
-        </span>
-      ),
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[120px] h-[52px]">&nbsp;</div>
+        return (
+          <span className="block w-[120px] h-[52px] truncate flex items-center" title={getValue() as string}>
+            {getValue() as string}
+          </span>
+        )
+      },
     },
     {
       accessorKey: "email",
@@ -158,11 +195,14 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ getValue }) => (
-        <span className="block min-w-[150px] truncate">
-          {getValue() as string}
-        </span>
-      ),
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[150px] h-[52px]">&nbsp;</div>
+        return (
+          <span className="block w-[150px] h-[52px] truncate flex items-center" title={getValue() as string}>
+            {getValue() as string}
+          </span>
+        )
+      },
     },
     {
       accessorKey: "team",
@@ -177,9 +217,10 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         </Button>
       ),
       cell: ({ row }) => {
+        if (row.original.id < 0) return <div className="w-[100px] h-[52px]">&nbsp;</div>
         const team = row.original.team;
         return (
-          <span className="block min-w-[100px] truncate">
+          <span className="block w-[100px] h-[52px] truncate flex items-center" title={team ? team.name : "N/A"}>
             {team ? team.name : "N/A"}
           </span>
         );
@@ -189,16 +230,17 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
       accessorKey: "ipAddresses",
       header: "IP Addresses",
       cell: ({ row }) => {
+        if (row.original.id < 0) return <div className="w-[120px] h-[52px]">&nbsp;</div>
         const ipAddresses = row.original.ipAddresses;
         if (!ipAddresses || ipAddresses.length === 0) {
-          return <span className="text-muted-foreground">-</span>;
+          return <div className="w-[120px] h-[52px] flex items-center"><span className="text-muted-foreground">-</span></div>;
         }
         
         const displayIPs = ipAddresses.slice(0, 2); // Show first 2 IPs
         const remainingCount = ipAddresses.length - displayIPs.length;
         
         return (
-          <div className="min-w-[120px]">
+          <div className="w-[120px] h-[52px] flex items-center">
             <div className="flex flex-wrap gap-1">
               {displayIPs.map((ip, index) => (
                 <span 
@@ -234,11 +276,14 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ getValue }) => (
-        <span className="block min-w-[80px]">
-          {getValue() as string}
-        </span>
-      ),
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[80px] h-[52px]">&nbsp;</div>
+        return (
+          <span className="block w-[80px] h-[52px] flex items-center">
+            {getValue() as string}
+          </span>
+        )
+      },
     },
     {
       accessorKey: "banned",
@@ -252,43 +297,49 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ getValue }) => {
+      cell: ({ getValue, row }) => {
+        if (row.original.id < 0) return <div className="w-[60px] h-[52px]">&nbsp;</div>
         const isBanned = getValue() as boolean
         return (
-          <span className={cn("font-semibold min-w-[60px] block", isBanned ? "text-red-600" : "text-green-600")}>
-            {isBanned ? t("yes") : t("no")}
-          </span>
+          <div className="w-[60px] h-[52px] flex items-center">
+            <span className={cn("font-semibold", isBanned ? "text-red-600" : "text-green-600")}>
+              {isBanned ? t("yes") : t("no")}
+            </span>
+          </div>
         )
       },
     },
     {
       id: "actions",
       header: t("actions"),
-      cell: ({ row }) => (
-        <div className="flex gap-1 flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditingUser(row.original)}
-          >
-            {t("edit")}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setTempBanning(row.original)}
-          >
-            {row.original.banned ? t("unban") : t("temp_ban")}
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setDeleting(row.original)}
-          >
-            {t("delete")}
-          </Button>
-        </div>
-      ),
+      cell: ({ row }) => {
+        if (row.original.id < 0) return <div className="w-[240px] h-[52px]">&nbsp;</div>
+        return (
+          <div className="flex gap-1 flex-wrap w-[240px] h-[52px] items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditingUser(row.original)}
+            >
+              {t("edit")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTempBanning(row.original)}
+            >
+              {row.original.banned ? t("unban") : t("temp_ban")}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleting(row.original)}
+            >
+              {t("delete")}
+            </Button>
+          </div>
+        )
+      },
     },
   ]
 
@@ -357,7 +408,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doDeleteSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)].id)
+    const ids = Object.keys(rowSelection)
+      .map((key) => filteredUsers[Number.parseInt(key, 10)].id)
+      .filter((id) => id >= 0) // Filter out empty placeholder rows
     await Promise.all(ids.map((id) => axios.delete(`/api/users/${id}`)))
     setRowSelection({})
     setConfirmMassDelete(false)
@@ -366,7 +419,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
   }
 
   const doTempBanSelected = async () => {
-    const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
+    const selectedUsers = Object.keys(rowSelection)
+      .map((key) => filteredUsers[Number.parseInt(key, 10)])
+      .filter((user) => user.id >= 0) // Filter out empty placeholder rows
     const ids = selectedUsers.map(user => user.id)
     const bannedCount = selectedUsers.filter(user => user.banned).length
     const unbannedCount = selectedUsers.length - bannedCount
@@ -427,7 +482,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
                 onClick={() => setConfirmMassBan(true)}
               >
                 {(() => {
-                  const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
+                  const selectedUsers = Object.keys(rowSelection)
+                    .map((key) => filteredUsers[Number.parseInt(key, 10)])
+                    .filter(user => user.id >= 0)
                   const bannedCount = selectedUsers.filter(user => user.banned).length
                   const unbannedCount = selectedUsers.length - bannedCount
                   return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
@@ -553,20 +610,109 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           )}
         </div>
 
-        <div className="mb-2 text-sm text-muted-foreground">
-          {t("showing") || "Showing"} {filteredUsers.length} {t("of") || "of"} {users.length} {t("users")?.toLowerCase() || "users"}
+        {/* Data Table */}
+        <div className="bg-background rounded-md border">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b">
+                <tr>
+                  <th className="w-[48px] px-3 py-1.5 align-middle text-center">
+                    {/* Select all checkbox disabled - select individual rows only */}
+                  </th>
+                  {columns.map((column) => (
+                    <th key={column.id || (column as any).accessorKey} className="px-3 py-1.5 text-left font-medium align-middle">
+                      {typeof column.header === 'function' ? column.header({} as any) : column.header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.map((row) => {
+                  const rowIndex = filteredUsers.findIndex(fu => fu.id === row.id)
+                  const isSelected = rowIndex >= 0 && rowSelection[rowIndex]
+                  return (
+                    <tr key={row.id} className="border-b last:border-b-0">
+                      <td className="w-[48px] px-3 py-2 align-middle text-center">
+                        {row.id >= 0 ? (
+                          <Checkbox
+                            aria-label="Select row"
+                            checked={isSelected || false}
+                            onCheckedChange={(value) => {
+                              const newSelection = { ...rowSelection }
+                              if (value) {
+                                newSelection[rowIndex] = true
+                              } else {
+                                delete newSelection[rowIndex]
+                              }
+                              setRowSelection(newSelection)
+                            }}
+                          />
+                        ) : (
+                          <div className="h-5">&nbsp;</div>
+                        )}
+                      </td>
+                      {columns.map((column) => {
+                        const cellKey = column.id || (column as any).accessorKey
+                        const cellContent = typeof column.cell === 'function' 
+                          ? column.cell({ 
+                              row: { original: row } as any, 
+                              getValue: () => (row as any)[(column as any).accessorKey || ''] 
+                            } as any)
+                          : null
+                        return (
+                          <td key={cellKey} className="px-3 py-2 align-middle">
+                            {cellContent}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Fixed Pagination */}
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage + 1} of {totalPages}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(0)}
+                disabled={currentPage === 0}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={currentPage === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                disabled={currentPage >= totalPages - 1}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={currentPage >= totalPages - 1}
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
-
-        <DataTable
-          columns={columns}
-          data={filteredUsers}
-          enableRowSelection
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          enablePagination={true}
-          defaultPageSize={12}
-          hidePageSizeSelector={true}
-        />
       </div>
 
       {/* Edit Sheet */}
@@ -654,7 +800,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection)
+                  .map((key) => filteredUsers[Number.parseInt(key, 10)])
+                  .filter(user => user.id >= 0)
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban_users") : t("temp_ban_users")
@@ -662,7 +810,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection)
+                  .map((key) => filteredUsers[Number.parseInt(key, 10)])
+                  .filter(user => user.id >= 0)
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban_users_confirm") : t("temp_ban_users_confirm")
@@ -673,7 +823,9 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={doTempBanSelected}>
               {(() => {
-                const selectedUsers = Object.keys(rowSelection).map((key) => filteredUsers[Number.parseInt(key, 10)])
+                const selectedUsers = Object.keys(rowSelection)
+                  .map((key) => filteredUsers[Number.parseInt(key, 10)])
+                  .filter(user => user.id >= 0)
                 const bannedCount = selectedUsers.filter(user => user.banned).length
                 const unbannedCount = selectedUsers.length - bannedCount
                 return bannedCount > unbannedCount ? t("unban") : t("temp_ban")

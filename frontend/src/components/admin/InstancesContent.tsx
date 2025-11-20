@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { X, ArrowUpDown, Server } from "lucide-react"
+import { X, ArrowUpDown, Server, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +53,6 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
   const [usernameFilter, setUsernameFilter] = useState("")
   const [challengeFilter, setChallengeFilter] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
   
   // Sorting state
   const [sortBy, setSortBy] = useState("createdAt")
@@ -72,10 +71,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
       const categoryMatch = !categoryFilter || 
         instance.category?.toLowerCase().includes(categoryFilter.toLowerCase())
       
-      const statusMatch = !statusFilter || 
-        instance.status?.toLowerCase() === statusFilter.toLowerCase()
-      
-      return usernameMatch && challengeMatch && categoryMatch && statusMatch
+      return usernameMatch && challengeMatch && categoryMatch
     })
     
     // Sort instances
@@ -95,17 +91,9 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
           aValue = a.category || ""
           bValue = b.category || ""
           break
-        case "status":
-          aValue = a.status || ""
-          bValue = b.status || ""
-          break
         case "createdAt":
           aValue = new Date(a.createdAt).getTime()
           bValue = new Date(b.createdAt).getTime()
-          break
-        case "expiresAt":
-          aValue = new Date(a.expiresAt).getTime()
-          bValue = new Date(b.expiresAt).getTime()
           break
         default:
           return 0
@@ -121,19 +109,19 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
     })
     
     return filtered
-  }, [instances, usernameFilter, challengeFilter, categoryFilter, statusFilter, sortBy, sortOrder])
+  }, [instances, usernameFilter, challengeFilter, categoryFilter, sortBy, sortOrder])
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0)
-  const pageSize = 10
+  const pageSize = 9
 
-  // Get current page data and pad to 10 rows
+  // Get current page data and pad to 9 rows
   const paginatedData = useMemo(() => {
     const start = currentPage * pageSize
     const end = start + pageSize
     const pageData = filteredInstances.slice(start, end)
     
-    // Pad with empty rows to always have 10 rows
+    // Pad with empty rows to always have 9 rows
     const emptyRowsNeeded = pageSize - pageData.length
     const emptyRows = new Array(emptyRowsNeeded).fill(null).map((_, i) => ({
       id: -(start + pageData.length + i + 1),
@@ -158,7 +146,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
   // Reset to first page when filters change
   useMemo(() => {
     setCurrentPage(0)
-  }, [usernameFilter, challengeFilter, categoryFilter, statusFilter])
+  }, [usernameFilter, challengeFilter, categoryFilter])
   
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -236,33 +224,6 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
       },
     },
     {
-      accessorKey: "status",
-      header: () => (
-        <Button
-          variant="ghost"
-          className="h-auto p-0 font-semibold hover:bg-transparent"
-          onClick={() => handleSort("status")}
-        >
-          {t("status")}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ getValue, row }) => {
-        if (row.original.id < 0) return <div className="w-[80px] h-[52px]">&nbsp;</div>
-        const status = getValue() as string
-        return (
-          <div className="h-[52px] flex items-center">
-            <Badge 
-              variant={status === "running" ? "default" : "secondary"}
-              className={cn("w-[80px] justify-center")}
-            >
-              {status}
-            </Badge>
-          </div>
-        )
-      },
-    },
-    {
       accessorKey: "createdAt",
       header: () => (
         <Button
@@ -278,8 +239,8 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
         if (row.original.id < 0) return <div className="w-[150px] h-[52px]">&nbsp;</div>
         const dateStr = formatDate(getValue() as string)
         return (
-          <span className="block w-[150px] h-[52px] text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap flex items-center" title={dateStr}>
-            {dateStr.length > 18 ? dateStr.substring(0, 16) + '..' : dateStr}
+          <span className="block w-[150px] h-[52px] text-sm text-muted-foreground flex items-center">
+            {dateStr}
           </span>
         )
       },
@@ -287,24 +248,19 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
     {
       accessorKey: "expiresAt",
       header: () => (
-        <Button
-          variant="ghost"
-          className="h-auto p-0 font-semibold hover:bg-transparent"
-          onClick={() => handleSort("expiresAt")}
-        >
+        <div className="font-semibold">
           {t("time_remaining")}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        </div>
       ),
       cell: ({ getValue, row }) => {
-        if (row.original.id < 0) return <div className="w-[60px] h-[52px]">&nbsp;</div>
+        if (row.original.id < 0) return <div className="w-[100px] h-[52px]">&nbsp;</div>
         const timeLeft = getTimeRemaining(getValue() as string)
         const isExpiringSoon = timeLeft <= 5
         return (
-          <div className="h-[52px] flex items-center">
+          <div className="w-[100px] h-[52px] flex items-center">
             <Badge 
               variant={isExpiringSoon ? "destructive" : "outline"}
-              className="w-[60px] justify-center"
+              className="w-[80px] justify-center"
             >
               {timeLeft}m
             </Badge>
@@ -320,11 +276,11 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
         </div>
       ),
       cell: ({ getValue, row }) => {
-        if (row.original.id < 0) return <div className="w-[110px] h-[52px]">&nbsp;</div>
+        if (row.original.id < 0) return <div className="w-[220px] h-[52px]">&nbsp;</div>
         const containerId = getValue() as string
         return (
-          <span className="block w-[110px] h-[52px] font-mono text-xs text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap flex items-center" title={containerId}>
-            {containerId.length > 12 ? containerId.substring(0, 10) + '..' : containerId}
+          <span className="block w-[220px] h-[52px] font-mono text-xs text-muted-foreground flex items-center">
+            {containerId}
           </span>
         )
       },
@@ -483,24 +439,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
             </div>
           </div>
 
-          <div className="flex-1 min-w-[140px]">
-            <label className="text-sm font-medium mb-1 block">
-              {t("status")}
-            </label>
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm"
-              >
-                <option value="">{t("all")}</option>
-                <option value="running">{t("running")}</option>
-                <option value="stopped">{t("stopped")}</option>
-              </select>
-            </div>
-          </div>
-
-          {(usernameFilter || challengeFilter || categoryFilter || statusFilter) && (
+          {(usernameFilter || challengeFilter || categoryFilter) && (
             <Button
               variant="outline"
               size="sm"
@@ -508,7 +447,6 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
                 setUsernameFilter("")
                 setChallengeFilter("")
                 setCategoryFilter("")
-                setStatusFilter("")
               }}
               className="mb-0.5"
             >
@@ -520,14 +458,17 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
         {/* Data Table */}
         <div className="bg-background rounded-md border">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="border-b">
                 <tr>
-                  {columns.map((column) => (
-                    <th key={column.id || (column as any).accessorKey} className="px-3 py-1.5 text-left font-medium align-middle">
+                  {columns.map((column, idx) => {
+                    const widths = ["w-[140px]", "w-[180px]", "w-[150px]", "w-[100px]", "w-[220px]", "w-[80px]"]
+                    return (
+                    <th key={column.id || (column as any).accessorKey} className={`px-3 py-1.5 text-left font-medium align-middle ${widths[idx] || ""}`}>
                       {typeof column.header === 'function' ? column.header({} as any) : column.header}
                     </th>
-                  ))}
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -558,14 +499,14 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
             <div className="text-sm text-muted-foreground">
               Page {currentPage + 1} of {totalPages}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(0)}
                 disabled={currentPage === 0}
               >
-                ««
+                <ChevronsLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -573,7 +514,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
                 onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                 disabled={currentPage === 0}
               >
-                «
+                <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -581,7 +522,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
                 onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
                 disabled={currentPage >= totalPages - 1}
               >
-                »
+                <ChevronRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -589,7 +530,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
                 onClick={() => setCurrentPage(totalPages - 1)}
                 disabled={currentPage >= totalPages - 1}
               >
-                »»
+                <ChevronsRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
