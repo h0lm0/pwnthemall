@@ -3,7 +3,9 @@ package controllers
 import (
 	"time"
 
+	"github.com/jinzhu/copier"
 	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
 	"github.com/pwnthemall/pwnthemall/backend/models"
 	"github.com/pwnthemall/pwnthemall/backend/utils"
 
@@ -127,4 +129,40 @@ func GetSubmissionTrend(c *gin.Context) {
 	}
 
 	utils.OKResponse(c, trends)
+}
+
+func GetRunningInstances(c *gin.Context) {
+	var instances []models.Instance
+	result := config.DB.
+		Preload("User").
+		Preload("Team").
+		Preload("Challenge").
+		Preload("Challenge.ChallengeCategory").
+		Where("status = ?", "running").
+		Order("created_at DESC").
+		Find(&instances)
+
+	if result.Error != nil {
+		utils.InternalServerError(c, result.Error.Error())
+		return
+	}
+
+	var runningInstances []dto.AdminInstanceDTO
+	for _, instance := range instances {
+		var instanceDTO dto.AdminInstanceDTO
+		copier.Copy(&instanceDTO, &instance)
+		
+		// Manually set nested fields that copier can't automatically map
+		instanceDTO.Username = instance.User.Username
+		instanceDTO.TeamName = instance.Team.Name
+		instanceDTO.ChallengeName = instance.Challenge.Name
+		
+		if instance.Challenge.ChallengeCategory != nil {
+			instanceDTO.Category = instance.Challenge.ChallengeCategory.Name
+		}
+		
+		runningInstances = append(runningInstances, instanceDTO)
+	}
+
+	utils.OKResponse(c, runningInstances)
 }

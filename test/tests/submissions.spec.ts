@@ -168,13 +168,22 @@ test('Add teams and submissions', async ({ page }) => {
   });
 
   const challengeCookie = getCookieHeader(challengeLoginResp);
-  const challengesResp = await page.request.get('https://pwnthemall.local/api/challenges', {
-    headers: { 'Cookie': challengeCookie }
-  });
-
+  
+  // Fetch challenges from all categories to get type information
+  const categories = ['pwn', 'web', 'crypto', 'misc', 'forensics', 'rev'];
   let challenges: any[] = [];
-  if (challengesResp.ok()) {
-    challenges = await challengesResp.json();
+  
+  for (const category of categories) {
+    const catResp = await page.request.get(`https://pwnthemall.local/api/challenges/category/${category}`, {
+      headers: { 'Cookie': challengeCookie }
+    });
+    
+    if (catResp.ok()) {
+      const catChallenges = await catResp.json();
+      if (Array.isArray(catChallenges)) {
+        challenges = challenges.concat(catChallenges);
+      }
+    }
   }
 
   await page.request.post('https://pwnthemall.local/api/logout', {
@@ -244,6 +253,85 @@ test('Add teams and submissions', async ({ page }) => {
     await page.request.post('https://pwnthemall.local/api/logout', {
       headers: { 'Cookie': noiseCookie }
     });
+  }
+
+  // Start docker/compose challenge instances for teams
+  console.log('\n=== Starting Docker Challenge Instances ===');
+  const dockerChallenges = challenges.filter((c: any) => 
+    c.type?.name === 'docker' || c.type?.name === 'compose'
+  );
+
+  if (dockerChallenges.length > 0) {
+    console.log(`Found ${dockerChallenges.length} docker/compose challenges`);
+    
+    // Start instances for all teams (to create more variety and handle parallel workers)
+    const teamsForInstances = teams;
+    
+    for (const team of teamsForInstances) {
+      const member = team.members[0];
+      
+      const loginResp = await page.request.post('https://pwnthemall.local/api/login', {
+        data: {
+          username: member.email,
+          password: member.password
+        }
+      });
+
+      if (!loginResp.ok()) {
+        console.log(`Failed to login as ${member.email}, skipping instances`);
+        continue;
+      }
+
+      const cookie = getCookieHeader(loginResp);
+      
+      // Select 3 random docker challenges per team (increased from 2)
+      const numInstances = Math.min(3, dockerChallenges.length);
+      const selectedChallenges = [...dockerChallenges]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, numInstances);
+      
+      console.log(`Starting ${numInstances} instances for team ${team.name}`);
+      
+      for (const challenge of selectedChallenges) {
+        try {
+          const instanceResp = await page.request.post(
+            `https://pwnthemall.local/api/challenges/${challenge.id}/start`,
+            {
+              headers: { 'Cookie': cookie }
+            }
+          );
+
+          if (instanceResp.ok()) {
+            const instanceData = await instanceResp.json();
+            console.log(`  ✓ Started instance: ${challenge.name} (ID: ${instanceData.id || 'N/A'})`);
+          } else {
+            const errorText = await instanceResp.text();
+            if (errorText.includes('already has a running instance') || 
+                errorText.includes('cooldown') ||
+                errorText.includes('instance_already_running')) {
+              console.log(`  ⚠ ${challenge.name}: Already running (skipped)`);
+            } else {
+              console.log(`  ✗ Failed: ${challenge.name}: ${errorText}`);
+            }
+          }
+          
+          await page.waitForTimeout(1000);
+          
+        } catch (err) {
+          console.log(`  ✗ Error starting ${challenge.name}:`, err);
+        }
+      }
+      
+      await page.request.post('https://pwnthemall.local/api/logout', {
+        headers: { 'Cookie': cookie }
+      });
+      
+      await page.waitForTimeout(1500);
+    }
+    
+    console.log('Finished starting docker challenge instances\n');
+  } else {
+    console.log('No docker/compose challenges found, skipping instance creation\n');
   }
 
 });

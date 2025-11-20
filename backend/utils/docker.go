@@ -270,11 +270,11 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 		"Started container %s for team %d user %d on host ports %v mapping to internal %v",
 		containerName, teamId, userId, hostPorts, internalPorts,
 	)
-	return resp.ID, nil
+	return containerName, nil
 }
 
-func StopDockerInstance(containerID string) error {
-	debug.Log("Attempting to stop Docker container: %s", containerID)
+func StopDockerInstance(containerName string) error {
+	debug.Log("Attempting to stop Docker container: %s", containerName)
 
 	if err := EnsureDockerClientConnected(); err != nil {
 		debug.Log("Docker client connection failed: %v", err)
@@ -283,18 +283,18 @@ func StopDockerInstance(containerID string) error {
 
 	ctx := context.Background()
 
-	if containerID == "" {
-		debug.Println("containerID invalid, nothing to stop")
+	if containerName == "" {
+		debug.Println("containerName invalid, nothing to stop")
 		return nil
 	}
 
-	debug.Log("Removing container %s with force", containerID)
-	if err := config.DockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
-		debug.Log("Failed to remove container %s: %v", containerID, err)
-		return fmt.Errorf("failed to remove container %s: %w", containerID, err)
+	debug.Log("Removing container %s with force", containerName)
+	if err := config.DockerClient.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true}); err != nil {
+		debug.Log("Failed to remove container %s: %v", containerName, err)
+		return fmt.Errorf("failed to remove container %s: %w", containerName, err)
 	}
 
-	debug.Log("Successfully stopped and removed container %s", containerID)
+	debug.Log("Successfully stopped and removed container %s", containerName)
 	return nil
 }
 

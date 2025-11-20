@@ -137,14 +137,14 @@ func calculateInstanceExpiration(dockerConfig models.DockerConfig) time.Time {
 }
 
 // createInstanceRecord creates database record for new instance
-func createInstanceRecord(containerID string, user models.User, challenge models.Challenge, ports []int, expiresAt time.Time) (*models.Instance, error) {
+func createInstanceRecord(containerName string, user models.User, challenge models.Challenge, ports []int, expiresAt time.Time) (*models.Instance, error) {
 	ports64 := make(pq.Int64Array, len(ports))
 	for i, p := range ports {
 		ports64[i] = int64(p)
 	}
 
 	instance := models.Instance{
-		Container:   containerID,
+		Container:   containerName,
 		UserID:      user.ID,
 		TeamID:      *user.TeamID,
 		ChallengeID: challenge.ID,
@@ -488,7 +488,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 	}
 
 	// Start container
-	containerID, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, ports)
+	containerName, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, ports)
 	if err != nil {
 		debug.Log("Error starting Docker instance: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -497,7 +497,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 
 	// Calculate expiration and create instance record
 	expiresAt := calculateInstanceExpiration(dockerConfig)
-	instance, err := createInstanceRecord(containerID, user, challenge, ports, expiresAt)
+	instance, err := createInstanceRecord(containerName, user, challenge, ports, expiresAt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "instance_create_failed"})
 		return
@@ -509,7 +509,7 @@ func StartDockerChallengeInstance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":         "instance_started",
 		"image_name":     imageName,
-		"container_name": containerID,
+		"container_name": containerName,
 		"expires_at":     expiresAt,
 		"ports":          ports,
 	})

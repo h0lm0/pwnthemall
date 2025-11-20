@@ -247,13 +247,14 @@
   "instance_actions": {
     "instance_cooldown_wait": "Veuillez patienter avant de démarrer une autre instance. Période de refroidissement active.",
     "instance_stopped_success": "Instance arrêtée avec succès",
+    "instance_create_failed": "Échec de la création de l'instance",
     "kill_instance": "Tuer l'instance",
     "restart_instance": "Redémarrer l'instance",
     "running": "En cours",
     "start_instance": "Démarrer l'instance",
     "starting": "Démarrage...",
     "stop_instance": "Arrêter l'instance",
-    "stopped": "Arrêtée",
+    "stopped": "Arrêté",
     "stopping": "Arrêt..."
   },
   "messages": {
@@ -273,7 +274,8 @@
     "to": "à",
     "of": "sur",
     "previous": "Précédent",
-    "next": "Suivant"
+    "next": "Suivant",
+    "and": "et"
   },
   "misc": {
     "create_account": "Créez un nouveau compte pour continuer",
@@ -464,6 +466,12 @@
     "submission_trend": "Tendance des soumissions",
     "challenge_categories": "Catégories de défis",
     "running_instances": "Instances actives",
+    "currently_running_challenges": "Défis Actuellement en Cours",
+    "active_instances": "instances actives",
+    "no_running_instances": "Aucune instance en cours pour le moment",
+    "started": "Démarré",
+    "expires": "Expire",
+    "more_instances": "instances supplémentaires",
     "no_recent_submissions": "Aucune soumission récente",
     "last_7_days": "7 derniers jours",
     "last_48_hours": "48 dernières heures",
@@ -483,5 +491,22 @@
     "active": "Actifs",
     "banned": "Bannis",
     "submissions_over_time": "Soumissions au fil du temps"
-  }
+  },
+  "instances": "Instances",
+  "instance_stopped_success": "Instance arrêtée avec succès !",
+  "instance_stop_failed": "Échec de l'arrêt de l'instance",
+  "instances_stopped_success": "Instances sélectionnées arrêtées avec succès !",
+  "instances_stop_failed": "Échec de l'arrêt des instances sélectionnées",
+  "confirm_stop_instance": "Confirmer l'arrêt de l'instance",
+  "confirm_stop_instance_description": "Êtes-vous sûr de vouloir arrêter cette instance ? Cette action est irréversible.",
+  "confirm_stop_instances": "Confirmer l'arrêt des instances",
+  "confirm_stop_instances_description": "Êtes-vous sûr de vouloir arrêter {count} instances sélectionnées ? Cette action est irréversible.",
+  "stop_selected": "Arrêter la sélection",
+  "stop": "Arrêter",
+  "running": "En cours",
+  "stopped": "Arrêté",
+  "time_remaining": "Temps restant",
+  "container_id": "ID du conteneur",
+  "filter_by_challenge": "Filtrer par défi...",
+  "filter_by_category": "Filtrer par catégorie..."
 }
