@@ -247,13 +247,14 @@
   "instance_actions": {
     "instance_cooldown_wait": "Veuillez patienter avant de démarrer une autre instance. Période de refroidissement active.",
     "instance_stopped_success": "Instance arrêtée avec succès",
+    "instance_create_failed": "Échec de la création de l'instance",
     "kill_instance": "Tuer l'instance",
     "restart_instance": "Redémarrer l'instance",
     "running": "En cours",
     "start_instance": "Démarrer l'instance",
     "starting": "Démarrage...",
     "stop_instance": "Arrêter l'instance",
-    "stopped": "Arrêtée",
+    "stopped": "Arrêté",
     "stopping": "Arrêt..."
   },
   "messages": {
@@ -273,7 +274,8 @@
     "to": "à",
     "of": "sur",
     "previous": "Précédent",
-    "next": "Suivant"
+    "next": "Suivant",
+    "and": "et"
   },
   "misc": {
     "create_account": "Créez un nouveau compte pour continuer",
@@ -464,6 +466,12 @@
     "submission_trend": "Tendance des soumissions",
     "challenge_categories": "Catégories de défis",
     "running_instances": "Instances actives",
+    "currently_running_challenges": "Défis Actuellement en Cours",
+    "active_instances": "instances actives",
+    "no_running_instances": "Aucune instance en cours pour le moment",
+    "started": "Démarré",
+    "expires": "Expire",
+    "more_instances": "instances supplémentaires",
     "no_recent_submissions": "Aucune soumission récente",
     "last_7_days": "7 derniers jours",
     "last_48_hours": "48 dernières heures",

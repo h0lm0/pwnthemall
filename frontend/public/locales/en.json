@@ -247,6 +247,7 @@
   "instance_actions": {
     "instance_cooldown_wait": "Please wait before starting another instance. Cooldown period active.",
     "instance_stopped_success": "Instance stopped successfully",
+    "instance_create_failed": "Failed to create instance",
     "kill_instance": "Kill Instance",
     "restart_instance": "Restart Instance",
     "running": "Running",
@@ -273,7 +274,8 @@
     "to": "to",
     "of": "of",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "and": "and"
   },
   "misc": {
     "create_account": "Create a new account to continue",
@@ -463,6 +465,12 @@
     "submission_trend": "Submission trend",
     "challenge_categories": "Challenge categories",
     "running_instances": "Running instances",
+    "currently_running_challenges": "Currently Running Challenges",
+    "active_instances": "active instances",
+    "no_running_instances": "No instances running yet",
+    "started": "Started",
+    "expires": "Expires",
+    "more_instances": "more instances",
     "no_recent_submissions": "No recent submissions yet",
     "last_7_days": "Last 7 Days",
     "last_48_hours": "Last 48 Hours",

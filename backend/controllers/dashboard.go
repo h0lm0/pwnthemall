@@ -128,3 +128,57 @@ func GetSubmissionTrend(c *gin.Context) {
 
 	utils.OKResponse(c, trends)
 }
+
+func GetRunningInstances(c *gin.Context) {
+	var instances []models.Instance
+	result := config.DB.
+		Preload("User").
+		Preload("Team").
+		Preload("Challenge").
+		Preload("Challenge.ChallengeCategory").
+		Where("status = ?", "running").
+		Order("created_at DESC").
+		Find(&instances)
+
+	if result.Error != nil {
+		utils.InternalServerError(c, result.Error.Error())
+		return
+	}
+
+	// Transform to a simplified DTO
+	type RunningInstanceDTO struct {
+		ID            uint      `json:"id"`
+		Container     string    `json:"container"`
+		UserID        uint      `json:"userId"`
+		Username      string    `json:"username"`
+		TeamID        uint      `json:"teamId"`
+		TeamName      string    `json:"teamName"`
+		ChallengeID   uint      `json:"challengeId"`
+		ChallengeName string    `json:"challengeName"`
+		Category      string    `json:"category"`
+		CreatedAt     time.Time `json:"createdAt"`
+		ExpiresAt     time.Time `json:"expiresAt"`
+	}
+
+	var runningInstances []RunningInstanceDTO
+	for _, instance := range instances {
+		dto := RunningInstanceDTO{
+			ID:            instance.ID,
+			Container:     instance.Container,
+			UserID:        instance.UserID,
+			Username:      instance.User.Username,
+			TeamID:        instance.TeamID,
+			TeamName:      instance.Team.Name,
+			ChallengeID:   instance.ChallengeID,
+			ChallengeName: instance.Challenge.Name,
+			CreatedAt:     instance.CreatedAt,
+			ExpiresAt:     instance.ExpiresAt,
+		}
+		if instance.Challenge.ChallengeCategory != nil {
+			dto.Category = instance.Challenge.ChallengeCategory.Name
+		}
+		runningInstances = append(runningInstances, dto)
+	}
+
+	utils.OKResponse(c, runningInstances)
+}

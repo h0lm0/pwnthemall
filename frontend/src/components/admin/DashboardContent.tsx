@@ -6,11 +6,11 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Flag, Users, Trophy, CheckCircle, TrendingUp, Server } from "lucide-react";
 import CTFStatusOverview from "./CTFStatusOverview";
 
-interface DashboardContentProps {}
+interface DashboardContentProps { }
 
 interface DashboardStats {
   challenges: {
@@ -67,29 +67,48 @@ interface SubmissionTrend {
   count: number;
 }
 
+interface RunningInstance {
+  id: number;
+  container: string;
+  userId: number;
+  username: string;
+  teamId: number;
+  teamName: string;
+  challengeId: number;
+  challengeName: string;
+  category: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
 export default function DashboardContent() {
   const { getSiteName } = useSiteConfig();
   const { t } = useLanguage();
-  
+
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentSubmissions, setRecentSubmissions] = useState<Submission[]>([]);
   const [submissionTrend, setSubmissionTrend] = useState<SubmissionTrend[]>([]);
+  const [runningInstances, setRunningInstances] = useState<RunningInstance[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const [instancePage, setInstancePage] = useState(1);
+  const itemsPerPage = 13;
+  const instancesPerPage = 5;
 
   useEffect(() => {
     const fetchDashboardData = async (isInitial = false) => {
       try {
-        const [statsRes, submissionsRes, trendRes] = await Promise.all([
+        const [statsRes, submissionsRes, trendRes, instancesRes] = await Promise.all([
           axios.get("/api/admin/dashboard/stats"),
           axios.get("/api/admin/submissions?limit=15"),
           axios.get("/api/admin/dashboard/submission-trend"),
+          axios.get("/api/admin/dashboard/running-instances"),
         ]);
 
         setStats(statsRes.data);
         setRecentSubmissions(Array.isArray(submissionsRes.data) ? submissionsRes.data : []);
         setSubmissionTrend(trendRes.data || []);
+        setRunningInstances(Array.isArray(instancesRes.data) ? instancesRes.data : []);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -108,16 +127,6 @@ export default function DashboardContent() {
 
     return () => clearInterval(interval);
   }, []);
-
-  const difficultyData = stats
-    ? [
-        { name: t("dashboard.intro"), value: stats.challenges.intro, color: "#60a5fa" },
-        { name: t("dashboard.easy"), value: stats.challenges.easy, color: "#22c55e" },
-        { name: t("dashboard.medium"), value: stats.challenges.medium, color: "#f59e0b" },
-        { name: t("dashboard.hard"), value: stats.challenges.hard, color: "#ef4444" },
-        { name: t("dashboard.insane"), value: stats.challenges.insane, color: "#a855f7" },
-      ]
-    : [];
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
@@ -158,7 +167,7 @@ export default function DashboardContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Challenges Card */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-3 px-3">
               <CardTitle className="text-sm font-medium">
                 {t("dashboard.total_challenges")}
               </CardTitle>
@@ -284,53 +293,69 @@ export default function DashboardContent() {
                 {t("dashboard.last_48_hours")} - {recentSubmissions.length} {t("dashboard.total_submissions").toLowerCase()}
               </CardDescription>
             </CardHeader>
-            <CardContent className="px-3 pb-3">
+            <CardContent className="px-3 pb-0">
               {recentSubmissions.length === 0 ? (
                 <div className="text-center py-4 text-muted-foreground text-sm">
                   {t("dashboard.no_recent_submissions")}
                 </div>
               ) : (
                 <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs py-2">{t("user.user")}</TableHead>
-                        <TableHead className="text-xs py-2">{t("team.team")}</TableHead>
-                        <TableHead className="text-xs py-2">{t("challenge.challenge")}</TableHead>
-                        <TableHead className="text-xs py-2">{t("dashboard.result")}</TableHead>
-                        <TableHead className="text-right text-xs py-2">{t("time")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentSubmissions
-                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                        .map((submission) => {
-                          return (
-                            <TableRow key={submission.id}>
-                              <TableCell className="font-medium text-xs py-2">
-                                {submission.user?.username || "Unknown"}
-                              </TableCell>
-                              <TableCell className="text-xs py-2">
-                                {submission.user?.team?.name || "-"}
-                              </TableCell>
-                              <TableCell className="text-xs py-2">
-                                {submission.challenge?.name || "Unknown"}
-                              </TableCell>
-                              <TableCell className="py-2">
-                                <Badge variant={submission.isCorrect ? "default" : "destructive"} className="text-xs py-0">
-                                  {submission.isCorrect ? t("dashboard.correct") : t("dashboard.incorrect")}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right text-xs text-muted-foreground py-2">
-                                {formatDate(submission.createdAt)}
-                              </TableCell>
+                  <div className="min-h-[452px] flex flex-col">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs py-1.5">{t("user.user")}</TableHead>
+                          <TableHead className="text-xs py-1.5">{t("team.team")}</TableHead>
+                          <TableHead className="text-xs py-1.5">{t("challenge.challenge")}</TableHead>
+                          <TableHead className="text-xs py-1.5">{t("dashboard.result")}</TableHead>
+                          <TableHead className="text-right text-xs py-1.5">{t("time")}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentSubmissions
+                          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                          .map((submission) => {
+                            return (
+                              <TableRow key={submission.id}>
+                                <TableCell className="font-medium text-xs py-1.5">
+                                  {submission.user?.username || "Unknown"}
+                                </TableCell>
+                                <TableCell className="text-xs py-1.5">
+                                  {submission.user?.team?.name || "-"}
+                                </TableCell>
+                                <TableCell className="text-xs py-1.5">
+                                  {submission.challenge?.name || "Unknown"}
+                                </TableCell>
+                                <TableCell className="py-1.5">
+                                  <Badge variant={submission.isCorrect ? "default" : "destructive"} className="text-xs py-0">
+                                    {submission.isCorrect ? t("dashboard.correct") : t("dashboard.incorrect")}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right text-xs text-muted-foreground py-1.5">
+                                  {formatDate(submission.createdAt)}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        {(() => {
+                          const currentPageItems = recentSubmissions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).length;
+                          const emptyRows = itemsPerPage - currentPageItems;
+                          return Array.from({ length: emptyRows }).map((_, index) => (
+                            <TableRow key={`empty-row-${currentPage}-${index}`}>
+                              <TableCell className="py-1.5 h-[33px]"></TableCell>
+                              <TableCell className="py-1.5 h-[33px]"></TableCell>
+                              <TableCell className="py-1.5 h-[33px]"></TableCell>
+                              <TableCell className="py-1.5 h-[33px]"></TableCell>
+                              <TableCell className="py-1.5 h-[33px]"></TableCell>
                             </TableRow>
-                          );
-                        })}
-                    </TableBody>
-                  </Table>
+                          ));
+                        })()}
+                      </TableBody>
+                    </Table>
+                    <div className="flex-1"></div>
+                  </div>
                   {recentSubmissions.length > itemsPerPage && (
-                    <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center justify-between mt-[22px] mb-2">
                       <div className="text-xs text-muted-foreground">
                         {t("pagination.showing")} {(currentPage - 1) * itemsPerPage + 1} {t("pagination.to")} {Math.min(currentPage * itemsPerPage, recentSubmissions.length)} {t("pagination.of")} {recentSubmissions.length}
                       </div>
@@ -376,14 +401,14 @@ export default function DashboardContent() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis 
-                        dataKey="date" 
+                      <XAxis
+                        dataKey="date"
                         tickFormatter={formatShortDate}
                         className="text-xs"
                       />
                       <YAxis className="text-xs" />
-                      <Tooltip 
-                        contentStyle={{ 
+                      <Tooltip
+                        contentStyle={{
                           backgroundColor: "hsl(var(--popover))",
                           border: "1px solid hsl(var(--border))",
                           borderRadius: "var(--radius)"
@@ -406,68 +431,97 @@ export default function DashboardContent() {
               </CardContent>
             </Card>
 
-            {/* Difficulty Distribution Chart */}
-            <Card>
-              <CardHeader className="pb-2 pt-3 px-3">
-                <CardTitle className="text-base">{t("dashboard.difficulty_distribution")}</CardTitle>
-                <CardDescription className="text-xs">{t("dashboard.by_difficulty")}</CardDescription>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                {difficultyData.some(d => d.value > 0) ? (
-                  <ResponsiveContainer width="100%" height={160}>
-                    <PieChart>
-                      <Pie
-                        data={difficultyData.filter(d => d.value > 0)}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={45}
-                        outerRadius={65}
-                        paddingAngle={5}
-                        dataKey="value"
-                        label={(entry) => entry.value > 0 ? `${entry.name}: ${entry.value}` : null}
-                      >
-                        {difficultyData.filter(d => d.value > 0).map((entry) => (
-                          <Cell key={entry.name} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: "hsl(var(--popover))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "var(--radius)"
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[160px] flex items-center justify-center text-muted-foreground text-sm">
-                    No challenges yet
+            {/* Running Instances - Compact Version */}
+            {stats && (
+              <Card>
+                <CardHeader className="pb-2 pt-3 px-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Server className="h-4 w-4" />
+                      {t("dashboard.currently_running_challenges")}
+                    </CardTitle>
+                    <Badge
+                      variant="outline"
+                      className={stats.instances.running > 0 ? "text-green-600 border-green-600" : "text-muted-foreground"}
+                    >
+                      {stats.instances.running} / {stats.instances.total}
+                    </Badge>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardHeader>
+                <CardContent className="px-2 pb-2">
+                  {runningInstances.length === 0 ? (
+                    <div className="h-[265] flex items-center justify-center text-muted-foreground text-sm">
+                      {t("dashboard.no_running_instances")}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="h-[234px] flex flex-col justify-between">
+                        {runningInstances.slice((instancePage - 1) * instancesPerPage, instancePage * instancesPerPage).map((instance) => {
+                          const now = new Date();
+                          const expires = new Date(instance.expiresAt);
+                          const timeLeft = Math.max(0, Math.floor((expires.getTime() - now.getTime()) / 1000 / 60));
+                          const isExpiringSoon = timeLeft <= 5;
+
+                          return (
+                            <div key={instance.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50 hover:bg-muted h-[45px]">
+                              <div className="flex-1 min-w-0 space-y-0.5">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-medium text-xs truncate">{instance.challengeName}</span>
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 shrink-0">
+                                    {instance.category}
+                                  </Badge>
+                                </div>
+                                <div className="text-[10px] text-muted-foreground truncate">
+                                  {instance.username} · {instance.teamName}
+                                </div>
+                              </div>
+                              <Badge
+                                variant={isExpiringSoon ? "destructive" : "outline"}
+                                className={`text-[10px] px-1.5 py-0 h-5 ml-2 shrink-0 ${isExpiringSoon ? "" : "text-muted-foreground"}`}
+                              >
+                                {timeLeft}m
+                              </Badge>
+                            </div>
+                          );
+                        })}
+                        {(() => {
+                          const currentPageInstances = runningInstances.slice((instancePage - 1) * instancesPerPage, instancePage * instancesPerPage).length;
+                          const emptyInstances = instancesPerPage - currentPageInstances;
+                          return Array.from({ length: emptyInstances }).map((_, index) => (
+                            <div key={`empty-instance-${instancePage}-${index}`} className="h-[45px]"></div>
+                          ));
+                        })()}
+                      </div>
+                      {runningInstances.length > instancesPerPage && (
+                        <div className="flex items-center justify-between mt-[35px]">
+                          <div className="text-xs text-muted-foreground">
+                            {t("pagination.showing")} {(instancePage - 1) * instancesPerPage + 1} {t("pagination.to")} {Math.min(instancePage * instancesPerPage, runningInstances.length)} {t("pagination.of")} {runningInstances.length}
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => setInstancePage(p => Math.max(1, p - 1))}
+                              disabled={instancePage === 1}
+                              className="px-2 py-1 text-xs border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent"
+                            >
+                              {t("pagination.previous")}
+                            </button>
+                            <button
+                              onClick={() => setInstancePage(p => Math.min(Math.ceil(runningInstances.length / instancesPerPage), p + 1))}
+                              disabled={instancePage >= Math.ceil(runningInstances.length / instancesPerPage)}
+                              className="px-2 py-1 text-xs border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent"
+                            >
+                              {t("pagination.next")}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
-
-        {/* Instances Status (if applicable) */}
-        {stats && stats.instances.total > 0 && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between py-3 px-3">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Server className="h-4 w-4" />
-                  {t("dashboard.running_instances")}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {t("dashboard.total_instances")}: {stats.instances.total}
-                </CardDescription>
-              </div>
-              <div className="text-2xl font-bold">
-                {stats.instances.running}
-              </div>
-            </CardHeader>
-          </Card>
-        )}
       </div>
     </>
   );
