@@ -4,14 +4,10 @@ description: |
 category: "pwn"
 difficulty: "medium"
 type: "standard"
+decay: "Logarithmic - Medium"
 author: "crypto-master"
 hidden: false
 flags:
   - "flag"
-points: 300
+points: 500
 enableFirstBlood: false
-decayFormula:
-  name: "Standard Linear Decay"
-  type: "linear"
-  step: 5
-  minPoints: 50

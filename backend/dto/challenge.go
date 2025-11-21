@@ -63,8 +63,9 @@ type ChallengeWithSolved struct {
 // SolveWithUser represents a solve with user information
 type SolveWithUser struct {
 	models.Solve
-	Username   string             `json:"username"`
-	FirstBlood *models.FirstBlood `json:"firstBlood,omitempty"`
+	Username      string             `json:"username"`
+	FirstBlood    *models.FirstBlood `json:"firstBlood,omitempty"`
+	CurrentPoints int                `json:"currentPoints"` // Current decayed points of the challenge
 }
 
 // TeamSolveEvent represents a team solve WebSocket event

@@ -4,11 +4,12 @@ description: |
 category: "pwn"
 difficulty: "medium"
 type: "standard"
+decay: "Logarithmic - Medium"
 author: "crypto-master"
 hidden: false
 flags:
   - "flag"
-points: 300
+points: 500
 enableFirstBlood: true
 firstBlood:
   bonuses: [200]

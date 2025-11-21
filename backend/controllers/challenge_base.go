@@ -142,11 +142,18 @@ func buildChallengeWithSolved(challenge models.Challenge, solvedChallengeIds []u
 // GetChallenges returns all visible challenges
 func GetChallenges(c *gin.Context) {
 	var challenges []models.Challenge
-	result := config.DB.Where("hidden = false").Find(&challenges)
+	result := config.DB.Preload("DecayFormula").Where("hidden = false").Find(&challenges)
 	if result.Error != nil {
 		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
+	
+	// Calculate current points with decay for each challenge
+	decayService := utils.NewDecay()
+	for i := range challenges {
+		challenges[i].CurrentPoints = decayService.CalculateCurrentPoints(&challenges[i])
+	}
+	
 	utils.OKResponse(c, challenges)
 }
 
@@ -155,11 +162,16 @@ func GetChallenge(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
-	result := config.DB.First(&challenge, id)
+	result := config.DB.Preload("DecayFormula").First(&challenge, id)
 	if result.Error != nil {
 		utils.NotFoundError(c, "Challenge not found")
 		return
 	}
+	
+	// Calculate current points with decay
+	decayService := utils.NewDecay()
+	challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
+	
 	utils.OKResponse(c, challenge)
 }
 
@@ -191,6 +203,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("ChallengeCategory").
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
+		Preload("DecayFormula").
 		Preload("Hints").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ? and hidden = false", categoryName).

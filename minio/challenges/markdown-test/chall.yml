@@ -45,8 +45,9 @@ description: |
 category: "misc"
 difficulty: "easy"
 type: "standard"
+decay: "Logarithmic - Medium"
 author: "swinowz"
 hidden: false
 flags: ["flag"]
-points: 123
+points: 500
 

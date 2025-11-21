@@ -27,6 +27,7 @@ interface ChallengeAdminFormProps {
 interface DecayFormula {
   id: number
   name: string
+  type: string
   step: number
   minPoints: number
 }
@@ -505,10 +506,12 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     <SelectValue placeholder="Select a decay formula" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
                     {decayFormulas.map((formula) => (
                       <SelectItem key={formula.id} value={formula.id.toString()}>
-                        {formula.name} - Step: {formula.step}, Min: {formula.minPoints}
+                        {formula.type === 'fixed' 
+                          ? formula.name 
+                          : `${formula.name} - Step: ${formula.step}, Min: ${formula.minPoints}`
+                        }
                       </SelectItem>
                     ))}
                   </SelectContent>

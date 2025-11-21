@@ -271,16 +271,24 @@ func createChallengeRelatedEntities(metaData meta.BaseChallengeMetadata) (uint, 
 		return 0, 0, nil, nil, err
 	}
 
+	// Get decay formula - default to "No Decay" if not specified or not found
 	var cDecayFormula models.DecayFormula
-	if err := config.DB.FirstOrCreate(&cDecayFormula, models.DecayFormula{Name: cDecayFormula.Name, Step: cDecayFormula.Step, MinPoints: cDecayFormula.MinPoints}).Error; err != nil {
-		return 0, 0, nil, nil, err
+	decayFormulaName := metaData.DecayFormula
+	if decayFormulaName == "" || decayFormulaName == "None" {
+		decayFormulaName = "No Decay"
+	}
+	if err := config.DB.Where("name = ?", decayFormulaName).First(&cDecayFormula).Error; err != nil {
+		// If specified formula not found, use "No Decay" as fallback
+		if err := config.DB.Where("name = ?", "No Decay").First(&cDecayFormula).Error; err != nil {
+			return 0, 0, nil, nil, err
+		}
 	}
 
 	return cCategory.ID, cDifficulty.ID, &cType, &cDecayFormula, nil
 }
 
 // populateBasicChallengeFields sets basic challenge fields from metadata
-func populateBasicChallengeFields(challenge *models.Challenge, metaData meta.BaseChallengeMetadata, slug string, categoryID uint, difficultyID uint, cType *models.ChallengeType, decayFormula *models.DecayFormula) {
+func populateBasicChallengeFields(challenge *models.Challenge, metaData meta.BaseChallengeMetadata, slug string, categoryID uint, difficultyID uint, cType *models.ChallengeType, decayFormula *models.DecayFormula, isNewChallenge bool) {
 	challenge.Slug = slug
 	challenge.Name = metaData.Name
 	challenge.Description = metaData.Description
@@ -292,7 +300,15 @@ func populateBasicChallengeFields(challenge *models.Challenge, metaData meta.Bas
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
 	challenge.MaxAttempts = metaData.Attempts
-	challenge.DecayFormula = decayFormula
+	
+	// Only set decay formula if:
+	// 1. It's a new challenge, OR
+	// 2. The YAML file explicitly specifies a decay formula (not empty/None)
+	if isNewChallenge || (metaData.DecayFormula != "" && metaData.DecayFormula != "None") {
+		challenge.DecayFormula = decayFormula
+		challenge.DecayFormulaID = decayFormula.ID
+	}
+	// If it's an existing challenge and YAML doesn't specify decay, preserve existing decay formula
 }
 
 // setChallengePorts converts and sets port array
@@ -411,12 +427,17 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 
 	// Load or create challenge
 	var challenge models.Challenge
-	if err := config.DB.Where(querySlug, slug).First(&challenge).Error; err != nil && err != gorm.ErrRecordNotFound {
-		return err
+	isNewChallenge := false
+	if err := config.DB.Where(querySlug, slug).First(&challenge).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			isNewChallenge = true
+		} else {
+			return err
+		}
 	}
 
 	// Populate challenge fields
-	populateBasicChallengeFields(&challenge, metaData, slug, categoryID, difficultyID, cType, decayFormula)
+	populateBasicChallengeFields(&challenge, metaData, slug, categoryID, difficultyID, cType, decayFormula, isNewChallenge)
 	setChallengePorts(&challenge, ports)
 	setConnectionInfo(&challenge, metaData.ConnectionInfo)
 	challenge.EnableFirstBlood = metaData.EnableFirstBlood

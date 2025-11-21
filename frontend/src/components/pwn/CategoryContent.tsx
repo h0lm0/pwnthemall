@@ -817,14 +817,16 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                 <h3 className="text-lg font-semibold text-foreground">
                                   {t('solves')} ({solves?.length || 0})
                                 </h3>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <div className="w-3 h-3 bg-yellow-500 rounded-full flex items-center justify-center">
-                                    <svg viewBox="0 0 24 24" fill="white" className="w-1.5 h-1.5">
-                                      <path d="M12 2L13.09 8.26L20 9L14 14.74L15.18 22L12 19.5L8.82 22L10 14.74L4 9L10.91 8.26L12 2Z"/>
-                                    </svg>
+                                {selectedChallenge?.enableFirstBlood && (
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <div className="w-3 h-3 bg-yellow-500 rounded-full flex items-center justify-center">
+                                      <svg viewBox="0 0 24 24" fill="white" className="w-1.5 h-1.5">
+                                        <path d="M12 2L13.09 8.26L20 9L14 14.74L15.18 22L12 19.5L8.82 22L10 14.74L4 9L10.91 8.26L12 2Z"/>
+                                      </svg>
+                                    </div>
+                                    <span>{t('firstblood_bonus') || 'FirstBlood bonus'}</span>
                                   </div>
-                                  <span>FirstBlood bonus</span>
-                                </div>
+                                )}
                               </div>
                               {solves?.map((solve, index) => (
                                 <div 
@@ -873,8 +875,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                       {solve.firstBlood && solve.firstBlood.bonuses.length > 0 ? (
                                         <div className="space-y-1">
                                           <div className="flex items-center justify-end gap-1">
-                                            <span>+{solve.points - solve.firstBlood.bonuses.reduce((sum, bonus) => sum + bonus, 0)} pts</span>
-                                            <span className="text-xs text-muted-foreground">(base)</span>
+                                            <span>+{solve.currentPoints} pts</span>
+                                            <span className="text-xs text-muted-foreground">(current)</span>
                                           </div>
                                           <div className="flex items-center justify-end gap-1">
                                             <div className="w-4 h-4 text-yellow-500">
@@ -888,11 +890,21 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                             <span className="text-xs text-yellow-600 dark:text-yellow-400">(firstblood)</span>
                                           </div>
                                           <div className="text-xs font-normal text-muted-foreground border-t pt-1">
-                                            Total: +{solve.points} pts
+                                            Total: +{solve.currentPoints + solve.firstBlood.bonuses.reduce((sum, bonus) => sum + bonus, 0)} pts (now)
+                                          </div>
+                                          <div className="text-xs font-normal text-muted-foreground italic">
+                                            Earned: {solve.points} pts (at solve time)
                                           </div>
                                         </div>
                                       ) : (
-                                        <span>+{solve.points} pts</span>
+                                        <div className="space-y-1">
+                                          <span>+{solve.currentPoints} pts</span>
+                                          {solve.points !== solve.currentPoints && (
+                                            <div className="text-xs font-normal text-muted-foreground italic">
+                                              Earned: {solve.points} pts (at solve time)
+                                            </div>
+                                          )}
+                                        </div>
                                       )}
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1">
