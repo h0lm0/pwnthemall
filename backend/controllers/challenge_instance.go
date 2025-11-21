@@ -663,11 +663,6 @@ func StartComposeChallengeInstance(c *gin.Context) {
 		return
 	}
 	
-	if err := config.DB.Create(instance).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "instance_create_failed"})
-		return
-	}
-	
 	// Broadcast instance start
 	broadcastInstanceStart(instance, *user, challenge, ports)
 	
