@@ -1,12 +1,21 @@
 pwnthemall.local {
     handle_path /api/* {
-        reverse_proxy backend:8080
+        reverse_proxy backend:8080 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+        }
     }
 
-    # WebSocket endpoint should be proxied to backend without stripping the prefix
     @ws path /ws/*
     handle @ws {
-        reverse_proxy backend:8080
+        reverse_proxy backend:8080 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+        }
     }
 
     handle_path /minio-api/* {
@@ -18,6 +27,11 @@ pwnthemall.local {
     }
 
     handle {
-        reverse_proxy frontend:3000
+        reverse_proxy frontend:3000 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+        }
     }
 }

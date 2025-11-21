@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
 	"github.com/pwnthemall/pwnthemall/backend/models"
 	"github.com/pwnthemall/pwnthemall/backend/utils"
 
@@ -20,6 +21,7 @@ import (
 func getClientIP(c *gin.Context) string {
 	// Check X-Forwarded-For header first (common behind proxies)
 	if xff := c.GetHeader("X-Forwarded-For"); xff != "" {
+		debug.Log("XFF: %v", xff)
 		// Take the first IP in the comma-separated list
 		if ips := strings.Split(xff, ","); len(ips) > 0 {
 			ip := strings.TrimSpace(ips[0])
@@ -31,6 +33,7 @@ func getClientIP(c *gin.Context) string {
 
 	// Check X-Real-IP header (common with Nginx)
 	if xri := c.GetHeader("X-Real-IP"); xri != "" {
+		debug.Log("XRI: %v", xri)
 		if net.ParseIP(xri) != nil {
 			return xri
 		}

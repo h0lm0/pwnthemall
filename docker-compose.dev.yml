@@ -191,4 +191,13 @@ volumes:
 
 networks:
   public:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.1.0/24
+
   private:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.2.0/24

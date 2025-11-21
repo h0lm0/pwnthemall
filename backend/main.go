@@ -64,7 +64,7 @@ func main() {
 		SameSite: http.SameSiteLaxMode,
 	})
 	router.Use(sessions.Sessions("pwnthemall", store))
-
+	router.SetTrustedProxies([]string{"172.70.1.0/24"})
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"https://pwnthemall.local", "https://demo.pwnthemall.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
