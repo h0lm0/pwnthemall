@@ -100,6 +100,56 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
 
+## Dépendances entre Challenges
+
+Le champ `depends_on` est **optionnel** et permet de créer des chaînes de challenges en exigeant que les équipes résolvent un challenge avant d'accéder à un autre.
+
+### Fonctionnement
+
+- Les challenges sont **masqués** pour les équipes jusqu'à ce que la dépendance soit résolue
+- Une fois le challenge requis résolu, le challenge dépendant apparaît dans la liste
+- Les admin peuvent toujours voir et accéder à tous les challenges indépendamment des dépendances
+
+### Utilisation
+
+```yaml
+depends_on: "Nom du Challenge"  # Nom exact du challenge qui doit être résolu en premier
+```
+
+### Exemple : Chaîne de Challenges Progressive
+
+```yaml
+# Challenge 1
+name: "L'histoire du maire [1/3]"
+category: osint
+difficulty: easy
+points: 100
+flags: ["flag1"]
+# Pas de depends_on - c'est le premier challenge
+```
+
+```yaml
+# Challenge 2 : Trouver le nom du fils du maire (nécessite Challenge 1)
+name: "L'histoire du maire [2/3]"
+category: osint
+difficulty: medium
+points: 200
+flags: ["flag2"]
+depends_on: "L'histoire du maire [1/3]"  
+```
+
+```yaml
+# Challenge 3 : Trouver le secret de famille (nécessite Challenge 2)
+name: "L'histoire du maire [3/3]"
+category: osint
+difficulty: hard
+points: 300
+flags: ["flag3"]
+depends_on: "L'histoire du maire [2/3]" 
+```
+
+Cela crée une chaîne : **Challenge 1** → **Challenge 2** → **Challenge 3**
+
 ## Système de Decay
 
 Le champ `decay` est **optionnel** et contrôle comment les points d'un challenge diminuent au fur et à mesure que les équipes le résolvent. S'il n'est pas spécifié, le challenge n'aura **aucun decay** (points fixes).

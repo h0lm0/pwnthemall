@@ -13,3 +13,4 @@ flags: ["flag"]
 points: 123
 ports: [80,22]
 connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
+# depends_on: "Other Challenge Name"  # Optional: exact name of challenge that must be solved first

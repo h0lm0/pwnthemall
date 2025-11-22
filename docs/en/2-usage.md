@@ -99,6 +99,56 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
 
+## Challenge Dependencies
+
+The `depends_on` field is **optional** and allows you to create challenge chains by requiring teams to solve one challenge before accessing another.
+
+### How It Works
+
+- Challenges are **hidden** from teams until the dependency is solved
+- Once the required challenge is solved, the dependent challenge appears in the list
+- Admins can always see and access all challenges regardless of dependencies
+
+### Usage
+
+```yaml
+depends_on: "Challenge Name"  # Exact name of the challenge that must be solved first
+```
+
+### Example: Progressive Challenge Chain
+
+```yaml
+# Challenge 1
+name: "The Mayor's Story [1/3]"
+category: osint
+difficulty: easy
+points: 100
+flags: ["flag1"]
+# No depends_on - this is the first challenge
+```
+
+```yaml
+# Challenge 2 (requires Challenge 1)
+name: "The Mayor's Story [2/3]"
+category: osint
+difficulty: medium
+points: 200
+flags: ["flag2"]
+depends_on: "The Mayor's Story [1/3]"
+```
+
+```yaml
+# Challenge 3 (requires Challenge 2)
+name: "The Mayor's Story [3/3]"
+category: osint
+difficulty: hard
+points: 300
+flags: ["flag3"]
+depends_on: "The Mayor's Story [2/3]"
+```
+
+This creates a chain: **Challenge 1** → **Challenge 2** → **Challenge 3**
+
 ## Decay System
 
 The `decay` field is **optional** and controls how challenge points decrease as more teams solve it. If not specified, challenges will have **no decay** (fixed points).
