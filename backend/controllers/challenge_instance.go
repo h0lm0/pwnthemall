@@ -647,31 +647,36 @@ func StartComposeChallengeInstance(c *gin.Context) {
 		return
 	}
 	
-	// Start the compose instance
-	if err := utils.StartComposeInstance(projectInterface.(*types.Project), int(*user.TeamID)); err != nil {
-		debug.Log("StartComposeInstance failed: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "start_compose_failed"})
-		return
-	}
-	
-	// Calculate expiration and create instance record
+	// Calculate expiration and create instance record first
 	expiresAt := calculateInstanceExpiration(dockerConfig)
-	projectName := fmt.Sprintf("%s-%d-%d", challenge.Slug, *user.TeamID, user.ID)
+	projectName := fmt.Sprintf("%s_%d_%d", challenge.Slug, *user.TeamID, user.ID)
 	instance, err := createInstanceRecord(projectName, *user, challenge, ports, expiresAt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	
-	// Broadcast instance start
-	broadcastInstanceStart(instance, *user, challenge, ports)
-	
+	// Respond immediately to avoid timeout
 	c.JSON(http.StatusOK, gin.H{
-		"status":     "compose_instance_started",
+		"status":     "compose_instance_starting",
 		"project":    projectName,
 		"expires_at": expiresAt,
 		"ports":      ports,
 	})
+	
+	// Start the compose instance asynchronously (takes 10+ seconds)
+	go func() {
+		if err := utils.StartComposeInstance(projectInterface.(*types.Project), int(*user.TeamID)); err != nil {
+			debug.Log("StartComposeInstance failed: %v", err)
+			// Clean up the instance record on failure
+			config.DB.Delete(&instance)
+			return
+		}
+		
+		// Broadcast instance start after successful startup
+		broadcastInstanceStart(instance, *user, challenge, ports)
+		debug.Log("Compose instance started successfully: %s", projectName)
+	}()
 }
 
 // getUserAndInstance retrieves and validates the user and instance for stopping
