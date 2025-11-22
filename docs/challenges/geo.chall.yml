@@ -6,6 +6,7 @@ description: |
 category: misc
 difficulty: easy
 type: geo
+decay: "Logarithmic - Medium"
 author: "Kevin'MITGeo"
 hidden: false
 flags: []

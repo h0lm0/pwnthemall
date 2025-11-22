@@ -6,6 +6,7 @@ description: |
 category: "pwn"
 difficulty: "easy"
 type: "compose"
+decay: "Logarithmic - Medium"
 author: "h0lm0"
 hidden: false
 flags: ["flag"]

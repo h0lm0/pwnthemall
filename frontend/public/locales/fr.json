@@ -62,6 +62,7 @@
     "description": "Description",
     "difficulty": "Difficulté",
     "failed_to_load_challenges": "Échec du chargement des challenges",
+    "firstblood_bonus": "Bonus FirstBlood",
     "no_categories": "Aucune catégorie",
     "no_challenges_available": "Aucun challenge disponible",
     "no_challenges_in_category": "Aucun challenge trouvé dans cette catégorie",

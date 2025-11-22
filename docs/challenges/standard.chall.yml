@@ -6,6 +6,7 @@ description: |
 category: "pwn"
 difficulty: "easy"
 type: "standard"
+decay: "Logarithmic - Medium"
 author: "Kevin'MIT"
 hidden: false
 flags: ["flag"]

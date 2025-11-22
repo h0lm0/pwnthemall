@@ -28,6 +28,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       category: "pwn"
       difficulty: "easy"
       type: "standard"
+      decay: "Logarithmic - Medium"
       author: "Kevin'MIT"
       hidden: false
       flags: ["flag"]
@@ -46,6 +47,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       category: web
       difficulty: easy
       type: docker
+      decay: "Logarithmic - Medium"
       author: "Kevin'MITDocker"
       flags: ["flag"]
       hidden: false
@@ -66,6 +68,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       category: misc
       difficulty: easy
       type: geo
+      decay: "Logarithmic - Medium"
       author: "Kevin'MITGeo"
       hidden: false
       flags: []
@@ -87,6 +90,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       category: "pwn"
       difficulty: "easy"
       type: "compose"
+      decay: "Logarithmic - Medium"
       author: "h0lm0"
       hidden: false
       flags: ["flag"]
@@ -94,6 +98,53 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       ports: [80,22]
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
+
+## Decay System
+
+The `decay` field is **optional** and controls how challenge points decrease as more teams solve it. If not specified, challenges will have **no decay** (fixed points).
+
+### Available decay formulas
+
+- **No Decay** - Points remain constant regardless of solves
+- **Logarithmic - Ultra Slow** - Very minimal decay (step: 10, min: 10 pts)
+- **Logarithmic - Very Slow** - Slow decay (step: 25, min: 25 pts)
+- **Logarithmic - Slow** - Moderately slow decay (step: 50, min: 100 pts)
+- **Logarithmic - Medium** - Balanced decay (step: 75, min: 75 pts)
+- **Logarithmic - Fast** - Aggressive decay (step: 100, min: 50 pts)
+
+### How It Works
+
+Logarithmic decay uses the formula: `points = basePoints - (step × log₂(solveNumber))`
+
+- The **first solve** always receives full points (no decay)
+- Points decay quickly for early solves, then slow down
+- Points never go below the specified minimum
+
+Example with 500 base points and "Logarithmic - Medium" (step: 75, min: 75):
+- 1st solve: 500 pts
+- 2nd solve: 425 pts (500 - 75×1)
+- 3rd solve: 381 pts (500 - 75×1.58)
+- 5th solve: 326 pts (500 - 75×2.32)
+- 10th solve: 251 pts (500 - 75×3.32)
+- 20th solve: 176 pts (500 - 75×4.32)
+- 50th+ solve: 75 pts (minimum)
+
+### Usage
+
+```yaml
+# With decay
+decay: "Logarithmic - Medium"
+
+# Without decay (default if omitted)
+# No need to specify the decay field, or:
+decay: "No Decay"
+```
+### FirstBlood Bonuses
+
+FirstBlood bonuses are **permanent** and decay does not apply:
+- Base challenge points: subject to decay
+- FirstBlood bonus: fixed, never changes
+- Total score = Current Points + FirstBlood Bonus
 
 ## Challenge synchronization
 
