@@ -1,0 +1,16 @@
+name: "Mon amie k4tie"
+author: "h0lm"
+category: misc
+description: |
+
+    Mon amie [Katie Moussouris](https://en.wikipedia.org/wiki/Katie_Moussouris) cherche des failles sur un programme, mais elle est un peu bloquée..
+
+    Un coup de main serait le bienvenu, c'est quand tu veux !
+
+type: docker
+ports: [25000]
+connection_info: ["nc $ip [25000]"] 
+flags: ["k4tie_m0ussouris_bUg_bouNty!"]
+difficulty: easy
+hidden: false
+points: 200

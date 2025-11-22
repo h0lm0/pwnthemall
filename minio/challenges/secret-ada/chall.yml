@@ -1,0 +1,20 @@
+name: "Un secret au bout des doigts"
+author: "swinowz"
+category: crypto
+description: |
+    Ada Lovelace a laissé un message codé pour les esprits curieux. Retrouvez celui-ci...
+
+    ```
+    **⠁⠙⠁⠇⠕⠧⠑⠇⠁⠉⠑⠋⠇⠁⠛⠉⠁⠉⠓⠑**
+    ```
+
+type: standard
+flags: ["adalovelaceflagcache"]
+difficulty: easy
+hidden: false
+points: 200
+attempts: 3
+# enableFirstBlood: true
+# firstBlood:
+#   bonuses: [200]
+#   badges: ["a"]
