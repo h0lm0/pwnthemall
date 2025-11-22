@@ -446,12 +446,6 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     variant="secondary"
                     className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
                   >
-                    {challenge.type?.name || 'Unknown Type'}
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
-                  >
                     {challenge.difficulty?.name || 'Unknown Difficulty'}
                   </Badge>
                   {isDockerChallenge(challenge) && (
@@ -470,30 +464,6 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                       {getLocalInstanceStatus(challenge.id) === 'running' ? t('running') : 
                        getLocalInstanceStatus(challenge.id) === 'building' ? t('building') : 
                        getLocalInstanceStatus(challenge.id) === 'expired' ? t('expired') : t('stopped')}
-                    </Badge>
-                  )}
-                  {challenge.hints && challenge.hints.length > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="text-xs bg-blue-200 dark:bg-blue-900 text-blue-900 dark:text-blue-200 border border-blue-400 dark:border-blue-600 pointer-events-none select-none"
-                    >
-                      {challenge.hints.length} {challenge.hints.length === 1 ? t('hint') : t('hints')}
-                    </Badge>
-                  )}
-                  {challenge.solved && (
-                    <Badge
-                      variant="secondary"
-                      className="text-xs bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400 pointer-events-none select-none"
-                    >
-                      {t('solved')}
-                    </Badge>
-                  )}
-                  {!challenge.solved && (
-                    <Badge
-                      variant="secondary"
-                      className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
-                    >
-                      {t('unsolved')}
                     </Badge>
                   )}
                 </div>
