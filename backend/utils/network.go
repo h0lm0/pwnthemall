@@ -13,6 +13,7 @@ import (
 	"github.com/pwnthemall/pwnthemall/backend/config"
 	"github.com/pwnthemall/pwnthemall/backend/debug"
 	"github.com/pwnthemall/pwnthemall/backend/models"
+	"github.com/pwnthemall/pwnthemall/backend/shared"
 	"github.com/vishvananda/netlink"
 )
 
@@ -56,6 +57,21 @@ func GetTeamIPs(teamID uint) ([]string, error) {
 	return ips, nil
 }
 
+func GetTeamMappedPorts(teamID uint) ([]int, error) {
+	var insts []models.Instance
+	err := config.DB.Where("team_id = ?", teamID).Find(&insts).Error
+	if err != nil {
+		return nil, err
+	}
+	var ports []int
+	for _, inst := range insts {
+		for _, p := range inst.Ports {
+			ports = append(ports, int(p))
+		}
+	}
+	return ports, nil
+}
+
 func RefreshTeamNetworkFirewall(teamID uint, teamSubnet string, allowedIPs []string) error {
 	ipt, err := iptables.New()
 	if err != nil {
@@ -89,17 +105,18 @@ func RefreshTeamNetworkFirewall(teamID uint, teamSubnet string, allowedIPs []str
 	return nil
 }
 
-func PushFirewallToAgent(teamID uint, subnet string, allowedIPs []string) error {
+func PushFirewallToAgent(teamID uint, ports []int, allowedIPs []string) error {
 	agentURL, err := getDefaultGateway()
 	if err != nil {
 		debug.Log("getDefaultGateway error: %v", err)
 		return fmt.Errorf("firewall agent push failed")
 	}
-	body := map[string]interface{}{
-		"team_id":     teamID,
-		"subnet":      subnet,
-		"allowed_ips": allowedIPs,
+	body := shared.FirewallRequest{
+		TeamID:     teamID,
+		Ports:      ports,
+		AllowedIPs: allowedIPs,
 	}
+
 	data, _ := json.Marshal(body)
 	debug.Log("PushFirewallToAgent: agentURL %s", agentURL)
 	resp, err := http.Post("http://"+agentURL+":8383/team/firewall", "application/json", bytes.NewReader(data))

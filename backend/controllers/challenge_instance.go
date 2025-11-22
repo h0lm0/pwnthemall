@@ -345,12 +345,13 @@ func StartDockerChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	subnet, _, err := utils.GetTeamSubnet(int(*user.TeamID))
-	if err != nil {
-		debug.Log("Could not determine team subnet for team %d: %v", *user.TeamID, err)
+	// subnet, _, err := utils.GetTeamSubnet(int(*user.TeamID))
+	teamIPs, ipErr := utils.GetTeamIPs(*user.TeamID)
+	// teamPorts, portsErr := utils.GetTeamMappedPorts(*user.TeamID)
+	if ipErr != nil {
+		debug.Log("failed to retrieve team IPs: %v", ipErr)
 	} else {
-		teamIPs, _ := utils.GetTeamIPs(*user.TeamID)
-		if err := utils.PushFirewallToAgent(*user.TeamID, subnet, teamIPs); err != nil {
+		if err := utils.PushFirewallToAgent(*user.TeamID, ports, teamIPs); err != nil {
 			debug.Log("Could not push team firewall config: %v", err)
 		}
 	}
@@ -632,12 +633,11 @@ func StartComposeChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	subnet, _, err := utils.GetTeamSubnet(int(*user.TeamID))
-	if err != nil {
-		debug.Log("Could not determine team subnet for team %d: %v", *user.TeamID, err)
+	teamIPs, ipErr := utils.GetTeamIPs(*user.TeamID)
+	if ipErr != nil {
+		debug.Log("failed to retrieve team IPs: %v", ipErr)
 	} else {
-		teamIPs, _ := utils.GetTeamIPs(*user.TeamID)
-		if err := utils.PushFirewallToAgent(*user.TeamID, subnet, teamIPs); err != nil {
+		if err := utils.PushFirewallToAgent(*user.TeamID, ports, teamIPs); err != nil {
 			debug.Log("Could not push team firewall config: %v", err)
 		}
 	}
