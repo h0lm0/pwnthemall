@@ -249,7 +249,45 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	decayService := utils.NewDecay()
 	var challengesWithSolved []dto.ChallengeWithSolved
 	
+	// Build a map of challenge names to their data for dependency ordering
+	challengeMap := make(map[string]models.Challenge)
 	for _, challenge := range challenges {
+		challengeMap[challenge.Name] = challenge
+	}
+	
+	// Sort challenges respecting dependency chains
+	var orderedChallenges []models.Challenge
+	processedNames := make(map[string]bool)
+	
+	// Helper function to add a challenge and its dependencies recursively
+	var addChallengeWithDeps func(string)
+	addChallengeWithDeps = func(name string) {
+		if processedNames[name] {
+			return
+		}
+		
+		challenge, exists := challengeMap[name]
+		if !exists {
+			return
+		}
+		
+		// First, add the dependency if it exists
+		if challenge.DependsOn != "" {
+			addChallengeWithDeps(challenge.DependsOn)
+		}
+		
+		// Then add this challenge
+		orderedChallenges = append(orderedChallenges, challenge)
+		processedNames[name] = true
+	}
+	
+	// Process all challenges in their original order, but respect dependencies
+	for _, challenge := range challenges {
+		addChallengeWithDeps(challenge.Name)
+	}
+	
+	// Build response from ordered challenges
+	for _, challenge := range orderedChallenges {
 		// Check if challenge has a dependency and if user is not admin
 		if challenge.DependsOn != "" && user.Role != "admin" {
 			// Check if the required challenge has been solved
