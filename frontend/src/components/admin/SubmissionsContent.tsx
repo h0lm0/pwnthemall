@@ -199,28 +199,48 @@ export default function SubmissionsContent({ submissions, onRefresh }: Submissio
                 {paginatedData.map((submission) => (
                   <tr key={submission.id} className="border-b last:border-b-0">
                     <td className="w-[180px] px-3 py-2 align-middle truncate">
-                      {submission.id >= 0 ? submission.user?.username || "-" : ""}
+                      {submission.id >= 0 ? (
+                        submission.user?.username || "-"
+                      ) : (
+                        <div className="h-[22px]">&nbsp;</div>
+                      )}
                     </td>
                     <td className="w-[180px] px-3 py-2 align-middle truncate">
-                      {submission.id >= 0 ? submission.user?.team?.name || "-" : ""}
+                      {submission.id >= 0 ? (
+                        submission.user?.team?.name || "-"
+                      ) : (
+                        <div className="h-[22px]">&nbsp;</div>
+                      )}
                     </td>
                     <td className="w-[220px] px-3 py-2 align-middle truncate">
-                      {submission.id >= 0 ? submission.challenge?.name || "-" : ""}
+                      {submission.id >= 0 ? (
+                        submission.challenge?.name || "-"
+                      ) : (
+                        <div className="h-[22px]">&nbsp;</div>
+                      )}
                     </td>
                     <td className="w-[150px] px-3 py-2 align-middle font-mono text-muted-foreground truncate">
-                      {submission.id >= 0 ? submission.value || "-" : ""}
+                      {submission.id >= 0 ? (
+                        submission.value || "-"
+                      ) : (
+                        <div className="h-[22px]">&nbsp;</div>
+                      )}
                     </td>
                     <td className="w-[100px] px-3 py-2 align-middle">
-                      {submission.id >= 0 && (
+                      {submission.id >= 0 ? (
                         <Badge variant={submission.isCorrect ? "default" : "destructive"} className="text-xs">
                           {submission.isCorrect ? (t("dashboard.correct") || "Correct") : (t("dashboard.incorrect") || "Incorrect")}
                         </Badge>
+                      ) : (
+                        <div className="h-[22px]">&nbsp;</div>
                       )}
                     </td>
                     <td className="w-[170px] px-3 py-2 align-middle text-muted-foreground">
                       {submission.id >= 0 ? (
                         new Date(submission.createdAt).toLocaleString()
-                      ) : ""}
+                      ) : (
+                        <div className="h-[22px]">&nbsp;</div>
+                      )}
                     </td>
                   </tr>
                 ))}
