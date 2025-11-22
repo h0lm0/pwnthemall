@@ -48,6 +48,8 @@ export interface Challenge {
   }[]
   maxAttempts?: number
   teamFailedAttempts?: number
+  dependsOn?: string
+  locked?: boolean
 }
 
 export interface FirstBlood {

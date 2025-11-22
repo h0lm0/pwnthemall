@@ -1,0 +1,13 @@
+name: "Social Media Hunt [1/2]"
+type: standard
+category: osint
+difficulty: easy
+points: 150
+decay: "Logarithmic - Medium"
+description: |
+  We've discovered a **mysterious** account on social media.  
+  Can you find out the user's **real name** ?  
+  __(flag is "flag")__  
+author: "swinowz"
+flags:
+  - "flag"

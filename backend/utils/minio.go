@@ -300,6 +300,7 @@ func populateBasicChallengeFields(challenge *models.Challenge, metaData meta.Bas
 	challenge.Hidden = metaData.Hidden
 	challenge.Points = metaData.Points
 	challenge.MaxAttempts = metaData.Attempts
+	challenge.DependsOn = metaData.DependsOn
 	
 	// Only set decay formula if:
 	// 1. It's a new challenge, OR

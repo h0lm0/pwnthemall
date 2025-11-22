@@ -55,6 +55,7 @@ type HintWithPurchased struct {
 type ChallengeWithSolved struct {
 	models.Challenge
 	Solved             bool                `json:"solved"`
+	Locked             bool                `json:"locked,omitempty"`       // True if depends_on requirement not met
 	Hints              []HintWithPurchased `json:"hints,omitempty"`
 	GeoRadiusKm        *float64            `json:"geoRadiusKm,omitempty"`
 	TeamFailedAttempts int64               `json:"teamFailedAttempts,omitempty"`

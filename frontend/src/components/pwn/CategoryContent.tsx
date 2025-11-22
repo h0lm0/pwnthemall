@@ -3,7 +3,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { CTFStatus } from "@/hooks/use-ctf-status";
 import { Challenge, Solve } from "@/models/Challenge";
-import { BadgeCheck, Trophy, Play, Square, Settings, Clock, Star } from "lucide-react";
+import { BadgeCheck, Trophy, Play, Square, Settings, Clock, Star, Lock } from "lucide-react";
 import ConnectionInfo from "@/components/ConnectionInfo";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
@@ -396,15 +396,24 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
           {(challenges || []).map((challenge) => (
             <Card
               key={challenge.id}
-              onClick={() => handleChallengeSelect(challenge)}
-              className={`hover:shadow-lg transition-shadow duration-200 cursor-pointer relative ${
-                challenge.solved 
-                  ? 'bg-green-100 dark:bg-green-900 border-green-200 dark:border-green-700' 
-                  : ''
+              onClick={() => !challenge.locked && handleChallengeSelect(challenge)}
+              className={`hover:shadow-lg transition-shadow duration-200 relative ${
+                challenge.locked 
+                  ? 'opacity-60 cursor-not-allowed' 
+                  : challenge.solved 
+                    ? 'bg-green-100 dark:bg-green-900 border-green-200 dark:border-green-700 cursor-pointer' 
+                    : 'cursor-pointer'
               }`}
             >
+              {/* Locked indicator */}
+              {challenge.locked && (
+                <div className="absolute top-2 left-2 z-10">
+                  <Lock className="w-6 h-6 text-muted-foreground" />
+                </div>
+              )}
+              
               {/* Solved check */}
-              {challenge.solved && (
+              {challenge.solved && !challenge.locked && (
                 <div className="absolute top-2 left-2">
                   <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>

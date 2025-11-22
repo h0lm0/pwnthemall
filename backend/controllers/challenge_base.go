@@ -231,11 +231,34 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	// Check and activate scheduled hints
 	utils.CheckAndActivateHintsForChallenges(challenges)
 
+	// Build a map of solved challenge names for dependency checking
+	solvedNamesMap := make(map[string]bool)
+	if user.Team != nil {
+		var solvedChallenges []models.Challenge
+		config.DB.Table("challenges").
+			Joins("JOIN solves ON solves.challenge_id = challenges.id").
+			Where("solves.team_id = ?", user.Team.ID).
+			Select("challenges.name").
+			Find(&solvedChallenges)
+		for _, ch := range solvedChallenges {
+			solvedNamesMap[ch.Name] = true
+		}
+	}
+
 	// Build response with solved status
 	decayService := utils.NewDecay()
 	var challengesWithSolved []dto.ChallengeWithSolved
 	
 	for _, challenge := range challenges {
+		// Check if challenge has a dependency and if user is not admin
+		if challenge.DependsOn != "" && user.Role != "admin" {
+			// Check if the required challenge has been solved
+			if !solvedNamesMap[challenge.DependsOn] {
+				// Skip locked challenges - don't show them until dependency is solved
+				continue
+			}
+		}
+		
 		item := buildChallengeWithSolved(challenge, solvedChallengeIds, purchasedHintIds, failedAttemptsMap, user.Role, decayService)
 		challengesWithSolved = append(challengesWithSolved, item)
 	}
