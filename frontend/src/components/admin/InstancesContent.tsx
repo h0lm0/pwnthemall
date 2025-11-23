@@ -393,14 +393,17 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
 
   const doStopAll = async () => {
     try {
-      const response = await axios.delete('/api/admin/instances')
+      // Close dialog and clear instances immediately for better UX
       setConfirmStopAll(false)
-      toast.success(response.data.message || t("all_instances_stopped_success"))
-      onRefresh()
+      toast.success(t("all_instances_stopped_success"))
+      onRefresh() // Clear the table immediately
+      
+      // Make the API call in the background (deletion happens asynchronously on backend)
+      await axios.delete('/api/admin/instances')
     } catch (err: any) {
       console.error("Failed to stop all instances:", err)
-      toast.error(t("all_instances_stop_failed"))
-      setConfirmStopAll(false)
+      // Refresh again to show actual state if there was an error
+      onRefresh()
     }
   }
 

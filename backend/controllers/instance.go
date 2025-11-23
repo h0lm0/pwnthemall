@@ -150,13 +150,21 @@ func StopAllInstancesAdmin(c *gin.Context) {
 	count := len(instances)
 	debug.Log("Admin stopping all instances: %d total", count)
 
-	// Stop all Docker/Compose containers asynchronously
+	// Stop all Docker/Compose containers asynchronously with rate limiting (3 at a time)
+	const maxConcurrent = 3
+	semaphore := make(chan struct{}, maxConcurrent)
+
 	for _, instance := range instances {
 		if instance.Container != "" {
 			containerName := instance.Container
 			isCompose := instance.Challenge.ChallengeType != nil && instance.Challenge.ChallengeType.Name == "compose"
 
+			// Acquire semaphore slot (blocks if 3 are already running)
+			semaphore <- struct{}{}
+
 			go func(name string, compose bool) {
+				defer func() { <-semaphore }() // Release semaphore slot when done
+
 				if compose {
 					debug.Log("Admin stopping Compose project asynchronously: %s", name)
 					if err := utils.StopComposeInstance(name); err != nil {
