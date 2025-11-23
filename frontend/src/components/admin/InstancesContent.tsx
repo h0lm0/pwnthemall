@@ -6,7 +6,7 @@ import { ColumnDef, RowSelectionState } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { Checkbox } from "@/components/ui/checkbox"
 import { X, ArrowUpDown, Server, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react"
 import {
   AlertDialog,
@@ -47,6 +47,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
   const { getSiteName } = useSiteConfig()
   const [deleting, setDeleting] = useState<Instance | null>(null)
   const [confirmMassDelete, setConfirmMassDelete] = useState(false)
+  const [confirmStopAll, setConfirmStopAll] = useState(false)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   
   // Filter states
@@ -168,7 +169,60 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
     return timeLeft
   }
 
+  const toggleRowSelection = (rowIndex: number) => {
+    setRowSelection(prev => {
+      const newSelection = { ...prev }
+      if (newSelection[rowIndex]) {
+        delete newSelection[rowIndex]
+      } else {
+        newSelection[rowIndex] = true
+      }
+      return newSelection
+    })
+  }
+
+  const toggleAllRows = () => {
+    if (Object.keys(rowSelection).length === paginatedData.filter(r => r.id >= 0).length) {
+      setRowSelection({})
+    } else {
+      const newSelection: RowSelectionState = {}
+      paginatedData.forEach((row, index) => {
+        if (row.id >= 0) {
+          newSelection[index] = true
+        }
+      })
+      setRowSelection(newSelection)
+    }
+  }
+
   const columns: ColumnDef<Instance>[] = [
+    {
+      id: "select",
+      header: () => {
+        const allSelected = paginatedData.filter(r => r.id >= 0).length > 0 && 
+          Object.keys(rowSelection).length === paginatedData.filter(r => r.id >= 0).length
+        return (
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={toggleAllRows}
+            aria-label="Select all"
+          />
+        )
+      },
+      cell: ({ row }) => {
+        if (row.original.id < 0) return <div className="w-[40px] h-[52px]">&nbsp;</div>
+        const rowIndex = paginatedData.findIndex(r => r.id === row.original.id)
+        return (
+          <div className="w-[40px] h-[52px] flex items-center">
+            <Checkbox
+              checked={rowSelection[rowIndex] || false}
+              onCheckedChange={() => toggleRowSelection(rowIndex)}
+              aria-label="Select row"
+            />
+          </div>
+        )
+      },
+    },
     {
       accessorKey: "username",
       header: () => (
@@ -337,6 +391,19 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
     }
   }
 
+  const doStopAll = async () => {
+    try {
+      const response = await axios.delete('/api/admin/instances')
+      setConfirmStopAll(false)
+      toast.success(response.data.message || t("all_instances_stopped_success"))
+      onRefresh()
+    } catch (err: any) {
+      console.error("Failed to stop all instances:", err)
+      toast.error(t("all_instances_stop_failed"))
+      setConfirmStopAll(false)
+    }
+  }
+
   return (
     <>
       <Head>
@@ -354,12 +421,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "flex items-center gap-2 h-9",
-                Object.keys(rowSelection).length === 0 && "invisible"
-              )}
-            >
+            {Object.keys(rowSelection).length > 0 && (
               <Button
                 variant="destructive"
                 size="sm"
@@ -367,7 +429,16 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
               >
                 {t("stop_selected")}
               </Button>
-            </div>
+            )}
+            {filteredInstances.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setConfirmStopAll(true)}
+              >
+                {t("stop_all")}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -462,7 +533,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
               <thead className="border-b">
                 <tr>
                   {columns.map((column, idx) => {
-                    const widths = ["w-[140px]", "w-[180px]", "w-[180px]", "w-[100px]", "w-[220px]", "w-[80px]"]
+                    const widths = ["w-[40px]", "w-[140px]", "w-[180px]", "w-[180px]", "w-[100px]", "w-[220px]", "w-[80px]"]
                     return (
                     <th key={column.id || (column as any).accessorKey} className={`px-3 py-1.5 text-left font-medium align-middle ${widths[idx] || ""}`}>
                       {typeof column.header === 'function' ? column.header({} as any) : column.header}
@@ -569,6 +640,24 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
               <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
               <AlertDialogAction onClick={doDeleteSelected} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 {t("stop")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Stop All Confirmation Dialog */}
+        <AlertDialog open={confirmStopAll} onOpenChange={setConfirmStopAll}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("confirm_stop_all_instances")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("confirm_stop_all_instances_description", { count: filteredInstances.length.toString() })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+              <AlertDialogAction onClick={doStopAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {t("stop_all")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

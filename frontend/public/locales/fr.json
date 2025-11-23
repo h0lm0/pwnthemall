@@ -503,11 +503,17 @@
   "confirm_stop_instances": "Confirmer l'arrêt des instances",
   "confirm_stop_instances_description": "Êtes-vous sûr de vouloir arrêter {count} instances sélectionnées ? Cette action est irréversible.",
   "stop_selected": "Arrêter la sélection",
+  "stop_all": "Tout Arrêter",
   "stop": "Arrêter",
   "running": "En cours",
   "stopped": "Arrêté",
   "time_remaining": "Temps restant",
   "container_id": "ID du conteneur",
   "filter_by_challenge": "Filtrer par défi...",
-  "filter_by_category": "Filtrer par catégorie..."
+  "filter_by_category": "Filtrer par catégorie...",
+  "confirm_stop_all_instances": "Confirmer l'arrêt de toutes les instances",
+  "confirm_stop_all_instances_description": "Êtes-vous sûr de vouloir arrêter TOUTES les {count} instances en cours ? Cette action est irréversible.",
+  "all_instances_stopped_success": "Toutes les instances ont été arrêtées avec succès !",
+  "all_instances_stop_failed": "Échec de l'arrêt de toutes les instances",
+  "clear_filters": "Effacer les filtres"
 }
