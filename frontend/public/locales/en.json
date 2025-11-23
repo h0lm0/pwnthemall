@@ -242,8 +242,8 @@
   },
   "instance": {
     "active_instances": "Active Instances",
-    "docker_instance": "Docker Instance",
-    "instance_status": "Instance Status"
+    "docker_instance": "Instance",
+    "instance_status": "Instance status"
   },
   "instance_actions": {
     "instance_cooldown_wait": "Please wait before starting another instance. Cooldown period active.",
