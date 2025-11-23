@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -97,52 +98,85 @@ func Register(c *gin.Context) {
 }
 
 // Login authenticates a user using username or email and sets a session cookie
+// validateLoginInput validates the login input
+func validateLoginInput(input *dto.LoginInput) (string, error) {
+	usernameOrEmail := strings.TrimSpace(input.Username)
+	
+	if usernameOrEmail == "" || strings.TrimSpace(input.Password) == "" {
+		return "", fmt.Errorf("please_fill_fields")
+	}
+	
+	return usernameOrEmail, nil
+}
+
+// authenticateUser finds and validates user credentials
+func authenticateUser(usernameOrEmail, password string) (*models.User, error) {
+	var user models.User
+	if err := config.DB.Where("username = ? OR email = ?", usernameOrEmail, usernameOrEmail).First(&user).Error; err != nil {
+		return nil, fmt.Errorf("invalid_credentials")
+	}
+	
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, fmt.Errorf("invalid_credentials")
+	}
+	
+	if user.Banned {
+		return nil, fmt.Errorf("banned")
+	}
+	
+	return &user, nil
+}
+
+// generateAndSetTokens creates tokens and sets them as cookies
+func generateAndSetTokens(c *gin.Context, userID uint, role string) error {
+	accessToken, err := utils.GenerateAccessToken(userID, role)
+	if err != nil {
+		return fmt.Errorf("could not create access token")
+	}
+	
+	refreshToken, err := utils.GenerateRefreshToken(userID)
+	if err != nil {
+		return fmt.Errorf("could not create refresh token")
+	}
+	
+	// Set both tokens as secure HTTP-only cookies
+	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true)        // 1 hour, secure, httpOnly
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", true, true) // 7 days, secure, httpOnly
+	
+	return nil
+}
+
 func Login(c *gin.Context) {
 	var input dto.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequestError(c, "invalid_input")
 		return
 	}
-
-	usernameOrEmail := strings.TrimSpace(input.Username)
-
-	if usernameOrEmail == "" || strings.TrimSpace(input.Password) == "" {
-		utils.BadRequestError(c, "please_fill_fields")
-		return
-	}
-
-	var user models.User
-	if err := config.DB.Where("username = ? OR email = ?", usernameOrEmail, usernameOrEmail).First(&user).Error; err != nil {
-		utils.UnauthorizedError(c, "invalid_credentials")
-		return
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		utils.UnauthorizedError(c, "invalid_credentials")
-		return
-	}
-
-	if user.Banned {
-		utils.ErrorResponse(c, 418, "banned") // 418 I'm a teapot
-		return
-	}
-
-	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role)
+	
+	// Validate input
+	usernameOrEmail, err := validateLoginInput(&input)
 	if err != nil {
-		utils.InternalServerError(c, "could not create access token")
+		utils.BadRequestError(c, err.Error())
 		return
 	}
-
-	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	
+	// Authenticate user
+	user, err := authenticateUser(usernameOrEmail, input.Password)
 	if err != nil {
-		utils.InternalServerError(c, "could not create refresh token")
+		if err.Error() == "banned" {
+			utils.ErrorResponse(c, 418, "banned") // 418 I'm a teapot
+		} else {
+			utils.UnauthorizedError(c, err.Error())
+		}
 		return
 	}
-
-	// Set both tokens as secure HTTP-only cookies
-	c.SetCookie("access_token", accessToken, 3600, "/", "", true, true)        // 1 hour, secure, httpOnly
-	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", "", true, true) // 7 days, secure, httpOnly
-
+	
+	// Generate and set tokens
+	if err := generateAndSetTokens(c, user.ID, user.Role); err != nil {
+		utils.InternalServerError(c, err.Error())
+		return
+	}
+	
 	utils.OKResponse(c, gin.H{"message": "Login successful"})
 }
 

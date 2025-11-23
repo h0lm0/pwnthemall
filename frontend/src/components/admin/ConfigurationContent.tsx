@@ -66,7 +66,7 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
         if ((key === "CTF_START_TIME" || key === "CTF_END_TIME") && value) {
           try {
             const date = new Date(value);
-            if (!isNaN(date.getTime())) {
+            if (!Number.isNaN(date.getTime())) {
               return (
                 <div className="min-w-[200px] max-w-[300px]">
                   <div className="font-mono text-sm">{date.toLocaleString()}</div>
@@ -219,7 +219,7 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
   };
 
   const doDeleteSelected = async () => {
-    const keys = Object.keys(rowSelection).map((key) => configs[parseInt(key, 10)].key);
+    const keys = Object.keys(rowSelection).map((key) => configs[Number.parseInt(key, 10)].key);
     await Promise.all(keys.map((key) => axios.delete(`/api/configs/${key}`)));
     setRowSelection({});
     setConfirmMassDelete(false);
@@ -243,7 +243,7 @@ export default function ConfigurationContent({ configs, onRefresh }: Configurati
     if (bIndex !== -1) return 1;
     
     // Otherwise, sort alphabetically
-    return a.key.localeCompare(b.key);
+    return a.key.localeCompare(b.key, 'en', { sensitivity: 'base' });
   });
 
   return (

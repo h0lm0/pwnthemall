@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 
 export type Language = 'en' | 'fr';
 
@@ -36,34 +36,30 @@ const LanguageContext = createContext<LanguageContextProps>({
   clearTranslationCache: () => {},
 });
 
-// Translation cache version - increment this when you update translations
-const TRANSLATION_VERSION = '1.0.12';
-
 // Flatten nested object into dot notation keys
 // Supports both nested (auth.login) and flat (login) key access
 // e.g., { auth: { login: "Login" } } -> { "auth.login": "Login", "login": "Login" }
+const storeTranslationValue = (flattened: Record<string, string>, newKey: string, key: string, value: any, prefix: string) => {
+  flattened[newKey] = String(value);
+  if (prefix && !flattened[key]) {
+    flattened[key] = String(value);
+  }
+};
+
 const flattenTranslations = (obj: any, prefix = ''): Record<string, string> => {
   const flattened: Record<string, string> = {};
   
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      const value = obj[key];
-      const newKey = prefix ? `${prefix}.${key}` : key;
-      
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        // Recursively flatten nested objects
-        Object.assign(flattened, flattenTranslations(value, newKey));
-      } else {
-        // Store the value with both the full path and just the key
-        // This allows both t('auth.login') and t('login') to work
-        flattened[newKey] = String(value);
-        
-        // Also store without prefix for backwards compatibility
-        // Only if the key without prefix doesn't already exist
-        if (prefix && !flattened[key]) {
-          flattened[key] = String(value);
-        }
-      }
+    if (!obj.hasOwnProperty(key)) continue;
+    
+    const value = obj[key];
+    const newKey = prefix ? `${prefix}.${key}` : key;
+    const isObject = typeof value === 'object' && value !== null && !Array.isArray(value);
+    
+    if (isObject) {
+      Object.assign(flattened, flattenTranslations(value, newKey));
+    } else {
+      storeTranslationValue(flattened, newKey, key, value, prefix);
     }
   }
   
@@ -73,30 +69,35 @@ const flattenTranslations = (obj: any, prefix = ''): Record<string, string> => {
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize language state from localStorage if available
   const getInitialLanguage = (): Language => {
-    if (typeof window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       const savedLang = localStorage.getItem('language') as Language;
       return savedLang || 'en';
     }
     return 'en';
   };
 
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
+  const [language, setLanguage] = useState<Language>(getInitialLanguage);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // Helper functions for ETag-based caching
+  const getCacheKey = (lang: Language) => `translations_${lang}`;
+  const getETagKey = (lang: Language) => `translations_etag_${lang}`;
+
   // On mount, clear other language caches and load cached translations if available
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Clear other language caches on app load (when user logs in)
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('translations_') && !key.includes(`_${language}_v`)) {
+    if (globalThis.window !== undefined) {
+      // Clear other language caches on app load
+      for (const key of Object.keys(localStorage)) {
+        if ((key.startsWith('translations_') || key.startsWith('translations_etag_')) && 
+            !key.includes(`_${language}`)) {
           localStorage.removeItem(key);
         }
-      });
+      }
       
-      // Try to load cached translations
-      const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
+      // Try to load cached translations (will be validated in background)
+      const cacheKey = getCacheKey(language);
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try {
@@ -104,108 +105,163 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           setIsLoaded(true);
           setIsInitialLoad(false);
         } catch (e) {
+          console.error('Failed to parse cached translations:', e);
           localStorage.removeItem(cacheKey);
+          localStorage.removeItem(getETagKey(language));
         }
       }
     }
-  }, [language]); // Re-run when language changes to handle cache invalidation
+  }, [language]);
 
-  useEffect(() => {
-    const loadTranslations = async () => {
-      // Check if we already have cached translations for this language
-      if (typeof window !== 'undefined') {
-        const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          try {
-            const cachedTranslations = JSON.parse(cached);
-            setTranslations(cachedTranslations);
-            setIsLoaded(true);
-            setIsInitialLoad(false);
-            return; // Use cached version, no need to fetch
-          } catch (e) {
-            // If parsing fails, remove corrupted cache and continue to fetch
-            localStorage.removeItem(cacheKey);
-          }
-        }
-        // Clean up old version caches
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith(`translations_${language}_v`) && key !== cacheKey) {
-            localStorage.removeItem(key);
-          }
-        });
-      }
-      setIsLoaded(false);
-      try {
-        const res = await fetch(`/locales/${language}.json`);
-        if (!res.ok) {
-          throw new Error(`Failed to load translations: ${res.status}`);
-        }
-        const data = await res.json();
-        
-        // Flatten nested translations to dot notation keys
-        const flattenedData = flattenTranslations(data);
-        setTranslations(flattenedData);
-        
-        // Cache flattened translations in localStorage with version
-        if (typeof window !== 'undefined') {
-          const cacheKey = `translations_${language}_v${TRANSLATION_VERSION}`;
-          localStorage.setItem(cacheKey, JSON.stringify(flattenedData));
-        }
-        // Add minimum loading time to prevent flickering only on initial load
-        if (isInitialLoad) {
-          await new Promise(resolve => setTimeout(resolve, 150));
-          setIsInitialLoad(false);
-        }
-        setIsLoaded(true);
-      } catch (error) {
-        console.error('Failed to load translations:', error);
-        setTranslations({});
-        if (isInitialLoad) {
-          await new Promise(resolve => setTimeout(resolve, 150));
-          setIsInitialLoad(false);
-        }
-        setIsLoaded(true);
-      }
-    };
+  const tryLoadCachedTranslations = (lang: Language) => {
+    if (globalThis.window === undefined) return false;
     
-    // Always attempt to load translations when language changes
-    loadTranslations();
-  }, [language, isInitialLoad]);
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('language', lang);
-      // Clear other language caches when switching languages
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('translations_') && !key.includes(`_${lang}_v`)) {
-          localStorage.removeItem(key);
-        }
-      });
+    const cached = localStorage.getItem(getCacheKey(lang));
+    if (!cached) return false;
+    
+    try {
+      const cachedTranslations = JSON.parse(cached);
+      setTranslations(cachedTranslations);
+      setIsLoaded(true);
+      setIsInitialLoad(false);
+      return true;
+    } catch (e) {
+      console.error('Failed to parse cached translations:', e);
+      localStorage.removeItem(getCacheKey(lang));
+      localStorage.removeItem(getETagKey(lang));
+      return false;
     }
   };
 
-  const t = (key: string, vars?: Record<string, string | number>) => {
+  const cacheTranslations = (lang: Language, data: Record<string, string>, etag: string | null) => {
+    if (globalThis.window === undefined) return;
+    
+    localStorage.setItem(getCacheKey(lang), JSON.stringify(data));
+    if (etag) {
+      localStorage.setItem(getETagKey(lang), etag);
+    }
+  };
+
+  const validateCache = async (lang: Language) => {
+    // Perform background validation using HEAD request for efficiency
+    if (globalThis.window === undefined) return;
+    
+    const cachedETag = localStorage.getItem(getETagKey(lang));
+    if (!cachedETag) return; // No ETag stored, skip validation
+    
+    try {
+      // Use HEAD request to check ETag without downloading full file
+      const res = await fetch(`/locales/${lang}.json`, { 
+        method: 'HEAD',
+        cache: 'no-cache' // Force fresh ETag check
+      });
+      
+      const serverETag = res.headers.get('etag');
+      
+      // If ETags don't match, fetch and update cache
+      if (serverETag && serverETag !== cachedETag) {
+        const dataRes = await fetch(`/locales/${lang}.json`, { cache: 'no-cache' });
+        if (dataRes.ok) {
+          const data = await dataRes.json();
+          const flattenedData = flattenTranslations(data);
+          
+          // Update cache and state
+          cacheTranslations(lang, flattenedData, serverETag);
+          if (lang === language) {
+            setTranslations(flattenedData);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Cache validation failed:', error);
+      // Silently fail - keep using cached version
+    }
+  };
+
+  const handleLoadingDelay = async () => {
+    if (isInitialLoad) {
+      await new Promise(resolve => setTimeout(resolve, 150));
+      setIsInitialLoad(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadTranslations = async () => {
+      // Try loading from cache first (stale-while-revalidate pattern)
+      const hasCached = tryLoadCachedTranslations(language);
+      
+      if (!hasCached) {
+        // No cache - fetch fresh data
+        setIsLoaded(false);
+        
+        try {
+          const res = await fetch(`/locales/${language}.json`, { cache: 'no-cache' });
+          if (!res.ok) {
+            throw new Error(`Failed to load translations: ${res.status}`);
+          }
+          
+          const etag = res.headers.get('etag');
+          const data = await res.json();
+          const flattenedData = flattenTranslations(data);
+          
+          setTranslations(flattenedData);
+          cacheTranslations(language, flattenedData, etag);
+          await handleLoadingDelay();
+          setIsLoaded(true);
+        } catch (error) {
+          console.error('Failed to load translations:', error);
+          setTranslations({});
+          await handleLoadingDelay();
+          setIsLoaded(true);
+        }
+      } else {
+        // We have cache - serve immediately and validate in background
+        validateCache(language);
+      }
+    };
+    
+    loadTranslations();
+  }, [language, isInitialLoad]);
+
+  const handleSetLanguage = useCallback((lang: Language) => {
+    setLanguage(lang);
+    if (globalThis.window !== undefined) {
+      localStorage.setItem('language', lang);
+      // Clear other language caches when switching languages
+      for (const key of Object.keys(localStorage)) {
+        if ((key.startsWith('translations_') || key.startsWith('translations_etag_')) && 
+            !key.includes(`_${lang}`)) {
+          localStorage.removeItem(key);
+        }
+      }
+    }
+  }, []);
+
+  const t = useCallback((key: string, vars?: Record<string, string | number>) => {
     let str = translations[key];
     
-    // If translation not found, log it and return key
+    // If translation not found, return key
     if (!str) {
-      //console.warn(`Translation missing for key: "${key}" in language: ${language}`);
       return key;
     }
     
     // Replace variables if provided
     if (vars) {
-      Object.entries(vars).forEach(([k, v]) => {
-        str = str.replace(new RegExp(`{${k}}`, 'g'), String(v));
-      });
+      for (const [k, v] of Object.entries(vars)) {
+        str = str.replaceAll(`{${k}}`, String(v));
+      }
     }
     
     return str;
-  };
+  }, [translations]);
 
-
+  const contextValue = useMemo(() => ({
+    language,
+    setLanguage: handleSetLanguage,
+    t,
+    isLoaded,
+    clearTranslationCache
+  }), [language, handleSetLanguage, t, isLoaded]);
 
   // Show loading screen while translations are loading (only on initial load or language change)
   if (!isLoaded && (isInitialLoad || Object.keys(translations).length === 0)) {
@@ -213,7 +269,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, isLoaded, clearTranslationCache: clearTranslationCache }}>
+    <LanguageContext.Provider value={contextValue}>
       <div className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {children}
         {/* Subtle loading indicator for language changes */}
@@ -234,12 +290,12 @@ export const useLanguage = () => useContext(LanguageContext);
 
 // Export clearTranslationCache function for use in other contexts
 export const clearTranslationCache = () => {
-  if (typeof window !== 'undefined') {
+  if (globalThis.window !== undefined) {
     // Clear all translation caches
-    Object.keys(localStorage).forEach(key => {
+    for (const key of Object.keys(localStorage)) {
       if (key.startsWith('translations_')) {
         localStorage.removeItem(key);
       }
-    });
+    }
   }
 };

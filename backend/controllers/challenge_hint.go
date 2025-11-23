@@ -58,18 +58,13 @@ func PurchaseHint(c *gin.Context) {
 		return
 	}
 
-	// Get team with current score
-	var team models.Team
-	if err := tx.Preload("Solves").First(&team, *user.TeamID).Error; err != nil {
+	// Calculate team score with decay
+	decayService := utils.NewDecay()
+	totalScore, err := calculateTeamScore(*user.TeamID, decayService)
+	if err != nil {
 		tx.Rollback()
-		utils.InternalServerError(c, "team_not_found")
+		utils.InternalServerError(c, "failed_to_calculate_score")
 		return
-	}
-
-	// Calculate team score
-	totalScore := 0
-	for _, solve := range team.Solves {
-		totalScore += solve.Points
 	}
 
 	// Get total spent on hints

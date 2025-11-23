@@ -69,7 +69,7 @@ export const FirstBloodManager: React.FC<FirstBloodManagerProps> = ({ bonuses, o
                 type="number"
                 min="1"
                 value={newBonus.points}
-                onChange={(e) => setNewBonus(prev => ({ ...prev, points: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => setNewBonus(prev => ({ ...prev, points: Number.parseInt(e.target.value, 10) || 0 }))}
                 placeholder="Bonus points"
                 className="bg-background text-foreground border-input"
               />
@@ -133,7 +133,7 @@ export const FirstBloodManager: React.FC<FirstBloodManagerProps> = ({ bonuses, o
                     type="number"
                     min="1"
                     value={bonus.points}
-                    onChange={(e) => updateBonus(index, 'points', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateBonus(index, 'points', Number.parseInt(e.target.value, 10) || 0)}
                     className="w-20 bg-background text-foreground border-input"
                   />
                   <Select

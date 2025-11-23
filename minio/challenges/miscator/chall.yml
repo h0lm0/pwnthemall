@@ -4,9 +4,10 @@ description: |
 category: misc
 difficulty: easy
 type: docker
+decay: "Logarithmic - Medium"
 author: swinowz
 flags: ["flag"]
 hidden: false
-points: 50
+points: 500
 ports: [22]
 connection_info: ["http://$ip:22"] 

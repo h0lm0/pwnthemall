@@ -6,9 +6,10 @@ description: |
 category: "pwn"
 difficulty: "easy"
 type: "compose"
+decay: "Logarithmic - Medium"
 author: "h0lm0"
 hidden: false
 flags: ["flag"]
-points: 123
+points: 500
 ports: [80,22]
 connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]

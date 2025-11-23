@@ -175,6 +175,7 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
             if (typeof window !== 'undefined' && window.dispatchEvent) {
               try {
                 const parsed = JSON.parse(event.data);
+                debugLog('[NOTIFICATIONS WS] Parsed message:', parsed);
                 if (parsed && parsed.event === 'team_solve') {
                   debugLog('[WS] team_solve event', parsed);
                   window.dispatchEvent(new CustomEvent('team-solve', { detail: parsed }));
@@ -195,44 +196,49 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
                 }
                 if (parsed && parsed.event === 'instance_update') {
                   debugLog('[WS] instance_update event', parsed);
+                  debugLog('[NOTIFICATIONS WS] Dispatching instance-update event:', parsed);
                   window.dispatchEvent(new CustomEvent('instance-update', { detail: parsed }));
+                  debugLog('[NOTIFICATIONS WS] Event dispatched successfully');
                   return; // Not a Notification object
                 }
               } catch {}
             }
 
-            const notification: Notification = JSON.parse(event.data);
-            debugLog('Parsed notification:', notification);
-
-            if (notification && (notification as any).id && (notification as any).title) {
-              debugLog('Valid notification, dispatching event');
-              setNotifications(prev => [notification, ...prev]);
-              setUnreadCount(prev => prev + 1);
-              if (typeof window !== 'undefined' && window.dispatchEvent) {
-                window.dispatchEvent(new CustomEvent('new-notification', { detail: notification }));
+            try {
+              const notification: Notification = JSON.parse(event.data);
+              debugLog('Parsed notification:', notification);
+              debugLog('[NOTIFICATIONS WS] Raw message received:', event.data);
+              if (notification && (notification as any).id && (notification as any).title) {
+                debugLog('Valid notification, dispatching event');
+                setNotifications(prev => [notification, ...prev]);
+                setUnreadCount(prev => prev + 1);
+                if (typeof window !== 'undefined' && window.dispatchEvent) {
+                  window.dispatchEvent(new CustomEvent('new-notification', { detail: notification }));
+                }
+              } else {
+                debugWarn('Received invalid notification data:', notification);
               }
-            } else {
-              debugWarn('Received invalid notification data:', notification);
+            } catch (error) {
+              debugError('Failed to parse WebSocket message:', error);
             }
           } catch (error) {
-            debugError('Failed to parse WebSocket message:', error);
+            debugError('[NOTIFICATIONS WS] Error processing message:', error);
           }
         };
 
-        ws.onclose = () => {
-          debugWarn('[WS] Disconnected from', url);
-          setIsConnected(false);
-
-          // Attempt failover to next candidate immediately
-          tryNext();
-        };
-
         ws.onerror = (error) => {
-          debugError('[WS] Error on', url, error);
+          debugWarn('[WS] Error:', error);
+          console.error('[NOTIFICATIONS WS] ❌ Error:', error);
           setIsConnected(false);
           try {
             ws.close();
           } catch {}
+        };
+
+        ws.onclose = (event) => {
+          debugWarn('[WS] Disconnected from', url);
+          setIsConnected(false);
+          tryNext();
         };
       } catch (error) {
         debugError('[WS] Failed to create WebSocket connection for', url, error);
@@ -283,4 +289,4 @@ export const useNotifications = (isAuthenticated: boolean = false): UseNotificat
     markAllAsRead,
     refreshNotifications,
   };
-}; 
+};

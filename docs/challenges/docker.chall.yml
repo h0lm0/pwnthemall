@@ -6,9 +6,11 @@ description: |
 category: web
 difficulty: easy
 type: docker
+decay: "Logarithmic - Medium"
 author: "Kevin'MITDocker"
 flags: ["flag"]
 hidden: false
 points: 500
 ports: [5001]
-connection_info: ["http://$ip:[5001]"] 
+connection_info: ["http://$ip:[5001]"]
+# depends_on: "Other Challenge Name"  # Optional: exact name of challenge that must be solved first 

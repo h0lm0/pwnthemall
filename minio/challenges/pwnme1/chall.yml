@@ -8,10 +8,11 @@ description: |
 category: pwn
 difficulty: intro
 type: standard
+decay: "Logarithmic - Medium"
 author: h0lm
 flags: ["flag"]
 hidden: false
-points: 10
+points: 500
 enableFirstBlood: true
 firstBlood:
   bonuses: [200]

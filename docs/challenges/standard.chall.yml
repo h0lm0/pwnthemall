@@ -6,7 +6,9 @@ description: |
 category: "pwn"
 difficulty: "easy"
 type: "standard"
+decay: "Logarithmic - Medium"
 author: "Kevin'MIT"
 hidden: false
 flags: ["flag"]
 points: 123
+# depends_on: "Other Challenge Name"  # Optional: exact name of challenge that must be solved first

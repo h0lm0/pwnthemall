@@ -3,7 +3,9 @@ package controllers
 import (
 	"time"
 
+	"github.com/jinzhu/copier"
 	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
 	"github.com/pwnthemall/pwnthemall/backend/models"
 	"github.com/pwnthemall/pwnthemall/backend/utils"
 
@@ -21,19 +23,32 @@ func GetDashboardStats(c *gin.Context) {
 	// Count hidden challenges
 	config.DB.Model(&models.Challenge{}).Where("hidden = ?", true).Count(&stats.Challenges.Hidden)
 
-	// Count by difficulty (join with ChallengeDifficulty table)
+	// Count by difficulty (join with ChallengeDifficulty table), excluding hidden challenges
+	config.DB.Model(&models.Challenge{}).
+		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
+		Where("LOWER(challenge_difficulties.name) = ?", "intro").
+		Where("hidden = ?", false).
+		Count(&stats.Challenges.Intro)
 	config.DB.Model(&models.Challenge{}).
 		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
 		Where("LOWER(challenge_difficulties.name) = ?", "easy").
+		Where("hidden = ?", false).
 		Count(&stats.Challenges.Easy)
 	config.DB.Model(&models.Challenge{}).
 		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
 		Where("LOWER(challenge_difficulties.name) = ?", "medium").
+		Where("hidden = ?", false).
 		Count(&stats.Challenges.Medium)
 	config.DB.Model(&models.Challenge{}).
 		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
 		Where("LOWER(challenge_difficulties.name) = ?", "hard").
+		Where("hidden = ?", false).
 		Count(&stats.Challenges.Hard)
+	config.DB.Model(&models.Challenge{}).
+		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
+		Where("LOWER(challenge_difficulties.name) = ?", "insane").
+		Where("hidden = ?", false).
+		Count(&stats.Challenges.Insane)
 
 	// Count by category
 	type CategoryCount struct {
@@ -114,4 +129,40 @@ func GetSubmissionTrend(c *gin.Context) {
 	}
 
 	utils.OKResponse(c, trends)
+}
+
+func GetRunningInstances(c *gin.Context) {
+	var instances []models.Instance
+	result := config.DB.
+		Preload("User").
+		Preload("Team").
+		Preload("Challenge").
+		Preload("Challenge.ChallengeCategory").
+		Where("status = ?", "running").
+		Order("created_at DESC").
+		Find(&instances)
+
+	if result.Error != nil {
+		utils.InternalServerError(c, result.Error.Error())
+		return
+	}
+
+	var runningInstances []dto.AdminInstanceDTO
+	for _, instance := range instances {
+		var instanceDTO dto.AdminInstanceDTO
+		copier.Copy(&instanceDTO, &instance)
+		
+		// Manually set nested fields that copier can't automatically map
+		instanceDTO.Username = instance.User.Username
+		instanceDTO.TeamName = instance.Team.Name
+		instanceDTO.ChallengeName = instance.Challenge.Name
+		
+		if instance.Challenge.ChallengeCategory != nil {
+			instanceDTO.Category = instance.Challenge.ChallengeCategory.Name
+		}
+		
+		runningInstances = append(runningInstances, instanceDTO)
+	}
+
+	utils.OKResponse(c, runningInstances)
 }

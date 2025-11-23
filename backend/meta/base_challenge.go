@@ -16,6 +16,7 @@ type BaseChallengeMetadata struct {
 	EnableFirstBlood bool                `yaml:"enableFirstBlood"`
 	FirstBlood       *FirstBloodMetadata `yaml:"firstBlood,omitempty"`
 	Attempts         int                 `yaml:"attempts,omitempty"` // Max submission attempts (0 = unlimited)
+	DependsOn        string              `yaml:"depends_on,omitempty"` // Name of challenge that must be solved first
 }
 
 type HintMetadata struct {

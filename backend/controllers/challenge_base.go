@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 
 	"strings"
@@ -21,14 +22,138 @@ import (
 	"gorm.io/gorm"
 )
 
+// getSolvedChallengeIds retrieves all challenge IDs solved by a team
+func getSolvedChallengeIds(teamID uint) []uint {
+	var solves []models.Solve
+	var solvedIds []uint
+	
+	if err := config.DB.Where(queryTeamID, teamID).Find(&solves).Error; err == nil {
+		for _, solve := range solves {
+			solvedIds = append(solvedIds, solve.ChallengeID)
+		}
+	}
+	
+	return solvedIds
+}
+
+// getPurchasedHintIds retrieves all hint IDs purchased by a team
+func getPurchasedHintIds(teamID uint) []uint {
+	var purchases []models.HintPurchase
+	var purchasedIds []uint
+	
+	if err := config.DB.Where(queryTeamID, teamID).Find(&purchases).Error; err == nil {
+		for _, purchase := range purchases {
+			purchasedIds = append(purchasedIds, purchase.HintID)
+		}
+	}
+	
+	return purchasedIds
+}
+
+// getTeamFailedAttempts counts failed attempts for challenges with MaxAttempts set
+func getTeamFailedAttempts(teamID uint, challenges []models.Challenge) map[uint]int64 {
+	failedAttemptsMap := make(map[uint]int64)
+	
+	for _, challenge := range challenges {
+		if challenge.MaxAttempts > 0 {
+			var count int64
+			config.DB.Model(&models.Submission{}).
+				Joins("JOIN users ON users.id = submissions.user_id").
+				Where("users.team_id = ? AND submissions.challenge_id = ? AND submissions.is_correct = ?",
+					teamID, challenge.ID, false).
+				Count(&count)
+			failedAttemptsMap[challenge.ID] = count
+		}
+	}
+	
+	return failedAttemptsMap
+}
+
+// processHintsWithPurchaseStatus filters hints and adds purchase status
+func processHintsWithPurchaseStatus(hints []models.Hint, purchasedHintIds []uint, userRole string) []dto.HintWithPurchased {
+	var hintsWithPurchased []dto.HintWithPurchased
+	
+	for _, hint := range hints {
+		debug.Log("Hint ID %d: IsActive=%t, User Role=%s", hint.ID, hint.IsActive, userRole)
+		
+		// Skip inactive hints unless user is admin
+		if !hint.IsActive && userRole != "admin" {
+			debug.Log("Skipping inactive hint ID %d for non-admin user", hint.ID)
+			continue
+		}
+
+		purchased := false
+		for _, purchasedId := range purchasedHintIds {
+			if hint.ID == purchasedId {
+				purchased = true
+				break
+			}
+		}
+		
+		hintsWithPurchased = append(hintsWithPurchased, dto.HintWithPurchased{
+			Hint:      hint,
+			Purchased: purchased,
+		})
+	}
+	
+	return hintsWithPurchased
+}
+
+// addGeoSpecIfNeeded adds geo radius to challenge if it's a geo type
+func addGeoSpecIfNeeded(challenge models.Challenge, item *dto.ChallengeWithSolved) {
+	if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
+		var spec models.GeoSpec
+		if err := config.DB.Where(queryChallengeID, challenge.ID).First(&spec).Error; err == nil {
+			r := spec.RadiusKm
+			item.GeoRadiusKm = &r
+		}
+	}
+}
+
+// buildChallengeWithSolved creates a challenge DTO with solved status and hints
+func buildChallengeWithSolved(challenge models.Challenge, solvedChallengeIds []uint, purchasedHintIds []uint, failedAttemptsMap map[uint]int64, userRole string, decayService *utils.DecayService) dto.ChallengeWithSolved {
+	solved := false
+	for _, solvedId := range solvedChallengeIds {
+		if challenge.ID == solvedId {
+			solved = true
+			break
+		}
+	}
+	
+	// Compute current points with decay
+	challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
+	
+	// Process hints
+	hintsWithPurchased := processHintsWithPurchaseStatus(challenge.Hints, purchasedHintIds, userRole)
+	
+	item := dto.ChallengeWithSolved{
+		Challenge:          challenge,
+		Solved:             solved,
+		Hints:              hintsWithPurchased,
+		TeamFailedAttempts: failedAttemptsMap[challenge.ID],
+	}
+	
+	// Add geo spec if applicable
+	addGeoSpecIfNeeded(challenge, &item)
+	
+	return item
+}
+
 // GetChallenges returns all visible challenges
 func GetChallenges(c *gin.Context) {
 	var challenges []models.Challenge
-	result := config.DB.Where("hidden = false").Find(&challenges)
+	result := config.DB.Preload("DecayFormula").Where("hidden = false").Find(&challenges)
 	if result.Error != nil {
 		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
+	
+	// Calculate current points with decay for each challenge
+	decayService := utils.NewDecay()
+	for i := range challenges {
+		challenges[i].CurrentPoints = decayService.CalculateCurrentPoints(&challenges[i])
+	}
+	
 	utils.OKResponse(c, challenges)
 }
 
@@ -37,11 +162,16 @@ func GetChallenge(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
-	result := config.DB.First(&challenge, id)
+	result := config.DB.Preload("DecayFormula").First(&challenge, id)
 	if result.Error != nil {
 		utils.NotFoundError(c, "Challenge not found")
 		return
 	}
+	
+	// Calculate current points with decay
+	decayService := utils.NewDecay()
+	challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
+	
 	utils.OKResponse(c, challenge)
 }
 
@@ -49,6 +179,7 @@ func GetChallenge(c *gin.Context) {
 func GetChallengesByCategoryName(c *gin.Context) {
 	categoryName := c.Param("category")
 
+	// Get and validate user
 	userI, exists := c.Get("user")
 	if !exists {
 		utils.UnauthorizedError(c, "unauthorized")
@@ -62,15 +193,17 @@ func GetChallengesByCategoryName(c *gin.Context) {
 
 	// Check CTF timing - only allow access if CTF has started or user is admin
 	if !config.IsCTFStarted() && user.Role != "admin" {
-		utils.OKResponse(c, []interface{}{}) // Return empty array instead of error
+		utils.OKResponse(c, []interface{}{})
 		return
 	}
 
+	// Load challenges for category
 	var challenges []models.Challenge
 	result := config.DB.
 		Preload("ChallengeCategory").
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
+		Preload("DecayFormula").
 		Preload("Hints").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ? and hidden = false", categoryName).
@@ -82,200 +215,247 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		return
 	}
 
-	// Get solved challenges for the user's team
+	// Get team-specific data
 	var solvedChallengeIds []uint
 	var purchasedHintIds []uint
+	var failedAttemptsMap map[uint]int64
+	
 	if user.Team != nil {
-		var solves []models.Solve
-		if err := config.DB.Where("team_id = ?", user.Team.ID).Find(&solves).Error; err == nil {
-			for _, solve := range solves {
-				solvedChallengeIds = append(solvedChallengeIds, solve.ChallengeID)
-			}
-		}
-
-		// Get purchased hints for the team
-		var purchases []models.HintPurchase
-		if err := config.DB.Where("team_id = ?", user.Team.ID).Find(&purchases).Error; err == nil {
-			for _, purchase := range purchases {
-				purchasedHintIds = append(purchasedHintIds, purchase.HintID)
-			}
-		}
+		solvedChallengeIds = getSolvedChallengeIds(user.Team.ID)
+		purchasedHintIds = getPurchasedHintIds(user.Team.ID)
+		failedAttemptsMap = getTeamFailedAttempts(user.Team.ID, challenges)
+	} else {
+		failedAttemptsMap = make(map[uint]int64)
 	}
 
-	var challengesWithSolved []dto.ChallengeWithSolved
-	decayService := utils.NewDecay()
-
-	// Check and activate scheduled hints before processing
+	// Check and activate scheduled hints
 	utils.CheckAndActivateHintsForChallenges(challenges)
 
-	// Get failed attempts count for team's challenges (if user has a team)
-	failedAttemptsMap := make(map[uint]int64)
+	// Build a map of solved challenge names for dependency checking
+	solvedNamesMap := make(map[string]bool)
 	if user.Team != nil {
-		for _, challenge := range challenges {
-			if challenge.MaxAttempts > 0 {
-				var count int64
-				config.DB.Model(&models.Submission{}).
-					Joins("JOIN users ON users.id = submissions.user_id").
-					Where("users.team_id = ? AND submissions.challenge_id = ? AND submissions.is_correct = ?",
-						user.Team.ID, challenge.ID, false).
-					Count(&count)
-				failedAttemptsMap[challenge.ID] = count
-			}
+		var solvedChallenges []models.Challenge
+		config.DB.Table("challenges").
+			Joins("JOIN solves ON solves.challenge_id = challenges.id").
+			Where("solves.team_id = ?", user.Team.ID).
+			Select("challenges.name").
+			Find(&solvedChallenges)
+		for _, ch := range solvedChallenges {
+			solvedNamesMap[ch.Name] = true
 		}
 	}
 
+	// Build response with solved status
+	decayService := utils.NewDecay()
+	var challengesWithSolved []dto.ChallengeWithSolved
+	
+	// Build a map of challenge names to their data for dependency ordering
+	challengeMap := make(map[string]models.Challenge)
 	for _, challenge := range challenges {
-		solved := false
-		for _, solvedId := range solvedChallengeIds {
-			if challenge.ID == solvedId {
-				solved = true
-				break
-			}
+		challengeMap[challenge.Name] = challenge
+	}
+	
+	// Sort challenges respecting dependency chains
+	var orderedChallenges []models.Challenge
+	processedNames := make(map[string]bool)
+	
+	// Helper function to add a challenge and its dependencies recursively
+	var addChallengeWithDeps func(string)
+	addChallengeWithDeps = func(name string) {
+		if processedNames[name] {
+			return
 		}
-		// Compute current points (decay-aware) for display
-		challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
-
-		// Process hints with purchase status - only include active hints
-		var hintsWithPurchased []dto.HintWithPurchased
-		for _, hint := range challenge.Hints {
-			debug.Log("Hint ID %d: IsActive=%t, User Role=%s", hint.ID, hint.IsActive, user.Role)
-			// Skip inactive hints unless user is admin
-			if !hint.IsActive && user.Role != "admin" {
-				debug.Log("Skipping inactive hint ID %d for non-admin user", hint.ID)
+		
+		challenge, exists := challengeMap[name]
+		if !exists {
+			return
+		}
+		
+		// First, add the dependency if it exists
+		if challenge.DependsOn != "" {
+			addChallengeWithDeps(challenge.DependsOn)
+		}
+		
+		// Then add this challenge
+		orderedChallenges = append(orderedChallenges, challenge)
+		processedNames[name] = true
+	}
+	
+	// Process all challenges in their original order, but respect dependencies
+	for _, challenge := range challenges {
+		addChallengeWithDeps(challenge.Name)
+	}
+	
+	// Build response from ordered challenges
+	for _, challenge := range orderedChallenges {
+		// Check if challenge has a dependency and if user is not admin
+		if challenge.DependsOn != "" && user.Role != "admin" {
+			// Check if the required challenge has been solved
+			if !solvedNamesMap[challenge.DependsOn] {
+				// Skip locked challenges - don't show them until dependency is solved
 				continue
 			}
-
-			purchased := false
-			for _, purchasedId := range purchasedHintIds {
-				if hint.ID == purchasedId {
-					purchased = true
-					break
-				}
-			}
-			hintsWithPurchased = append(hintsWithPurchased, dto.HintWithPurchased{
-				Hint:      hint,
-				Purchased: purchased,
-			})
 		}
-
-		item := dto.ChallengeWithSolved{
-			Challenge:          challenge,
-			Solved:             solved,
-			Hints:              hintsWithPurchased,
-			TeamFailedAttempts: failedAttemptsMap[challenge.ID],
-		}
-		if challenge.ChallengeType != nil && strings.ToLower(challenge.ChallengeType.Name) == "geo" {
-			var spec models.GeoSpec
-			if err := config.DB.Where("challenge_id = ?", challenge.ID).First(&spec).Error; err == nil {
-				r := spec.RadiusKm
-				item.GeoRadiusKm = &r
-			}
-		}
+		
+		item := buildChallengeWithSolved(challenge, solvedChallengeIds, purchasedHintIds, failedAttemptsMap, user.Role, decayService)
 		challengesWithSolved = append(challengesWithSolved, item)
 	}
 
 	utils.OKResponse(c, challengesWithSolved)
 }
 
+const (
+	maxSizePerFile = 1024 * 1024 * 256 // 256 MB
+	bucketChallengeFiles = "challenge-files"
+	formFieldFiles = "files"
+	formFieldMeta = "meta"
+	errInvalidMultipartForm = "invalid_multipart_form"
+	errFileExceedsMaxSize = "file %s exceeds max size (256MB)"
+	errMissingMeta = "missing_meta"
+	errInvalidMetaJSON = "invalid_meta_json"
+	errInvalidChallengeData = "invalid_challenge_data"
+	errMissingChallengeName = "missing_challenge_name"
+	errChallengeCreationFailed = "challenge_creation_failed"
+)
+
+// validateAndProcessFiles processes uploaded files into a zip buffer
+func validateAndProcessFiles(form *multipart.Form, zipWriter *zip.Writer) (bool, error) {
+	hasFiles := false
+	
+	if form == nil || form.File == nil {
+		return hasFiles, nil
+	}
+	
+	files, ok := form.File[formFieldFiles]
+	if !ok {
+		return hasFiles, nil
+	}
+	
+	for _, fileHeader := range files {
+		if fileHeader.Size > maxSizePerFile {
+			return false, fmt.Errorf(errFileExceedsMaxSize, fileHeader.Filename)
+		}
+		
+		file, err := fileHeader.Open()
+		if err != nil {
+			return false, err
+		}
+		defer file.Close()
+		
+		w, err := zipWriter.Create(fileHeader.Filename)
+		if err != nil {
+			return false, err
+		}
+		
+		if _, err = io.Copy(w, file); err != nil {
+			return false, err
+		}
+		
+		hasFiles = true
+	}
+	
+	return hasFiles, nil
+}
+
+// parseAndValidateMeta parses and validates the metadata JSON into a Challenge model
+func parseAndValidateMeta(metaStr string) (*models.Challenge, error) {
+	if metaStr == "" {
+		return nil, fmt.Errorf(errMissingMeta)
+	}
+	
+	var metaMap map[string]interface{}
+	if err := json.Unmarshal([]byte(metaStr), &metaMap); err != nil {
+		return nil, fmt.Errorf(errInvalidMetaJSON)
+	}
+	
+	var challenge models.Challenge
+	challengeBytes, _ := json.Marshal(metaMap)
+	if err := json.Unmarshal(challengeBytes, &challenge); err != nil {
+		return nil, fmt.Errorf(errInvalidChallengeData)
+	}
+	
+	if challenge.Name == "" {
+		return nil, fmt.Errorf(errMissingChallengeName)
+	}
+	
+	return &challenge, nil
+}
+
+// uploadFilesToMinIO uploads the zip buffer to MinIO storage
+func uploadFilesToMinIO(challengeSlug string, zipBytes []byte) error {
+	zipFilename := fmt.Sprintf("%s.zip", challengeSlug)
+	objectName := fmt.Sprintf("challenges/%s", zipFilename)
+	
+	_, err := config.FS.PutObject(
+		context.Background(),
+		bucketChallengeFiles,
+		objectName,
+		bytes.NewReader(zipBytes),
+		int64(len(zipBytes)),
+		minio.PutObjectOptions{ContentType: "application/zip"},
+	)
+	
+	return err
+}
+
 // CreateChallenge creates a new challenge with optional file upload
 func CreateChallenge(c *gin.Context) {
-	const maxSizePerFile = 1024 * 1024 * 256 // 256 MB
-
+	// Initialize ZIP writer
 	var zipBuffer bytes.Buffer
 	zipWriter := zip.NewWriter(&zipBuffer)
-	hasFiles := false
-
+	
+	// Get and validate form
 	form, err := c.MultipartForm()
 	if err != nil {
 		if err != http.ErrNotMultipart && err != http.ErrMissingBoundary {
-			utils.BadRequestError(c, "invalid_multipart_form")
+			utils.BadRequestError(c, errInvalidMultipartForm)
 			return
 		}
 	}
-
-	if form != nil && form.File != nil {
-		if files, ok := form.File["files"]; ok {
-			for _, fileHeader := range files {
-				if fileHeader.Size > maxSizePerFile {
-					utils.BadRequestError(c, fmt.Sprintf("file %s exceeds max size (256MB)", fileHeader.Filename))
-					return
-				}
-				file, err := fileHeader.Open()
-				if err != nil {
-					utils.InternalServerError(c, err.Error())
-					return
-				}
-				defer file.Close()
-
-				w, err := zipWriter.Create(fileHeader.Filename)
-				if err != nil {
-					utils.InternalServerError(c, err.Error())
-					return
-				}
-				if _, err = io.Copy(w, file); err != nil {
-					utils.InternalServerError(c, err.Error())
-					return
-				}
-				hasFiles = true
-			}
+	
+	// Process uploaded files into ZIP
+	hasFiles, err := validateAndProcessFiles(form, zipWriter)
+	if err != nil {
+		if strings.Contains(err.Error(), "exceeds max size") {
+			utils.BadRequestError(c, err.Error())
+		} else {
+			utils.InternalServerError(c, err.Error())
 		}
+		return
 	}
-
+	
+	// Close ZIP writer
 	if err := zipWriter.Close(); err != nil {
 		utils.InternalServerError(c, err.Error())
 		return
 	}
-
-	metaStr := c.PostForm("meta")
-	if metaStr == "" {
-		utils.BadRequestError(c, "missing_meta")
+	
+	// Parse and validate metadata
+	metaStr := c.PostForm(formFieldMeta)
+	challenge, err := parseAndValidateMeta(metaStr)
+	if err != nil {
+		utils.BadRequestError(c, err.Error())
 		return
 	}
-
-	var metaMap map[string]interface{}
-	if err := json.Unmarshal([]byte(metaStr), &metaMap); err != nil {
-		utils.BadRequestError(c, "invalid_meta_json")
-		return
-	}
-
-	var challenge models.Challenge
-	challengeBytes, _ := json.Marshal(metaMap)
-	if err := json.Unmarshal(challengeBytes, &challenge); err != nil {
-		utils.BadRequestError(c, "invalid_challenge_data")
-		return
-	}
-
-	if challenge.Name == "" {
-		utils.BadRequestError(c, "missing_challenge_name")
-		return
-	}
-
-	result := config.DB.Create(&challenge)
+	
+	// Create challenge in database
+	result := config.DB.Create(challenge)
 	if result.Error != nil {
-		utils.InternalServerError(c, "challenge_creation_failed")
+		utils.InternalServerError(c, errChallengeCreationFailed)
 		return
 	}
-
+	
+	// Upload files to MinIO if any
 	if hasFiles {
 		zipBytes := zipBuffer.Bytes()
-		zipFilename := fmt.Sprintf("%s.zip", challenge.Slug)
-		objectName := fmt.Sprintf("challenges/%s", zipFilename)
-		_, err := config.FS.PutObject(
-			context.Background(),
-			"challenge-files",
-			objectName,
-			bytes.NewReader(zipBytes),
-			int64(len(zipBytes)),
-			minio.PutObjectOptions{ContentType: "application/zip"},
-		)
-		if err != nil {
-			config.DB.Delete(&challenge)
+		if err := uploadFilesToMinIO(challenge.Slug, zipBytes); err != nil {
+			config.DB.Delete(challenge)
 			utils.InternalServerError(c, err.Error())
 			return
 		}
 	}
-
-	utils.CreatedResponse(c, challenge)
+	
+	utils.CreatedResponse(c, *challenge)
 }
 
 // GetChallengeFirstBloods returns the first blood information for a challenge

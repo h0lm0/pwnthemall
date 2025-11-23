@@ -4,7 +4,8 @@ description: |
 category: osint
 difficulty: intro
 type: standard
+decay: "Logarithmic - Medium"
 author: h0lm
 flags: ["flag"]
 hidden: false
-points: 10
+points: 500

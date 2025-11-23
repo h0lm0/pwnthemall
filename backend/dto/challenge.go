@@ -55,6 +55,7 @@ type HintWithPurchased struct {
 type ChallengeWithSolved struct {
 	models.Challenge
 	Solved             bool                `json:"solved"`
+	Locked             bool                `json:"locked,omitempty"`       // True if depends_on requirement not met
 	Hints              []HintWithPurchased `json:"hints,omitempty"`
 	GeoRadiusKm        *float64            `json:"geoRadiusKm,omitempty"`
 	TeamFailedAttempts int64               `json:"teamFailedAttempts,omitempty"`
@@ -63,8 +64,9 @@ type ChallengeWithSolved struct {
 // SolveWithUser represents a solve with user information
 type SolveWithUser struct {
 	models.Solve
-	Username   string             `json:"username"`
-	FirstBlood *models.FirstBlood `json:"firstBlood,omitempty"`
+	Username      string             `json:"username"`
+	FirstBlood    *models.FirstBlood `json:"firstBlood,omitempty"`
+	CurrentPoints int                `json:"currentPoints"` // Current decayed points of the challenge
 }
 
 // TeamSolveEvent represents a team solve WebSocket event

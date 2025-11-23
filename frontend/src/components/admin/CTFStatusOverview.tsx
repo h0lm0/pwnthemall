@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar, PlayCircle, StopCircle } from "lucide-react";
@@ -108,43 +107,42 @@ export default function CTFStatusOverview() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
+      <CardHeader className="pb-2 pt-3 px-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Clock className="h-4 w-4" />
           {t("ctf_status") || "CTF Status"}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Badge className={`flex items-center gap-1 ${getStatusColor(ctfStatus.status)}`}>
+      <CardContent className="px-3 pb-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <Badge className={`flex items-center gap-1 text-xs ${getStatusColor(ctfStatus.status)}`}>
             {getStatusIcon(ctfStatus.status)}
             {getStatusText(ctfStatus.status)}
           </Badge>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-xs">
+              <span className="text-muted-foreground">{t("competition_active") || "Active"}:</span>
+              <Badge variant={ctfStatus.is_active ? "default" : "secondary"} className="text-xs px-1 py-0 h-5">
+                {ctfStatus.is_active ? (t("yes") || "yes") : (t("no") || "no")}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1 text-xs">
+              <span className="text-muted-foreground">{t("competition_started") || "Started"}:</span>
+              <Badge variant={ctfStatus.is_started ? "default" : "secondary"} className="text-xs px-1 py-0 h-5">
+                {ctfStatus.is_started ? (t("yes") || "yes") : (t("no") || "no")}
+              </Badge>
+            </div>
+          </div>
         </div>
         
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {getStatusDescription(ctfStatus.status)}
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium">{t("competition_active") || "Competition Active"}:</span>
-            <Badge variant={ctfStatus.is_active ? "default" : "secondary"}>
-              {ctfStatus.is_active ? (t("yes") || "Yes") : (t("no") || "No")}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium">{t("competition_started") || "Competition Started"}:</span>
-            <Badge variant={ctfStatus.is_started ? "default" : "secondary"}>
-              {ctfStatus.is_started ? (t("yes") || "Yes") : (t("no") || "No")}
-            </Badge>
-          </div>
-        </div>
-
         {ctfStatus.status !== "no_timing" && (
-          <div className="text-xs text-muted-foreground pt-2 border-t">
+          <div className="text-xs text-muted-foreground pt-1 border-t">
             <p>
-              💡 <strong>{t("tip") || "Tip"}:</strong> {t("ctf_timing_tip") || "Edit the CTF_START_TIME and CTF_END_TIME configurations below to control when the competition runs."}
+              💡 {t("ctf_timing_tip") || "Edit CTF_START_TIME and CTF_END_TIME in configuration to control timing."}
             </p>
           </div>
         )}

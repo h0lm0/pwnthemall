@@ -81,7 +81,7 @@ export default function ChallengeCategoriesContent({ challengeCategories, onRefr
   }
 
   const doDeleteSelected = async () => {
-    const ids = Object.keys(rowSelection).map((key) => challengeCategories[parseInt(key, 10)].id)
+    const ids = Object.keys(rowSelection).map((key) => challengeCategories[Number.parseInt(key, 10)].id)
     await Promise.all(ids.map((id) => axios.delete(`/api/challenge-categories/${id}`)))
     setRowSelection({})
     onRefresh()

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"log"
@@ -45,6 +46,17 @@ func main() {
 	}
 
 	initWebSocketHub()
+
+	// Sync all challenges from MinIO on startup
+	log.Println("INFO: Launching initial challenge sync goroutine...")
+	go func() {
+		ctx := context.Background()
+		if err := utils.SyncAllChallengesFromMinIO(ctx, utils.UpdatesHub); err != nil {
+			log.Printf("Warning: Initial challenge sync failed: %v", err)
+		} else {
+			log.Println("INFO: Initial challenge sync goroutine completed successfully")
+		}
+	}()
 
 	// Start hint activation scheduler
 	utils.StartHintScheduler()

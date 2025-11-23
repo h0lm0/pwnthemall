@@ -55,13 +55,13 @@ export default function LoginContent({
                             <div className="grid gap-2">
                                 <div className="flex items-center">
                                     <Label htmlFor="password" >{t('password')}</Label>
-                                    <a
-                                        href="#"
+                                    <button
+                                        type="button"
                                         tabIndex={-1}
-                                        className="ml-auto text-sm underline-offset-4 hover:underline"
+                                        className="ml-auto text-sm underline-offset-4 hover:underline bg-transparent border-0 cursor-pointer p-0"
                                     >
                                         {t('forgot_password')}
-                                    </a>
+                                    </button>
                                 </div>
                                 <Input
                                     id="password"

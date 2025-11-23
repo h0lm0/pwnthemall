@@ -3,7 +3,8 @@ description: pwn me 3 blabla,
 category: misc
 difficulty: easy
 type: standard
+decay: "Logarithmic - Medium"
 author: swinowz
 flags: ["flag"]
 hidden: true
-points: 50
+points: 500

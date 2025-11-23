@@ -42,7 +42,7 @@ export default function ChallengeForm({
     const { name, value } = e.target
     setForm({
       ...form,
-      [name]: name === "points" ? parseInt(value) || 0 : value
+      [name]: name === "points" ? Number.parseInt(value, 10) || 0 : value
     })
   }
 

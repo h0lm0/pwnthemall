@@ -4,7 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/copier"
 	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/dto"
 	"github.com/pwnthemall/pwnthemall/backend/models"
 )
 
@@ -21,5 +23,35 @@ func GetAllSubmissions(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, submissions)
+	response := make([]dto.SubmissionResponse, len(submissions))
+
+	for i, s := range submissions {
+
+		value := s.Value
+		if s.IsCorrect {
+			value = "*********"
+		}
+
+		var safeTeam models.SafeTeam
+		if s.User != nil && s.User.Team != nil {
+			_ = copier.Copy(&safeTeam, s.User.Team)
+		}
+
+		response[i] = dto.SubmissionResponse{
+			ID:        s.ID,
+			Value:     value,
+			IsCorrect: s.IsCorrect,
+			CreatedAt: s.CreatedAt,
+			User: models.SafeUserWithTeam{
+				ID:       s.UserID,
+				Username: s.User.Username,
+				Role:     s.User.Role,
+				Team:     safeTeam,
+			},
+			ChallengeID: s.ChallengeID,
+			Challenge:   s.Challenge,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }

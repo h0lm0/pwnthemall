@@ -85,9 +85,6 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
             <Button className="flex-1" onClick={handleAccept} variant={"default" as any}>
               {t('accept')}
             </Button>
-            <Button className="flex-1" onClick={handleDecline} variant={"secondary" as any}>
-              {t('decline')}
-            </Button>
           </div>
         </CardContent>
       </Card>
