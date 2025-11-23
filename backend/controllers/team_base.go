@@ -43,10 +43,23 @@ func GetTeam(c *gin.Context) {
 	memberPoints := map[string]int{}
 	var totalPoints int
 
+	// Initialize decay service for current points calculation
+	decayService := utils.NewDecay()
+
 	// Fetch all solves for this team
 	var solves []models.Solve
 	if err := config.DB.Where("team_id = ?", team.ID).Order("created_at ASC").Find(&solves).Error; err == nil {
 		for _, solve := range solves {
+			// Get challenge to calculate current decayed points
+			var challenge models.Challenge
+			if err := config.DB.Preload("DecayFormula").First(&challenge, solve.ChallengeID).Error; err != nil {
+				continue
+			}
+
+			// Calculate position and current points with decay
+			position := getSolvePosition(challenge.ID, solve.CreatedAt)
+			currentPoints := calculateSolvePointsWithDecay(&solve, &challenge, position, decayService)
+
 			// Find the submission that led to this solve: the latest submission for this challenge
 			// by a member of the team at or before the solve time
 			var submission models.Submission
@@ -57,9 +70,9 @@ func GetTeam(c *gin.Context) {
 				First(&submission)
 			if subRes.Error == nil && submission.UserID != 0 {
 				key := fmt.Sprintf("%d", submission.UserID)
-				memberPoints[key] += solve.Points
+				memberPoints[key] += currentPoints
 			}
-			totalPoints += solve.Points
+			totalPoints += currentPoints
 		}
 	}
 

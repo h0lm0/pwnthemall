@@ -5,6 +5,7 @@ description: |
 category: web
 difficulty: easy
 type: docker
+decay: "Logarithmic - Medium"
 author: swinowz
 flags: ["flag"]
 hidden: false

@@ -309,13 +309,13 @@ export default function UsersContent({ users, onRefresh }: UsersContentProps) {
         )
       },
     },
-    {
+{
       id: "actions",
       header: t("actions"),
       cell: ({ row }) => {
         if (row.original.id < 0) return <div className="w-[240px] h-[52px]">&nbsp;</div>
         return (
-          <div className="flex gap-1 flex-wrap w-[240px] h-[52px] items-center">
+          <div className="flex gap-1 w-[240px] min-h-[52px] items-center">
             <Button
               variant="outline"
               size="sm"

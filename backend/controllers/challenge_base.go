@@ -142,11 +142,18 @@ func buildChallengeWithSolved(challenge models.Challenge, solvedChallengeIds []u
 // GetChallenges returns all visible challenges
 func GetChallenges(c *gin.Context) {
 	var challenges []models.Challenge
-	result := config.DB.Where("hidden = false").Find(&challenges)
+	result := config.DB.Preload("DecayFormula").Where("hidden = false").Find(&challenges)
 	if result.Error != nil {
 		utils.InternalServerError(c, result.Error.Error())
 		return
 	}
+	
+	// Calculate current points with decay for each challenge
+	decayService := utils.NewDecay()
+	for i := range challenges {
+		challenges[i].CurrentPoints = decayService.CalculateCurrentPoints(&challenges[i])
+	}
+	
 	utils.OKResponse(c, challenges)
 }
 
@@ -155,11 +162,16 @@ func GetChallenge(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
-	result := config.DB.First(&challenge, id)
+	result := config.DB.Preload("DecayFormula").First(&challenge, id)
 	if result.Error != nil {
 		utils.NotFoundError(c, "Challenge not found")
 		return
 	}
+	
+	// Calculate current points with decay
+	decayService := utils.NewDecay()
+	challenge.CurrentPoints = decayService.CalculateCurrentPoints(&challenge)
+	
 	utils.OKResponse(c, challenge)
 }
 
@@ -191,6 +203,7 @@ func GetChallengesByCategoryName(c *gin.Context) {
 		Preload("ChallengeCategory").
 		Preload("ChallengeType").
 		Preload("ChallengeDifficulty").
+		Preload("DecayFormula").
 		Preload("Hints").
 		Joins("JOIN challenge_categories ON challenge_categories.id = challenges.challenge_category_id").
 		Where("challenge_categories.name = ? and hidden = false", categoryName).
@@ -218,11 +231,72 @@ func GetChallengesByCategoryName(c *gin.Context) {
 	// Check and activate scheduled hints
 	utils.CheckAndActivateHintsForChallenges(challenges)
 
+	// Build a map of solved challenge names for dependency checking
+	solvedNamesMap := make(map[string]bool)
+	if user.Team != nil {
+		var solvedChallenges []models.Challenge
+		config.DB.Table("challenges").
+			Joins("JOIN solves ON solves.challenge_id = challenges.id").
+			Where("solves.team_id = ?", user.Team.ID).
+			Select("challenges.name").
+			Find(&solvedChallenges)
+		for _, ch := range solvedChallenges {
+			solvedNamesMap[ch.Name] = true
+		}
+	}
+
 	// Build response with solved status
 	decayService := utils.NewDecay()
 	var challengesWithSolved []dto.ChallengeWithSolved
 	
+	// Build a map of challenge names to their data for dependency ordering
+	challengeMap := make(map[string]models.Challenge)
 	for _, challenge := range challenges {
+		challengeMap[challenge.Name] = challenge
+	}
+	
+	// Sort challenges respecting dependency chains
+	var orderedChallenges []models.Challenge
+	processedNames := make(map[string]bool)
+	
+	// Helper function to add a challenge and its dependencies recursively
+	var addChallengeWithDeps func(string)
+	addChallengeWithDeps = func(name string) {
+		if processedNames[name] {
+			return
+		}
+		
+		challenge, exists := challengeMap[name]
+		if !exists {
+			return
+		}
+		
+		// First, add the dependency if it exists
+		if challenge.DependsOn != "" {
+			addChallengeWithDeps(challenge.DependsOn)
+		}
+		
+		// Then add this challenge
+		orderedChallenges = append(orderedChallenges, challenge)
+		processedNames[name] = true
+	}
+	
+	// Process all challenges in their original order, but respect dependencies
+	for _, challenge := range challenges {
+		addChallengeWithDeps(challenge.Name)
+	}
+	
+	// Build response from ordered challenges
+	for _, challenge := range orderedChallenges {
+		// Check if challenge has a dependency and if user is not admin
+		if challenge.DependsOn != "" && user.Role != "admin" {
+			// Check if the required challenge has been solved
+			if !solvedNamesMap[challenge.DependsOn] {
+				// Skip locked challenges - don't show them until dependency is solved
+				continue
+			}
+		}
+		
 		item := buildChallengeWithSolved(challenge, solvedChallengeIds, purchasedHintIds, failedAttemptsMap, user.Role, decayService)
 		challengesWithSolved = append(challengesWithSolved, item)
 	}
