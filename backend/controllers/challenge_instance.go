@@ -761,6 +761,44 @@ func stopInstanceByType(challenge *models.Challenge, instance *models.Instance) 
 	}
 }
 
+func stopInstanceByTypeAsync(challenge *models.Challenge, instance *models.Instance, userID interface{}) error {
+	switch challenge.ChallengeType.Name {
+	case "docker":
+		go func() {
+			if err := utils.StopDockerInstance(instance.Container); err != nil {
+				debug.Log("Failed to stop Docker instance: %v", err)
+			}
+			if err := config.DB.Delete(instance).Error; err != nil {
+				debug.Log("Failed to delete instance from DB: %v", err)
+			}
+			// Broadcast after actual stop
+			broadcastInstanceStop(userID, instance)
+		}()
+		return nil
+		
+	case "compose":
+		// Stop compose asynchronously to avoid request timeout
+		go func() {
+			if err := utils.StopComposeInstance(instance.Container); err != nil {
+				debug.Log("Failed to stop Compose instance: %v", err)
+				return
+			}
+			if err := config.DB.Delete(instance).Error; err != nil {
+				debug.Log("Failed to delete Compose instance from DB: %v", err)
+				return
+			}
+			// Broadcast after actual stop (after 10 seconds)
+			broadcastInstanceStop(userID, instance)
+			debug.Log("Compose instance stopped and broadcast sent: %s", instance.Container)
+		}()
+		return nil
+		
+	default:
+		debug.Log("Unknown challenge type: %s", challenge.ChallengeType.Name)
+		return fmt.Errorf("unknown_challenge_type")
+	}
+}
+
 // broadcastInstanceStop sends WebSocket notification about instance stop
 func broadcastInstanceStop(userID interface{}, instance *models.Instance) {
 	if utils.WebSocketHub == nil {
@@ -793,7 +831,11 @@ func broadcastInstanceStop(userID interface{}, instance *models.Instance) {
 	}
 	
 	if payload, err := json.Marshal(event); err == nil {
-		utils.WebSocketHub.SendToTeamExcept(*user.TeamID, user.ID, payload)
+		debug.Log("[WebSocket] Broadcasting instance_update (stopped) for challenge %d to team %d", instance.ChallengeID, *user.TeamID)
+		utils.WebSocketHub.SendToTeam(*user.TeamID, payload)
+		debug.Log("[WebSocket] Broadcast sent successfully")
+	} else {
+		debug.Log("[WebSocket] Failed to marshal event: %v", err)
 	}
 }
 
@@ -827,8 +869,11 @@ func StopChallengeInstance(c *gin.Context) {
 		return
 	}
 	
-	// Stop instance by type
-	if err := stopInstanceByType(&challenge, instance); err != nil {
+	// Get user ID for broadcast
+	userID, _ := c.Get("user_id")
+	
+	// Stop instance by type (async for compose to avoid timeout)
+	if err := stopInstanceByTypeAsync(&challenge, instance, userID); err != nil {
 		switch err.Error() {
 		case "compose_stop_failed":
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "compose_stop_failed"})
@@ -840,12 +885,8 @@ func StopChallengeInstance(c *gin.Context) {
 		return
 	}
 	
-	// Broadcast stop event
-	userID, _ := c.Get("user_id")
-	broadcastInstanceStop(userID, instance)
-	
 	c.JSON(http.StatusOK, gin.H{
-		"message":   "instance_stopped",
+		"message":   "instance_stopping",
 		"container": instance.Container,
 	})
 }

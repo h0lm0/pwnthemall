@@ -53,7 +53,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
   const [solves, setSolves] = useState<Solve[]>([]);
   const [solvesLoading, setSolvesLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
-  const [instanceStatus, setInstanceStatus] = useState<{[key: number]: 'running' | 'stopped' | 'building' | 'expired'}>({});
+  const [instanceStatus, setInstanceStatus] = useState<{[key: number]: 'running' | 'stopped' | 'building' | 'expired' | 'stopping'}>({});
   const [instanceDetails, setInstanceDetails] = useState<{[key: number]: any}>({});
   const [connectionInfo, setConnectionInfo] = useState<{[key: number]: string[]}>({});
   const [instanceOwner, setInstanceOwner] = useState<{[key: number]: { userId: number; username?: string } }>({});
@@ -118,40 +118,63 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
 
   // Real-time: listen to instance updates over WebSocket
   useEffect(() => {
+    debugLog('[WebSocket] Registering instance-update event listener');
+    
     const handler = (e: any) => {
+      debugLog('[WebSocket] RAW EVENT RECEIVED:', e);
       const data = e?.detail || e?.data;
-      if (!data || data.event !== 'instance_update') return;
+      debugLog('[WebSocket] Event data:', data);
+      if (!data || data.event !== 'instance_update') {
+        debugLog('[WebSocket] Ignoring event, not instance_update');
+        return;
+      }
+
+      debugLog('[WebSocket] Received instance_update:', data);
 
       const challengeId = Number(data.challengeId);
       if (!challengeId) return;
 
       // Update status
-      let newStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
+      let newStatus: 'running' | 'stopped' | 'building' | 'expired' | 'stopping' = 'stopped';
       if (data.status === 'running') newStatus = 'running';
       else if (data.status === 'building') newStatus = 'building';
       else if (data.status === 'expired') newStatus = 'expired';
+      else if (data.status === 'stopping') newStatus = 'stopping';
 
-      setInstanceStatus(prev => ({ ...prev, [challengeId]: newStatus }));
+      debugLog(`[WebSocket] Challenge ${challengeId} status: ${data.status} → ${newStatus}`);
+      setInstanceStatus(prev => {
+        debugLog(`[WebSocket] Updating instance status from`, prev[challengeId], 'to', newStatus);
+        return { ...prev, [challengeId]: newStatus };
+      });
 
       // Update connection info when running
       if (newStatus === 'running' && Array.isArray(data.connectionInfo)) {
+        debugLog(`[WebSocket] Setting connection info for challenge ${challengeId}:`, data.connectionInfo);
         setConnectionInfo(prev => ({ ...prev, [challengeId]: data.connectionInfo }));
       }
-      if (newStatus !== 'running') {
-        setConnectionInfo(prev => ({ ...prev, [challengeId]: [] }));
+      if (newStatus !== 'running' && newStatus !== 'stopping') {
+        debugLog(`[WebSocket] Clearing connection info for challenge ${challengeId}`);
+        setConnectionInfo(prev => {
+          const newInfo = { ...prev, [challengeId]: [] };
+          debugLog(`[WebSocket] Connection info after clear:`, newInfo);
+          return newInfo;
+        });
       }
 
       // Track instance owner from event payload
       if (newStatus === 'running' && (typeof data.userId === 'number' || typeof data.userId === 'string')) {
         const ownerId = Number(data.userId);
+        debugLog(`[WebSocket] Setting instance owner for challenge ${challengeId}:`, ownerId);
         setInstanceOwner(prev => ({
           ...prev,
           [challengeId]: { userId: ownerId, username: data.username }
         }));
       } else if (newStatus !== 'running') {
+        debugLog(`[WebSocket] Clearing instance owner for challenge ${challengeId}`);
         setInstanceOwner(prev => {
           const copy = { ...prev } as any;
           delete copy[challengeId];
+          debugLog(`[WebSocket] Instance owner after delete:`, copy);
           return copy;
         });
       }
@@ -309,31 +332,13 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
         return;
       }
 
-      await stopInstance(challengeId.toString());
-      // Immediately set status to stopped for better UX
-      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+      // Set status to 'stopping' to show stopping state
+      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopping' }));
       
-      // Wait a moment for backend to process, then verify status
-      setTimeout(async () => {
-        try {
-          const status = await fetchInstanceStatus(challengeId.toString());
-          if (status) {
-            let localStatus: 'running' | 'stopped' | 'building' | 'expired' = 'stopped';
-            if (status.status === 'running') {
-              localStatus = 'running';
-            } else if (status.status === 'building') {
-              localStatus = 'building';
-            } else if (status.status === 'expired') {
-              localStatus = 'expired';
-            } else {
-              localStatus = 'stopped';
-            }
-            setInstanceStatus(prev => ({ ...prev, [challengeId]: localStatus }));
-          }
-        } catch (error) {
-          debugError('Failed to verify status after stopping:', error);
-        }
-      }, 1000); // Wait 1 second before verifying
+      await stopInstance(challengeId.toString());
+      
+      // The status will be updated to 'stopped' via websocket when backend finishes stopping
+      // No polling needed - websocket 'instance_update' event will handle it
     } catch (error: any) {
       // If backend denies or not found while we think it's running, assume non-owner attempt
       const errCode = error?.response?.data?.error;
@@ -456,6 +461,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                           ? 'bg-green-300 dark:bg-green-700 text-green-900 dark:text-green-100 border border-green-500 dark:border-green-400' 
                           : getLocalInstanceStatus(challenge.id) === 'building'
                           ? 'bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 border border-yellow-500 dark:border-yellow-400'
+                          : getLocalInstanceStatus(challenge.id) === 'stopping'
+                          ? 'bg-orange-300 dark:bg-orange-700 text-orange-900 dark:text-orange-100 border border-orange-500 dark:border-orange-400'
                           : getLocalInstanceStatus(challenge.id) === 'expired'
                           ? 'bg-red-300 dark:bg-red-700 text-red-900 dark:text-red-100 border border-red-500 dark:border-red-400'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
@@ -463,6 +470,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     >
                       {getLocalInstanceStatus(challenge.id) === 'running' ? t('running') : 
                        getLocalInstanceStatus(challenge.id) === 'building' ? t('building') : 
+                       getLocalInstanceStatus(challenge.id) === 'stopping' ? t('stopping') : 
                        getLocalInstanceStatus(challenge.id) === 'expired' ? t('expired') : t('stopped')}
                     </Badge>
                   )}
