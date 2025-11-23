@@ -502,11 +502,17 @@
   "confirm_stop_instances": "Confirm Stop Instances",
   "confirm_stop_instances_description": "Are you sure you want to stop {count} selected instances? This action cannot be undone.",
   "stop_selected": "Stop Selected",
+  "stop_all": "Stop All",
   "stop": "Stop",
   "running": "Running",
   "stopped": "Stopped",
   "time_remaining": "Time Remaining",
   "container_id": "Container ID",
   "filter_by_challenge": "Filter by challenge...",
-  "filter_by_category": "Filter by category..."
+  "filter_by_category": "Filter by category...",
+  "confirm_stop_all_instances": "Confirm Stop All Instances",
+  "confirm_stop_all_instances_description": "Are you sure you want to stop ALL {count} running instances? This action cannot be undone.",
+  "all_instances_stopped_success": "All instances stopped successfully!",
+  "all_instances_stop_failed": "Failed to stop all instances",
+  "clear_filters": "Clear Filters"
 }

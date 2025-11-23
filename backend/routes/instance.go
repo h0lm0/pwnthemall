@@ -14,6 +14,7 @@ func RegisterInstanceRoutes(router *gin.Engine) {
 	{
 		adminInstances.GET("", middleware.AuthRequired(false), middleware.CheckPolicy(adminInstancesPath, "read"), controllers.GetAllInstancesAdmin)
 		adminInstances.DELETE("/:id", middleware.DemoRestriction, middleware.AuthRequired(false), middleware.CheckPolicy(adminInstancesPath, "delete"), controllers.DeleteInstanceAdmin)
+		adminInstances.DELETE("", middleware.DemoRestriction, middleware.AuthRequired(false), middleware.CheckPolicy(adminInstancesPath, "delete"), controllers.StopAllInstancesAdmin)
 	}
 
 	// User routes for managing their own instances
