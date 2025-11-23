@@ -4,7 +4,6 @@ import { Challenge } from "@/models/Challenge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Edit, Plus, Search, ArrowUpDown } from "lucide-react"
@@ -32,7 +31,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
   const [filterDifficulty, setFilterDifficulty] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 8
+  const itemsPerPage = 11
 
   // Get unique values for filters
   const categories = useMemo(() => {
@@ -109,11 +108,35 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
     return filtered
   }, [challenges, searchTerm, sortBy, sortOrder, filterCategory, filterDifficulty, filterStatus])
 
-  // Paginated challenges
+  // Paginated challenges with empty rows to fill the page
   const paginatedChallenges = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
-    return filteredAndSortedChallenges.slice(startIndex, endIndex)
+    const pageData = filteredAndSortedChallenges.slice(startIndex, endIndex)
+    
+    // Add empty rows to fill the page
+    const emptyRowsNeeded = itemsPerPage - pageData.length
+    if (emptyRowsNeeded > 0) {
+      const emptyRows = new Array(emptyRowsNeeded).fill(null).map((_, index) => ({
+        id: -(index + 1),
+        name: "",
+        slug: "",
+        description: "",
+        points: 0,
+        hidden: false,
+        category: null as any,
+        categoryId: 0,
+        type: null as any,
+        typeId: 0,
+        difficulty: null as any,
+        difficultyId: 0,
+        author: "",
+        enableFirstBlood: false,
+      } as Challenge))
+      return [...pageData, ...emptyRows]
+    }
+    
+    return pageData
   }, [filteredAndSortedChallenges, currentPage, itemsPerPage])
 
   const totalPages = Math.ceil(filteredAndSortedChallenges.length / itemsPerPage)
@@ -257,107 +280,149 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
             </div>
           </CardHeader>
           <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                    onClick={() => handleSort("name")}
-                  >
-                    Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                    onClick={() => handleSort("category")}
-                  >
-                    Category
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                    onClick={() => handleSort("type")}
-                  >
-                    Type
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                    onClick={() => handleSort("difficulty")}
-                  >
-                    Difficulty
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                    onClick={() => handleSort("points")}
-                  >
-                    Points
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>First Blood</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedChallenges.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                    No challenges found matching your search criteria.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedChallenges.map((challenge) => (
-                  <TableRow key={challenge.id}>
-                    <TableCell className="font-medium">{challenge.name}</TableCell>
-                    <TableCell>{challenge.category?.name || "N/A"}</TableCell>
-                    <TableCell>{challenge.type?.name || "N/A"}</TableCell>
-                    <TableCell>
-                      <Badge className={getDifficultyColor(challenge.difficulty?.name || "")}>
-                        {challenge.difficulty?.name || "N/A"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{challenge.points}</TableCell>
-                    <TableCell>
-                      <Badge variant={challenge.enableFirstBlood ? "default" : "secondary"}>
-                        {challenge.enableFirstBlood ? "Enabled" : "Disabled"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(challenge.hidden ?? false)}>
-                        {challenge.hidden ? "Hidden" : "Visible"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(challenge)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm table-fixed">
+              <thead>
+                <tr>
+                  <th className="w-[280px] px-3 py-1.5 text-left font-medium align-middle">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                      onClick={() => handleSort("name")}
+                    >
+                      Name
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </th>
+                  <th className="w-[120px] px-3 py-1.5 text-left font-medium align-middle">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                      onClick={() => handleSort("category")}
+                    >
+                      Category
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </th>
+                  <th className="w-[120px] px-3 py-1.5 text-left font-medium align-middle">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                      onClick={() => handleSort("type")}
+                    >
+                      Type
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </th>
+                  <th className="w-[120px] px-3 py-1.5 text-left font-medium align-middle">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                      onClick={() => handleSort("difficulty")}
+                    >
+                      Difficulty
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </th>
+                  <th className="w-[100px] px-3 py-1.5 text-left font-medium align-middle">
+                    <Button
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                      onClick={() => handleSort("points")}
+                    >
+                      Points
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </th>
+                  <th className="w-[120px] px-3 py-1.5 text-left font-medium align-middle">First Blood</th>
+                  <th className="w-[100px] px-3 py-1.5 text-left font-medium align-middle">Status</th>
+                  <th className="w-[100px] px-3 py-1.5 text-left font-medium align-middle">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAndSortedChallenges.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-8 text-gray-500">
+                      No challenges found matching your search criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedChallenges.map((challenge) => (
+                    <tr key={challenge.id} className="border-b last:border-b-0">
+                      <td className="w-[280px] px-3 py-2 align-middle font-medium truncate">
+                        {challenge.id >= 0 ? (
+                          challenge.name
+                        ) : (
+                          <div className="h-[22px]">&nbsp;</div>
+                        )}
+                      </td>
+                      <td className="w-[120px] px-3 py-2 align-middle truncate">
+                        {challenge.id >= 0 ? (
+                          challenge.category?.name || "N/A"
+                        ) : (
+                          <div className="h-[22px]">&nbsp;</div>
+                        )}
+                      </td>
+                      <td className="w-[120px] px-3 py-2 align-middle truncate">
+                        {challenge.id >= 0 ? (
+                          challenge.type?.name || "N/A"
+                        ) : (
+                          <div className="h-[22px]">&nbsp;</div>
+                        )}
+                      </td>
+                      <td className="w-[120px] px-3 py-2 align-middle">
+                        {challenge.id >= 0 ? (
+                          <Badge className={getDifficultyColor(challenge.difficulty?.name || "")}>
+                            {challenge.difficulty?.name || "N/A"}
+                          </Badge>
+                        ) : (
+                          <div className="h-[22px]">&nbsp;</div>
+                        )}
+                      </td>
+                      <td className="w-[100px] px-3 py-2 align-middle">
+                        {challenge.id >= 0 ? (
+                          challenge.points
+                        ) : (
+                          <div className="h-[22px]">&nbsp;</div>
+                        )}
+                      </td>
+                      <td className="w-[120px] px-3 py-2 align-middle">
+                        {challenge.id >= 0 ? (
+                          <Badge variant={challenge.enableFirstBlood ? "default" : "secondary"}>
+                            {challenge.enableFirstBlood ? "Enabled" : "Disabled"}
+                          </Badge>
+                        ) : (
+                          <div className="h-[22px]">&nbsp;</div>
+                        )}
+                      </td>
+                      <td className="w-[100px] px-3 py-2 align-middle">
+                        {challenge.id >= 0 ? (
+                          <Badge className={getStatusColor(challenge.hidden ?? false)}>
+                            {challenge.hidden ? "Hidden" : "Visible"}
+                          </Badge>
+                        ) : (
+                          <div className="h-[22px]">&nbsp;</div>
+                        )}
+                      </td>
+                      <td className="w-[100px] px-3 py-2 align-middle">
+                        {challenge.id >= 0 ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(challenge)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <div className="h-[32px]">&nbsp;</div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
           
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 px-2">

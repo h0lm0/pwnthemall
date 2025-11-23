@@ -236,10 +236,10 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
         </Button>
       ),
       cell: ({ getValue, row }) => {
-        if (row.original.id < 0) return <div className="w-[150px] h-[52px]">&nbsp;</div>
+        if (row.original.id < 0) return <div className="w-[180px] h-[52px]">&nbsp;</div>
         const dateStr = formatDate(getValue() as string)
         return (
-          <span className="block w-[150px] h-[52px] text-sm text-muted-foreground flex items-center">
+          <span className="block w-[180px] h-[52px] text-sm text-muted-foreground flex items-center">
             {dateStr}
           </span>
         )
@@ -462,7 +462,7 @@ export default function InstancesContent({ instances, onRefresh }: Readonly<Inst
               <thead className="border-b">
                 <tr>
                   {columns.map((column, idx) => {
-                    const widths = ["w-[140px]", "w-[180px]", "w-[150px]", "w-[100px]", "w-[220px]", "w-[80px]"]
+                    const widths = ["w-[140px]", "w-[180px]", "w-[180px]", "w-[100px]", "w-[220px]", "w-[80px]"]
                     return (
                     <th key={column.id || (column as any).accessorKey} className={`px-3 py-1.5 text-left font-medium align-middle ${widths[idx] || ""}`}>
                       {typeof column.header === 'function' ? column.header({} as any) : column.header}

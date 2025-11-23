@@ -450,7 +450,7 @@ func GetChallengeSolves(c *gin.Context) {
 	var challenge models.Challenge
 	id := c.Param("id")
 
-	result := config.DB.First(&challenge, id)
+	result := config.DB.Preload("DecayFormula").First(&challenge, id)
 	if result.Error != nil {
 		utils.NotFoundError(c, "Challenge not found")
 		return
@@ -469,6 +469,10 @@ func GetChallengeSolves(c *gin.Context) {
 		return
 	}
 
+	// Initialize decay service for current points calculation
+	decayService := utils.NewDecay()
+	currentPoints := decayService.CalculateCurrentPoints(&challenge)
+
 	var solvesWithUsers []dto.SolveWithUser
 
 	for _, solve := range solves {
@@ -482,7 +486,8 @@ func GetChallengeSolves(c *gin.Context) {
 			First(&submission)
 
 		solveWithUser := dto.SolveWithUser{
-			Solve: solve,
+			Solve:         solve,
+			CurrentPoints: currentPoints, // Add current decayed points
 		}
 
 		if submissionResult.Error == nil && submission.User != nil {

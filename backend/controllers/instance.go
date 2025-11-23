@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
 	"github.com/pwnthemall/pwnthemall/backend/config"
+	"github.com/pwnthemall/pwnthemall/backend/debug"
 	"github.com/pwnthemall/pwnthemall/backend/dto"
 	"github.com/pwnthemall/pwnthemall/backend/models"
 	"github.com/pwnthemall/pwnthemall/backend/utils"
@@ -83,16 +84,40 @@ func DeleteInstanceAdmin(c *gin.Context) {
 	id := c.Param("id")
 	var instance models.Instance
 	
-	result := config.DB.First(&instance, id)
+	result := config.DB.Preload("Challenge.ChallengeType").First(&instance, id)
 	if result.Error != nil {
 		utils.NotFoundError(c, "Instance not found")
 		return
 	}
 
-	// Delete the instance
+	// Delete the instance from database first
 	if err := config.DB.Delete(&instance).Error; err != nil {
 		utils.InternalServerError(c, err.Error())
 		return
+	}
+
+	// Stop the Docker/Compose container asynchronously (can take time)
+	if instance.Container != "" {
+		containerName := instance.Container
+		isCompose := instance.Challenge.ChallengeType.Name == "compose"
+		
+		go func() {
+			if isCompose {
+				debug.Log("Admin stopping Compose project asynchronously: %s", containerName)
+				if err := utils.StopComposeInstance(containerName); err != nil {
+					debug.Log("Warning: Error stopping Compose instance (may already be stopped): %v", err)
+				} else {
+					debug.Log("Compose project stopped successfully: %s", containerName)
+				}
+			} else {
+				debug.Log("Admin stopping Docker container asynchronously: %s", containerName)
+				if err := utils.StopDockerInstance(containerName); err != nil {
+					debug.Log("Warning: Error stopping Docker instance (may already be stopped): %v", err)
+				} else {
+					debug.Log("Docker container stopped successfully: %s", containerName)
+				}
+			}
+		}()
 	}
 
 	utils.OKResponse(c, gin.H{"message": "Instance deleted successfully"})

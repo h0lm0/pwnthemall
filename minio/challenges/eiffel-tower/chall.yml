@@ -4,10 +4,11 @@ description: |
 category: misc
 difficulty: easy
 type: geo
+decay: "Logarithmic - Medium"
 author: system
 hidden: false
 flags: []
-points: 200
+points: 500
 
 target_lat: 48.858370
 target_lng: 2.294481

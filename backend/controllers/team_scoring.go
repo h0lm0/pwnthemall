@@ -22,10 +22,12 @@ const (
 // Helper functions for score calculation
 
 // calculateSolvePointsWithDecay calculates points for a single solve including first blood bonus with decay
+// Uses CURRENT challenge value based on total solves, not value at solve time
 func calculateSolvePointsWithDecay(solve *models.Solve, challenge *models.Challenge, position int, decayService *utils.DecayService) int {
-	currentPoints := decayService.CalculateDecayedPoints(challenge, position)
+	// Use CalculateCurrentPoints to get CURRENT challenge value (changes as more teams solve)
+	currentPoints := decayService.CalculateCurrentPoints(challenge)
 	
-	// Add FirstBlood bonus if applicable
+	// Add FirstBlood bonus if applicable (based on position at solve time)
 	if challenge.EnableFirstBlood && len(challenge.FirstBloodBonuses) > 0 {
 		if position < len(challenge.FirstBloodBonuses) {
 			bonusValue := int(challenge.FirstBloodBonuses[position])
@@ -65,12 +67,15 @@ func calculateTeamScore(teamID uint, decayService *utils.DecayService) (int, err
 	totalScore := 0
 	for _, solve := range solves {
 		var challenge models.Challenge
-		if err := config.DB.First(&challenge, solve.ChallengeID).Error; err != nil {
+		if err := config.DB.Preload("DecayFormula").First(&challenge, solve.ChallengeID).Error; err != nil {
 			continue
 		}
 
 		position := getSolvePosition(challenge.ID, solve.CreatedAt)
-				totalScore += calculateSolvePointsWithDecay(&solve, &challenge, position, decayService)
+		points := calculateSolvePointsWithDecay(&solve, &challenge, position, decayService)
+		totalScore += points
+		log.Printf("[DEBUG] Team %d, Challenge %d (slug: %s), Position: %d, CurrentPoints: %d, DecayFormulaID: %d", 
+			teamID, challenge.ID, challenge.Slug, position, points, challenge.DecayFormulaID)
 	}
 
 	return totalScore, nil
@@ -117,7 +122,7 @@ func createFirstBloodEntryForRecalc(challenge *models.Challenge, solve *models.S
 // processSolveRecalculation processes a single solve during point recalculation
 func processSolveRecalculation(solve *models.Solve, position int, decayService *utils.DecayService) (int, error) {
 	var challenge models.Challenge
-	if err := config.DB.First(&challenge, solve.ChallengeID).Error; err != nil {
+	if err := config.DB.Preload("DecayFormula").First(&challenge, solve.ChallengeID).Error; err != nil {
 		return 0, err
 	}
 
@@ -331,17 +336,12 @@ func GetTeamScore(c *gin.Context) {
 		return
 	}
 
-	// Get team with solves
-	var team models.Team
-	if err := config.DB.Preload("Solves").First(&team, *user.TeamID).Error; err != nil {
-		utils.InternalServerError(c, "team_not_found")
+	// Calculate total score with decay
+	decayService := utils.NewDecay()
+	totalScore, err := calculateTeamScore(*user.TeamID, decayService)
+	if err != nil {
+		utils.InternalServerError(c, "failed_to_calculate_score")
 		return
-	}
-
-	// Calculate total score
-	totalScore := 0
-	for _, solve := range team.Solves {
-		totalScore += solve.Points
 	}
 
 	// Get total spent on hints
@@ -406,7 +406,7 @@ func buildTimeline(allSolves []models.Solve, topTeams []models.Team, decayServic
 
 	for _, solve := range allSolves {
 		var challenge models.Challenge
-		if err := config.DB.First(&challenge, solve.ChallengeID).Error; err != nil {
+		if err := config.DB.Preload("DecayFormula").First(&challenge, solve.ChallengeID).Error; err != nil {
 			continue
 		}
 
