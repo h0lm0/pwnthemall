@@ -1168,7 +1168,7 @@ func StopComposeChallengeInstance(c *gin.Context) {
 		return
 	}
 
-	var instance models.Instance
+	var instance *models.Instance
 	teamID := uint(0)
 	if user.TeamID != nil {
 		teamID = *user.TeamID
@@ -1199,35 +1199,18 @@ func StopComposeChallengeInstance(c *gin.Context) {
 		}
 	}
 
-	if err := utils.StopComposeInstance(instance.Container); err != nil {
-		debug.Log("Failed to stop Compose instance: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "compose_stop_failed"})
-		return
-	}
-
-	if err := config.DB.Delete(&instance).Error; err != nil {
-		debug.Log("Failed to delete Compose instance from DB: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "db_delete_failed"})
-		return
-	}
-
-	if utils.WebSocketHub != nil {
-		var user models.User
-		if err := config.DB.Select("id, username, team_id").First(&user, userID).Error; err == nil && user.TeamID != nil {
-			event := dto.InstanceEvent{
-				Event:       "instance_update",
-				TeamID:      *user.TeamID,
-				UserID:      user.ID,
-				Username:    user.Username,
-				ChallengeID: instance.ChallengeID,
-				Status:      "stopped",
-				UpdatedAt:   time.Now().UTC().Unix(),
-			}
-			if payload, err := json.Marshal(event); err == nil {
-				utils.WebSocketHub.SendToTeamExcept(*user.TeamID, user.ID, payload)
-			}
+	go func() {
+		if err := utils.StopComposeInstance(instance.Container); err != nil {
+			debug.Log("Failed to stop Compose instance: %v", err)
+			return
 		}
-	}
+		if err := config.DB.Delete(instance).Error; err != nil {
+			debug.Log("Failed to delete Compose instance from DB: %v", err)
+			return
+		}
+		broadcastInstanceStop(userID, instance)
+		debug.Log("Compose instance stopped and broadcast sent: %s", instance.Container)
+	}()
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "instance_stopped",
