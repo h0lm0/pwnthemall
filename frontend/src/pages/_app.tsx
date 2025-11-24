@@ -22,7 +22,7 @@ interface MyAppProps extends AppProps {
 function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   const router = useRouter()
   const [windowWidth, setWindowWidth] = useState(0)
-  const [systemTheme, setSystemTheme] = useState<'latte' | 'slate'>('latte')
+  const [systemTheme, setSystemTheme] = useState<'light' | 'slate'>('light')
   const resizeTimeoutRef = useRef<NodeJS.Timeout>()
 
   const MIN_WIDTH = 1024
@@ -30,7 +30,7 @@ function MyApp({ Component, pageProps, sidebarDefaultOpen }: MyAppProps) {
   useEffect(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mq = window.matchMedia('(prefers-color-scheme: dark)')
-      const updateTheme = () => setSystemTheme(mq.matches ? 'slate' : 'latte')
+      const updateTheme = () => setSystemTheme(mq.matches ? 'slate' : 'light')
       updateTheme()
       mq.addEventListener('change', updateTheme)
       return () => mq.removeEventListener('change', updateTheme)

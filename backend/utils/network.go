@@ -106,26 +106,29 @@ func RefreshTeamNetworkFirewall(teamID uint, teamSubnet string, allowedIPs []str
 }
 
 func PushFirewallToAgent(teamID uint, ports []int, allowedIPs []string) error {
-	agentURL, err := getDefaultGateway()
-	if err != nil {
-		debug.Log("getDefaultGateway error: %v", err)
-		return fmt.Errorf("firewall agent push failed")
-	}
-	body := shared.FirewallRequest{
-		TeamID:     teamID,
-		Ports:      ports,
-		AllowedIPs: allowedIPs,
-	}
+	if os.Getenv("PTA_DOCKER_INSTANCE_ISOLATION") == "true" {
 
-	data, _ := json.Marshal(body)
-	debug.Log("PushFirewallToAgent: agentURL %s", agentURL)
-	resp, err := http.Post("http://"+agentURL+":8383/team/firewall", "application/json", bytes.NewReader(data))
-	if err != nil {
-		return fmt.Errorf("firewall agent push failed: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("firewall agent returned %d", resp.StatusCode)
+		agentURL, err := getDefaultGateway()
+		if err != nil {
+			debug.Log("getDefaultGateway error: %v", err)
+			return fmt.Errorf("firewall agent push failed")
+		}
+		body := shared.FirewallRequest{
+			TeamID:     teamID,
+			Ports:      ports,
+			AllowedIPs: allowedIPs,
+		}
+
+		data, _ := json.Marshal(body)
+		debug.Log("PushFirewallToAgent: agentURL %s", agentURL)
+		resp, err := http.Post("http://"+agentURL+":8383/team/firewall", "application/json", bytes.NewReader(data))
+		if err != nil {
+			return fmt.Errorf("firewall agent push failed: %w", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("firewall agent returned %d", resp.StatusCode)
+		}
 	}
 	return nil
 }

@@ -103,16 +103,17 @@ func main() {
 	routes.RegisterSubmissionRoutes(router)
 	routes.RegisterDashboardRoutes(router)
 
-	debug.Log("Loading plugins...")
-	pluginsystem.LoadAllPlugins("/app/plugins/bin", router, config.CEF)
-	routes.RegisterPluginRoutes(router)
+	if os.Getenv("PTA_PLUGINS_ENABLED") == "true" {
+		debug.Log("Loading plugins...")
+		pluginsystem.LoadAllPlugins("/app/plugins/bin", router, config.CEF)
+		routes.RegisterPluginRoutes(router)
+		defer pluginsystem.ShutdownAllPlugins()
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-
-	defer pluginsystem.ShutdownAllPlugins()
 
 	debug.Log("Starting server on port %s", port)
 	log.Printf("Server starting on port %s", port)

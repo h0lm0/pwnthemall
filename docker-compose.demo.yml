@@ -51,9 +51,11 @@ services:
       PTA_DOCKER_INSTANCES_BY_USER: ${PTA_DOCKER_INSTANCES_BY_USER}
       PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
       PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS: ${PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS}
+      PTA_DOCKER_ISOLATION: ${PTA_DOCKER_ISOLATION}
       PTA_CHALL_BASE_CIDR: ${PTA_CHALL_BASE_CIDR}
       PTA_DEBUG_ENABLED: ${PTA_DEBUG_ENABLED}
       PTA_PLUGIN_MAGIC_VALUE: ${PTA_PLUGIN_MAGIC_VALUE}
+      PTA_PLUGINS_ENABLED: ${PTA_PLUGINS_ENABLED}
     volumes:
       - ./shared/docker-worker:/home/app/.ssh/docker-worker
       - ./shared/libvirt-worker:/home/app/.ssh/libvirt-worker
@@ -92,7 +94,7 @@ services:
       context: ./libvirt-worker
       dockerfile: Dockerfile
       args:
-        LIBVIRT_UID: ${LIBVIRT_UID}
+        LIBVIRT_UID: ${LIBVIRT_UID:-1000}
         LIBVIRT_WORKER_PASSWORD: ${LIBVIRT_WORKER_PASSWORD}
     depends_on:
       db:
@@ -180,6 +182,7 @@ services:
     privileged: true
     network_mode: host
     restart: unless-stopped
+    profiles: ["isolation"]
 
 volumes:
   postgres_data:

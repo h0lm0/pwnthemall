@@ -20,6 +20,8 @@ display_ansi_art() {
     done
 }
 
+
+
 display_ansi_art
 
 ENV_FILE="./.env"
@@ -49,6 +51,29 @@ PLUGINS_IMAGE="pwnthemall-plugins:latest"
 # Worker system needs: automatically retrieve docker gid
 DOCKER_GID=$(getent group docker | cut -d: -f3)
 export DOCKER_GID
+
+function load_compose_profiles() {
+    local profiles=()
+
+    if [[ "${PTA_DIND:-false}" == "true" ]]; then
+        profiles+=("dind")
+    else
+        profiles+=("no-dind")
+    fi
+
+    if [[ "${PTA_DOCKER_ISOLATION:-false}" == "true" ]]; then
+        profiles+=("isolation")
+    fi
+
+    if [[ "${PTA_PLUGINS_ENABLED:-false}" == "true" ]]; then
+        profiles+=("plugins")
+    fi
+
+    export COMPOSE_PROFILES
+    COMPOSE_PROFILES="$(IFS=','; echo "${profiles[*]}")"
+
+    echo "[+] Enabled profiles: ${COMPOSE_PROFILES}"
+}
 
 function minio_alias() {
     local env="${1:-prod}" # default to prod
@@ -515,6 +540,7 @@ case "${1:-}" in
         esac
         ;;
     compose)
+        load_compose_profiles
         shift
         case "${1:-}" in
             -u|up)
