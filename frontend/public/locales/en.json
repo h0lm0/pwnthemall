@@ -62,6 +62,7 @@
     "description": "Description",
     "difficulty": "Difficulty",
     "failed_to_load_challenges": "Failed to load challenges",
+    "firstblood_bonus": "FirstBlood bonus",
     "no_categories": "No categories",
     "no_challenges_available": "No challenges available",
     "no_challenges_in_category": "No challenges found in this category",
@@ -241,11 +242,13 @@
   },
   "instance": {
     "active_instances": "Active Instances",
-    "docker_instance": "Docker Instance",
-    "instance_status": "Instance Status"
+    "docker_instance": "Instance",
+    "instance_status": "Instance status"
   },
   "instance_actions": {
+    "instance_cooldown_wait": "Please wait before starting another instance. Cooldown period active.",
     "instance_stopped_success": "Instance stopped successfully",
+    "instance_create_failed": "Failed to create instance",
     "kill_instance": "Kill Instance",
     "restart_instance": "Restart Instance",
     "running": "Running",
@@ -263,14 +266,17 @@
     "please_fill_fields": "Please fill in all fields",
     "tip": "Tip",
     "warning": "Warning",
-    "welcome_back": "Welcome back"
+    "welcome_back": "Welcome back",
+    "incorrect_location": "Incorrect location. You're not close enough to the target!",
+    "flag_already_submitted": "You've already submitted this flag"
   },
   "pagination": {
     "showing": "Showing",
     "to": "to",
     "of": "of",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "and": "and"
   },
   "misc": {
     "create_account": "Create a new account to continue",
@@ -460,12 +466,20 @@
     "submission_trend": "Submission trend",
     "challenge_categories": "Challenge categories",
     "running_instances": "Running instances",
+    "currently_running_challenges": "Currently Running Challenges",
+    "active_instances": "active instances",
+    "no_running_instances": "No instances running yet",
+    "started": "Started",
+    "expires": "Expires",
+    "more_instances": "more instances",
     "no_recent_submissions": "No recent submissions yet",
     "last_7_days": "Last 7 Days",
     "last_48_hours": "Last 48 Hours",
+    "intro": "Intro",
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard",
+    "insane": "Insane",
     "hidden": "Hidden",
     "correct": "Correct",
     "incorrect": "Incorrect",
@@ -477,5 +491,28 @@
     "active": "Active",
     "banned": "Banned",
     "submissions_over_time": "Submissions over time"
-  }
+  },
+  "instances": "Instances",
+  "instance_stopped_success": "Instance stopped successfully!",
+  "instance_stop_failed": "Failed to stop instance",
+  "instances_stopped_success": "Selected instances stopped successfully!",
+  "instances_stop_failed": "Failed to stop selected instances",
+  "confirm_stop_instance": "Confirm Stop Instance",
+  "confirm_stop_instance_description": "Are you sure you want to stop this instance? This action cannot be undone.",
+  "confirm_stop_instances": "Confirm Stop Instances",
+  "confirm_stop_instances_description": "Are you sure you want to stop {count} selected instances? This action cannot be undone.",
+  "stop_selected": "Stop Selected",
+  "stop_all": "Stop All",
+  "stop": "Stop",
+  "running": "Running",
+  "stopped": "Stopped",
+  "time_remaining": "Time Remaining",
+  "container_id": "Container ID",
+  "filter_by_challenge": "Filter by challenge...",
+  "filter_by_category": "Filter by category...",
+  "confirm_stop_all_instances": "Confirm Stop All Instances",
+  "confirm_stop_all_instances_description": "Are you sure you want to stop ALL {count} running instances? This action cannot be undone.",
+  "all_instances_stopped_success": "All instances stopped successfully!",
+  "all_instances_stop_failed": "Failed to stop all instances",
+  "clear_filters": "Clear Filters"
 }

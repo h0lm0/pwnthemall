@@ -152,21 +152,31 @@ func (h *Hub) SendToTeamExcept(teamID uint, excludeUserID uint, message []byte) 
 		return
 	}
 
+	debug.Log("[WebSocket] SendToTeamExcept: team=%d, exclude=%d, team_members=%v", teamID, excludeUserID, userIDs)
+
 	h.mu.RLock()
+	sentCount := 0
 	for _, userID := range userIDs {
 		if userID == excludeUserID {
+			debug.Log("[WebSocket] Skipping excluded user %d", userID)
 			continue
 		}
 		if client, exists := h.clients[userID]; exists {
 			select {
 			case client.Send <- message:
+				sentCount++
+				debug.Log("[WebSocket] Sent message to user %d", userID)
 			default:
 				close(client.Send)
 				delete(h.clients, userID)
+				debug.Log("[WebSocket] Failed to send to user %d (channel full), closed connection", userID)
 			}
+		} else {
+			debug.Log("[WebSocket] User %d not connected to websocket", userID)
 		}
 	}
 	h.mu.RUnlock()
+	debug.Log("[WebSocket] Sent message to %d users (excluding user %d)", sentCount, excludeUserID)
 }
 
 // GetConnectedUsers returns a list of connected user IDs

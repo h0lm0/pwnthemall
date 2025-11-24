@@ -202,14 +202,22 @@ const ResizeHandle = ({ onResize, onToggle }: {
   }, [onResize, onToggle])
 
   return (
-    <div
-      className="absolute top-0 right-0 w-2 h-full cursor-col-resize hover:bg-border/50 transition-colors z-10 flex items-center justify-center group"
+    <button
+      type="button"
+      aria-label="Resize sidebar"
+      className="absolute top-0 right-0 w-2 h-full cursor-col-resize hover:bg-border/50 transition-colors z-10 flex items-center justify-center group border-0 bg-transparent p-0"
       onMouseDown={handleMouseDown}
+      onClick={(e) => {
+        // Only toggle on actual click, not during drag
+        if (e.detail === 1) {
+          onToggle?.();
+        }
+      }}
       title="Drag to resize, click to toggle"
     >
       {/* Visual indicator */}
       <div className="w-0.5 h-8 bg-border rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-    </div>
+    </button>
   )
 }
 
@@ -240,7 +248,10 @@ export const Sidebar = React.forwardRef<
     )
   }
 
-  const sidebarWidth = open ? width : (collapsible === "icon" ? 64 : width)
+  let sidebarWidth = width
+  if (!open) {
+    sidebarWidth = collapsible === "icon" ? 64 : width
+  }
 
   return (
     <div

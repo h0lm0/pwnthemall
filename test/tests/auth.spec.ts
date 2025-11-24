@@ -280,7 +280,7 @@ test('Member to admin upgrade', async ({ page }) => {
 
   // Vérifie l'accès aux pages admin
   const adminPageChecks = [
-    { url: '/admin/dashboard', text: /administration page/i },
+    { url: '/admin/dashboard', text: /CTF Status/i },
     { url: '/admin/users', text: /users/i },
     { url: '/admin/challenge-categories', text: /challenge categories/i },
   ];

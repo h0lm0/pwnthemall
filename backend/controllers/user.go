@@ -138,16 +138,17 @@ func GetCurrentUser(c *gin.Context) {
 	}
 
 	// Compute team-based points and number of solved challenges
-	var totalPoints int64 = 0
+	var totalPoints int = 0
 	var solvesCount int64 = 0
 	if user.TeamID != nil {
 		// Count of solves for the team
 		config.DB.Model(&models.Solve{}).Where("team_id = ?", *user.TeamID).Count(&solvesCount)
-		// Sum of points from solves for the team
-		config.DB.Model(&models.Solve{}).
-			Where("team_id = ?", *user.TeamID).
-			Select("COALESCE(SUM(points), 0)").
-			Scan(&totalPoints)
+		// Calculate current points with decay
+		decayService := utils.NewDecay()
+		score, err := calculateTeamScore(*user.TeamID, decayService)
+		if err == nil {
+			totalPoints = score
+		}
 	}
 
 	// Compute total number of challenges available to solve (challenges with at least one flag)

@@ -38,14 +38,14 @@ instance.interceptors.response.use(
       originalRequest.url?.includes('/api/refresh') ||
       originalRequest.url?.includes('/api/me')
     ) {
-      return Promise.reject(error);
+      throw error;
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       // If already failed once or on login page, don't retry
       const isOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
       if (refreshFailed || isOnLoginPage) {
-        return Promise.reject(error);
+        throw error;
       }
 
       if (isRefreshing) {
@@ -56,7 +56,7 @@ instance.interceptors.response.use(
             return instance(originalRequest);
           })
           .catch((err) => {
-            return Promise.reject(err);
+            throw err;
           });
       }
 
@@ -77,13 +77,13 @@ instance.interceptors.response.use(
         if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
-        return Promise.reject(refreshError);
+        throw refreshError;
       } finally {
         isRefreshing = false;
       }
     }
 
-    return Promise.reject(error);
+    throw error;
   }
 );
 

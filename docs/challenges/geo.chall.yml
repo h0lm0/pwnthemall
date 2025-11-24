@@ -6,6 +6,7 @@ description: |
 category: misc
 difficulty: easy
 type: geo
+decay: "Logarithmic - Medium"
 author: "Kevin'MITGeo"
 hidden: false
 flags: []
@@ -13,3 +14,4 @@ points: 200
 target_lat: 48.85837
 target_lng: 2.294481
 radius_km: 1.0
+# depends_on: "Other Challenge Name"  # Optional: exact name of challenge that must be solved first
