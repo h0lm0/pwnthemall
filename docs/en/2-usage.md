@@ -55,6 +55,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       ports: [5001]
       connection_info: ["http://$ip:[5001]"] 
       ```
+   Ports that need to be mapped in `connection_info` must framed by `[` `]`
 
 3. **Geo**  
    - A location to pin on a world map based on clues in the description.  
@@ -98,6 +99,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       ports: [80,22]
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
+   Ports that need to be mapped in `connection_info` must framed by `[` `]`
 
 ## Challenge Dependencies
 

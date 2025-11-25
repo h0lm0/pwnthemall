@@ -56,6 +56,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       ports: [5001]
       connection_info: ["http://$ip:[5001]"] 
       ```
+   Les ports à mapper dans le `connection_info` sont à encadrer avec `[` `]`
 
 3. **Geo**  
    - Une localisation à pinner sur une map du monde selon les indices dans la description.  
@@ -99,6 +100,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       ports: [80,22]
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
+   Les ports à mapper dans le `connection_info` sont à encadrer avec `[` `]`
 
 ## Dépendances entre Challenges
 
