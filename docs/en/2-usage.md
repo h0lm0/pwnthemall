@@ -196,6 +196,71 @@ FirstBlood bonuses are **permanent** and decay does not apply:
 - FirstBlood bonus: fixed, never changes
 - Total score = Current Points + FirstBlood Bonus
 
+## Challenge Files
+
+Want to attach files to your challenges? You can! Just drop your files in the challenge folder and reference them in the YAML.
+
+### How to Add Files
+
+1. Put your files in `minio/challenges/[challenge_name]/`
+2. Add the `files` field to your `chall.yml`:
+
+```yaml
+name: "Base64 Mystery"
+description: |
+  I found this mysterious Python script and its output.
+  
+  Can you figure out what the original message was?
+  
+  Download the files below to solve this challenge!
+category: misc
+difficulty: intro
+type: standard
+files: [encode.py, output.txt]  # List your files here
+flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
+points: 50
+```
+
+### Supported Paths
+
+You can reference files by name or use relative paths:
+
+```yaml
+# Direct files in challenge folder
+files: [readme.txt, exploit.py, data.zip]
+
+# Files in subdirectories
+files: [static/image.png, scripts/solver.py, data/secrets.txt]
+
+# Mix of both
+files: [readme.txt, static/hint.jpg, tools/decrypt.py]
+```
+
+### File Validation
+
+When syncing challenges, the system checks:
+- **File existence**: All referenced files must exist in MinIO
+- **File size**: Max 50MB per file
+- **Total size**: Max 200MB for all files combined
+
+### How Users See Files
+
+Files appear at the top of the challenge description page with:
+- File icons based on type (code, archive, text, etc.)
+- File size display
+- One-click download
+
+### Example Challenge Structure
+
+```
+minio/challenges/base64-mystery/
+├── chall.yml
+├── encode.py          # Python script
+└── output.txt         # Encoded output
+```
+
+The `files` field in your YAML makes them downloadable from the web interface. Simple as that!
+
 ## Challenge synchronization
 
 Challenge synchronization is handled via the `pta-cli.sh` script. Once your YAML files have been created or modified, you can synchronize the challenges to the MinIO storage using the following command:

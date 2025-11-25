@@ -197,9 +197,72 @@ Les bonus FirstBlood sont **permanents** et le decay ne s'applique pas :
 - Bonus FirstBlood : fixe, ne change jamais
 - Score total = Points Actuels + Bonus FirstBlood
 
-## Synchronisation des challenges
+## Fichiers de Challenge
 
-La synchronisation des challenges se fait via le script `pta-cli.sh`. Une fois vos YAML créés et modifiés, vous pouvez lancer la synchronisation des challeges vers le stockage MinIO avec la commande:
+Vous souhaitez joindre des fichiers à vos challenges ? C'est possible ! Il suffit de déposer vos fichiers dans le dossier du challenge et de les référencer dans le YAML.
+
+### Comment Ajouter des Fichiers
+
+1. Placez vos fichiers dans `minio/challenges/[nom_du_challenge]/`
+2. Ajoutez le champ `files` à votre `chall.yml` :
+
+```yaml
+name: "Mystère Base64"
+description: |
+  J'ai trouvé ce script Python mystérieux et son résultat.
+category: misc
+difficulty: intro
+type: standard
+files: [encode.py, output.txt]  # Liste vos fichiers ici
+flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
+points: 50
+```
+
+### Chemins Supportés
+
+Vous pouvez référencer les fichiers par nom ou utiliser des chemins relatifs :
+
+```yaml
+# Fichiers directs dans le dossier du challenge
+files: [readme.txt, exploit.py, data.zip]
+
+# Fichiers dans des sous-dossiers
+files: [static/image.png, scripts/solver.py, data/secrets.txt]
+
+# Mix des deux
+files: [readme.txt, static/hint.jpg, tools/decrypt.py]
+```
+
+### Validation des Fichiers
+
+Lors de la synchronisation des challenges, le système vérifie :
+- **Existence des fichiers** : Tous les fichiers référencés doivent exister dans MinIO
+- **Taille des fichiers** : Max 50MB par fichier
+- **Taille totale** : Max 200MB pour tous les fichiers combinés
+- **Sécurité des chemins** : Les tentatives de traversée de chemin (`../` est bloqué)
+
+### Affichage pour les Utilisateurs
+
+Les fichiers apparaissent en haut de la page de description du challenge avec :
+- Des icônes selon le type de fichier (code, archive, texte, etc.)
+- Affichage de la taille
+- Téléchargement en un clic
+- Limitation de débit : 10 téléchargements par minute par utilisateur
+
+### Exemple de Structure de Challenge
+
+```
+minio/challenges/mystere-base64/
+├── chall.yml
+├── encode.py          # Script Python
+└── output.txt         # Sortie encodée
+```
+
+Le champ `files` dans votre YAML les rend téléchargeables depuis l'interface web. Simple comme bonjour !
+
+## Synchronisation des Challenges
+
+La synchronisation des challenges se fait via le script `pta-cli.sh`. Une fois vos fichiers YAML créés ou modifiés, vous pouvez synchroniser les challenges vers le stockage MinIO grâce à la commande suivante :
 
 ```bash
 bash pta-cli.sh minio sync challenges
