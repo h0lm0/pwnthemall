@@ -173,7 +173,24 @@
   "cookies": {
     "cookie_accept_message": "En cliquant sur Accepter, vous acceptez notre utilisation des cookies.",
     "cookie_message": "Nous utilisons des cookies pour vous garantir la meilleure expérience sur notre site. Pour plus d'informations sur l'utilisation des cookies, consultez notre politique de cookies.",
-    "cookie_title": "Nous utilisons des cookies"
+    "cookie_title": "Nous utilisons des cookies",
+    "page_title": "Politique des cookies",
+    "title": "Politique des cookies",
+    "what_are_cookies": "Que sont les cookies ?",
+    "cookies_description": "Les cookies sont de petits fichiers texte placés sur votre appareil lorsque vous visitez un site web. Ils aident les sites web à fonctionner correctement et fournissent des informations aux propriétaires du site.",
+    "cookies_we_use": "Cookies que nous utilisons",
+    "only_essential_message": "Ce site web utilise uniquement des cookies essentiels qui sont strictement nécessaires au bon fonctionnement de la plateforme. Ces cookies ne nécessitent pas votre consentement selon le RGPD car ils sont essentiels pour fournir le service que vous avez demandé.",
+    "essential_cookies_title": "Cookies essentiels",
+    "essential_cookies_description": "Ces cookies sont nécessaires au fonctionnement du site web et ne peuvent pas être désactivés. Ils sont utilisés pour :",
+    "purpose_authentication": "L'authentification et l'accès au compte",
+    "purpose_session": "La gestion de session et le maintien de votre état connecté",
+    "purpose_preferences": "La mémorisation de vos préférences (langue, thème)",
+    "purpose_security": "La sécurité et la protection contre les activités malveillantes",
+    "manage_cookies": "Gestion des cookies",
+    "manage_cookies_description": "Puisque nous utilisons uniquement des cookies essentiels requis pour le fonctionnement du site web, ils ne peuvent pas être désactivés via notre plateforme. Cependant, vous pouvez configurer votre navigateur pour bloquer ou vous alerter sur les cookies.",
+    "browser_settings_note": "Note : Le blocage des cookies essentiels peut vous empêcher d'utiliser certaines fonctionnalités du site web ou de vous connecter à votre compte.",
+    "more_information": "Plus d'informations",
+    "contact_message": "Si vous avez des questions concernant notre utilisation des cookies, veuillez contacter l'administrateur du site web."
   },
   "ctf": {
     "competition_active": "Compétition Active",

@@ -173,7 +173,24 @@
   "cookies": {
     "cookie_accept_message": "By clicking Accept, you agree to our use of cookies.",
     "cookie_message": "We use cookies to ensure you get the best experience on our website. For more information on how we use cookies, please see our cookie policy.",
-    "cookie_title": "We use cookies"
+    "cookie_title": "We use cookies",
+    "page_title": "Cookie policy",
+    "title": "Cookie policy",
+    "what_are_cookies": "What are cookies?",
+    "cookies_description": "Cookies are small text files that are placed on your device when you visit a website. They help websites function properly and provide information to website owners.",
+    "cookies_we_use": "Cookies we use",
+    "only_essential_message": "This website only uses essential cookies that are strictly necessary for the proper functioning of the platform. These cookies do not require your consent under GDPR as they are essential for providing the service you have requested.",
+    "essential_cookies_title": "Essential cookies",
+    "essential_cookies_description": "These cookies are necessary for the website to function and cannot be disabled. They are used for:",
+    "purpose_authentication": "Authentication and account access",
+    "purpose_session": "Session management and maintaining your logged-in state",
+    "purpose_preferences": "Remembering your preferences (language, theme)",
+    "purpose_security": "Security and protection against malicious activities",
+    "manage_cookies": "Managing cookies",
+    "manage_cookies_description": "Since we only use essential cookies required for the website to function, they cannot be disabled through our platform. However, you can configure your browser to block or alert you about cookies.",
+    "browser_settings_note": "Note: Blocking essential cookies may prevent you from using certain features of the website or logging into your account.",
+    "more_information": "More information",
+    "contact_message": "If you have any questions about our use of cookies, please contact the website administrator."
   },
   "ctf": {
     "competition_active": "Competition Active",

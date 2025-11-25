@@ -77,7 +77,7 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
             <span className="block mt-2 text-xs">
               {t('cookie_accept_message')}
             </span>
-            <Link href="/learn-more" className="underline text-xs mt-1 inline-block">
+            <Link href="/cookies" className="underline text-xs mt-1 inline-block">
               {t('learn_more')}
             </Link>
           </div>
