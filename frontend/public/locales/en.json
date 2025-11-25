@@ -217,6 +217,12 @@
     "email_too_long": "Email too long (max 254 characters)",
     "invalid_email": "Invalid email address."
   },
+  "errors": {
+    "challenge_not_found": "Challenge not found",
+    "file_not_found": "File not found",
+    "invalid_file_path": "Invalid file path",
+    "file_download_failed": "Failed to download file"
+  },
   "flag": {
     "enter_your_flag": "Enter your flag",
     "flag_submission_no_longer_available": "Flag submission is no longer available",

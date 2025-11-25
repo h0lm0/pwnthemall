@@ -35,6 +35,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useChallengeInstances } from "@/hooks/use-challenge-instances";
 import { buildSubmitPayload, formatDate, GeoCoords } from "./category-helpers";
+import { ChallengeFiles } from "@/components/ChallengeFiles";
 
 interface CategoryContentProps {
   cat: string;
@@ -519,6 +520,12 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                       {/* Tab Panels: absolutely positioned & independently scrollable */}
                       <TabsContent value="description" className="absolute inset-0 overflow-y-auto mt-0 pt-2 pr-2 z-[1100]">
                         <div className="text-left text-foreground leading-relaxed min-h-full">
+                          {selectedChallenge?.files && selectedChallenge.files.length > 0 && (
+                            <ChallengeFiles 
+                              challengeId={selectedChallenge.id} 
+                              files={selectedChallenge.files} 
+                            />
+                          )}
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{

@@ -211,11 +211,17 @@
     "disconnected": "Déconnecté"
   },
   "email": {
-    "email": "E-mail",
+    "email": "Email",
     "email_exists": "Cette adresse email existe déjà",
     "email_length": "L'adresse email doit contenir au plus 254 caractères",
     "email_too_long": "Email trop long (254 caractères max)",
     "invalid_email": "Adresse email invalide"
+  },
+  "errors": {
+    "challenge_not_found": "Challenge introuvable",
+    "file_not_found": "Fichier introuvable",
+    "invalid_file_path": "Chemin de fichier invalide",
+    "file_download_failed": "Échec du téléchargement du fichier"
   },
   "flag": {
     "enter_your_flag": "Entrez votre flag",
