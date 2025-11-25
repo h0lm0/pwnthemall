@@ -31,8 +31,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      docker-worker:
-        condition: service_healthy
+      # docker-worker:
+        # condition: service_healthy
     environment:
       DATABASE_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable'
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -55,8 +55,11 @@ services:
       PTA_DOCKER_INSTANCES_BY_USER: ${PTA_DOCKER_INSTANCES_BY_USER}
       PTA_DOCKER_INSTANCES_BY_TEAM: ${PTA_DOCKER_INSTANCES_BY_TEAM}
       PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS: ${PTA_DOCKER_INSTANCE_COOLDOWN_SECONDS}
+      PTA_DOCKER_ISOLATION: ${PTA_DOCKER_ISOLATION}
+      PTA_CHALL_BASE_CIDR: ${PTA_CHALL_BASE_CIDR}
       PTA_DEBUG_ENABLED: ${PTA_DEBUG_ENABLED}
       PTA_PLUGIN_MAGIC_VALUE: ${PTA_PLUGIN_MAGIC_VALUE}
+      PTA_PLUGINS_ENABLED: ${PTA_PLUGINS_ENABLED}
     volumes:
       - ./backend:/app
       - ./shared/docker-worker:/home/app/.ssh/docker-worker
@@ -66,6 +69,9 @@ services:
       private:
 
   docker-worker:
+    profiles:
+      - "no-dind"
+    hostname: docker-worker
     container_name: docker-worker
     build:
       context: ./docker-worker
@@ -89,13 +95,37 @@ services:
       timeout: 3s
       retries: 5
 
+  docker-worker-dind:
+    hostname: docker-worker
+    profiles:
+      - "dind"
+    container_name: docker-worker
+    privileged: true
+    build:
+      context: ./docker-worker
+      dockerfile: Dockerfile.dind
+      args:
+        DOCKER_GID: ${DOCKER_GID}
+        DOCKER_WORKER_PASSWORD: ${DOCKER_WORKER_PASSWORD}
+    volumes:
+      - ./shared/docker-worker.pub:/home/docker/.ssh/authorized_keys
+    networks:
+      private:
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   libvirt-worker:
+    profiles:
+      - "plugins"
     container_name: libvirt-worker
     build:
       context: ./libvirt-worker
       dockerfile: Dockerfile
       args:
-        LIBVIRT_UID: ${LIBVIRT_UID}
+        LIBVIRT_UID: ${LIBVIRT_UID:-1000}
         LIBVIRT_WORKER_PASSWORD: ${LIBVIRT_WORKER_PASSWORD}
     depends_on:
       db:
@@ -145,7 +175,7 @@ services:
         CADDY_ENV: ${CADDY_ENV}  
     ports:
       - "8080:80"
-      - "127.0.0.1:443:443"
+      - "443:443"
     networks:
       public:
 
@@ -175,10 +205,42 @@ services:
       public:
       private:
 
+  agent:
+    profiles:
+      - isolation
+    container_name: agent
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    network_mode: host
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./agent/config:/etc/agent:ro
+    user: "1000:1000"
+
 volumes:
   postgres_data:
   minio:
 
 networks:
   public:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.1.0/24
+
   private:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.2.0/24

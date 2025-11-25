@@ -53,15 +53,32 @@ func ConnectDocker() error {
 	} else {
 		// Handle remote Docker daemon (SSH, TCP, etc.)
 		log.Printf("DEBUG: Using remote Docker daemon: %s", dockerCfg.Host)
+		var helper *connhelper.ConnectionHelper
+		if strings.HasPrefix(dockerCfg.Host, "ssh://") {
+			sshOpts := []string{
+				"-o", "StrictHostKeyChecking=no",
+			}
 
-		helper, err := connhelper.GetConnectionHelper(dockerCfg.Host)
-		if err != nil {
-			log.Println("Failed to create connection helper:", err)
-			return err
-		}
-		if helper == nil {
-			log.Println("Unable to create connection helper (nil)")
-			return errors.New("unable to create connection helper")
+			helper, err = connhelper.GetConnectionHelperWithSSHOpts(dockerCfg.Host, sshOpts)
+			if err != nil {
+				log.Println("Failed to create connection helper:", err)
+				return err
+			}
+			if helper == nil {
+				log.Println("Unable to create connection helper (nil)")
+				return errors.New("unable to create connection helper")
+			}
+
+		} else {
+			helper, err = connhelper.GetConnectionHelper(dockerCfg.Host)
+			if err != nil {
+				log.Println("Failed to create connection helper:", err)
+				return err
+			}
+			if helper == nil {
+				log.Println("Unable to create connection helper (nil)")
+				return errors.New("unable to create connection helper")
+			}
 		}
 
 		httpClient := &http.Client{

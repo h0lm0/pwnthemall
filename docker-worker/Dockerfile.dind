@@ -1,0 +1,24 @@
+FROM docker:29.0.0-dind-alpine3.22
+
+RUN apk add --no-cache openssh bash shadow
+
+ARG DOCKER_GID
+ENV DOCKER_GID $DOCKER_GID
+
+ARG DOCKER_WORKER_PASSWORD
+ENV DOCKER_WORKER_PASSWORD $DOCKER_WORKER_PASSWORD
+
+RUN adduser -D -u 1000 -s /bin/bash -G docker docker && \
+    mkdir -p /home/docker/.ssh && \
+    chown -R docker:docker /home/docker/.ssh && \
+    chmod 700 /home/docker/.ssh
+
+RUN echo "docker:${DOCKER_WORKER_PASSWORD}" | chpasswd
+
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+
+COPY entrypoint.dind.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

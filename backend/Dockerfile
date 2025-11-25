@@ -17,6 +17,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o pwnthemall
 # ============================================
 FROM golang:1.24-alpine AS dev
 
+ARG PTA_PLUGINS_ENABLED
+ENV PTA_PLUGINS_ENABLED=${PTA_PLUGINS_ENABLED}
+
 WORKDIR /app
 
 RUN apk --no-cache add ca-certificates openssh-client
@@ -48,6 +51,8 @@ FROM alpine:3.22 AS prod
 
 ARG DOCKER_GID
 ENV DOCKER_GID=${DOCKER_GID}
+ARG PTA_PLUGINS_ENABLED
+ENV PTA_PLUGINS_ENABLED=${PTA_PLUGINS_ENABLED}
 
 WORKDIR /app
 

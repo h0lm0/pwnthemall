@@ -75,9 +75,9 @@ func loadSinglePlugin(file string, router *gin.Engine, enforcer *casbin.Enforcer
 	metadata := plug.GetMetadata()
 	metadata.EnvVars = envVars
 
-    plugConfig := map[string]interface{}{
-        "db_connection": os.Getenv("DATABASE_URL"),
-    }
+	plugConfig := map[string]interface{}{
+		"db_connection": os.Getenv("DATABASE_URL"),
+	}
 
 	plugConfig = shared.MergeEnvToConfig(plugConfig, envVars)
 
@@ -95,6 +95,12 @@ func loadSinglePlugin(file string, router *gin.Engine, enforcer *casbin.Enforcer
 		debug.Log("Failed to register routes for %s: %v", metadata.Name, err)
 		client.Kill()
 		return
+	}
+
+	if metadata.Type == "challenge-handler" {
+		challengeType := metadata.Name
+		RegisterPluginChallengeHandler(plug, challengeType)
+		debug.Log("Registered challenge handler for type: %s", challengeType)
 	}
 
 	shared.LoadedPlugins[metadata.Name] = &shared.LoadedPlugin{
