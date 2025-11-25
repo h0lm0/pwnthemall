@@ -24,7 +24,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       description: |
          Standard challenge example
 
-         Make a team and enter the flag "PwnThatDemo" to solve it !
+         Make a team and enter the flag "flag" to solve it !
       category: "pwn"
       difficulty: "easy"
       type: "standard"
@@ -43,7 +43,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       description: |
          Simple challenge using Docker container.
 
-         The flag is "whatsthis?aDockerContainer!"
+         The flag is "flag"
       category: web
       difficulty: easy
       type: docker
@@ -86,7 +86,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       description: |
          Compose challenge example
 
-         Enter the flag "really?ComposeChallenges!" to solve it !
+         Enter the flag "flag" to solve it !
       category: "pwn"
       difficulty: "easy"
       type: "compose"

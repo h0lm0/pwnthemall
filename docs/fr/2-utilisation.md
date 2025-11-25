@@ -25,7 +25,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       description: |
          Standard challenge example
 
-         Make a team and enter the flag "PwnThatDemo" to solve it !
+         Make a team and enter the flag "flag" to solve it !
       category: "pwn"
       difficulty: "easy"
       type: "standard"
@@ -44,7 +44,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       description: |
          Simple challenge using Docker container.
 
-         The flag is "whatsthis?aDockerContainer!"
+         The flag is "flag"
       category: web
       difficulty: easy
       type: docker
@@ -87,7 +87,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       description: |
          Compose challenge example
 
-         Enter the flag "really?ComposeChallenges!" to solve it !
+         Enter the flag "flag" to solve it !
       category: "pwn"
       difficulty: "easy"
       type: "compose"
