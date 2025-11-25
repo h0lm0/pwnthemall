@@ -53,7 +53,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       hidden: false
       points: 500
       ports: [5001]
-      connection_info: ["http://$ip:5001"] 
+      connection_info: ["http://$ip:[5001]"] 
       ```
 
 3. **Geo**  

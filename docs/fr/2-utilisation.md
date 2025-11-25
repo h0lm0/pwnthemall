@@ -54,7 +54,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       hidden: false
       points: 500
       ports: [5001]
-      connection_info: ["http://$ip:5001"] 
+      connection_info: ["http://$ip:[5001]"] 
       ```
 
 3. **Geo**  
