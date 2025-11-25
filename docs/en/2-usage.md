@@ -82,7 +82,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
    - A flag to find in an environment with multiple dedicated containers.  
    - Exemple : [docs/challenges/compose.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
       ```yaml
-      name: "Demo 04 (Compose - WIP)"
+      name: "Demo 04 (Compose)"
       description: |
          Compose challenge example
 

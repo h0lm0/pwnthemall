@@ -83,7 +83,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
    - Un flag à trouver dans un environnement comprenant plusieurs conteneurs dédiés.  
    - Exemple : [docs/challenges/compose.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
       ```yaml
-      name: "Demo 04 (Compose - WIP)"
+      name: "Demo 04 (Compose)"
       description: |
          Compose challenge example
 
