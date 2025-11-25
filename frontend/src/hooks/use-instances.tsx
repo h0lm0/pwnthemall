@@ -31,11 +31,21 @@ export const useInstances = () => {
     
     try {
       debugLog(`Starting instance for challenge ID: ${challengeId}`)
-      const response = await axios.post<InstanceResponse>(`/api/challenges/${challengeId}/start`)
+      const response = await axios.post<InstanceResponse>(
+        `/api/challenges/${challengeId}/start`,
+        {},
+        { timeout: 60000 }
+      )
       debugLog('Instance started successfully:', response.data)
       toast.success('Instance started successfully')
       return response.data
     } catch (error: any) {
+      if (error.code === 'ERR_NETWORK_CHANGED') {
+        debugLog('Network changed eror during compose start, treating as success')
+        toast.success('Instance starting...')
+        return { status: 'compose_instance_starting' } as InstanceResponse
+      }
+      
       debugError('Failed to start instance:', error)
       debugError('Response data:', error.response?.data)
       debugError('Response status:', error.response?.status)
