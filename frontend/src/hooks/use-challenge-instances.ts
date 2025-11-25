@@ -122,17 +122,28 @@ export function useChallengeInstances(
   const handleStartInstance = async (challengeId: number) => {
     try {
       setInstanceStatus(prev => ({ ...prev, [challengeId]: 'building' }));
-      await startInstance(challengeId.toString());
+      const response = await startInstance(challengeId.toString());
 
+      // For compose challenges, the backend responds immediately but builds async
+      const isComposeStarting = response?.status === 'compose_instance_starting';
+      if (isComposeStarting) {
+        debugError('Compose instance starting, waiting for WebSocket update');
+        return;
+      }
+
+      // For regular docker challenges, fetch status immediately
       const status = await fetchInstanceStatus(challengeId.toString());
       if (status) {
-        setInstanceStatus(prev => ({ ...prev, [challengeId]: mapApiStatusToLocal(status.status) }));
-        setConnectionInfo(prev => ({ ...prev, [challengeId]: status.connection_info || [] }));
+        setInstanceStatus((prev: { [key: number]: InstanceStatus }) => ({ ...prev, [challengeId]: mapApiStatusToLocal(status.status) }));
+        setConnectionInfo((prev: { [key: number]: string[] }) => ({ ...prev, [challengeId]: status.connection_info || [] }));
       } else {
-        setInstanceStatus(prev => ({ ...prev, [challengeId]: 'running' }));
+        setInstanceStatus((prev: { [key: number]: InstanceStatus }) => ({ ...prev, [challengeId]: 'running' }));
       }
     } catch (error) {
-      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+      // Only set to stopped if it's a real error
+      if ((error as any)?.code !== 'ERR_NETWORK_CHANGED') {
+        setInstanceStatus((prev: { [key: number]: InstanceStatus }) => ({ ...prev, [challengeId]: 'stopped' }));
+      }
     }
   };
 
@@ -154,13 +165,13 @@ export function useChallengeInstances(
       }
 
       await stopInstance(challengeId.toString());
-      setInstanceStatus(prev => ({ ...prev, [challengeId]: 'stopped' }));
+      setInstanceStatus((prev: { [key: number]: InstanceStatus }) => ({ ...prev, [challengeId]: 'stopped' }));
 
       setTimeout(async () => {
         try {
           const status = await fetchInstanceStatus(challengeId.toString());
           if (status) {
-            setInstanceStatus(prev => ({ ...prev, [challengeId]: mapApiStatusToLocal(status.status) }));
+            setInstanceStatus((prev: { [key: number]: InstanceStatus }) => ({ ...prev, [challengeId]: mapApiStatusToLocal(status.status) }));
           }
         } catch (error) {
           debugError('Failed to verify status after stopping:', error);
