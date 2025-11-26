@@ -2,7 +2,7 @@
 
 Cette page explique comment utiliser pwnthemall, en commençant par la création de challenges.
 
-## Création de Challenges
+## Création de challenges
 
 Tous les challenges doivent être placés dans le dossier suivant :
 
@@ -15,7 +15,7 @@ Ce fichier définit le challenge.
 
 Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges)
 
-### Types de Challenges
+### Types de challenges
 
 1. **Standard**  
    - Un flag à trouver selon la description.  
@@ -102,7 +102,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       ```
    Les ports à mapper dans le `connection_info` sont à encadrer avec `[` `]`
 
-## Dépendances entre Challenges
+## Dépendances entre challenges
 
 Le champ `depends_on` est **optionnel** et permet de créer des chaînes de challenges en exigeant que les équipes résolvent un challenge avant d'accéder à un autre.
 
@@ -118,7 +118,7 @@ Le champ `depends_on` est **optionnel** et permet de créer des chaînes de chal
 depends_on: "Nom du Challenge"  # Nom exact du challenge qui doit être résolu en premier
 ```
 
-### Exemple : Chaîne de Challenges Progressive
+### Exemple : chaîne de challenges progressive
 
 ```yaml
 # Challenge 1
@@ -152,7 +152,7 @@ depends_on: "L'histoire du maire [2/3]"
 
 Cela crée une chaîne : **Challenge 1** → **Challenge 2** → **Challenge 3**
 
-## Système de Decay
+## Système de decay
 
 Le champ `decay` est **optionnel** et contrôle comment les points d'un challenge diminuent au fur et à mesure que les équipes le résolvent. S'il n'est pas spécifié, le challenge n'aura **aucun decay** (points fixes).
 
@@ -199,9 +199,71 @@ Les bonus FirstBlood sont **permanents** et le decay ne s'applique pas :
 - Bonus FirstBlood : fixe, ne change jamais
 - Score total = Points Actuels + Bonus FirstBlood
 
-## Synchronisation des challenges
+## Fichiers joints aux challenges
 
-La synchronisation des challenges se fait via le script `pta-cli.sh`. Une fois vos YAML créés et modifiés, vous pouvez lancer la synchronisation des challeges vers le stockage MinIO avec la commande:
+Vous souhaitez joindre des fichiers à vos challenges ? C'est possible ! Il suffit de déposer vos fichiers dans le dossier du challenge et de les référencer dans le YAML.
+
+### Comment ajouter des fichiers
+
+1. Placez vos fichiers dans `minio/challenges/[nom_du_challenge]/`
+2. Ajoutez le champ `files` à votre `chall.yml` :
+
+```yaml
+name: "Mystère Base64"
+description: |
+  J'ai trouvé ce script Python mystérieux et son résultat.
+category: misc
+difficulty: easy
+type: standard
+files: [encode.py, output.txt]  # Liste de vos fichiers ici
+flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
+points: 50
+```
+
+### Chemins supportés
+
+Vous pouvez référencer les fichiers par nom ou utiliser des chemins relatifs :
+
+```yaml
+# Fichiers directs dans le dossier du challenge
+files: [readme.txt, exploit.py, data.zip]
+
+# Fichiers dans des sous-dossiers
+files: [static/image.png, scripts/solver.py, data/secrets.txt]
+
+# Mix des deux
+files: [readme.txt, static/hint.jpg, tools/decrypt.py]
+```
+
+### Validation des fichiers
+
+Lors de la synchronisation des challenges, le système vérifie :
+- **Existence des fichiers** : Tous les fichiers référencés doivent exister dans MinIO
+- **Taille des fichiers** : Max 50MB par fichier
+- **Taille totale** : Max 200MB pour tous les fichiers combinés
+
+### Affichage pour les utilisateurs
+
+Les fichiers apparaissent en haut de la page de description du challenge avec :
+- Des icônes selon le type de fichier (code, archive, texte, etc.)
+- Affichage de la taille
+- Téléchargement en un clic
+- Limitation de débit : 10 téléchargements par minute par utilisateur
+
+### Exemple de structure de challenge
+
+```
+minio/challenges/mystere-base64/
+├── chall.yml
+├── encode.py          # Script Python
+└── output.txt         # Sortie encodée
+```
+
+Le champ `files` dans votre YAML les rend téléchargeables depuis l'interface web.
+
+## Synchronisation des Challenges
+
+La synchronisation des challenges se fait via le script `pta-cli.sh`. Une fois vos fichiers YAML créés ou modifiés, vous pouvez synchroniser les challenges vers le stockage MinIO grâce à la commande suivante :
 
 ```bash
 bash pta-cli.sh minio sync challenges

@@ -22,6 +22,7 @@ type Challenge struct {
 	Author                string               `json:"author"`
 	Hidden                bool                 `json:"hidden"`
 	Flags                 []Flag               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"-"`
+	Files                 pq.StringArray       `gorm:"type:text[]" json:"files"`
 	Ports                 pq.Int64Array        `gorm:"type:integer[]" json:"ports"`
 	ConnectionInfo        pq.StringArray       `gorm:"type:text[]" json:"connectionInfo"`
 	Points                int                  `json:"points"` // maybe rename it basePoints

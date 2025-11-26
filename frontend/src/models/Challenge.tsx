@@ -21,6 +21,7 @@ export interface Challenge {
   author: string
   hidden?: boolean
   solved?: boolean
+  files?: string[]
   ports?: number[]
   connectionInfo?: string[]
   geoRadiusKm?: number | null

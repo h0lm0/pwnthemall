@@ -1,12 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
 
-test.use({
-  ignoreHTTPSErrors: true,
-});
-
-test.describe.configure({ mode: 'serial' });
-test.setTimeout(180000);
-
 function getCookieHeader(response: any): string {
   const setCookieHeader = response.headers()['set-cookie'];
   if (setCookieHeader) {
@@ -19,7 +12,11 @@ function getCookieHeader(response: any): string {
   return '';
 }
 
-test('Add teams and submissions', async ({ page }) => {
+test.describe('Submissions', () => {
+  test.describe.configure({ mode: 'serial' });
+  test.setTimeout(180000);
+
+  test('Add teams and submissions', async ({ page }) => {
   const teams = [
     {
       name: 'NHM2I',
@@ -334,4 +331,5 @@ test('Add teams and submissions', async ({ page }) => {
     console.log('No docker/compose challenges found, skipping instance creation\n');
   }
 
+  });
 });

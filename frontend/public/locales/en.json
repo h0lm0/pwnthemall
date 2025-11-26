@@ -58,14 +58,19 @@
     "author": "Author",
     "category": "Category",
     "challenge": "Challenge",
+    "challenge_files": "Challenge Files",
     "choose_a_category": "Choose a category",
     "description": "Description",
     "difficulty": "Difficulty",
     "failed_to_load_challenges": "Failed to load challenges",
+    "failed_to_load_files": "Failed to load files",
+    "file_download_failed": "Failed to download file",
+    "file_downloading": "Downloading file...",
     "firstblood_bonus": "FirstBlood bonus",
     "no_categories": "No categories",
     "no_challenges_available": "No challenges available",
     "no_challenges_in_category": "No challenges found in this category",
+    "no_ports_defined_for_challenge": "No ports defined for this challenge",
     "points": "Points",
     "search_challenges": "Search challenges...",
     "select_category": "Select Category"
@@ -233,6 +238,12 @@
     "email_length": "Email must be at most 254 characters.",
     "email_too_long": "Email too long (max 254 characters)",
     "invalid_email": "Invalid email address."
+  },
+  "errors": {
+    "challenge_not_found": "Challenge not found",
+    "file_not_found": "File not found",
+    "invalid_file_path": "Invalid file path",
+    "file_download_failed": "Failed to download file"
   },
   "flag": {
     "enter_your_flag": "Enter your flag",

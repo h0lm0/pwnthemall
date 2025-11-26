@@ -14,6 +14,9 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.GET("/:id/solves", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/solves", "read"), controllers.GetChallengeSolves)
 		challenges.GET("/:id/firstbloods", middleware.AuthRequired(false), middleware.CheckPolicy("/challenges/:id/firstbloods", "read"), controllers.GetChallengeFirstBloods)
 		challenges.GET("/category/:category", middleware.AuthRequiredTeamOrAdmin(), middleware.CheckPolicy("/challenges/category/:category", "read"), controllers.GetChallengesByCategoryName)
+		
+		challenges.GET("/:id/files", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/files", "read"), controllers.GetChallengeFiles)
+		challenges.GET("/:id/files/:filename", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/files", "read"), controllers.DownloadChallengeFile)
 
 		challenges.POST("", middleware.CheckPolicy("/challenges", "write"), controllers.CreateChallenge)
 		challenges.POST("/:id/submit", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/submit", "write"), controllers.SubmitChallenge)

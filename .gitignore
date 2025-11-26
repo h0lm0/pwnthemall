@@ -3,3 +3,4 @@ tmp
 shared/*
 .vscode
 .scannerwork
+test/.last-run.json

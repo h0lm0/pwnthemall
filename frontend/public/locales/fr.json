@@ -58,14 +58,19 @@
     "author": "Auteur",
     "category": "Catégorie",
     "challenge": "Challenge",
+    "challenge_files": "Fichiers du Challenge",
     "choose_a_category": "Choisissez une catégorie",
     "description": "Description",
     "difficulty": "Difficulté",
     "failed_to_load_challenges": "Échec du chargement des challenges",
+    "failed_to_load_files": "Échec du chargement des fichiers",
+    "file_download_failed": "Échec du téléchargement du fichier",
+    "file_downloading": "Téléchargement du fichier...",
     "firstblood_bonus": "Bonus FirstBlood",
     "no_categories": "Aucune catégorie",
     "no_challenges_available": "Aucun challenge disponible",
     "no_challenges_in_category": "Aucun challenge trouvé dans cette catégorie",
+    "no_ports_defined_for_challenge": "Aucun port défini pour ce challenge",
     "points": "Points",
     "search_challenges": "Rechercher des challenges...",
     "select_category": "Sélectionner une catégorie"
@@ -228,11 +233,17 @@
     "disconnected": "Déconnecté"
   },
   "email": {
-    "email": "E-mail",
+    "email": "Email",
     "email_exists": "Cette adresse email existe déjà",
     "email_length": "L'adresse email doit contenir au plus 254 caractères",
     "email_too_long": "Email trop long (254 caractères max)",
     "invalid_email": "Adresse email invalide"
+  },
+  "errors": {
+    "challenge_not_found": "Challenge introuvable",
+    "file_not_found": "Fichier introuvable",
+    "invalid_file_path": "Chemin de fichier invalide",
+    "file_download_failed": "Échec du téléchargement du fichier"
   },
   "flag": {
     "enter_your_flag": "Entrez votre flag",
