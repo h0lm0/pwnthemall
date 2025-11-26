@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -419,6 +420,54 @@ func syncHints(challengeID uint, hints []meta.HintMetadata) error {
 	return nil
 }
 
+// setChallengeFiles validates and sets the files list for a challenge
+func setChallengeFiles(challenge *models.Challenge, files []string, slug string) error {
+	if len(files) == 0 {
+		challenge.Files = []string{}
+		return nil
+	}
+
+	const maxFileSize = 50 * 1024 * 1024  // 50MB per file
+	const maxTotalSize = 200 * 1024 * 1024 // 200MB total
+	var totalSize int64
+
+	validFiles := make([]string, 0, len(files))
+	bucketName := "challenges"
+
+	for _, fileName := range files {
+		// Sanitize path
+		cleanPath := filepath.Clean(fileName)
+		if strings.HasPrefix(cleanPath, "..") || filepath.IsAbs(cleanPath) {
+			return fmt.Errorf("invalid file path: %s (path traversal attempt)", fileName)
+		}
+
+		// Construct object path
+		objectPath := fmt.Sprintf("%s/%s", slug, cleanPath)
+
+		// Verify file exists in MinIO
+		obj, err := config.FS.StatObject(context.Background(), bucketName, objectPath, minio.StatObjectOptions{})
+		if err != nil {
+			return fmt.Errorf("file not found in MinIO: %s", fileName)
+		}
+
+		// Check file size
+		if obj.Size > maxFileSize {
+			return fmt.Errorf("file %s exceeds maximum size (50MB)", fileName)
+		}
+
+		totalSize += obj.Size
+		validFiles = append(validFiles, fileName)
+	}
+
+	// Check total size
+	if totalSize > maxTotalSize {
+		return fmt.Errorf("total file size exceeds maximum (200MB)")
+	}
+
+	challenge.Files = validFiles
+	return nil
+}
+
 func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug string, ports []int, updatesHub *Hub) error {
 	// Create or get related entities
 	categoryID, difficultyID, cType, decayFormula, err := createChallengeRelatedEntities(metaData)
@@ -443,6 +492,11 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	setConnectionInfo(&challenge, metaData.ConnectionInfo)
 	challenge.EnableFirstBlood = metaData.EnableFirstBlood
 	setFirstBloodConfig(&challenge, metaData.FirstBlood)
+	
+	// Set challenge files
+	if err := setChallengeFiles(&challenge, metaData.Files, slug); err != nil {
+		return fmt.Errorf("failed to set challenge files: %w", err)
+	}
 
 	// Process cover image if specified
 	coverImgPath := ""

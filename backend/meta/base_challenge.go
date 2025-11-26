@@ -9,6 +9,7 @@ type BaseChallengeMetadata struct {
 	Author           string              `yaml:"author"`
 	Hidden           bool                `yaml:"hidden"`
 	Flags            []string            `yaml:"flags"`
+	Files            []string            `yaml:"files,omitempty"`
 	Points           int                 `yaml:"points"`
 	ConnectionInfo   []string            `yaml:"connection_info,omitempty"`
 	DecayFormula     string              `yaml:"decay,omitempty"`
