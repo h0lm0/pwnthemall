@@ -11,6 +11,8 @@ p, member, /challenges/:id/start, write
 p, member, /challenges/:id/stop, write
 p, member, /challenges/:id/instance-status, read
 p, member, /challenges/:id/firstbloods, read
+p, member, /challenges/:id/files, read
+p, member, /challenges/:id/files/:filename, read
 p, member, /challenges/:id/cover, read
 p, member, /challenges/hints/:id/purchase, write
 p, member, /challenges-categories, read
