@@ -1,7 +1,6 @@
 # Démo publique
 
-La démo est maintenant disponible sur :  
-[https://demo.pwnthemall.com](https://demo.pwnthemall.com)
+La démo est maintenant disponible sur [demo.pwnthemall.com](https://demo.pwnthemall.com)
 
 La base de données est restaurée chaque nuit. Par défaut, deux comptes sont créés.  
 Vous pouvez essayer et expérimenter les fonctionnalités avec ces comptes :
