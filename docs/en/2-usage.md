@@ -101,6 +101,58 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       ```
    Ports that need to be mapped in `connection_info` must framed by `[` `]`
 
+## Cover Images
+
+Challenges can include cover images displayed on challenge cards.
+
+### Configuration
+
+1. Place the image file in the challenge folder: `minio/challenges/[challenge_name]/`
+2. Add the `cover_img` field to `chall.yml`:
+
+```yaml
+name: "Web Exploitation 101"
+description: |
+  Learn the basics of web exploitation in this interactive challenge!
+category: web
+difficulty: easy
+type: docker
+cover_img: banner.jpg
+flags: ["flag"]
+points: 100
+```
+
+### Requirements
+
+- **Formats**: JPG, PNG, GIF, WebP
+- **Max file size**: 5MB ( can be configured )
+- **Max dimensions**: 8000x8000px ( can be configured )
+- **Recommended**: 800x450px (16:9)
+
+### Processing
+
+During challenge sync:
+- Image format and size validation
+- Automatic resize to 800x450px
+- Conversion to PNG format ( or stays as GIF )
+- Storage in MinIO
+
+### Display
+
+- Cover images appear at the top of challenge cards
+- Challenges without `cover_img` display with a default placeholder
+
+### Example Structure
+
+```
+minio/challenges/web-basics/
+├── chall.yml
+├── banner.jpg
+├── Dockerfile
+└── app/
+    └── index.html
+```
+
 ## Challenge Dependencies
 
 The `depends_on` field is **optional** and allows you to create challenge chains by requiring teams to solve one challenge before accessing another.

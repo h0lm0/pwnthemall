@@ -102,6 +102,58 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       ```
    Les ports à mapper dans le `connection_info` sont à encadrer avec `[` `]`
 
+## Images de Couverture
+
+Les challenges peuvent inclure des images de couverture affichées sur les cartes.
+
+### Configuration
+
+1. Placer le fichier image dans le dossier du challenge : `minio/challenges/[nom_du_challenge]/`
+2. Ajouter le champ `cover_img` dans `chall.yml` :
+
+```yaml
+name: "Exploitation Web 101"
+description: |
+  Apprenez les bases de l'exploitation web dans ce challenge interactif !
+category: web
+difficulty: easy
+type: docker
+cover_img: banner.jpg
+flags: ["flag"]
+points: 100
+```
+
+### Exigences
+
+- **Formats** : JPG, PNG, GIF, WebP
+- **Taille max** : 5MB ( configurable )
+- **Dimensions max** : 8000x8000px ( configurable )
+- **Recommandé** : 800x450px (16:9)
+
+### Traitement
+
+Lors de la synchronisation :
+- Validation du format et de la taille
+- Redimensionnement automatique à 800x450px
+- Conversion en PNG ( ou laisse en gif )
+- Stockage dans MinIO
+
+### Affichage
+
+- Les images apparaissent au dessus des cartes de challenges
+- Les challenges sans `cover_img` affichent un placeholder par défaut qui sera configurable plus tard depuis le panneau d'administration
+
+### Exemple de Structure
+
+```
+minio/challenges/web-basics/
+├── chall.yml
+├── banner.jpg
+├── Dockerfile
+└── app/
+    └── index.html
+```
+
 ## Dépendances entre Challenges
 
 Le champ `depends_on` est **optionnel** et permet de créer des chaînes de challenges en exigeant que les équipes résolvent un challenge avant d'accéder à un autre.
