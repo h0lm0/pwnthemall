@@ -1,8 +1,22 @@
 #!/bin/sh
-echo "Host docker-worker
-    IdentityFile /home/app/.ssh/docker-worker" > /home/app/.ssh/config
-ssh-keyscan docker-worker
-ssh-keyscan docker-worker > /home/app/.ssh/known_hosts
-ssh-keyscan libvirt-worker
-ssh-keyscan libvirt-worker >> /home/app/.ssh/known_hosts
+
+case "$PTA_DOCKER_HOST" in
+    ssh://*)
+        DOCKER_HOSTNAME=`echo "$PTA_DOCKER_HOST" | cut -d'@' -f2 | cut -d'/' -f1`
+        echo "DOCKER_HOSTNAME: $DOCKER_HOSTNAME"
+        echo "Host $DOCKER_HOSTNAME
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            IdentityFile /home/app/.ssh/$DOCKER_HOSTNAME" > /home/app/.ssh/config
+        ;;
+    *)
+        echo "Docker Host is not ssh based; skipping"
+        ;;
+esac
+
+if [ "$PTA_PLUGINS_ENABLED" = "true" ]; then
+    echo "Host libvirt-worker
+        StrictHostKeyChecking no
+        UserKnownHostsFile /dev/null" >> /home/app/.ssh/config
+fi
 air

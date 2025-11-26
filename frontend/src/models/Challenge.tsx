@@ -21,6 +21,7 @@ export interface Challenge {
   author: string
   hidden?: boolean
   solved?: boolean
+  files?: string[]
   ports?: number[]
   connectionInfo?: string[]
   geoRadiusKm?: number | null
@@ -48,6 +49,9 @@ export interface Challenge {
   }[]
   maxAttempts?: number
   teamFailedAttempts?: number
+  dependsOn?: string
+  locked?: boolean
+  coverImg?: string
 }
 
 export interface FirstBlood {
@@ -66,7 +70,8 @@ export interface Solve {
   team: Team
   challengeId: number
   challenge: Challenge
-  points: number
+  points: number // Historical points when solved
+  currentPoints: number // Current decayed points of the challenge
   createdAt: string
   userId?: number
   username?: string

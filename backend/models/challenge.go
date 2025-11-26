@@ -22,6 +22,7 @@ type Challenge struct {
 	Author                string               `json:"author"`
 	Hidden                bool                 `json:"hidden"`
 	Flags                 []Flag               `gorm:"foreignKey:ChallengeID;constraint:OnDelete:CASCADE;" json:"-"`
+	Files                 pq.StringArray       `gorm:"type:text[]" json:"files"`
 	Ports                 pq.Int64Array        `gorm:"type:integer[]" json:"ports"`
 	ConnectionInfo        pq.StringArray       `gorm:"type:text[]" json:"connectionInfo"`
 	Points                int                  `json:"points"` // maybe rename it basePoints
@@ -35,4 +36,6 @@ type Challenge struct {
 	FirstBloodBonuses     pq.Int64Array        `gorm:"type:integer[]" json:"firstBloodBonuses"`
 	FirstBloodBadges      pq.StringArray       `gorm:"type:text[]" json:"firstBloodBadges"`
 	MaxAttempts           int                  `gorm:"default:0" json:"maxAttempts"` // 0 = unlimited attempts
+	DependsOn             string               `json:"dependsOn,omitempty"`          // Name of the challenge that must be solved first
+	CoverImg              string               `json:"coverImg,omitempty"`            // Cover image filename (e.g., "cover_resized.webp")
 }

@@ -24,10 +24,11 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       description: |
          Standard challenge example
 
-         Make a team and enter the flag "PwnThatDemo" to solve it !
+         Make a team and enter the flag "flag" to solve it !
       category: "pwn"
       difficulty: "easy"
       type: "standard"
+      decay: "Logarithmic - Medium"
       author: "Kevin'MIT"
       hidden: false
       flags: ["flag"]
@@ -42,17 +43,19 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       description: |
          Simple challenge using Docker container.
 
-         The flag is "whatsthis?aDockerContainer!"
+         The flag is "flag"
       category: web
       difficulty: easy
       type: docker
+      decay: "Logarithmic - Medium"
       author: "Kevin'MITDocker"
       flags: ["flag"]
       hidden: false
       points: 500
       ports: [5001]
-      connection_info: ["http://$ip:5001"] 
+      connection_info: ["http://$ip:[5001]"] 
       ```
+   Ports that need to be mapped in `connection_info` must framed by `[` `]`
 
 3. **Geo**  
    - A location to pin on a world map based on clues in the description.  
@@ -66,6 +69,7 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       category: misc
       difficulty: easy
       type: geo
+      decay: "Logarithmic - Medium"
       author: "Kevin'MITGeo"
       hidden: false
       flags: []
@@ -79,14 +83,15 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
    - A flag to find in an environment with multiple dedicated containers.  
    - Exemple : [docs/challenges/compose.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
       ```yaml
-      name: "Demo 04 (Compose - WIP)"
+      name: "Demo 04 (Compose)"
       description: |
          Compose challenge example
 
-         Enter the flag "really?ComposeChallenges!" to solve it !
+         Enter the flag "flag" to solve it !
       category: "pwn"
       difficulty: "easy"
       type: "compose"
+      decay: "Logarithmic - Medium"
       author: "h0lm0"
       hidden: false
       flags: ["flag"]
@@ -94,13 +99,228 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       ports: [80,22]
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
+   Ports that need to be mapped in `connection_info` must framed by `[` `]`
+
+## Cover images
+
+Challenges can include cover images displayed on challenge cards.
+
+### Configuration
+
+1. Place the image file in the challenge folder: `minio/challenges/[challenge_name]/`
+2. Add the `cover_img` field to `chall.yml`:
+
+```yaml
+name: "Web Exploitation 101"
+description: |
+  Learn the basics of web exploitation in this interactive challenge!
+category: web
+difficulty: easy
+type: docker
+cover_img: banner.jpg
+flags: ["flag"]
+points: 100
+```
+
+### Requirements
+
+- **Formats**: JPG, PNG, GIF, WebP
+- **Max file size**: 5MB ( can be configured )
+- **Max dimensions**: 8000x8000px ( can be configured )
+- **Recommended**: 800x450px (16:9)
+
+### Processing
+
+During challenge sync:
+- Image format and size validation
+- Automatic resize to 800x450px
+- Conversion to PNG format ( or stays as GIF )
+- Storage in MinIO
+
+### Display
+
+- Cover images appear at the top of challenge cards
+- Challenges without `cover_img` display with a default placeholder
+
+### Example structure
+
+```
+minio/challenges/web-basics/
+├── chall.yml
+├── banner.jpg
+├── Dockerfile
+└── app/
+    └── index.html
+```
+
+## Challenge dependencies
+
+The `depends_on` field is **optional** and allows you to create challenge chains by requiring teams to solve one challenge before accessing another.
+
+### How it works
+
+- Challenges are **hidden** from teams until the dependency is solved
+- Once the required challenge is solved, the dependent challenge appears in the list
+- Admins can always see and access all challenges regardless of dependencies
+
+### Usage
+
+```yaml
+depends_on: "Challenge Name"  # Exact name of the challenge that must be solved first
+```
+
+### Example: progressive challenge chain
+
+```yaml
+# Challenge 1
+name: "The Mayor's Story [1/3]"
+category: osint
+difficulty: easy
+points: 100
+flags: ["flag1"]
+# No depends_on - this is the first challenge
+```
+
+```yaml
+# Challenge 2 (requires Challenge 1)
+name: "The Mayor's Story [2/3]"
+category: osint
+difficulty: medium
+points: 200
+flags: ["flag2"]
+depends_on: "The Mayor's Story [1/3]"
+```
+
+```yaml
+# Challenge 3 (requires Challenge 2)
+name: "The Mayor's Story [3/3]"
+category: osint
+difficulty: hard
+points: 300
+flags: ["flag3"]
+depends_on: "The Mayor's Story [2/3]"
+```
+
+This creates a chain: **Challenge 1** → **Challenge 2** → **Challenge 3**
+
+## Decay system
+
+The `decay` field is **optional** and controls how challenge points decrease as more teams solve it. If not specified, challenges will have **no decay** (fixed points).
+
+### Available decay formulas
+
+- **No Decay** - Points remain constant regardless of solves
+- **Logarithmic - Ultra Slow** - Very minimal decay (step: 10, min: 10 pts)
+- **Logarithmic - Very Slow** - Slow decay (step: 25, min: 25 pts)
+- **Logarithmic - Slow** - Moderately slow decay (step: 50, min: 100 pts)
+- **Logarithmic - Medium** - Balanced decay (step: 75, min: 75 pts)
+- **Logarithmic - Fast** - Aggressive decay (step: 100, min: 50 pts)
+
+### How it works
+
+Logarithmic decay uses the formula: `points = basePoints - (step × log₂(solveNumber))`
+
+- The **first solve** always receives full points (no decay)
+- Points decay quickly for early solves, then slow down
+- Points never go below the specified minimum
+
+Example with 500 base points and "Logarithmic - Medium" (step: 75, min: 75):
+- 1st solve: 500 pts
+- 2nd solve: 425 pts (500 - 75×1)
+- 3rd solve: 381 pts (500 - 75×1.58)
+- 5th solve: 326 pts (500 - 75×2.32)
+- 10th solve: 251 pts (500 - 75×3.32)
+- 20th solve: 176 pts (500 - 75×4.32)
+- 50th+ solve: 75 pts (minimum)
+
+### Usage
+
+```yaml
+# With decay
+decay: "Logarithmic - Medium"
+
+# Without decay (default if omitted)
+# No need to specify the decay field, or:
+decay: "No Decay"
+```
+### FirstBlood bonuses
+
+FirstBlood bonuses are **permanent** and decay does not apply:
+- Base challenge points: subject to decay
+- FirstBlood bonus: fixed, never changes
+- Total score = Current Points + FirstBlood Bonus
+
+## Challenge files
+
+Want to attach files to your challenges? You can! Just drop your files in the challenge folder and reference them in the YAML.
+
+### How to add files
+
+1. Put your files in `minio/challenges/[challenge_name]/`
+2. Add the `files` field to your `chall.yml`:
+
+```yaml
+name: "Base64 Mystery"
+description: |
+  I found this mysterious Python script and its output.
+  
+  Can you figure out what the original message was?
+  
+  Download the files below to solve this challenge!
+category: misc
+difficulty: intro
+type: standard
+files: [encode.py, output.txt]  # List your files here
+flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
+points: 50
+```
+
+### Supported paths
+
+You can reference files by name or use relative paths:
+
+```yaml
+# Direct files in challenge folder
+files: [readme.txt, exploit.py, data.zip]
+
+# Files in subdirectories
+files: [static/image.png, scripts/solver.py, data/secrets.txt]
+
+# Mix of both
+files: [readme.txt, static/hint.jpg, tools/decrypt.py]
+```
+
+### Files validation
+
+When syncing challenges, the system checks:
+- **File existence**: All referenced files must exist in MinIO
+- **File size**: Max 50MB per file
+- **Total size**: Max 200MB for all files combined
+
+### How users see files
+
+Files appear at the top of the challenge description page with:
+- File icons based on type (code, archive, text, etc.)
+- File size display
+- One-click download
+
+### Challenge structure example
+
+```
+minio/challenges/base64-mystery/
+├── chall.yml
+├── encode.py          # Python script
+└── output.txt         # Encoded output
+```
+
+The `files` field in your YAML makes them downloadable from the web interface.
 
 ## Challenge synchronization
 
 Challenge synchronization is handled via the `pta-cli.sh` script. Once your YAML files have been created or modified, you can synchronize the challenges to the MinIO storage using the following command:
 
 ```bash
-bash pta-cli.sh minio sync challenges
+bash pta-cli.sh minio sync [--env dev|prod|demo] challenges
 ```
 
 ![sync-vhs](../assets/minio-sync.gif)

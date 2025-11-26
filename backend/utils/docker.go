@@ -11,7 +11,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-
 	"strconv"
 	"strings"
 
@@ -244,7 +243,20 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 		},
 	}
 
+	debug.Log("Creating Docker network for team %d", teamId)
+	networkName, err := EnsureTeamNetworkExists(teamId)
+	if err != nil {
+		return fmt.Sprintf("failed to ensure team %d", teamId), err
+	}
+	debug.Log("Docker network created: %s", networkName)
+
 	containerTimeout := 60
+	networkingConfig := &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			networkName: {},
+		},
+	}
+
 	resp, err := config.DockerClient.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -254,7 +266,7 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 			StopTimeout:  &containerTimeout,
 		},
 		hostConfig,
-		&network.NetworkingConfig{},
+		networkingConfig,
 		nil,
 		containerName,
 	)
@@ -270,11 +282,11 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 		"Started container %s for team %d user %d on host ports %v mapping to internal %v",
 		containerName, teamId, userId, hostPorts, internalPorts,
 	)
-	return resp.ID, nil
+	return containerName, nil
 }
 
-func StopDockerInstance(containerID string) error {
-	debug.Log("Attempting to stop Docker container: %s", containerID)
+func StopDockerInstance(containerName string) error {
+	debug.Log("Attempting to stop Docker container: %s", containerName)
 
 	if err := EnsureDockerClientConnected(); err != nil {
 		debug.Log("Docker client connection failed: %v", err)
@@ -283,18 +295,18 @@ func StopDockerInstance(containerID string) error {
 
 	ctx := context.Background()
 
-	if containerID == "" {
-		debug.Println("containerID invalid, nothing to stop")
+	if containerName == "" {
+		debug.Println("containerName invalid, nothing to stop")
 		return nil
 	}
 
-	debug.Log("Removing container %s with force", containerID)
-	if err := config.DockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
-		debug.Log("Failed to remove container %s: %v", containerID, err)
-		return fmt.Errorf("failed to remove container %s: %w", containerID, err)
+	debug.Log("Removing container %s with force", containerName)
+	if err := config.DockerClient.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true}); err != nil {
+		debug.Log("Failed to remove container %s: %v", containerName, err)
+		return fmt.Errorf("failed to remove container %s: %w", containerName, err)
 	}
 
-	debug.Log("Successfully stopped and removed container %s", containerID)
+	debug.Log("Successfully stopped and removed container %s", containerName)
 	return nil
 }
 
@@ -306,11 +318,29 @@ func EnsureTeamNetworkExists(teamId int) (string, error) {
 		Filters: filters.NewArgs(filters.Arg("name", networkName)),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to list networks: %w", err)
+		debug.Log(err.Error())
+		return "", fmt.Errorf("docker_network_unavailable")
 	}
 
 	if len(networks) > 0 {
 		return networkName, nil
+	}
+
+	subnet, gateway, err := GetTeamSubnet(teamId)
+	if err != nil {
+		debug.Log(err.Error())
+		return "", fmt.Errorf("docker_network_unavailable")
+	}
+
+	debug.Log("Team %d | subnet: %s | gateway: %s", teamId, subnet, gateway)
+
+	ipamConfig := &network.IPAMConfig{
+		Subnet:  subnet,  // exemple: "172.18.0.0/24"
+		Gateway: gateway, // exemple: "172.18.0.1"
+	}
+	ipam := &network.IPAM{
+		Driver: "default",
+		Config: []network.IPAMConfig{*ipamConfig},
 	}
 
 	_, err = config.DockerClient.NetworkCreate(
@@ -319,12 +349,14 @@ func EnsureTeamNetworkExists(teamId int) (string, error) {
 		network.CreateOptions{
 			Driver:     "bridge",
 			Attachable: true,
+			IPAM:       ipam,
+			// Internal: true, // using iptables instead
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to create network: %w", err)
+		debug.Log(err.Error())
+		return "", fmt.Errorf("docker_network_unavailable")
 	}
-
 	return networkName, nil
 }
 

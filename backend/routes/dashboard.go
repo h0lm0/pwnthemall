@@ -13,5 +13,6 @@ func RegisterDashboardRoutes(router *gin.Engine) {
 	{
 		dashboard.GET("/stats", middleware.CheckPolicy("/admin/dashboard", "read"), controllers.GetDashboardStats)
 		dashboard.GET("/submission-trend", middleware.CheckPolicy("/admin/dashboard", "read"), controllers.GetSubmissionTrend)
+		dashboard.GET("/running-instances", middleware.CheckPolicy("/admin/dashboard", "read"), controllers.GetRunningInstances)
 	}
 }

@@ -15,12 +15,17 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.GET("/:id/firstbloods", middleware.AuthRequired(false), middleware.CheckPolicy("/challenges/:id/firstbloods", "read"), controllers.GetChallengeFirstBloods)
 		challenges.GET("/category/:category", middleware.AuthRequiredTeamOrAdmin(), middleware.CheckPolicy("/challenges/category/:category", "read"), controllers.GetChallengesByCategoryName)
 
+		challenges.GET("/:id/files", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/files", "read"), controllers.GetChallengeFiles)
+		challenges.GET("/:id/files/:filename", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/files", "read"), controllers.DownloadChallengeFile)
+
 		challenges.POST("", middleware.CheckPolicy("/challenges", "write"), controllers.CreateChallenge)
 		challenges.POST("/:id/submit", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/submit", "write"), controllers.SubmitChallenge)
 		challenges.POST("/:id/build", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/build", "write"), controllers.BuildChallengeImage)
 		challenges.GET("/:id/instance-status", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/instance-status", "read"), controllers.GetInstanceStatus)
 		challenges.POST("/:id/start", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
 		challenges.POST("/:id/stop", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/stop", "write"), controllers.StopChallengeInstance)
+
+		challenges.GET("/:id/cover", middleware.AuthRequiredTeamOrAdmin(), middleware.CheckPolicy("/challenges/:id/cover", "read"), controllers.GetChallengeCover)
 
 		// Hint routes
 		challenges.POST("/hints/:id/purchase", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/hints/:id/purchase", "write"), controllers.PurchaseHint)

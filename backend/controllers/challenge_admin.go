@@ -11,21 +11,8 @@ import (
 	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
-func UpdateChallengeAdmin(c *gin.Context) {
-	var challenge models.Challenge
-	id := c.Param("id")
-
-	if err := config.DB.First(&challenge, id).Error; err != nil {
-		utils.NotFoundError(c, "Challenge not found")
-		return
-	}
-
-	var req dto.ChallengeAdminUpdateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		utils.BadRequestError(c, err.Error())
-		return
-	}
-
+// updateChallengeFields updates the basic challenge fields from the request
+func updateChallengeFields(challenge *models.Challenge, req *dto.ChallengeAdminUpdateRequest) {
 	if req.Points != nil {
 		challenge.Points = *req.Points
 	}
@@ -35,27 +22,22 @@ func UpdateChallengeAdmin(c *gin.Context) {
 	if req.EnableFirstBlood != nil {
 		challenge.EnableFirstBlood = *req.EnableFirstBlood
 	}
-
-	// Convert []int to pq.Int64Array
+	
 	if req.FirstBloodBonuses != nil && len(*req.FirstBloodBonuses) > 0 {
 		challenge.FirstBloodBonuses = *req.FirstBloodBonuses
 	} else if req.FirstBloodBonuses != nil {
 		challenge.FirstBloodBonuses = []int64{}
 	}
-
-	// Convert []string to pq.StringArray for badges
+	
 	if req.FirstBloodBadges != nil && len(*req.FirstBloodBadges) > 0 {
 		challenge.FirstBloodBadges = *req.FirstBloodBadges
 	} else if req.FirstBloodBadges != nil {
 		challenge.FirstBloodBadges = []string{}
 	}
+}
 
-	if err := config.DB.Save(&challenge).Error; err != nil {
-		utils.InternalServerError(c, "Failed to update challenge")
-		return
-	}
-
-	// Broadcast category update (challenge modified affects category)
+// broadcastChallengeUpdate sends WebSocket notification for challenge update
+func broadcastChallengeUpdate() {
 	if utils.UpdatesHub != nil {
 		if payload, err := json.Marshal(gin.H{
 			"event":  "challenge-category",
@@ -64,52 +46,94 @@ func UpdateChallengeAdmin(c *gin.Context) {
 			utils.UpdatesHub.SendToAll(payload)
 		}
 	}
+}
 
-	// Recalculate points for all solves of this challenge with new values
-	recalculateChallengePoints(challenge.ID)
-
-	if req.EnableFirstBlood != nil && !*req.EnableFirstBlood && challenge.EnableFirstBlood {
-		config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.FirstBlood{})
+// processHintsFromRequest creates or updates hints based on the request
+func processHintsFromRequest(challengeID uint, hints *[]models.Hint) {
+	if hints == nil {
+		return
 	}
-
-	// Process hints from request
-	if req.Hints != nil {
-		for _, hintReq := range *req.Hints {
-			debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
-			if hintReq.ID > 0 {
-				// Update existing hint
-				var hint models.Hint
-				if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
-					hint.Title = hintReq.Title
-					hint.Content = hintReq.Content
-					hint.Cost = hintReq.Cost
-					hint.IsActive = hintReq.IsActive
-					hint.AutoActiveAt = hintReq.AutoActiveAt
-					if err := config.DB.Save(&hint).Error; err != nil {
-						debug.Log("Failed to update hint %d: %v", hint.ID, err)
-					} else {
-						debug.Log("Successfully updated hint %d", hint.ID)
-					}
-				}
-			} else if hintReq.Content != "" {
-				// Create new hint
-				hint := models.Hint{
-					ChallengeID:  challenge.ID,
-					Title:        hintReq.Title,
-					Content:      hintReq.Content,
-					Cost:         hintReq.Cost,
-					IsActive:     hintReq.IsActive,
-					AutoActiveAt: hintReq.AutoActiveAt,
-				}
-				if err := config.DB.Create(&hint).Error; err != nil {
-					debug.Log("Failed to create hint: %v", err)
+	
+	for _, hintReq := range *hints {
+		debug.Log("Processing hint: ID=%d, Title=%s, Content=%s, Cost=%d", hintReq.ID, hintReq.Title, hintReq.Content, hintReq.Cost)
+		
+		if hintReq.ID > 0 {
+			// Update existing hint
+			var hint models.Hint
+			if err := config.DB.First(&hint, hintReq.ID).Error; err == nil {
+				hint.Title = hintReq.Title
+				hint.Content = hintReq.Content
+				hint.Cost = hintReq.Cost
+				hint.IsActive = hintReq.IsActive
+				hint.AutoActiveAt = hintReq.AutoActiveAt
+				if err := config.DB.Save(&hint).Error; err != nil {
+					debug.Log("Failed to update hint %d: %v", hint.ID, err)
 				} else {
-					debug.Log("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
+					debug.Log("Successfully updated hint %d", hint.ID)
 				}
+			}
+		} else if hintReq.Content != "" {
+			// Create new hint
+			hint := models.Hint{
+				ChallengeID:  challengeID,
+				Title:        hintReq.Title,
+				Content:      hintReq.Content,
+				Cost:         hintReq.Cost,
+				IsActive:     hintReq.IsActive,
+				AutoActiveAt: hintReq.AutoActiveAt,
+			}
+			if err := config.DB.Create(&hint).Error; err != nil {
+				debug.Log("Failed to create hint: %v", err)
+			} else {
+				debug.Log("Successfully created hint: ID=%d, Title=%s", hint.ID, hint.Title)
 			}
 		}
 	}
+}
 
+// cleanupFirstBloodIfDisabled removes first blood entries if feature is disabled
+func cleanupFirstBloodIfDisabled(req *dto.ChallengeAdminUpdateRequest, challenge *models.Challenge) {
+	if req.EnableFirstBlood != nil && !*req.EnableFirstBlood && challenge.EnableFirstBlood {
+		config.DB.Where("challenge_id = ?", challenge.ID).Delete(&models.FirstBlood{})
+	}
+}
+
+func UpdateChallengeAdmin(c *gin.Context) {
+	var challenge models.Challenge
+	id := c.Param("id")
+	
+	if err := config.DB.First(&challenge, id).Error; err != nil {
+		utils.NotFoundError(c, "Challenge not found")
+		return
+	}
+	
+	var req dto.ChallengeAdminUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequestError(c, err.Error())
+		return
+	}
+	
+	// Update challenge fields
+	updateChallengeFields(&challenge, &req)
+	
+	if err := config.DB.Save(&challenge).Error; err != nil {
+		utils.InternalServerError(c, "Failed to update challenge")
+		return
+	}
+	
+	// Broadcast update
+	broadcastChallengeUpdate()
+	
+	// Recalculate points
+	recalculateChallengePoints(challenge.ID)
+	
+	// Cleanup first blood if disabled
+	cleanupFirstBloodIfDisabled(&req, &challenge)
+	
+	// Process hints
+	processHintsFromRequest(challenge.ID, req.Hints)
+	
+	// Reload challenge with associations
 	if err := config.DB.Preload("DecayFormula").Preload("Hints").Preload("FirstBlood").First(&challenge, challenge.ID).Error; err != nil {
 		debug.Log("Failed to reload challenge: %v", err)
 	} else {
@@ -118,7 +142,7 @@ func UpdateChallengeAdmin(c *gin.Context) {
 			debug.Log("Hint %d: ID=%d, Title=%s, Content=%s", i, hint.ID, hint.Title, hint.Content)
 		}
 	}
-
+	
 	utils.OKResponse(c, challenge)
 }
 

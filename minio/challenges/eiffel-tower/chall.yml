@@ -1,15 +1,17 @@
-name: "Find the Spot: Eiffel Tower"
+name: "Find the spot 1"
 description: |
-  Place your pin at the correct location -> Eiffel Tower
+  Je cherche un monument réalisé par un certain "Gustave"  
+  En sais-tu quelque chose ?
 category: misc
 difficulty: easy
 type: geo
+decay: "Logarithmic - Medium"
 author: system
 hidden: false
+cover_img: tenor.gif 
 flags: []
 points: 200
 
-target_lat: 48.85837
+target_lat: 48.858370
 target_lng: 2.294481
 radius_km: 1.0
-

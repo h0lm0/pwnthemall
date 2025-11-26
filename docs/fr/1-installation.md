@@ -37,7 +37,7 @@ Pour corriger cela, vous pouvez simplement ajouter une entrée pour ce nom de do
 
 ---
 
-## Windows
+## Windows - OBSOLETE
 
 ### Prérequis
 

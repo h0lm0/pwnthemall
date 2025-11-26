@@ -58,13 +58,19 @@
     "author": "Auteur",
     "category": "Catégorie",
     "challenge": "Challenge",
+    "challenge_files": "Fichiers du Challenge",
     "choose_a_category": "Choisissez une catégorie",
     "description": "Description",
     "difficulty": "Difficulté",
     "failed_to_load_challenges": "Échec du chargement des challenges",
+    "failed_to_load_files": "Échec du chargement des fichiers",
+    "file_download_failed": "Échec du téléchargement du fichier",
+    "file_downloading": "Téléchargement du fichier...",
+    "firstblood_bonus": "Bonus FirstBlood",
     "no_categories": "Aucune catégorie",
     "no_challenges_available": "Aucun challenge disponible",
     "no_challenges_in_category": "Aucun challenge trouvé dans cette catégorie",
+    "no_ports_defined_for_challenge": "Aucun port défini pour ce challenge",
     "points": "Points",
     "search_challenges": "Rechercher des challenges...",
     "select_category": "Sélectionner une catégorie"
@@ -172,7 +178,24 @@
   "cookies": {
     "cookie_accept_message": "En cliquant sur Accepter, vous acceptez notre utilisation des cookies.",
     "cookie_message": "Nous utilisons des cookies pour vous garantir la meilleure expérience sur notre site. Pour plus d'informations sur l'utilisation des cookies, consultez notre politique de cookies.",
-    "cookie_title": "Nous utilisons des cookies"
+    "cookie_title": "Nous utilisons des cookies",
+    "page_title": "Politique des cookies",
+    "title": "Politique des cookies",
+    "what_are_cookies": "Que sont les cookies ?",
+    "cookies_description": "Les cookies sont de petits fichiers texte placés sur votre appareil lorsque vous visitez un site web. Ils aident les sites web à fonctionner correctement et fournissent des informations aux propriétaires du site.",
+    "cookies_we_use": "Cookies que nous utilisons",
+    "only_essential_message": "Ce site web utilise uniquement des cookies essentiels qui sont strictement nécessaires au bon fonctionnement de la plateforme. Ces cookies ne nécessitent pas votre consentement selon le RGPD car ils sont essentiels pour fournir le service que vous avez demandé.",
+    "essential_cookies_title": "Cookies essentiels",
+    "essential_cookies_description": "Ces cookies sont nécessaires au fonctionnement du site web et ne peuvent pas être désactivés. Ils sont utilisés pour :",
+    "purpose_authentication": "L'authentification et l'accès au compte",
+    "purpose_session": "La gestion de session et le maintien de votre état connecté",
+    "purpose_preferences": "La mémorisation de vos préférences (langue, thème)",
+    "purpose_security": "La sécurité et la protection contre les activités malveillantes",
+    "manage_cookies": "Gestion des cookies",
+    "manage_cookies_description": "Puisque nous utilisons uniquement des cookies essentiels requis pour le fonctionnement du site web, ils ne peuvent pas être désactivés via notre plateforme. Cependant, vous pouvez configurer votre navigateur pour bloquer ou vous alerter sur les cookies.",
+    "browser_settings_note": "Note : Le blocage des cookies essentiels peut vous empêcher d'utiliser certaines fonctionnalités du site web ou de vous connecter à votre compte.",
+    "more_information": "Plus d'informations",
+    "contact_message": "Si vous avez des questions concernant notre utilisation des cookies, veuillez contacter l'administrateur du site web."
   },
   "ctf": {
     "competition_active": "Compétition Active",
@@ -210,11 +233,17 @@
     "disconnected": "Déconnecté"
   },
   "email": {
-    "email": "E-mail",
+    "email": "Email",
     "email_exists": "Cette adresse email existe déjà",
     "email_length": "L'adresse email doit contenir au plus 254 caractères",
     "email_too_long": "Email trop long (254 caractères max)",
     "invalid_email": "Adresse email invalide"
+  },
+  "errors": {
+    "challenge_not_found": "Challenge introuvable",
+    "file_not_found": "Fichier introuvable",
+    "invalid_file_path": "Chemin de fichier invalide",
+    "file_download_failed": "Échec du téléchargement du fichier"
   },
   "flag": {
     "enter_your_flag": "Entrez votre flag",
@@ -245,7 +274,9 @@
     "instance_status": "Statut de l'instance"
   },
   "instance_actions": {
+    "instance_cooldown_wait": "Veuillez patienter avant de démarrer une autre instance. Période de refroidissement active.",
     "instance_stopped_success": "Instance arrêtée avec succès",
+    "instance_create_failed": "Échec de la création de l'instance",
     "kill_instance": "Tuer l'instance",
     "restart_instance": "Redémarrer l'instance",
     "running": "En cours",
@@ -263,14 +294,17 @@
     "please_fill_fields": "Veuillez remplir tous les champs",
     "tip": "Astuce",
     "warning": "Attention",
-    "welcome_back": "Bon retour"
+    "welcome_back": "Bienvenue",
+    "incorrect_location": "Emplacement incorrect. Vous n'êtes pas assez proche de la cible !",
+    "flag_already_submitted": "Vous avez déjà soumis ce flag"
   },
   "pagination": {
     "showing": "Affichage de",
     "to": "à",
     "of": "sur",
     "previous": "Précédent",
-    "next": "Suivant"
+    "next": "Suivant",
+    "and": "et"
   },
   "misc": {
     "create_account": "Créez un nouveau compte pour continuer",
@@ -374,7 +408,7 @@
     "team_left_successfully": "Vous avez quitté l'équipe.",
     "team_not_found": "Équipe introuvable. Veuillez vérifier le nom ou l'ID de l'équipe.",
     "invalid_password": "Mot de passe d'équipe incorrect. Veuillez réessayer.",
-    "too_many_attempts": "Trop de tentatives échouées. Veuillez attendre avant de réessayer.",,
+    "too_many_attempts": "Trop de tentatives échouées. Veuillez attendre avant de réessayer.",
     "team_name": "Nom de l'équipe",
     "team_name_or_id": "Nom ou ID de l'équipe",
     "team_name_required": "Le nom de l'équipe est requis",
@@ -461,12 +495,20 @@
     "submission_trend": "Tendance des soumissions",
     "challenge_categories": "Catégories de défis",
     "running_instances": "Instances actives",
+    "currently_running_challenges": "Défis Actuellement en Cours",
+    "active_instances": "instances actives",
+    "no_running_instances": "Aucune instance en cours pour le moment",
+    "started": "Démarré",
+    "expires": "Expire",
+    "more_instances": "instances supplémentaires",
     "no_recent_submissions": "Aucune soumission récente",
     "last_7_days": "7 derniers jours",
     "last_48_hours": "48 dernières heures",
+    "intro": "Introduction",
     "easy": "Facile",
     "medium": "Moyen",
     "hard": "Difficile",
+    "insane": "Insane",
     "hidden": "Caché",
     "correct": "Correct",
     "incorrect": "Incorrect",
@@ -478,5 +520,28 @@
     "active": "Actifs",
     "banned": "Bannis",
     "submissions_over_time": "Soumissions au fil du temps"
-  }
+  },
+  "instances": "Instances",
+  "instance_stopped_success": "Instance arrêtée avec succès !",
+  "instance_stop_failed": "Échec de l'arrêt de l'instance",
+  "instances_stopped_success": "Instances sélectionnées arrêtées avec succès !",
+  "instances_stop_failed": "Échec de l'arrêt des instances sélectionnées",
+  "confirm_stop_instance": "Confirmer l'arrêt de l'instance",
+  "confirm_stop_instance_description": "Êtes-vous sûr de vouloir arrêter cette instance ? Cette action est irréversible.",
+  "confirm_stop_instances": "Confirmer l'arrêt des instances",
+  "confirm_stop_instances_description": "Êtes-vous sûr de vouloir arrêter {count} instances sélectionnées ? Cette action est irréversible.",
+  "stop_selected": "Arrêter la sélection",
+  "stop_all": "Tout Arrêter",
+  "stop": "Arrêter",
+  "running": "En cours",
+  "stopped": "Arrêté",
+  "time_remaining": "Temps restant",
+  "container_id": "ID du conteneur",
+  "filter_by_challenge": "Filtrer par défi...",
+  "filter_by_category": "Filtrer par catégorie...",
+  "confirm_stop_all_instances": "Confirmer l'arrêt de toutes les instances",
+  "confirm_stop_all_instances_description": "Êtes-vous sûr de vouloir arrêter TOUTES les {count} instances en cours ? Cette action est irréversible.",
+  "all_instances_stopped_success": "Toutes les instances ont été arrêtées avec succès !",
+  "all_instances_stop_failed": "Échec de l'arrêt de toutes les instances",
+  "clear_filters": "Effacer les filtres"
 }

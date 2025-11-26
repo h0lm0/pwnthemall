@@ -2,7 +2,7 @@ services:
   frontend:
     image: nginx
     ports:
-      - "8989"
+      - "80"
   attacker:
     build: .
     ports:

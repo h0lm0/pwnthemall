@@ -36,7 +36,7 @@ As remediation, you can simply add an entry for this domain name on your `/etc/h
 127.0.0.1   pwnthemall.local
 ```
 
-## Windows
+## Windows - DEPRECATED
 
 ### Requirements
 

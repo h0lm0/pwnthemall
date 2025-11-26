@@ -9,13 +9,16 @@ type BaseChallengeMetadata struct {
 	Author           string              `yaml:"author"`
 	Hidden           bool                `yaml:"hidden"`
 	Flags            []string            `yaml:"flags"`
+	Files            []string            `yaml:"files,omitempty"`
 	Points           int                 `yaml:"points"`
 	ConnectionInfo   []string            `yaml:"connection_info,omitempty"`
 	DecayFormula     string              `yaml:"decay,omitempty"`
 	Hints            []HintMetadata      `yaml:"hints,omitempty"`
 	EnableFirstBlood bool                `yaml:"enableFirstBlood"`
 	FirstBlood       *FirstBloodMetadata `yaml:"firstBlood,omitempty"`
-	Attempts         int                 `yaml:"attempts,omitempty"` // Max submission attempts (0 = unlimited)
+	Attempts         int                 `yaml:"attempts,omitempty"`   // Max submission attempts (0 = unlimited)
+	DependsOn        string              `yaml:"depends_on,omitempty"` // Name of challenge that must be solved first
+	CoverImg         string              `yaml:"cover_img,omitempty"`  // Cover image filename relative to challenge folder
 }
 
 type HintMetadata struct {

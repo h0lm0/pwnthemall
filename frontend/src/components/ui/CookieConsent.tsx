@@ -77,16 +77,13 @@ export const CookieConsent: React.FC<CookieConsentProps> = ({
             <span className="block mt-2 text-xs">
               {t('cookie_accept_message')}
             </span>
-            <Link href="/learn-more" className="underline text-xs mt-1 inline-block">
+            <Link href="/cookies" className="underline text-xs mt-1 inline-block">
               {t('learn_more')}
             </Link>
           </div>
           <div className="flex gap-2 pt-2">
             <Button className="flex-1" onClick={handleAccept} variant={"default" as any}>
               {t('accept')}
-            </Button>
-            <Button className="flex-1" onClick={handleDecline} variant={"secondary" as any}>
-              {t('decline')}
             </Button>
           </div>
         </CardContent>

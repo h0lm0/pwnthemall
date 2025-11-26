@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"errors"
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +13,79 @@ import (
 )
 
 // JoinTeam allows a user to join an existing team with password
+// validateJoinTeamInput validates the input for joining a team
+func validateJoinTeamInput(password string) error {
+	if len(password) < 8 {
+		return fmt.Errorf("password_too_short")
+	}
+	return nil
+}
+
+// findAndValidateTeam finds a team by ID or name and validates the password
+func findAndValidateTeam(tx *gorm.DB, teamID *uint, name, password string) (*models.Team, error) {
+	var team models.Team
+	
+	if teamID != nil {
+		if err := tx.First(&team, *teamID).Error; err != nil {
+			return nil, fmt.Errorf("team_not_found")
+		}
+	} else if name != "" {
+		if err := tx.Where("name = ?", name).First(&team).Error; err != nil {
+			return nil, fmt.Errorf("team_not_found")
+		}
+	} else {
+		return nil, fmt.Errorf("team_id_or_name_required")
+	}
+	
+	if err := bcrypt.CompareHashAndPassword([]byte(team.Password), []byte(password)); err != nil {
+		return nil, fmt.Errorf("invalid_password")
+	}
+	
+	return &team, nil
+}
+
+// processJoinTeamTransaction handles the database transaction for joining a team
+func processJoinTeamTransaction(tx *gorm.DB, userID interface{}, teamID *uint, name, password string) error {
+	var user models.User
+	if err := tx.First(&user, userID).Error; err != nil {
+		return fmt.Errorf("user_not_found")
+	}
+	
+	if user.TeamID != nil {
+		return fmt.Errorf("user_already_in_team")
+	}
+	
+	team, err := findAndValidateTeam(tx, teamID, name, password)
+	if err != nil {
+		return err
+	}
+	
+	user.TeamID = &team.ID
+	if err := tx.Save(&user).Error; err != nil {
+		return fmt.Errorf("team_join_failed")
+	}
+	
+	return nil
+}
+
+// handleJoinTeamError handles errors from the join team transaction
+func handleJoinTeamError(c *gin.Context, err error) {
+	switch err.Error() {
+	case "user_not_found":
+		utils.NotFoundError(c, "user_not_found")
+	case "user_already_in_team":
+		utils.BadRequestError(c, "user_already_in_team")
+	case "team_not_found":
+		utils.NotFoundError(c, "team_not_found")
+	case "team_id_or_name_required":
+		utils.BadRequestError(c, "team_id_or_name_required")
+	case "invalid_password":
+		utils.UnauthorizedError(c, "invalid_password")
+	default:
+		utils.InternalServerError(c, "team_join_failed")
+	}
+}
+
 func JoinTeam(c *gin.Context) {
 	var input struct {
 		TeamID   *uint  `json:"teamId"`
@@ -23,67 +96,30 @@ func JoinTeam(c *gin.Context) {
 		utils.BadRequestError(c, "invalid_input")
 		return
 	}
-
-	// Validate password length
-	if len(input.Password) < 8 {
-		utils.BadRequestError(c, "password_too_short")
+	
+	// Validate password
+	if err := validateJoinTeamInput(input.Password); err != nil {
+		utils.BadRequestError(c, err.Error())
 		return
 	}
-
+	
 	userID, exists := c.Get("user_id")
 	if !exists {
 		utils.UnauthorizedError(c, "unauthorized")
 		return
 	}
-
+	
+	// Process join transaction
 	err := config.DB.Transaction(func(tx *gorm.DB) error {
-		var user models.User
-		if err := tx.First(&user, userID).Error; err != nil {
-			return errors.New("user_not_found")
-		}
-		if user.TeamID != nil {
-			return errors.New("user_already_in_team")
-		}
-		var team models.Team
-		if input.TeamID != nil {
-			if err := tx.First(&team, *input.TeamID).Error; err != nil {
-				return errors.New("team_not_found")
-			}
-		} else if input.Name != "" {
-			if err := tx.Where("name = ?", input.Name).First(&team).Error; err != nil {
-				return errors.New("team_not_found")
-			}
-		} else {
-			return errors.New("team_id_or_name_required")
-		}
-		if err := bcrypt.CompareHashAndPassword([]byte(team.Password), []byte(input.Password)); err != nil {
-			return errors.New("invalid_password")
-		}
-		user.TeamID = &team.ID
-		if err := tx.Save(&user).Error; err != nil {
-			return errors.New("team_join_failed")
-		}
-		return nil
+		return processJoinTeamTransaction(tx, userID, input.TeamID, input.Name, input.Password)
 	})
-
+	
 	if err != nil {
-		switch err.Error() {
-		case "user_not_found":
-			utils.NotFoundError(c, "user_not_found")
-		case "user_already_in_team":
-			utils.BadRequestError(c, "user_already_in_team")
-		case "team_not_found":
-			utils.NotFoundError(c, "team_not_found")
-		case "team_id_or_name_required":
-			utils.BadRequestError(c, "team_id_or_name_required")
-		case "invalid_password":
-			utils.UnauthorizedError(c, "invalid_password")
-		default:
-			utils.InternalServerError(c, "team_join_failed")
-		}
+		handleJoinTeamError(c, err)
 		return
 	}
-
+	
+	// Load team for response
 	var team models.Team
 	if input.TeamID != nil {
 		config.DB.First(&team, *input.TeamID)
