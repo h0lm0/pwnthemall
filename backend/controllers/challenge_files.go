@@ -21,7 +21,6 @@ import (
 func GetChallengeFiles(c *gin.Context) {
 	challengeID := c.Param("id")
 
-	// Fetch challenge from database
 	var challenge models.Challenge
 	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
 		debug.Log("Challenge not found: %v", err)
@@ -29,35 +28,28 @@ func GetChallengeFiles(c *gin.Context) {
 		return
 	}
 
-	// Check if challenge has files
 	if len(challenge.Files) == 0 {
 		c.JSON(http.StatusOK, []meta.FileMetadata{})
 		return
 	}
 
-	// Generate file metadata (without download URLs - client will use /download endpoint)
 	files := make([]meta.FileMetadata, 0, len(challenge.Files))
 	bucketName := "challenges"
 
 	for _, fileName := range challenge.Files {
-		// Sanitize path
 		cleanPath := filepath.Clean(fileName)
 		if strings.HasPrefix(cleanPath, "..") || filepath.IsAbs(cleanPath) {
 			debug.Log("Invalid file path skipped: %s", fileName)
 			continue
 		}
 
-		// Construct object path
 		objectPath := fmt.Sprintf("%s/%s", challenge.Slug, cleanPath)
-
-		// Get file info from MinIO
 		obj, err := config.FS.StatObject(context.Background(), bucketName, objectPath, minio.StatObjectOptions{})
 		if err != nil {
 			debug.Log("File not found in MinIO: %s, error: %v", objectPath, err)
 			continue
 		}
 
-		// Determine content type
 		contentType := obj.ContentType
 		if contentType == "" {
 			contentType = "application/octet-stream"
@@ -77,7 +69,6 @@ func DownloadChallengeFile(c *gin.Context) {
 	challengeID := c.Param("id")
 	filename := c.Param("filename")
 
-	// Fetch challenge from database
 	var challenge models.Challenge
 	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
 		debug.Log("Challenge not found: %v", err)
@@ -85,7 +76,6 @@ func DownloadChallengeFile(c *gin.Context) {
 		return
 	}
 
-	// Verify file is in challenge's file list
 	fileFound := false
 	var matchedFile string
 	for _, f := range challenge.Files {
@@ -102,7 +92,6 @@ func DownloadChallengeFile(c *gin.Context) {
 		return
 	}
 
-	// Sanitize path
 	cleanPath := filepath.Clean(matchedFile)
 	if strings.HasPrefix(cleanPath, "..") || filepath.IsAbs(cleanPath) {
 		debug.Log("Invalid file path: %s", matchedFile)
@@ -110,11 +99,9 @@ func DownloadChallengeFile(c *gin.Context) {
 		return
 	}
 
-	// object path
 	bucketName := "challenges"
 	objectPath := fmt.Sprintf("%s/%s", challenge.Slug, cleanPath)
 
-	// Get object from MinIO
 	object, err := config.FS.GetObject(context.Background(), bucketName, objectPath, minio.GetObjectOptions{})
 	if err != nil {
 		debug.Log("Failed to get object from MinIO: %s, error: %v", objectPath, err)
@@ -123,7 +110,6 @@ func DownloadChallengeFile(c *gin.Context) {
 	}
 	defer object.Close()
 
-	// Get object info for content type and size
 	objInfo, err := object.Stat()
 	if err != nil {
 		debug.Log("Failed to stat object: %s, error: %v", objectPath, err)
@@ -131,7 +117,6 @@ func DownloadChallengeFile(c *gin.Context) {
 		return
 	}
 
-	// Set headers
 	contentType := objInfo.ContentType
 	if contentType == "" {
 		contentType = "application/octet-stream"
