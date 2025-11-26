@@ -2,7 +2,7 @@
 
 Cette page explique comment utiliser pwnthemall, en commençant par la création de challenges.
 
-## Création de Challenges
+## Création de challenges
 
 Tous les challenges doivent être placés dans le dossier suivant :
 
@@ -15,7 +15,7 @@ Ce fichier définit le challenge.
 
 Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges)
 
-### Types de Challenges
+### Types de challenges
 
 1. **Standard**  
    - Un flag à trouver selon la description.  
@@ -100,7 +100,7 @@ Les structures des fichiers YAML se trouvent dans [docs/challenges/](https://git
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
 
-## Dépendances entre Challenges
+## Dépendances entre challenges
 
 Le champ `depends_on` est **optionnel** et permet de créer des chaînes de challenges en exigeant que les équipes résolvent un challenge avant d'accéder à un autre.
 
@@ -116,7 +116,7 @@ Le champ `depends_on` est **optionnel** et permet de créer des chaînes de chal
 depends_on: "Nom du Challenge"  # Nom exact du challenge qui doit être résolu en premier
 ```
 
-### Exemple : Chaîne de Challenges Progressive
+### Exemple : Chaîne de challenges progressive
 
 ```yaml
 # Challenge 1
@@ -150,7 +150,7 @@ depends_on: "L'histoire du maire [2/3]"
 
 Cela crée une chaîne : **Challenge 1** → **Challenge 2** → **Challenge 3**
 
-## Système de Decay
+## Système de decay
 
 Le champ `decay` est **optionnel** et contrôle comment les points d'un challenge diminuent au fur et à mesure que les équipes le résolvent. S'il n'est pas spécifié, le challenge n'aura **aucun decay** (points fixes).
 
@@ -197,7 +197,7 @@ Les bonus FirstBlood sont **permanents** et le decay ne s'applique pas :
 - Bonus FirstBlood : fixe, ne change jamais
 - Score total = Points Actuels + Bonus FirstBlood
 
-## Fichiers de Challenge
+## Fichiers joints aux challenges
 
 Vous souhaitez joindre des fichiers à vos challenges ? C'est possible ! Il suffit de déposer vos fichiers dans le dossier du challenge et de les référencer dans le YAML.
 
@@ -211,14 +211,14 @@ name: "Mystère Base64"
 description: |
   J'ai trouvé ce script Python mystérieux et son résultat.
 category: misc
-difficulty: intro
+difficulty: easy
 type: standard
-files: [encode.py, output.txt]  # Liste vos fichiers ici
+files: [encode.py, output.txt]  # Liste de vos fichiers ici
 flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
 points: 50
 ```
 
-### Chemins Supportés
+### Chemins supportés
 
 Vous pouvez référencer les fichiers par nom ou utiliser des chemins relatifs :
 
@@ -233,15 +233,14 @@ files: [static/image.png, scripts/solver.py, data/secrets.txt]
 files: [readme.txt, static/hint.jpg, tools/decrypt.py]
 ```
 
-### Validation des Fichiers
+### Validation des fichiers
 
 Lors de la synchronisation des challenges, le système vérifie :
 - **Existence des fichiers** : Tous les fichiers référencés doivent exister dans MinIO
 - **Taille des fichiers** : Max 50MB par fichier
 - **Taille totale** : Max 200MB pour tous les fichiers combinés
-- **Sécurité des chemins** : Les tentatives de traversée de chemin (`../` est bloqué)
 
-### Affichage pour les Utilisateurs
+### Affichage pour les utilisateurs
 
 Les fichiers apparaissent en haut de la page de description du challenge avec :
 - Des icônes selon le type de fichier (code, archive, texte, etc.)
@@ -249,7 +248,7 @@ Les fichiers apparaissent en haut de la page de description du challenge avec :
 - Téléchargement en un clic
 - Limitation de débit : 10 téléchargements par minute par utilisateur
 
-### Exemple de Structure de Challenge
+### Exemple de structure de challenge
 
 ```
 minio/challenges/mystere-base64/
@@ -258,7 +257,7 @@ minio/challenges/mystere-base64/
 └── output.txt         # Sortie encodée
 ```
 
-Le champ `files` dans votre YAML les rend téléchargeables depuis l'interface web. Simple comme bonjour !
+Le champ `files` dans votre YAML les rend téléchargeables depuis l'interface web.
 
 ## Synchronisation des Challenges
 

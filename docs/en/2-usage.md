@@ -99,11 +99,11 @@ Examples of YAML files can be found in [docs/challenges/](https://github.com/h0l
       connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
       ```
 
-## Challenge Dependencies
+## Challenge dependencies
 
 The `depends_on` field is **optional** and allows you to create challenge chains by requiring teams to solve one challenge before accessing another.
 
-### How It Works
+### How it works
 
 - Challenges are **hidden** from teams until the dependency is solved
 - Once the required challenge is solved, the dependent challenge appears in the list
@@ -115,7 +115,7 @@ The `depends_on` field is **optional** and allows you to create challenge chains
 depends_on: "Challenge Name"  # Exact name of the challenge that must be solved first
 ```
 
-### Example: Progressive Challenge Chain
+### Example: progressive challenge chain
 
 ```yaml
 # Challenge 1
@@ -149,7 +149,7 @@ depends_on: "The Mayor's Story [2/3]"
 
 This creates a chain: **Challenge 1** → **Challenge 2** → **Challenge 3**
 
-## Decay System
+## Decay system
 
 The `decay` field is **optional** and controls how challenge points decrease as more teams solve it. If not specified, challenges will have **no decay** (fixed points).
 
@@ -162,7 +162,7 @@ The `decay` field is **optional** and controls how challenge points decrease as 
 - **Logarithmic - Medium** - Balanced decay (step: 75, min: 75 pts)
 - **Logarithmic - Fast** - Aggressive decay (step: 100, min: 50 pts)
 
-### How It Works
+### How it works
 
 Logarithmic decay uses the formula: `points = basePoints - (step × log₂(solveNumber))`
 
@@ -189,18 +189,18 @@ decay: "Logarithmic - Medium"
 # No need to specify the decay field, or:
 decay: "No Decay"
 ```
-### FirstBlood Bonuses
+### FirstBlood bonuses
 
 FirstBlood bonuses are **permanent** and decay does not apply:
 - Base challenge points: subject to decay
 - FirstBlood bonus: fixed, never changes
 - Total score = Current Points + FirstBlood Bonus
 
-## Challenge Files
+## Challenge files
 
 Want to attach files to your challenges? You can! Just drop your files in the challenge folder and reference them in the YAML.
 
-### How to Add Files
+### How to add files
 
 1. Put your files in `minio/challenges/[challenge_name]/`
 2. Add the `files` field to your `chall.yml`:
@@ -221,7 +221,7 @@ flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
 points: 50
 ```
 
-### Supported Paths
+### Supported paths
 
 You can reference files by name or use relative paths:
 
@@ -236,21 +236,21 @@ files: [static/image.png, scripts/solver.py, data/secrets.txt]
 files: [readme.txt, static/hint.jpg, tools/decrypt.py]
 ```
 
-### File Validation
+### Files validation
 
 When syncing challenges, the system checks:
 - **File existence**: All referenced files must exist in MinIO
 - **File size**: Max 50MB per file
 - **Total size**: Max 200MB for all files combined
 
-### How Users See Files
+### How users see files
 
 Files appear at the top of the challenge description page with:
 - File icons based on type (code, archive, text, etc.)
 - File size display
 - One-click download
 
-### Example Challenge Structure
+### Challenge structure example
 
 ```
 minio/challenges/base64-mystery/
@@ -259,7 +259,7 @@ minio/challenges/base64-mystery/
 └── output.txt         # Encoded output
 ```
 
-The `files` field in your YAML makes them downloadable from the web interface. Simple as that!
+The `files` field in your YAML makes them downloadable from the web interface.
 
 ## Challenge synchronization
 
