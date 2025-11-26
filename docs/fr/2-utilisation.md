@@ -266,7 +266,7 @@ Le champ `files` dans votre YAML les rend téléchargeables depuis l'interface w
 La synchronisation des challenges se fait via le script `pta-cli.sh`. Une fois vos fichiers YAML créés ou modifiés, vous pouvez synchroniser les challenges vers le stockage MinIO grâce à la commande suivante :
 
 ```bash
-bash pta-cli.sh minio sync challenges
+bash pta-cli.sh minio sync [--env dev|prod|demo] challenges
 ```
 
 ![sync-vhs](../assets/minio-sync.gif)
