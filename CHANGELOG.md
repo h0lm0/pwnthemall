@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.1](https://github.com/pwnthemall/pwnthemall/compare/v0.1.0...v0.1.1) (2025-11-26)
+
+
+### Bug Fixes
+
+* docker-compose.prod.yml & docker-compose.demo.yml new version ([b2c9071](https://github.com/pwnthemall/pwnthemall/commit/b2c90715bf143eb7d53a415c35365088ac248114))
+* docker-compose.prod.yml & docker-compose.demo.yml new version ([83beb9b](https://github.com/pwnthemall/pwnthemall/commit/83beb9bdf1ed9b4261d0828e9b3b9129775fbd61))
+* missing permissions for member on new challenge routes ([d4799d7](https://github.com/pwnthemall/pwnthemall/commit/d4799d7c9f04a015b54ea472b6898479292cac99))
+* missing permissions for member on new challenge routes ([837aa8b](https://github.com/pwnthemall/pwnthemall/commit/837aa8b5d709f069c447296de1f084d8fedef4c7))
+* release please config update ([743c9c3](https://github.com/pwnthemall/pwnthemall/commit/743c9c31bfe84e6f421e5e12e46b7fab2f6badd4))
+* release please config update ([66faf48](https://github.com/pwnthemall/pwnthemall/commit/66faf4896aa46d188d7ddddc2dccd20ceadc571f))
+* wrong release please config ([9cc98ef](https://github.com/pwnthemall/pwnthemall/commit/9cc98ef5d0e30c0e7de331d4892e704e8f63aa20))
+* wrong release please config ([bdcdc1b](https://github.com/pwnthemall/pwnthemall/commit/bdcdc1b22fb0da5997a3eda1fbd33b8efb6a0e0f))
+
 ## [0.1.0](https://github.com/pwnthemall/pwnthemall/compare/0.0.2...v0.1.0) (2025-11-26)
 
 
