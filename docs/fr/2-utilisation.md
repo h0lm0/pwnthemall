@@ -116,7 +116,7 @@ Le champ `depends_on` est **optionnel** et permet de créer des chaînes de chal
 depends_on: "Nom du Challenge"  # Nom exact du challenge qui doit être résolu en premier
 ```
 
-### Exemple : Chaîne de challenges progressive
+### Exemple : chaîne de challenges progressive
 
 ```yaml
 # Challenge 1
@@ -201,7 +201,7 @@ Les bonus FirstBlood sont **permanents** et le decay ne s'applique pas :
 
 Vous souhaitez joindre des fichiers à vos challenges ? C'est possible ! Il suffit de déposer vos fichiers dans le dossier du challenge et de les référencer dans le YAML.
 
-### Comment Ajouter des Fichiers
+### Comment ajouter des fichiers
 
 1. Placez vos fichiers dans `minio/challenges/[nom_du_challenge]/`
 2. Ajoutez le champ `files` à votre `chall.yml` :
