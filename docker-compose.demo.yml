@@ -27,8 +27,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      docker-worker:
-        condition: service_healthy
+      # docker-worker:
+        # condition: service_healthy
     environment:
       DATABASE_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable'
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -65,6 +65,9 @@ services:
       private:
 
   docker-worker:
+    profiles:
+      - "no-dind"
+    hostname: docker-worker
     container_name: docker-worker
     build:
       context: ./docker-worker
@@ -88,7 +91,31 @@ services:
       timeout: 3s
       retries: 5
 
+  docker-worker-dind:
+    hostname: docker-worker
+    profiles:
+      - "dind"
+    container_name: docker-worker
+    privileged: true
+    build:
+      context: ./docker-worker
+      dockerfile: Dockerfile.dind
+      args:
+        DOCKER_GID: ${DOCKER_GID}
+        DOCKER_WORKER_PASSWORD: ${DOCKER_WORKER_PASSWORD}
+    volumes:
+      - ./shared/docker-worker.pub:/home/docker/.ssh/authorized_keys
+    networks:
+      private:
+    healthcheck:
+      test: ["CMD", "docker", "info"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   libvirt-worker:
+    profiles:
+      - "plugins"
     container_name: libvirt-worker
     build:
       context: ./libvirt-worker
@@ -175,14 +202,27 @@ services:
       private:
 
   agent:
+    profiles:
+      - isolation
     container_name: agent
     build:
       context: ./agent
       dockerfile: Dockerfile
-    privileged: true
     network_mode: host
     restart: unless-stopped
-    profiles: ["isolation"]
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ./agent/config:/etc/agent:ro
+    user: "1000:1000"
 
 volumes:
   postgres_data:
@@ -191,4 +231,13 @@ volumes:
 
 networks:
   public:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.1.0/24
+
   private:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.70.2.0/24
