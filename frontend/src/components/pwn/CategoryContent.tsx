@@ -10,8 +10,6 @@ import { toast } from "sonner";
 import Head from "next/head";
 import {
   Card,
-  CardContent,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import {
@@ -27,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeoPicker from "./GeoPicker";
+import ChallengeImage from "@/components/ChallengeImage";
 import { useInstances } from "@/hooks/use-instances";
 import { useHints } from "@/hooks/use-hints";
 import { debugError, debugLog } from "@/lib/debug";
@@ -403,7 +402,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
             <Card
               key={challenge.id}
               onClick={() => !challenge.locked && handleChallengeSelect(challenge)}
-              className={`hover:shadow-lg transition-shadow duration-200 relative ${
+              className={`hover:shadow-lg transition-shadow duration-200 relative overflow-hidden flex flex-col ${
                 challenge.locked 
                   ? 'opacity-60 cursor-not-allowed' 
                   : challenge.solved 
@@ -411,43 +410,58 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     : 'cursor-pointer'
               }`}
             >
-              {/* Locked indicator */}
-              {challenge.locked && (
-                <div className="absolute top-2 left-2 z-10">
-                  <Lock className="w-6 h-6 text-muted-foreground" />
-                </div>
-              )}
-              
-              {/* Solved check */}
-              {challenge.solved && !challenge.locked && (
-                <div className="absolute top-2 left-2">
-                  <BadgeCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-              )}
-
-              {/* Points badge at top-right, compact so it doesn't overlap the title */}
-              {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
-                <div className="absolute top-2 right-2 z-10 pointer-events-none select-none">
-                  <div className="flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 shadow-sm">
-                    <Star className="w-5 h-5 0" />
-                    <span className="text-sm font-semibold leading-none">
-                      {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points}
-                    </span>
-                    <span className="text-xs text-muted-foreground uppercase tracking-wide leading-none">{t('points') || 'Points'}</span>
+              {/* Cover Image or Placeholder - Fixed height zone */}
+              <div className="h-48 flex-shrink-0 relative">
+                {challenge.coverImg && challenge.id ? (
+                  <ChallengeImage 
+                    challengeId={challenge.id} 
+                    alt={challenge.name || 'Challenge cover'}
+                    className="h-full w-full object-cover rounded-t-lg"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-muted/50 rounded-t-lg"></div>
+                )}
+                
+                {/* Locked indicator */}
+                {challenge.locked && (
+                  <div className="absolute z-10 top-2 left-2">
+                    <Lock className="w-6 h-6 text-white drop-shadow-lg" />
                   </div>
-                </div>
-              )}
-              <CardHeader className="px-4 pt-10 pb-2">
-                <CardTitle className={`${
+                )}
+                
+                {/* Solved check */}
+                {challenge.solved && !challenge.locked && (
+                  <div className="absolute top-2 left-2">
+                    <BadgeCheck className="w-6 h-6 text-green-400 drop-shadow-lg" />
+                  </div>
+                )}
+
+                {/* Points badge at top-right */}
+                {(typeof challenge.currentPoints === 'number' || typeof challenge.points === 'number') && (
+                  <div className="absolute z-10 pointer-events-none select-none top-2 right-2">
+                    <div className="flex items-center gap-1 rounded-full border bg-muted/90 backdrop-blur-sm px-2 py-0.5 shadow-sm">
+                      <Star className="w-5 h-5" />
+                      <span className="text-sm font-semibold leading-none">
+                        {typeof challenge.currentPoints === 'number' ? challenge.currentPoints : challenge.points}
+                      </span>
+                      <span className="text-xs text-muted-foreground uppercase tracking-wide leading-none">{t('points') || 'Points'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Content zone */}
+              <div className="flex flex-col p-4 pb-5">
+                <CardTitle className={`text-xl font-bold mb-3 text-center ${
                   challenge.solved 
                     ? 'text-green-700 dark:text-green-200' 
                     : 'dark:text-cyan-300'
                 }`}>
                   {challenge.name || 'Unnamed Challenge'}
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="text-left p-4 pt-2 pb-3">
-                <div className="flex flex-wrap gap-2 mt-2">
+                
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2">
                   <Badge
                     variant="secondary"
                     className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-500 pointer-events-none select-none"
@@ -476,7 +490,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     </Badge>
                   )}
                 </div>
-              </CardContent>
+              </div>
             </Card>
           ))}
         </div>

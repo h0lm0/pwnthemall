@@ -10,6 +10,7 @@ description: |
 
 type: standard
 flags: ["adalovelaceflagcache"]
+cover_img: cover.png 
 difficulty: easy
 hidden: false
 points: 200
