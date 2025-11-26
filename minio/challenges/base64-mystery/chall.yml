@@ -2,10 +2,10 @@ name: "Base64 Mystery"
 author: "swinowz"
 category: crypto
 description: |
-  I don't know.
+  J'ai trouvé un fichier texte bizarre; essaye de le DÉCRYPTER !
 
 type: standard
-files: [encode.py, output.txt]
+files: ["output.txt"]
 flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
 difficulty: intro
 hidden: false

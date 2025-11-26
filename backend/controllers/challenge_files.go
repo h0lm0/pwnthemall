@@ -12,21 +12,15 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/pwnthemall/pwnthemall/backend/config"
 	"github.com/pwnthemall/pwnthemall/backend/debug"
+	"github.com/pwnthemall/pwnthemall/backend/meta"
 	"github.com/pwnthemall/pwnthemall/backend/models"
 	"github.com/pwnthemall/pwnthemall/backend/utils"
 )
 
-// FileMetadata represents downloadable file information
-type FileMetadata struct {
-	Name        string `json:"name"`
-	Size        int64  `json:"size"`
-	ContentType string `json:"contentType"`
-}
-
 // GetChallengeFiles returns metadata and pre-signed download URLs for challenge files
 func GetChallengeFiles(c *gin.Context) {
 	challengeID := c.Param("id")
-	
+
 	// Fetch challenge from database
 	var challenge models.Challenge
 	if err := config.DB.First(&challenge, challengeID).Error; err != nil {
@@ -37,12 +31,12 @@ func GetChallengeFiles(c *gin.Context) {
 
 	// Check if challenge has files
 	if len(challenge.Files) == 0 {
-		c.JSON(http.StatusOK, []FileMetadata{})
+		c.JSON(http.StatusOK, []meta.FileMetadata{})
 		return
 	}
 
 	// Generate file metadata (without download URLs - client will use /download endpoint)
-	files := make([]FileMetadata, 0, len(challenge.Files))
+	files := make([]meta.FileMetadata, 0, len(challenge.Files))
 	bucketName := "challenges"
 
 	for _, fileName := range challenge.Files {
@@ -69,7 +63,7 @@ func GetChallengeFiles(c *gin.Context) {
 			contentType = "application/octet-stream"
 		}
 
-		files = append(files, FileMetadata{
+		files = append(files, meta.FileMetadata{
 			Name:        filepath.Base(fileName),
 			Size:        obj.Size,
 			ContentType: contentType,
@@ -137,7 +131,7 @@ func DownloadChallengeFile(c *gin.Context) {
 		return
 	}
 
-	// Set headers 
+	// Set headers
 	contentType := objInfo.ContentType
 	if contentType == "" {
 		contentType = "application/octet-stream"
