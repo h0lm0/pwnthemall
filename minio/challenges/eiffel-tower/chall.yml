@@ -8,6 +8,7 @@ type: geo
 decay: "Logarithmic - Medium"
 author: system
 hidden: false
+cover_img: tenor.gif 
 flags: []
 points: 200
 

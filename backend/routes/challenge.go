@@ -22,6 +22,9 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.POST("/:id/start", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
 		challenges.POST("/:id/stop", middleware.DemoRestriction, middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/:id/stop", "write"), controllers.StopChallengeInstance)
 
+		// Cover image
+		challenges.GET("/:id/cover", controllers.GetChallengeCover)
+
 		// Hint routes
 		challenges.POST("/hints/:id/purchase", middleware.AuthRequired(true), middleware.CheckPolicy("/challenges/hints/:id/purchase", "write"), controllers.PurchaseHint)
 		// challenges.PUT("/:id", middleware.CheckPolicy("/challenges/:id", "write"), controllers.UpdateUser)

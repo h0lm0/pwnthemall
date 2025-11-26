@@ -7,6 +7,7 @@ require (
 	github.com/casbin/gorm-adapter/v3 v3.33.0
 	github.com/compose-spec/compose-go/v2 v2.9.1
 	github.com/coreos/go-iptables v0.8.0
+	github.com/disintegration/imaging v1.6.2
 	github.com/docker/cli v28.5.1+incompatible
 	github.com/docker/compose/v2 v2.40.3
 	github.com/docker/docker v28.5.1+incompatible
@@ -202,6 +203,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/term v0.37.0 // indirect

@@ -50,6 +50,7 @@ export interface Challenge {
   teamFailedAttempts?: number
   dependsOn?: string
   locked?: boolean
+  coverImg?: string
 }
 
 export interface FirstBlood {

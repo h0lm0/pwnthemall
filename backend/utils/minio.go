@@ -444,6 +444,20 @@ func updateOrCreateChallengeInDB(metaData meta.BaseChallengeMetadata, slug strin
 	challenge.EnableFirstBlood = metaData.EnableFirstBlood
 	setFirstBloodConfig(&challenge, metaData.FirstBlood)
 
+	// Process cover image if specified
+	coverImgPath := ""
+	if metaData.CoverImg != "" {
+		ctx := context.Background()
+		if processedPath, err := ProcessChallengeCoverImage(ctx, slug, metaData.CoverImg); err != nil {
+			log.Printf("Warning: Failed to process cover image for %s: %v", slug, err)
+			// Don't fail sync - challenge still works without cover image
+		} else {
+			coverImgPath = processedPath
+			log.Printf("Successfully processed cover image for %s: %s", slug, coverImgPath)
+		}
+	}
+	challenge.CoverImg = coverImgPath
+
 	// Save challenge
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		return err
