@@ -16,10 +16,6 @@ Si vous souhaitez découvrir toutes les fonctionnalités de Pwnthemall, veuillez
 
 ## Aperçus
 
-### Profil Utilisateur
-
 <img width="920" height="500" alt="Capture d'écran du profil utilisateur" src="https://github.com/user-attachments/assets/b75caf98-f589-4822-8adb-bfb2b8b58b6c" />
-
-### Gestion des Équipes
 
 <img width="920" height="500" alt="Capture d'écran de la gestion des équipes" src="https://github.com/user-attachments/assets/6c7a85ee-1fc3-44d6-a0f0-e36ce559ff96" />
