@@ -3,7 +3,7 @@ name: release-please
 on:
   push:
     branches:
-      - dev
+      - main
 
 permissions:
   contents: write
@@ -19,3 +19,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          include-merged-prs: true
