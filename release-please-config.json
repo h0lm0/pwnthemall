@@ -1,5 +1,6 @@
 {
   "release-type": "simple",
+  "include-v-in-tag": true,
   "changelog-sections": [
     {"type": "feat", "section": "✨ Features", "hidden": false},
     {"type": "fix", "section": "🐛 Bug fixes", "hidden": false},
