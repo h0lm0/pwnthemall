@@ -178,7 +178,7 @@ func seedDockerConfig() {
 	}
 
 	config := models.DockerConfig{
-		Host:                    os.Getenv("PTA_DOCKER_HOST"),
+		Host:                    os.Getenv("PTA_DOCKER_WORKER_URL"),
 		ImagePrefix:             os.Getenv("PTA_DOCKER_IMAGE_PREFIX"),
 		MaxMemByInstance:        maxMem,
 		MaxCpuByInstance:        maxCpu,

@@ -1,8 +1,8 @@
 #!/bin/sh
 
-case "$PTA_DOCKER_HOST" in
+case "$PTA_DOCKER_WORKER_URL" in
     ssh://*)
-        DOCKER_HOSTNAME=`echo "$PTA_DOCKER_HOST" | cut -d'@' -f2 | cut -d'/' -f1`
+        DOCKER_HOSTNAME=`echo "$PTA_DOCKER_WORKER_URL" | cut -d'@' -f2 | cut -d'/' -f1`
         echo "DOCKER_HOSTNAME: $DOCKER_HOSTNAME"
         echo "Host $DOCKER_HOSTNAME
             StrictHostKeyChecking no

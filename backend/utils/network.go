@@ -18,7 +18,7 @@ import (
 )
 
 func GetTeamSubnet(teamID int) (string, string, error) {
-	baseCIDR := os.Getenv("PTA_CHALL_BASE_CIDR")
+	baseCIDR := os.Getenv("PTA_DOCKER_CHALL_BASE_CIDR")
 	_, ipnet, err := net.ParseCIDR(baseCIDR)
 	if err != nil {
 		return "", "", fmt.Errorf("invalid baseCIDR: %w", err)

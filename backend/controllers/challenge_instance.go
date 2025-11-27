@@ -167,7 +167,7 @@ func formatConnectionInfo(challenge models.Challenge, ports []int) []string {
 		return nil
 	}
 
-	ip := os.Getenv("PTA_PUBLIC_IP")
+	ip := os.Getenv("PTA_DOCKER_WORKER_IP")
 	if ip == "" {
 		ip = "worker-ip"
 	}
@@ -982,7 +982,7 @@ func buildConnectionInfoForInstance(challenge *models.Challenge, instance *model
 		return connectionInfo
 	}
 
-	ip := os.Getenv("PTA_PUBLIC_IP")
+	ip := os.Getenv("PTA_DOCKER_WORKER_IP")
 	if ip == "" {
 		ip = "instance-ip"
 	}

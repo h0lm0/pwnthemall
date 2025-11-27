@@ -10,7 +10,7 @@ description: |
 type: docker
 ports: [25000]
 connection_info: ["nc $ip [25000]"] 
-flags: ["k4tie_m0ussouris_bUg_bouNty!"]
+flags: ["PTA{k4tie_m0ussouris_bUg_bouNty!}"]
 difficulty: easy
 hidden: false
 points: 200
