@@ -28,7 +28,7 @@ bash pta-cli.sh compose up -b -e prod
 bash pta-cli.sh compose up -b -e dev
 ```
 
-Par défaut, le proxy Caddy sera disponible sur `0.0.0.0:443`, mais comme il crée automatiquement un certificat SSL pour `pwnthemall.local`, vous pourriez rencontrer une erreur concernant le certificat SSL du site.
+Par défaut, le proxy Caddy sera disponible sur `0.0.0.0:443`, mais comme il crée automatiquement un certificat SSL pour le domaine `$PTA_PUBLIC_DOMAIN` (configuré dans le `.env`), vous pourriez rencontrer une erreur concernant le certificat SSL du site.
 Pour corriger cela, vous pouvez simplement ajouter une entrée pour ce nom de domaine dans votre fichier `/etc/hosts` comme ceci :
 
 ```bash
