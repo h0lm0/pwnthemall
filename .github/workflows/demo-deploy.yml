@@ -1,9 +1,7 @@
-name: Deploy on merge to main
+name: Deploy demo
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
