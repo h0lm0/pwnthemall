@@ -1,5 +1,17 @@
 # 🚀 Changelog
 
+## [0.1.3](https://github.com/pwnthemall/pwnthemall/compare/v0.1.2...v0.1.3) (2025-11-27)
+
+
+### 🐛 Bug fixes
+
+* Dotenv fix and renammed some variables for better understanding ([d6a6bd8](https://github.com/pwnthemall/pwnthemall/commit/d6a6bd8e849d7787983c84398899fdbd7e711702))
+
+
+### 📝 Documentation
+
+* New page "configuration" on gitbooks docs (fr/en) ([557ff07](https://github.com/pwnthemall/pwnthemall/commit/557ff07ea4660258b04445d5dbf119ae22ad841f))
+
 ## [0.1.2](https://github.com/pwnthemall/pwnthemall/compare/v0.1.1...v0.1.2) (2025-11-27)
 
 
