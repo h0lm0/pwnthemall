@@ -1,4 +1,4 @@
-pwnthemall.local {
+%PTA_PUBLIC_DOMAIN% {
     handle_path /api/* {
         reverse_proxy backend:8080 {
             header_up X-Real-IP {remote_host}

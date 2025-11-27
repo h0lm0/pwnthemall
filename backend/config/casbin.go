@@ -27,7 +27,7 @@ func InitCasbin() *casbin.Enforcer {
 		SeedCasbin(CEF)
 	}
 
-	if os.Getenv("PTA_PTA_SEED_CASBIN_CSV") == "true" {
+	if os.Getenv("PTA_SEED_CASBIN_CSV") == "true" {
 		SeedCasbinFromCsv(CEF)
 	}
 
