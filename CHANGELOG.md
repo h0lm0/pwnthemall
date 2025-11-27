@@ -1,5 +1,16 @@
 # 🚀 Changelog
 
+## [0.1.2](https://github.com/pwnthemall/pwnthemall/compare/v0.1.1...v0.1.2) (2025-11-27)
+
+
+### 🤖 Continuous integration
+
+* Prettify relpls json ([1cb2d2c](https://github.com/pwnthemall/pwnthemall/commit/1cb2d2ca5020f43ac99e577945df1bdd8ea473b7))
+* Removing old plugin and adding sentence-case to release please ([9e0d4a3](https://github.com/pwnthemall/pwnthemall/commit/9e0d4a38aef3219b0e724c8a7b350e044d66e9e8))
+* Removing old plugin and adding sentence-case to release please ([2269c13](https://github.com/pwnthemall/pwnthemall/commit/2269c13a05bde886cb0d74c7920e662dc0b9ca66))
+* Upgrading release please version ([4d27203](https://github.com/pwnthemall/pwnthemall/commit/4d27203ed623b3fd8f33b16eca0a74bc597186a9))
+* Upgrading release please version ([df2a61d](https://github.com/pwnthemall/pwnthemall/commit/df2a61dac16e4c01112aabf76b5500b792f5f56e))
+
 ## [0.1.1](https://github.com/pwnthemall/pwnthemall/compare/v0.1.0...v0.1.1) (2025-11-27)
 
 
@@ -55,4 +66,3 @@
 * stopping now deletes from db AND stops the instance ( was only doing the db part before ) ([88ac12f](https://github.com/pwnthemall/pwnthemall/commit/88ac12f1b4ec1491729adb9d9acaf291340a1176))
 * table height when page isnt filled ([eb5f4a8](https://github.com/pwnthemall/pwnthemall/commit/eb5f4a8fa5ace662b6a15ccc13ce2ec972b07952))
 * users management bug in firefox ([c331b39](https://github.com/pwnthemall/pwnthemall/commit/c331b3971545d85aa71de56bebcb8ee9a6ec3e7c))
-
