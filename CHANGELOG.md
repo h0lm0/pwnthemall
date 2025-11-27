@@ -1,4 +1,4 @@
-# Changelog
+# 🚀 Changelog
 
 ## [0.1.1](https://github.com/pwnthemall/pwnthemall/compare/v0.1.0...v0.1.1) (2025-11-27)
 
@@ -55,3 +55,4 @@
 * stopping now deletes from db AND stops the instance ( was only doing the db part before ) ([88ac12f](https://github.com/pwnthemall/pwnthemall/commit/88ac12f1b4ec1491729adb9d9acaf291340a1176))
 * table height when page isnt filled ([eb5f4a8](https://github.com/pwnthemall/pwnthemall/commit/eb5f4a8fa5ace662b6a15ccc13ce2ec972b07952))
 * users management bug in firefox ([c331b39](https://github.com/pwnthemall/pwnthemall/commit/c331b3971545d85aa71de56bebcb8ee9a6ec3e7c))
+
