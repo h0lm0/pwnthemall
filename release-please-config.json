@@ -1,27 +1,26 @@
 {
   "include-v-in-tag": true,
   "plugins": [
-    {
-      "type": "changelog"
-    },
-    {
-      "type": "changelog-format",
-      "format": "# 🚀 Release: v{{version}}\n\n## Overview\n\n{{changelog}}"
-    }
+    "sentence-case"
   ],
   "packages": {
     ".": {
       "release-type": "simple",
-      "pull-request-title-pattern": "release: prepare v${version}",
+      "pull-request-title-pattern": "chore(main): release v${version}",
       "changelog-path": "CHANGELOG.md",
+      "changelog-host": "https://github.com",
       "changelog-sections": [
         { "type": "feat", "section": "🧩 Features" },
-        { "type": "breaking", "section": "💥 Breaking changes" },
-        { "type": "fix", "section": "🐛 Fixes" },
-        { "type": "perf", "section": "⚡ Performance" },
-        { "type": "docs", "section": "📝 Docs" },
-        { "type": "ci",   "section": "🤖 CI" },
-        { "type": "chore", "section": "🔧 Chore", "hidden": true }
+        { "type": "fix", "section": "🐛 Bug fixes" },
+        { "type": "perf", "section": "⚡ Performance improvements" },
+        { "type": "revert", "section": "⏪ Reverts" },
+        { "type": "docs", "section": "📝 Documentation" },
+        { "type": "style", "section": "💎 Styles", "hidden": true },
+        { "type": "chore", "section": "🔧 Miscellaneous chores", "hidden": true },
+        { "type": "refactor", "section": "♻️ Code refactoring", "hidden": true },
+        { "type": "test", "section": "✅ Tests", "hidden": true },
+        { "type": "build", "section": "🔨 Build System", "hidden": true },
+        { "type": "ci", "section": "🤖 Continuous integration" }
       ]
     }
   }
