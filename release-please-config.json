@@ -1,10 +1,20 @@
 {
-  "release-type": "simple",
-  "changelog-sections": [
-    {"type": "feat", "section": "✨ Features", "hidden": false},
-    {"type": "fix", "section": "🐛 Bug fixes", "hidden": false},
-    {"type": "perf", "section": "⚡ Performance improvements", "hidden": false},
-    {"type": "docs", "section": "📚 Documentation", "hidden": false},
-    {"type": "chore", "section": "🔧 Miscellaneous", "hidden": false}
-  ]
+  "include-v-in-tag": true,
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "header": "# 🚀 Release: v${version}\n\n## Overview\n",
+      "pull-request-title-pattern": "release: prepare v${version}",
+      "changelog-path": "CHANGELOG.md",
+      "changelog-sections": [
+        { "type": "feat", "section": "✨ Features" },
+        { "type": "breaking", "section": "💥 Breaking changes" },
+        { "type": "fix", "section": "🐛 Fixes" },
+        { "type": "perf", "section": "⚡ Performance" },
+        { "type": "docs", "section": "🤖 CI" },
+        { "type": "docs", "section": "📝 Docs" },
+        { "type": "chore", "section": "🔧 Chore", "hidden": true }
+      ]
+    }
+  }
 }
