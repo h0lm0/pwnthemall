@@ -1,18 +1,26 @@
 {
   "include-v-in-tag": true,
+  "plugins": [
+    {
+      "type": "changelog"
+    },
+    {
+      "type": "changelog-format",
+      "format": "# 🚀 Release: v{{version}}\n\n## Overview\n\n{{changelog}}"
+    }
+  ],
   "packages": {
     ".": {
       "release-type": "simple",
-      "header": "# 🚀 Release: v${version}\n\n## Overview\n",
       "pull-request-title-pattern": "release: prepare v${version}",
       "changelog-path": "CHANGELOG.md",
       "changelog-sections": [
-        { "type": "feat", "section": "✨ Features" },
+        { "type": "feat", "section": "🧩 Features" },
         { "type": "breaking", "section": "💥 Breaking changes" },
         { "type": "fix", "section": "🐛 Fixes" },
         { "type": "perf", "section": "⚡ Performance" },
-        { "type": "docs", "section": "🤖 CI" },
         { "type": "docs", "section": "📝 Docs" },
+        { "type": "ci",   "section": "🤖 CI" },
         { "type": "chore", "section": "🔧 Chore", "hidden": true }
       ]
     }
