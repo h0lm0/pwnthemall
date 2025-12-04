@@ -6,6 +6,7 @@ interface TeamScore {
   totalScore: number;
   availableScore: number;
   spentOnHints: number;
+  testMode?: boolean; // Admin without team - hints are free
 }
 
 interface PurchaseHintResponse {
