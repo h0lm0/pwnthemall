@@ -264,6 +264,7 @@
     "insufficient_points": "Points insuffisants ({cost} requis)",
     "purchased": "Acheté",
     "purchasing": "Achat en cours...",
+    "reveal_hint": "Révéler l'indice (Admin)",
     "spent": "Dépensé",
     "team_score": "Score de l'équipe",
     "total": "Total"
@@ -413,7 +414,8 @@
     "team_name_or_id": "Nom ou ID de l'équipe",
     "team_name_required": "Le nom de l'équipe est requis",
     "team_required": "Vous devez être dans une équipe.",
-    "team_required_to_submit": "Vous devez faire partie d'une équipe pour soumettre des flags."
+    "team_required_to_submit": "Vous devez faire partie d'une équipe pour soumettre des flags.",
+    "admin_team_required_for_instances": "L'admin doit rejoindre une équipe pour démarrer des instances Docker."
   },
   "team_members": {
     "a_teammate": "un coéquipier",

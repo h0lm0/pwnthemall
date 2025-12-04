@@ -22,6 +22,23 @@ func PurchaseHint(c *gin.Context) {
 		return
 	}
 
+	// Check if hint exists first
+	var hint models.Hint
+	if err := config.DB.First(&hint, hintID).Error; err != nil {
+		utils.NotFoundError(c, "hint_not_found")
+		return
+	}
+
+	// Admin without team: return hint content for free (test mode)
+	if user.Role == "admin" && user.TeamID == nil {
+		utils.OKResponse(c, gin.H{
+			"message":  "hint_revealed",
+			"hint":     hint,
+			"testMode": true,
+		})
+		return
+	}
+
 	if user.TeamID == nil {
 		utils.BadRequestError(c, "no_team")
 		return
@@ -34,14 +51,6 @@ func PurchaseHint(c *gin.Context) {
 			tx.Rollback()
 		}
 	}()
-
-	// Check if hint exists
-	var hint models.Hint
-	if err := tx.First(&hint, hintID).Error; err != nil {
-		tx.Rollback()
-		utils.NotFoundError(c, "hint_not_found")
-		return
-	}
 
 	// Check if hint is active (can't purchase inactive hints)
 	if !hint.IsActive {

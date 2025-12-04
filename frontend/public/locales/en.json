@@ -264,6 +264,7 @@
     "insufficient_points": "Insufficient points ({cost} required)",
     "purchased": "Purchased",
     "purchasing": "Purchasing...",
+    "reveal_hint": "Reveal hint (Admin)",
     "spent": "Spent",
     "team_score": "Team Score",
     "total": "Total"
@@ -412,7 +413,8 @@
     "team_name": "Team name",
     "team_name_or_id": "Team name or ID",
     "team_name_required": "Team name is required",
-    "team_required": "Team membership required."
+    "team_required": "Team membership required.",
+    "admin_team_required_for_instances": "Admin must join a team to start Docker instances."
   },
   "team_members": {
     "a_teammate": "a teammate",

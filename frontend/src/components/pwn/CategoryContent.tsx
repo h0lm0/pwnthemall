@@ -748,18 +748,34 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                           </div>
                                           <Button
                                             onClick={async () => {
+                                              // Admin test mode - allow even with insufficient points
+                                              const canPurchase = teamScore?.testMode || 
+                                                (teamScore?.availableScore !== undefined && teamScore.availableScore >= hint.cost);
+                                              if (!canPurchase && !teamScore?.testMode) return;
+                                              
                                               try {
                                                 const result = await purchaseHint(hint.id);
                                                 if (result.success && selectedChallenge) {
                                                   // Mettre à jour l'état local immédiatement pour un feedback instantané
+                                                  // For admin test mode, also update the hint content from response
                                                   const updatedHints = selectedChallenge.hints?.map(h => 
-                                                    h.id === hint.id ? { ...h, purchased: true } : h
+                                                    h.id === hint.id ? { 
+                                                      ...h, 
+                                                      purchased: true,
+                                                      // If hint content returned (admin test mode), use it
+                                                      ...(result.hint?.content ? { content: result.hint.content } : {})
+                                                    } : h
                                                   ) || [];
                                                   
                                                   setSelectedChallenge({
                                                     ...selectedChallenge,
                                                     hints: updatedHints
                                                   });
+                                                  
+                                                  // Skip server refresh for admin test mode (purchase not recorded)
+                                                  if (teamScore?.testMode) {
+                                                    return;
+                                                  }
                                                   
                                                   // Ensuite, recharger les données du serveur en arrière-plan
                                                   try {
@@ -780,10 +796,10 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                                 console.error('Error purchasing hint:', error);
                                               }
                                             }}
-                                            disabled={hintsLoading || (teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost)}
+                                            disabled={hintsLoading || (!teamScore?.testMode && teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost)}
                                             size="sm"
                                             className={`w-full ${
-                                              teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost
+                                              !teamScore?.testMode && teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost
                                                 ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed'
                                                 : 'bg-blue-600 hover:bg-blue-700'
                                             }`}
@@ -793,6 +809,8 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                                                 <Settings className="w-4 h-4 mr-2 animate-spin" />
                                                 {t('hints.purchasing') || 'Purchasing...'}
                                               </>
+                                            ) : teamScore?.testMode ? (
+                                              t('hints.reveal_hint') || 'Reveal hint (Admin)'
                                             ) : (
                                               teamScore?.availableScore !== undefined && teamScore.availableScore < hint.cost
                                                 ? t('hints.insufficient_points', { cost: hint.cost }) || `Insufficient points (${hint.cost} required)`
