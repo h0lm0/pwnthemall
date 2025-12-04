@@ -10,3 +10,7 @@ flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
 difficulty: intro
 hidden: false
 points: 50
+
+hints:
+  - content: "Ce n'est pas du chiffrement, c'est de l'encodage..."
+    cost: 10
