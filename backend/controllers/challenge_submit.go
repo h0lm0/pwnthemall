@@ -285,6 +285,13 @@ func checkDuplicateSubmission(userID uint, challengeID uint, submittedValue stri
 
 // handleCorrectSubmission processes a correct flag submission
 func handleCorrectSubmission(c *gin.Context, user *models.User, challenge models.Challenge) {
+	// Admin without team: return success without recording solve
+	if user.Role == "admin" && (user.Team == nil || user.TeamID == nil) {
+		debug.Log("AdminTest: Flag correct for challenge %d (admin: %s)", challenge.ID, user.Username)
+		utils.OKResponse(c, gin.H{"message": msgChallengeSolved, "testMode": true})
+		return
+	}
+
 	// Calculate solve position
 	var position int64
 	config.DB.Model(&models.Solve{}).Where(queryChallengeID, challenge.ID).Count(&position)
@@ -332,6 +339,12 @@ func handleIncorrectSubmission(c *gin.Context, challenge models.Challenge) {
 
 // validateSubmissionPreconditions checks all preconditions for submission
 func validateSubmissionPreconditions(c *gin.Context, user *models.User, challenge models.Challenge) bool {
+	// Admin without team: allow testing (won't record solve)
+	isAdminTest := user.Role == "admin" && (user.Team == nil || user.TeamID == nil)
+	if isAdminTest {
+		return true
+	}
+
 	// Validate user has a team
 	if user.Team == nil || user.TeamID == nil {
 		utils.ForbiddenError(c, errTeamRequired)

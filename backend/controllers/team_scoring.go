@@ -331,7 +331,17 @@ func GetTeamScore(c *gin.Context) {
 		return
 	}
 
+	// Admin without team: return zero score (test mode)
 	if user.TeamID == nil {
+		if user.Role == "admin" {
+			utils.OKResponse(c, gin.H{
+				"totalScore":     0,
+				"availableScore": 0,
+				"spentOnHints":   0,
+				"testMode":       true,
+			})
+			return
+		}
 		utils.BadRequestError(c, "no_team")
 		return
 	}
