@@ -10,5 +10,6 @@ description: |
   __(flag is "flag")__
 author: "PTA"
 depends_on: "The Track [1/3]"
+cover_img: the-track.png
 flags:
   - "flag"

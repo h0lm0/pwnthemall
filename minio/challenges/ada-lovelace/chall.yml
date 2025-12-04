@@ -12,4 +12,5 @@ hidden: false
 points: 500
 attempts: 3
 ports: [5001]
+cover_img: ada.png
 connection_info: ["http://$ip:[5001]"] 
