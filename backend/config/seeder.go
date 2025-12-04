@@ -12,6 +12,7 @@ import (
 	"github.com/pwnthemall/pwnthemall/backend/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // Constants for demo data queries
@@ -518,9 +519,11 @@ func SeedDemoData(teamCount int, timeRangeHours int) error {
 		for j := 0; j < solvesCount && j < len(teamChallenges); j++ {
 			challenge := teamChallenges[j]
 
-			// Check if team already solved this challenge
+			// Check if team already solved this challenge 
 			var existingSolve models.Solve
-			if err := DB.Where("team_id = ? AND challenge_id = ?", team.ID, challenge.ID).First(&existingSolve).Error; err == nil {
+			result := DB.Session(&gorm.Session{Logger: DB.Logger.LogMode(logger.Silent)}).
+				Where("team_id = ? AND challenge_id = ?", team.ID, challenge.ID).First(&existingSolve)
+			if result.Error == nil {
 				continue // Already solved
 			}
 
