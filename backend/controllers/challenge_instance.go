@@ -563,6 +563,10 @@ func validateComposeInstancePreconditions(c *gin.Context, userID interface{}, ch
 	}
 
 	if user.Team == nil || user.TeamID == nil {
+		// Admins get a clearer message - they need to join a team for Docker instances
+		if user.Role == "admin" {
+			return nil, fmt.Errorf("admin_team_required_for_instances")
+		}
 		return nil, fmt.Errorf("team_required")
 	}
 

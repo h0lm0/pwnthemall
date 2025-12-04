@@ -24,7 +24,7 @@ export default function ScoreboardContent() {
   const [activeTab, setActiveTab] = useState('individual');
   const [individualPage, setIndividualPage] = useState(1);
   const [teamPage, setTeamPage] = useState(1);
-  const [timelineData, setTimelineData] = useState<any[]>([]);
+  const [timelineData, setTimelineData] = useState<{ teams: any[], timeline: any[] } | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
   const itemsPerPage = 25;
 
@@ -36,16 +36,17 @@ export default function ScoreboardContent() {
   const fetchTimelineData = async () => {
     setChartLoading(true);
     try {
-      // Fetch solve timeline from backend - we'll need to create this endpoint
       const response = await axios.get('/api/teams/timeline');
-      const data = response.data || [];
-      
-      // Group solves by date and accumulate for top teams
-      setTimelineData(data);
+      const data = response.data;
+      // New format: { teams: [...], timeline: [...] }
+      if (data && data.teams && data.timeline) {
+        setTimelineData(data);
+      } else {
+        setTimelineData(null);
+      }
     } catch (error) {
       console.error('Failed to fetch timeline data:', error);
-      // For now, generate mock data based on current leaderboard
-      setTimelineData([]);
+      setTimelineData(null);
     } finally {
       setChartLoading(false);
     }
@@ -247,26 +248,23 @@ export default function ScoreboardContent() {
               <div className="flex items-center justify-center h-[300px]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 dark:border-cyan-400"></div>
               </div>
-            ) : timelineData.length === 0 ? (
+            ) : !timelineData || timelineData.timeline.length === 0 ? (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                 {t('scoreboard.no_solve_data') || 'No solve data available yet'}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={timelineData}>
+                <AreaChart data={timelineData.timeline.map(point => ({
+                  time: point.time,
+                  ...point.scores
+                }))}>
                   <defs>
-                    <linearGradient id="colorTeam1" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorTeam2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorTeam3" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
-                    </linearGradient>
+                    {timelineData.teams.map((team, index) => (
+                      <linearGradient key={team.id} id={`colorTeam${index}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={team.color} stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor={team.color} stopOpacity={0}/>
+                      </linearGradient>
+                    ))}
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 
@@ -287,30 +285,17 @@ export default function ScoreboardContent() {
                     }}
                   />
                   <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="team1" 
-                    stroke="#3b82f6" 
-                    fillOpacity={1}
-                    fill="url(#colorTeam1)" 
-                    name={timelineData[0]?.team1Name || 'Team 1'}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="team2" 
-                    stroke="#10b981" 
-                    fillOpacity={1}
-                    fill="url(#colorTeam2)"
-                    name={timelineData[0]?.team2Name || 'Team 2'}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="team3" 
-                    stroke="#f59e0b" 
-                    fillOpacity={1}
-                    fill="url(#colorTeam3)"
-                    name={timelineData[0]?.team3Name || 'Team 3'}
-                  />
+                  {timelineData.teams.map((team, index) => (
+                    <Area 
+                      key={team.id}
+                      type="monotone" 
+                      dataKey={team.name}
+                      stroke={team.color}
+                      fillOpacity={1}
+                      fill={`url(#colorTeam${index})`}
+                      name={team.name}
+                    />
+                  ))}
                 </AreaChart>
               </ResponsiveContainer>
             )}
