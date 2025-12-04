@@ -23,32 +23,26 @@ func GetDashboardStats(c *gin.Context) {
 	// Count hidden challenges
 	config.DB.Model(&models.Challenge{}).Where("hidden = ?", true).Count(&stats.Challenges.Hidden)
 
-	// Count by difficulty (join with ChallengeDifficulty table), excluding hidden challenges
+	// Count by difficulty (dynamic - only includes difficulties with challenges)
+	type DifficultyCount struct {
+		DifficultyID uint
+		Count        int64
+	}
+	var difficultyCounts []DifficultyCount
 	config.DB.Model(&models.Challenge{}).
-		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
-		Where("LOWER(challenge_difficulties.name) = ?", "intro").
+		Select("challenge_difficulty_id as difficulty_id, COUNT(*) as count").
 		Where("hidden = ?", false).
-		Count(&stats.Challenges.Intro)
-	config.DB.Model(&models.Challenge{}).
-		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
-		Where("LOWER(challenge_difficulties.name) = ?", "easy").
-		Where("hidden = ?", false).
-		Count(&stats.Challenges.Easy)
-	config.DB.Model(&models.Challenge{}).
-		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
-		Where("LOWER(challenge_difficulties.name) = ?", "medium").
-		Where("hidden = ?", false).
-		Count(&stats.Challenges.Medium)
-	config.DB.Model(&models.Challenge{}).
-		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
-		Where("LOWER(challenge_difficulties.name) = ?", "hard").
-		Where("hidden = ?", false).
-		Count(&stats.Challenges.Hard)
-	config.DB.Model(&models.Challenge{}).
-		Joins("LEFT JOIN challenge_difficulties ON challenges.challenge_difficulty_id = challenge_difficulties.id").
-		Where("LOWER(challenge_difficulties.name) = ?", "insane").
-		Where("hidden = ?", false).
-		Count(&stats.Challenges.Insane)
+		Group("challenge_difficulty_id").
+		Order("challenge_difficulty_id ASC").
+		Find(&difficultyCounts)
+
+	stats.Challenges.Difficulties = make(map[string]int64)
+	for _, dc := range difficultyCounts {
+		var difficulty models.ChallengeDifficulty
+		if err := config.DB.First(&difficulty, dc.DifficultyID).Error; err == nil {
+			stats.Challenges.Difficulties[difficulty.Name] = dc.Count
+		}
+	}
 
 	// Count by category
 	type CategoryCount struct {
