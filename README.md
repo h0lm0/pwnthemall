@@ -29,8 +29,7 @@
 
 ## 🚧 Work In Progress
 
-- Supporting multi workers
-- Supporting KVM workers
+- Multi Docker workers support
 
 
 ## 📚 Installation & Usage
