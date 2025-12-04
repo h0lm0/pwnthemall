@@ -7,7 +7,6 @@ description: |
 type: standard
 files: ["output.txt"]
 flags: ["PTA{b4s3_64_1s_n0t_3ncrypt10n}"]
-cover_img: base-64.jpg
 difficulty: intro
 hidden: false
 points: 50
