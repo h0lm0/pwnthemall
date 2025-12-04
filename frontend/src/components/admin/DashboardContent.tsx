@@ -16,11 +16,7 @@ interface DashboardStats {
   challenges: {
     total: number;
     hidden: number;
-    intro: number;
-    easy: number;
-    medium: number;
-    hard: number;
-    insane: number;
+    difficulties: Record<string, number>;
     categories: Record<string, number>;
   };
   users: {
@@ -95,6 +91,24 @@ export default function DashboardContent() {
   const itemsPerPage = 13;
   const instancesPerPage = 5;
 
+  // Get color classes for difficulty badges
+  const getDifficultyColor = (difficulty: string): string => {
+    switch (difficulty.toLowerCase()) {
+      case "intro":
+        return "text-blue-600 border-blue-600";
+      case "easy":
+        return "text-green-600 border-green-600";
+      case "medium":
+        return "text-orange-600 border-orange-600";
+      case "hard":
+        return "text-red-600 border-red-600";
+      case "insane":
+        return "text-purple-600 border-purple-600";
+      default:
+        return "text-gray-600 border-gray-600";
+    }
+  };
+
   useEffect(() => {
     const fetchDashboardData = async (isInitial = false) => {
       try {
@@ -167,37 +181,27 @@ export default function DashboardContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Challenges Card */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-3 px-3">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 {t("dashboard.total_challenges")}
               </CardTitle>
               <Flag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <div className="text-2xl font-bold">
+            <CardContent>
+              <div className="text-3xl font-bold">
                 {stats?.challenges.total || 0}
               </div>
               {stats && stats.challenges.total > 0 && (
-                <div className="mt-2 space-y-1">
+                <div className="mt-3 space-y-1">
                   <p className="text-xs text-muted-foreground font-medium">
                     {t("dashboard.by_difficulty")}:
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    <Badge variant="outline" className="text-blue-600 border-blue-600">
-                      {t("dashboard.intro")}: {stats.challenges.intro}
-                    </Badge>
-                    <Badge variant="outline" className="text-green-600 border-green-600">
-                      {t("dashboard.easy")}: {stats.challenges.easy}
-                    </Badge>
-                    <Badge variant="outline" className="text-orange-600 border-orange-600">
-                      {t("dashboard.medium")}: {stats.challenges.medium}
-                    </Badge>
-                    <Badge variant="outline" className="text-red-600 border-red-600">
-                      {t("dashboard.hard")}: {stats.challenges.hard}
-                    </Badge>
-                    <Badge variant="outline" className="text-purple-600 border-purple-600">
-                      {t("dashboard.insane")}: {stats.challenges.insane}
-                    </Badge>
+                    {stats.challenges.difficulties && Object.entries(stats.challenges.difficulties).map(([name, count]) => (
+                      <Badge key={name} variant="outline" className={getDifficultyColor(name)}>
+                        {t(`dashboard.${name.toLowerCase()}`) || name}: {count}
+                      </Badge>
+                    ))}
                     <Badge variant="outline" className="text-gray-600 border-gray-600">
                       {t("dashboard.hidden")}: {stats.challenges.hidden}
                     </Badge>
