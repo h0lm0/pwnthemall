@@ -10,6 +10,7 @@ description: |
 type: docker
 ports: [25000]
 connection_info: ["nc $ip [25000]"] 
+cover_img: katiemyfriend.png
 flags: ["PTA{k4tie_m0ussouris_bUg_bouNty!}"]
 difficulty: easy
 hidden: false
