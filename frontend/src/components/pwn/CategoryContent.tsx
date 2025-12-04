@@ -410,7 +410,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     : 'cursor-pointer'
               }`}
             >
-              {/* Cover Image or Placeholder - Fixed height zone */}
+              {/* Cover Image or Emoji Placeholder - Fixed height zone */}
               <div className="h-48 flex-shrink-0 relative">
                 {challenge.coverImg && challenge.id ? (
                   <ChallengeImage 
@@ -419,7 +419,11 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     className="h-full w-full object-cover rounded-t-lg"
                   />
                 ) : (
-                  <div className="h-full w-full bg-muted/50 rounded-t-lg"></div>
+                  <div className="h-full w-full rounded-t-lg flex items-center justify-center bg-muted/50">
+                    <span className="text-7xl opacity-30 select-none" aria-hidden="true">
+                      {challenge.emoji || '🎯'}
+                    </span>
+                  </div>
                 )}
                 
                 {/* Locked indicator */}

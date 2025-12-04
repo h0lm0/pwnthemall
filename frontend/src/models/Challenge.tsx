@@ -52,6 +52,7 @@ export interface Challenge {
   dependsOn?: string
   locked?: boolean
   coverImg?: string
+  emoji?: string
 }
 
 export interface FirstBlood {
