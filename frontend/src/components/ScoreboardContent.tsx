@@ -27,6 +27,7 @@ export default function ScoreboardContent() {
   const [timelineData, setTimelineData] = useState<{ teams?: any[], users?: any[], timeline: any[] } | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
   const [hiddenEntities, setHiddenEntities] = useState<Set<string>>(new Set());
+  const [hoveredEntity, setHoveredEntity] = useState<string | null>(null);
   const itemsPerPage = 25;
 
   // Toggle entity visibility in chart
@@ -45,6 +46,7 @@ export default function ScoreboardContent() {
   // Reset hidden entities when tab changes
   useEffect(() => {
     setHiddenEntities(new Set());
+    setHoveredEntity(null);
   }, [activeTab]);
 
   useEffect(() => {
@@ -302,7 +304,15 @@ export default function ScoreboardContent() {
                     />
                     {/* Render areas for either teams or users - only show non-hidden entities */}
                     {(timelineData.teams || timelineData.users || [])
-                      .filter((entity: any) => !hiddenEntities.has(entity.name || entity.username))
+                      .filter((entity: any) => {
+                        const entityName = entity.name || entity.username;
+                        // If hovering, only show the hovered entity
+                        if (hoveredEntity) {
+                          return entityName === hoveredEntity;
+                        }
+                        // Otherwise respect the hidden state
+                        return !hiddenEntities.has(entityName);
+                      })
                       .map((entity: any, index: number) => (
                         <Area 
                           key={entity.id}
@@ -321,17 +331,24 @@ export default function ScoreboardContent() {
                   {(timelineData.teams || timelineData.users || []).map((entity: any) => {
                     const entityName = entity.name || entity.username;
                     const isHidden = hiddenEntities.has(entityName);
+                    const isHovered = hoveredEntity === entityName;
                     return (
                       <button
                         key={entity.id}
                         onClick={() => toggleEntityVisibility(entityName)}
+                        onMouseEnter={() => setHoveredEntity(entityName)}
+                        onMouseLeave={() => setHoveredEntity(null)}
                         className={cn(
                           "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
                           "border hover:scale-105",
+                          isHovered
+                            ? "ring-2 ring-offset-2 ring-offset-background scale-110"
+                            : "",
                           isHidden 
                             ? "opacity-40 bg-muted text-muted-foreground border-muted-foreground/30 line-through" 
                             : "bg-background border-border"
                         )}
+                        style={isHovered ? { ['--tw-ring-color' as any]: entity.color } : {}}
                       >
                         <span 
                           className="w-3 h-3 rounded-full" 
