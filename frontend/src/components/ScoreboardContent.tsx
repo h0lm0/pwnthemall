@@ -24,22 +24,28 @@ export default function ScoreboardContent() {
   const [activeTab, setActiveTab] = useState('individual');
   const [individualPage, setIndividualPage] = useState(1);
   const [teamPage, setTeamPage] = useState(1);
-  const [timelineData, setTimelineData] = useState<{ teams: any[], timeline: any[] } | null>(null);
+  const [timelineData, setTimelineData] = useState<{ teams?: any[], users?: any[], timeline: any[] } | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
   const itemsPerPage = 25;
 
   useEffect(() => {
     fetchLeaderboards();
-    fetchTimelineData();
   }, []);
 
-  const fetchTimelineData = async () => {
+  // Fetch timeline data when active tab changes
+  useEffect(() => {
+    fetchTimelineData(activeTab);
+  }, [activeTab]);
+
+  const fetchTimelineData = async (tab: string) => {
     setChartLoading(true);
     try {
-      const response = await axios.get('/api/teams/timeline');
+      // Fetch appropriate timeline based on active tab
+      const endpoint = tab === 'individual' ? '/api/users/timeline' : '/api/teams/timeline';
+      const response = await axios.get(endpoint);
       const data = response.data;
-      // New format: { teams: [...], timeline: [...] }
-      if (data && data.teams && data.timeline) {
+      // Format: { teams/users: [...], timeline: [...] }
+      if (data && (data.teams || data.users) && data.timeline) {
         setTimelineData(data);
       } else {
         setTimelineData(null);
@@ -55,10 +61,16 @@ export default function ScoreboardContent() {
   const fetchLeaderboards = async () => {
     setLoading(true);
     try {
-      // Fetch team leaderboard - this is the correct endpoint
-      const teamsResponse = await axios.get('/api/teams/leaderboard');
-      const teamsData = teamsResponse.data || [];
+      // Fetch both leaderboards in parallel
+      const [teamsResponse, individualResponse] = await Promise.all([
+        axios.get('/api/teams/leaderboard'),
+        axios.get('/api/users/leaderboard')
+      ]);
       
+      const teamsData = teamsResponse.data || [];
+      const individualData = individualResponse.data || [];
+      
+      // Map team leaderboard data
       const teams = teamsData.map((t: any, index: number) => ({
         rank: index + 1,
         id: t.team?.id || t.id,
@@ -68,36 +80,16 @@ export default function ScoreboardContent() {
         memberCount: t.team?.users?.length || 0
       }));
 
-      // For individual leaderboard, we need to calculate from team data
-      // Since solves belong to teams, we extract individual contributions
-      const individualMap = new Map<number, IndividualLeaderboardEntry>();
-      
-      teamsData.forEach((teamScore: any) => {
-        const team = teamScore.team;
-        if (team && team.users) {
-          team.users.forEach((u: any) => {
-            if (!individualMap.has(u.id)) {
-              individualMap.set(u.id, {
-                rank: 0,
-                id: u.id,
-                username: u.username,
-                points: teamScore.totalScore || 0, // Team's total score
-                solves: teamScore.solveCount || 0, // Team's solve count
-                teamId: team.id,
-                teamName: team.name
-              });
-            }
-          });
-        }
-      });
-
-      const users = Array.from(individualMap.values())
-        .sort((a, b) => b.points - a.points);
-      
-      // Recalculate ranks after sorting
-      users.forEach((u, index) => {
-        u.rank = index + 1;
-      });
+      // Map individual leaderboard data from the new API
+      const users = individualData.map((entry: any, index: number) => ({
+        rank: index + 1,
+        id: entry.user?.id || entry.id,
+        username: entry.user?.username || entry.username,
+        points: entry.totalScore || entry.points || 0,
+        solves: entry.solveCount || entry.solves || 0,
+        teamId: entry.user?.teamId || entry.teamId,
+        teamName: entry.teamName || ''
+      }));
 
       setIndividualData(users);
       setTeamData(teams);
@@ -240,7 +232,10 @@ export default function ScoreboardContent() {
               {t('scoreboard.solve_activity') || 'Solve activity over time'}
             </CardTitle>
             <CardDescription>
-              {t('scoreboard.solve_activity_description') || 'Track how teams progress through challenges'}
+              {activeTab === 'individual' 
+                ? (t('scoreboard.solve_activity_description_individual') || 'Track how top players progress through challenges')
+                : (t('scoreboard.solve_activity_description') || 'Track how teams progress through challenges')
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -259,10 +254,11 @@ export default function ScoreboardContent() {
                   ...point.scores
                 }))}>
                   <defs>
-                    {timelineData.teams.map((team, index) => (
-                      <linearGradient key={team.id} id={`colorTeam${index}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={team.color} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={team.color} stopOpacity={0}/>
+                    {/* Handle both teams (for team view) and users (for individual view) */}
+                    {(timelineData.teams || timelineData.users || []).map((entity: any, index: number) => (
+                      <linearGradient key={entity.id} id={`colorEntity${index}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={entity.color} stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor={entity.color} stopOpacity={0}/>
                       </linearGradient>
                     ))}
                   </defs>
@@ -285,15 +281,16 @@ export default function ScoreboardContent() {
                     }}
                   />
                   <Legend />
-                  {timelineData.teams.map((team, index) => (
+                  {/* Render areas for either teams or users */}
+                  {(timelineData.teams || timelineData.users || []).map((entity: any, index: number) => (
                     <Area 
-                      key={team.id}
+                      key={entity.id}
                       type="monotone" 
-                      dataKey={team.name}
-                      stroke={team.color}
+                      dataKey={entity.name || entity.username}
+                      stroke={entity.color}
                       fillOpacity={1}
-                      fill={`url(#colorTeam${index})`}
-                      name={team.name}
+                      fill={`url(#colorEntity${index})`}
+                      name={entity.name || entity.username}
                     />
                   ))}
                 </AreaChart>
