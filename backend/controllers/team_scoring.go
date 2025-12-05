@@ -363,8 +363,8 @@ func GetTeamTimeline(c *gin.Context) {
 
 	decayService := utils.NewDecay()
 
-	// Sort teams by score to get them in leaderboard order
-	allTeams := getTopTeams(teams, decayService, len(teams))
+	// Sort teams by score and limit to top 10 for cleaner chart
+	allTeams := getTopTeams(teams, decayService, 10)
 
 	if len(allTeams) == 0 {
 		utils.OKResponse(c, timelineResponse{
