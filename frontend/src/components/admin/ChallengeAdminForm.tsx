@@ -498,50 +498,60 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     <Label>Full Image (drag the marker to set focal point)</Label>
                     {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
                     <div 
-                      className="relative w-full border rounded-lg overflow-hidden bg-muted select-none"
+                      className="relative border rounded-lg overflow-hidden bg-muted select-none flex justify-center"
                       style={{ maxHeight: '400px' }}
-                      onMouseMove={(e) => {
-                        if (e.buttons !== 1) return // Only when mouse button is pressed
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        const x = Math.round(((e.clientX - rect.left) / rect.width) * 100)
-                        const y = Math.round(((e.clientY - rect.top) / rect.height) * 100)
-                        setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault()
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        const x = Math.round(((e.clientX - rect.left) / rect.width) * 100)
-                        const y = Math.round(((e.clientY - rect.top) / rect.height) * 100)
-                        setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
-                      }}
                     >
-                      <img
-                        src={`/api/challenges/${challenge.id}/cover`}
-                        alt="Full cover"
-                        className="w-full h-auto pointer-events-none select-none"
-                        style={{ maxHeight: '400px', objectFit: 'contain' }}
-                        draggable={false}
-                      />
-                      {/* Draggable focal point marker */}
-                      <div 
-                        className="absolute w-8 h-8 border-2 border-white rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
-                        style={{ 
-                          left: `${coverPosition.x}%`, 
-                          top: `${coverPosition.y}%`,
-                          backgroundColor: 'rgba(59, 130, 246, 0.7)'
+                      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+                      <div
+                        className="relative"
+                        onMouseMove={(e) => {
+                          if (e.buttons !== 1) return // Only when mouse button is pressed
+                          const img = e.currentTarget.querySelector('img')
+                          if (!img) return
+                          const rect = img.getBoundingClientRect()
+                          const x = ((e.clientX - rect.left) / rect.width) * 100
+                          const y = ((e.clientY - rect.top) / rect.height) * 100
+                          setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          const img = e.currentTarget.querySelector('img')
+                          if (!img) return
+                          const rect = img.getBoundingClientRect()
+                          const x = ((e.clientX - rect.left) / rect.width) * 100
+                          const y = ((e.clientY - rect.top) / rect.height) * 100
+                          setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
                         }}
                       >
-                        <div className="absolute inset-0 rounded-full border-2 border-blue-400" />
-                        <div className="absolute inset-2 rounded-full bg-white/50" />
+                        <img
+                          src={`/api/challenges/${challenge.id}/cover`}
+                          alt="Full cover"
+                          className="block max-w-full h-auto pointer-events-none select-none"
+                          style={{ maxHeight: '400px' }}
+                          draggable={false}
+                        />
+                        {/* Draggable focal point marker */}
+                        <div 
+                          className="absolute w-8 h-8 border-2 border-white rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+                          style={{ 
+                            left: `${coverPosition.x}%`, 
+                            top: `${coverPosition.y}%`,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)'
+                          }}
+                        >
+                          <div className="absolute inset-0 rounded-full border-2 border-blue-400" />
+                          <div className="absolute inset-2 rounded-full bg-white/50" />
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Live Preview */}
+                  {/* Live Preview - matches actual card dimensions */}
                   <div className="space-y-2">
                     <Label>Preview (as seen on challenge cards)</Label>
                     <div className="flex justify-center">
-                      <div className="w-80 h-48 rounded-lg overflow-hidden border bg-muted">
+                      {/* Actual card: h-48 (192px), width varies by grid. Using w-96 (384px) for typical 3-col layout */}
+                      <div className="w-96 h-48 rounded-t-lg overflow-hidden border bg-muted">
                         <img
                           src={`/api/challenges/${challenge.id}/cover`}
                           alt="Cover preview"
@@ -561,7 +571,12 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                         setCoverLoading(true)
                         try {
                           await axios.put(`/api/admin/challenges/${challenge.id}/general`, {
-                            ...generalData,
+                            name: generalData.name || challenge.name,
+                            description: generalData.description || challenge.description,
+                            author: generalData.author || challenge.author,
+                            hidden: generalData.hidden,
+                            categoryId: generalData.categoryId || challenge.categoryId,
+                            difficultyId: generalData.difficultyId || challenge.difficultyId,
                             coverPositionX: coverPosition.x,
                             coverPositionY: coverPosition.y,
                           })

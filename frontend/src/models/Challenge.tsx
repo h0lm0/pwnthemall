@@ -53,8 +53,8 @@ export interface Challenge {
   locked?: boolean
   coverImg?: string
   emoji?: string
-  coverPositionX?: number
-  coverPositionY?: number
+  coverPositionX?: number  // 0-100, supports decimals
+  coverPositionY?: number  // 0-100, supports decimals
 }
 
 export interface FirstBlood {

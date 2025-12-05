@@ -30,18 +30,21 @@ export default function ChallengeImage({
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
 
-  // If image failed to load, don't render anything
+  // If image failed to load, show empty placeholder to maintain layout
   if (imageError) {
-    return null
+    return (
+      <div className={`relative w-full h-full overflow-hidden bg-muted ${className}`} />
+    )
   }
 
   const imageUrl = `/api/challenges/${challengeId}/cover`
   
   // Compute object-position from x/y percentages
-  const objectPosition = `${positionX}% ${positionY}%`
+  const adjustedY = Math.min(100, positionY - 0.4)
+  const objectPosition = `${positionX}% ${adjustedY}%`
 
   return (
-    <div className={`relative w-full aspect-video overflow-hidden bg-muted ${className}`}>
+    <div className={`relative w-full h-full overflow-hidden bg-muted ${className}`}>
       {imageLoading && (
         <div className="absolute inset-0 animate-pulse bg-muted/50" />
       )}
