@@ -487,20 +487,28 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
             <CardHeader>
               <CardTitle>Cover Image Position</CardTitle>
               <CardDescription>
-                Adjust how the cover image is cropped on challenge cards. Click on the image to set the focal point.
+                Adjust how the cover image is cropped on challenge cards. Drag the focal point marker to set the position.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {challenge.coverImg ? (
                 <>
-                  {/* Full Image with clickable focal point */}
+                  {/* Full Image with draggable focal point */}
                   <div className="space-y-2">
-                    <Label>Full Image (click to set focal point)</Label>
-                    <button 
-                      type="button"
-                      className="relative w-full border rounded-lg overflow-hidden cursor-crosshair bg-muted text-left"
+                    <Label>Full Image (drag the marker to set focal point)</Label>
+                    {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+                    <div 
+                      className="relative w-full border rounded-lg overflow-hidden bg-muted select-none"
                       style={{ maxHeight: '400px' }}
-                      onClick={(e) => {
+                      onMouseMove={(e) => {
+                        if (e.buttons !== 1) return // Only when mouse button is pressed
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const x = Math.round(((e.clientX - rect.left) / rect.width) * 100)
+                        const y = Math.round(((e.clientY - rect.top) / rect.height) * 100)
+                        setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
                         const rect = e.currentTarget.getBoundingClientRect()
                         const x = Math.round(((e.clientX - rect.left) / rect.width) * 100)
                         const y = Math.round(((e.clientY - rect.top) / rect.height) * 100)
@@ -510,105 +518,22 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                       <img
                         src={`/api/challenges/${challenge.id}/cover`}
                         alt="Full cover"
-                        className="w-full h-auto"
+                        className="w-full h-auto pointer-events-none select-none"
                         style={{ maxHeight: '400px', objectFit: 'contain' }}
+                        draggable={false}
                       />
-                      {/* Focal point marker */}
+                      {/* Draggable focal point marker */}
                       <div 
-                        className="absolute w-6 h-6 border-2 border-white rounded-full shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
+                        className="absolute w-8 h-8 border-2 border-white rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
                         style={{ 
                           left: `${coverPosition.x}%`, 
                           top: `${coverPosition.y}%`,
                           backgroundColor: 'rgba(59, 130, 246, 0.7)'
                         }}
                       >
-                        <div className="absolute inset-0 rounded-full border border-blue-400 animate-ping opacity-75" />
+                        <div className="absolute inset-0 rounded-full border-2 border-blue-400" />
+                        <div className="absolute inset-2 rounded-full bg-white/50" />
                       </div>
-                    </button>
-                  </div>
-
-                  {/* Position Controls */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="coverX">Horizontal Position ({coverPosition.x}%)</Label>
-                      <input
-                        id="coverX"
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={coverPosition.x}
-                        onChange={(e) => setCoverPosition(prev => ({ ...prev, x: Number.parseInt(e.target.value) }))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Left</span>
-                        <span>Center</span>
-                        <span>Right</span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="coverY">Vertical Position ({coverPosition.y}%)</Label>
-                      <input
-                        id="coverY"
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={coverPosition.y}
-                        onChange={(e) => setCoverPosition(prev => ({ ...prev, y: Number.parseInt(e.target.value) }))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Top</span>
-                        <span>Center</span>
-                        <span>Bottom</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Preset Buttons */}
-                  <div className="space-y-2">
-                    <Label>Quick Presets</Label>
-                    <div className="flex flex-wrap gap-2">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setCoverPosition({ x: 50, y: 0 })}
-                      >
-                        Top
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setCoverPosition({ x: 50, y: 50 })}
-                      >
-                        Center
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setCoverPosition({ x: 50, y: 100 })}
-                      >
-                        Bottom
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setCoverPosition({ x: 0, y: 50 })}
-                      >
-                        Left
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setCoverPosition({ x: 100, y: 50 })}
-                      >
-                        Right
-                      </Button>
                     </div>
                   </div>
 

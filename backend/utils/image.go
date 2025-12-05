@@ -166,28 +166,39 @@ func processImageSync(slug, filename string) (string, error) {
 		return "cover_resized.gif", nil
 	}
 
-	// 4. For other formats, resize and convert to PNG
-	resizedData, err := resizeImageToPNG(imageData)
-	if err != nil {
-		return "", fmt.Errorf("image resize failed: %w", err)
-	}
+	// 4. For other formats, store original without resizing
+	// Resizing is disabled - focal point cropping is now handled on frontend via CSS object-position
+	// resizedData, err := resizeImageToPNG(imageData)
+	// if err != nil {
+	// 	return "", fmt.Errorf("image resize failed: %w", err)
+	// }
 
-	// 5. Store resized image in MinIO
+	// 5. Store image in MinIO (keeping original dimensions)
 	resizedPath := fmt.Sprintf("%s/cover_resized.png", slug)
-	log.Printf("Storing resized image: %s", resizedPath)
+	log.Printf("Storing image: %s", resizedPath)
+
+	// Convert to PNG without resizing
+	img, _, err := image.Decode(bytes.NewReader(imageData))
+	if err != nil {
+		return "", fmt.Errorf("failed to decode image: %w", err)
+	}
+	var pngBuf bytes.Buffer
+	if err := imaging.Encode(&pngBuf, img, imaging.PNG); err != nil {
+		return "", fmt.Errorf("failed to encode image: %w", err)
+	}
 
 	_, err = config.FS.PutObject(
 		context.Background(),
 		bucketName,
 		resizedPath,
-		bytes.NewReader(resizedData),
-		int64(len(resizedData)),
+		bytes.NewReader(pngBuf.Bytes()),
+		int64(pngBuf.Len()),
 		minio.PutObjectOptions{
 			ContentType: "image/png",
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to store resized image: %w", err)
+		return "", fmt.Errorf("failed to store image: %w", err)
 	}
 
 	log.Printf("Cover image processed successfully: %s", resizedPath)
