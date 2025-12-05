@@ -550,8 +550,8 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                   <div className="space-y-2">
                     <Label>Preview (as seen on challenge cards)</Label>
                     <div className="flex justify-center">
-                      {/* Actual card: h-48 (192px), width varies by grid. Using w-96 (384px) for typical 3-col layout */}
-                      <div className="w-96 h-48 rounded-t-lg overflow-hidden border bg-muted">
+                      {/* Actual card: h-48 (192px), width ~411px in 3-col layout (max-w-7xl minus gaps) */}
+                      <div className="w-[411px] h-48 rounded-t-lg overflow-hidden border bg-muted">
                         <img
                           src={`/api/challenges/${challenge.id}/cover`}
                           alt="Cover preview"

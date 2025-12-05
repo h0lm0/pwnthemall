@@ -40,8 +40,7 @@ export default function ChallengeImage({
   const imageUrl = `/api/challenges/${challengeId}/cover`
   
   // Compute object-position from x/y percentages
-  const adjustedY = Math.min(100, positionY - 0.4)
-  const objectPosition = `${positionX}% ${adjustedY}%`
+  const objectPosition = `${positionX}% ${positionY}%`
 
   return (
     <div className={`relative w-full h-full overflow-hidden bg-muted ${className}`}>
