@@ -380,7 +380,8 @@
     "no_solve_data": "Aucune donnée de résolution disponible",
     "search": "Rechercher",
     "solve_activity": "Résolution au fil du temps",
-    "solve_activity_description": "Suivez la progression des équipes"
+    "solve_activity_description": "Suivez la progression des équipes",
+    "solve_activity_description_individual": "Suivez la progression des meilleurs joueurs"
   },
   "team": {
     "create_team": "Créer une équipe",

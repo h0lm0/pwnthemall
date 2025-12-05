@@ -11,7 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useUser } from '@/context/UserContext';
 import { IndividualLeaderboardEntry, TeamLeaderboardEntry } from '@/models/Leaderboard';
 import { cn } from '@/lib/utils';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 
 export default function ScoreboardContent() {
   const { t } = useLanguage();
@@ -26,7 +26,26 @@ export default function ScoreboardContent() {
   const [teamPage, setTeamPage] = useState(1);
   const [timelineData, setTimelineData] = useState<{ teams?: any[], users?: any[], timeline: any[] } | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
+  const [hiddenEntities, setHiddenEntities] = useState<Set<string>>(new Set());
   const itemsPerPage = 25;
+
+  // Toggle entity visibility in chart
+  const toggleEntityVisibility = (entityName: string) => {
+    setHiddenEntities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(entityName)) {
+        newSet.delete(entityName);
+      } else {
+        newSet.add(entityName);
+      }
+      return newSet;
+    });
+  };
+
+  // Reset hidden entities when tab changes
+  useEffect(() => {
+    setHiddenEntities(new Set());
+  }, [activeTab]);
 
   useEffect(() => {
     fetchLeaderboards();
@@ -248,53 +267,82 @@ export default function ScoreboardContent() {
                 {t('scoreboard.no_solve_data') || 'No solve data available yet'}
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={timelineData.timeline.map(point => ({
-                  time: point.time,
-                  ...point.scores
-                }))}>
-                  <defs>
-                    {/* Handle both teams (for team view) and users (for individual view) */}
-                    {(timelineData.teams || timelineData.users || []).map((entity: any, index: number) => (
-                      <linearGradient key={entity.id} id={`colorEntity${index}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={entity.color} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={entity.color} stopOpacity={0}/>
-                      </linearGradient>
-                    ))}
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="time" 
-                    className="text-xs"
-                    tick={{ fill: 'currentColor' }}
-                  />
-                  <YAxis 
-                    className="text-xs"
-                    tick={{ fill: 'currentColor' }}
-                    label={{ value: t('scoreboard.points') || 'Points', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--popover))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '0.5rem'
-                    }}
-                  />
-                  <Legend />
-                  {/* Render areas for either teams or users */}
-                  {(timelineData.teams || timelineData.users || []).map((entity: any, index: number) => (
-                    <Area 
-                      key={entity.id}
-                      type="monotone" 
-                      dataKey={entity.name || entity.username}
-                      stroke={entity.color}
-                      fillOpacity={1}
-                      fill={`url(#colorEntity${index})`}
-                      name={entity.name || entity.username}
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={timelineData.timeline.map(point => ({
+                    time: point.time,
+                    ...point.scores
+                  }))}>
+                    <defs>
+                      {/* Handle both teams (for team view) and users (for individual view) */}
+                      {(timelineData.teams || timelineData.users || []).map((entity: any, index: number) => (
+                        <linearGradient key={entity.id} id={`colorEntity${index}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={entity.color} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={entity.color} stopOpacity={0}/>
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="time" 
+                      className="text-xs"
+                      tick={{ fill: 'currentColor' }}
                     />
-                  ))}
-                </AreaChart>
-              </ResponsiveContainer>
+                    <YAxis 
+                      className="text-xs"
+                      tick={{ fill: 'currentColor' }}
+                      label={{ value: t('scoreboard.points') || 'Points', angle: -90, position: 'insideLeft' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--popover))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '0.5rem'
+                      }}
+                    />
+                    {/* Render areas for either teams or users - only show non-hidden entities */}
+                    {(timelineData.teams || timelineData.users || [])
+                      .filter((entity: any) => !hiddenEntities.has(entity.name || entity.username))
+                      .map((entity: any, index: number) => (
+                        <Area 
+                          key={entity.id}
+                          type="monotone" 
+                          dataKey={entity.name || entity.username}
+                          stroke={entity.color}
+                          fillOpacity={1}
+                          fill={`url(#colorEntity${index})`}
+                          name={entity.name || entity.username}
+                        />
+                      ))}
+                  </AreaChart>
+                </ResponsiveContainer>
+                {/* Custom clickable legend */}
+                <div className="flex flex-wrap justify-center gap-3 mt-4">
+                  {(timelineData.teams || timelineData.users || []).map((entity: any) => {
+                    const entityName = entity.name || entity.username;
+                    const isHidden = hiddenEntities.has(entityName);
+                    return (
+                      <button
+                        key={entity.id}
+                        onClick={() => toggleEntityVisibility(entityName)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                          "border hover:scale-105",
+                          isHidden 
+                            ? "opacity-40 bg-muted text-muted-foreground border-muted-foreground/30 line-through" 
+                            : "bg-background border-border"
+                        )}
+                      >
+                        <span 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: isHidden ? '#888' : entity.color }}
+                        />
+                        {entityName}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

@@ -380,7 +380,8 @@
     "no_solve_data": "No solve data available yet",
     "search": "Search",
     "solve_activity": "Solved challenges over time",
-    "solve_activity_description": "Track how teams progress through time"
+    "solve_activity_description": "Track how teams progress through time",
+    "solve_activity_description_individual": "Track how top players progress through challenges"
   },
   "team": {
     "create_team": "Create a team",
