@@ -5,6 +5,8 @@ interface ChallengeImageProps {
   readonly alt: string
   readonly className?: string
   readonly priority?: boolean
+  readonly positionX?: number  // 0-100, default 50 (center)
+  readonly positionY?: number  // 0-100, default 50 (center)
 }
 
 /**
@@ -15,8 +17,16 @@ interface ChallengeImageProps {
  * - Graceful degradation if image fails to load
  * - Responsive with aspect-video ratio
  * - Loading skeleton during fetch
+ * - Configurable focal point via positionX/positionY
  */
-export default function ChallengeImage({ challengeId, alt, className = '', priority = false }: ChallengeImageProps) {
+export default function ChallengeImage({ 
+  challengeId, 
+  alt, 
+  className = '', 
+  priority = false,
+  positionX = 50,
+  positionY = 50
+}: ChallengeImageProps) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
 
@@ -26,6 +36,9 @@ export default function ChallengeImage({ challengeId, alt, className = '', prior
   }
 
   const imageUrl = `/api/challenges/${challengeId}/cover`
+  
+  // Compute object-position from x/y percentages
+  const objectPosition = `${positionX}% ${positionY}%`
 
   return (
     <div className={`relative w-full aspect-video overflow-hidden bg-muted ${className}`}>
@@ -36,6 +49,7 @@ export default function ChallengeImage({ challengeId, alt, className = '', prior
         src={imageUrl}
         alt={alt}
         className="w-full h-full object-cover"
+        style={{ objectPosition }}
         onLoad={() => setImageLoading(false)}
         onError={() => {
           setImageError(true)

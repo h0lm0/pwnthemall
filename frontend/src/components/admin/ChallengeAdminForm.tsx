@@ -112,6 +112,11 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     categoryId: challenge.categoryId || 1,
     difficultyId: challenge.difficultyId || 1,
   })
+  const [coverPosition, setCoverPosition] = useState({
+    x: challenge.coverPositionX ?? 50,
+    y: challenge.coverPositionY ?? 50,
+  })
+  const [coverLoading, setCoverLoading] = useState(false)
   const [newHint, setNewHint] = useState({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null as string | null })
   const [editingHints, setEditingHints] = useState<{[key: number]: {title: string, content: string, cost: number, isActive: boolean, autoActiveAt: string | null}}>({})
 
@@ -373,8 +378,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   return (
     <div className="space-y-6">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="cover">Cover</TabsTrigger>
           <TabsTrigger value="points">Points & Decay</TabsTrigger>
           <TabsTrigger value="firstblood">First Blood</TabsTrigger>
           <TabsTrigger value="hints">Hints</TabsTrigger>
@@ -472,6 +478,189 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                   {generalLoading ? "Saving..." : "Save General Information"}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="cover" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Cover Image Position</CardTitle>
+              <CardDescription>
+                Adjust how the cover image is cropped on challenge cards. Click on the image to set the focal point.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {challenge.coverImg ? (
+                <>
+                  {/* Full Image with clickable focal point */}
+                  <div className="space-y-2">
+                    <Label>Full Image (click to set focal point)</Label>
+                    <button 
+                      type="button"
+                      className="relative w-full border rounded-lg overflow-hidden cursor-crosshair bg-muted text-left"
+                      style={{ maxHeight: '400px' }}
+                      onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const x = Math.round(((e.clientX - rect.left) / rect.width) * 100)
+                        const y = Math.round(((e.clientY - rect.top) / rect.height) * 100)
+                        setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
+                      }}
+                    >
+                      <img
+                        src={`/api/challenges/${challenge.id}/cover`}
+                        alt="Full cover"
+                        className="w-full h-auto"
+                        style={{ maxHeight: '400px', objectFit: 'contain' }}
+                      />
+                      {/* Focal point marker */}
+                      <div 
+                        className="absolute w-6 h-6 border-2 border-white rounded-full shadow-lg pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
+                        style={{ 
+                          left: `${coverPosition.x}%`, 
+                          top: `${coverPosition.y}%`,
+                          backgroundColor: 'rgba(59, 130, 246, 0.7)'
+                        }}
+                      >
+                        <div className="absolute inset-0 rounded-full border border-blue-400 animate-ping opacity-75" />
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Position Controls */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="coverX">Horizontal Position ({coverPosition.x}%)</Label>
+                      <input
+                        id="coverX"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={coverPosition.x}
+                        onChange={(e) => setCoverPosition(prev => ({ ...prev, x: Number.parseInt(e.target.value) }))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Left</span>
+                        <span>Center</span>
+                        <span>Right</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="coverY">Vertical Position ({coverPosition.y}%)</Label>
+                      <input
+                        id="coverY"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={coverPosition.y}
+                        onChange={(e) => setCoverPosition(prev => ({ ...prev, y: Number.parseInt(e.target.value) }))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Top</span>
+                        <span>Center</span>
+                        <span>Bottom</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preset Buttons */}
+                  <div className="space-y-2">
+                    <Label>Quick Presets</Label>
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setCoverPosition({ x: 50, y: 0 })}
+                      >
+                        Top
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setCoverPosition({ x: 50, y: 50 })}
+                      >
+                        Center
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setCoverPosition({ x: 50, y: 100 })}
+                      >
+                        Bottom
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setCoverPosition({ x: 0, y: 50 })}
+                      >
+                        Left
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setCoverPosition({ x: 100, y: 50 })}
+                      >
+                        Right
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Live Preview */}
+                  <div className="space-y-2">
+                    <Label>Preview (as seen on challenge cards)</Label>
+                    <div className="flex justify-center">
+                      <div className="w-80 h-48 rounded-lg overflow-hidden border bg-muted">
+                        <img
+                          src={`/api/challenges/${challenge.id}/cover`}
+                          alt="Cover preview"
+                          className="w-full h-full object-cover"
+                          style={{ objectPosition: `${coverPosition.x}% ${coverPosition.y}%` }}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                      This preview shows how the image will appear on challenge cards
+                    </p>
+                  </div>
+
+                  <div className="pt-4">
+                    <Button 
+                      onClick={async () => {
+                        setCoverLoading(true)
+                        try {
+                          await axios.put(`/api/admin/challenges/${challenge.id}/general`, {
+                            ...generalData,
+                            coverPositionX: coverPosition.x,
+                            coverPositionY: coverPosition.y,
+                          })
+                          toast.success("Cover position saved successfully")
+                        } catch (error) {
+                          toast.error("Failed to save cover position")
+                          console.error(error)
+                        } finally {
+                          setCoverLoading(false)
+                        }
+                      }} 
+                      disabled={coverLoading} 
+                      className="w-full"
+                    >
+                      {coverLoading ? "Saving..." : "Save Cover Position"}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No cover image configured for this challenge.</p>
+                  <p className="text-sm mt-2">Upload a cover image to the challenge directory to enable this feature.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
