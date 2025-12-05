@@ -464,7 +464,11 @@ function compose_down() {
     fi
 
     echo "[+] Stopping and removing containers using $compose_file"
-    docker compose -f "$compose_file" down -v
+    if [[ $env == "prod" ]]; then
+        docker compose -f "$compose_file" down
+    else 
+        docker compose -f "$compose_file" down -v
+    fi
     echo "[✓] Compose down completed"
 }
 
