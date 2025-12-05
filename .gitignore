@@ -4,3 +4,4 @@ shared/*
 .vscode
 .scannerwork
 test/.last-run.json
+test-results/.last-run.json
