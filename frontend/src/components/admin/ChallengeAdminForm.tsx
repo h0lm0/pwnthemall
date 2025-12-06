@@ -389,8 +389,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           <TabsTrigger value="hints">{t('challenge_form.tab_hints')}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
-          <Card>
+        <TabsContent value="general" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <Card>
             <CardHeader>
               <CardTitle>{t('challenge_form.general_info')}</CardTitle>
               <CardDescription>
@@ -415,7 +416,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                   value={generalData.description}
                   onChange={(e) => setGeneralData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter challenge description"
-                  rows={4}
+                  rows={6}
                 />
               </div>
 
@@ -483,10 +484,12 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
             </CardContent>
           </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="cover" className="space-y-4">
-          <Card>
+        <TabsContent value="cover" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <Card>
             <CardHeader>
               <CardTitle>{t('challenge_form.cover_position')}</CardTitle>
               <CardDescription>
@@ -620,10 +623,12 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               )}
             </CardContent>
           </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="points" className="space-y-4">
-          <Card>
+        <TabsContent value="points" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <Card>
             <CardHeader>
               <CardTitle>{t('challenge_form.points_config')}</CardTitle>
               <CardDescription>
@@ -665,8 +670,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
             </CardContent>
           </Card>
+          </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose}>
               {t('challenge_form.cancel')}
             </Button>
@@ -676,8 +682,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           </div>
         </TabsContent>
 
-        <TabsContent value="firstblood" className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
+        <TabsContent value="firstblood" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <div className="flex items-center justify-between mb-4">
             <Label htmlFor="enableFirstBlood">{t('challenge_form.enable_firstblood')}</Label>
             <Switch
               id="enableFirstBlood"
@@ -692,8 +699,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               onChange={setFirstBloodBonuses}
             />
           )}
+          </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose}>
               {t('challenge_form.cancel')}
             </Button>
@@ -703,8 +711,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
           </div>
         </TabsContent>
 
-        <TabsContent value="hints" className="space-y-4">
-          <Card>
+        <TabsContent value="hints" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -982,8 +991,9 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               )}
             </CardContent>
           </Card>
+          </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose}>
               {t('challenge_form.cancel')}
             </Button>
