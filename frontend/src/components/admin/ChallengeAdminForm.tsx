@@ -490,111 +490,110 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                 Adjust how the cover image is cropped on challenge cards. Drag the focal point marker to set the position.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent>
               {challenge.coverImg ? (
-                <>
-                  {/* Full Image with draggable focal point */}
-                  <div className="space-y-2">
-                    <Label>Full Image (drag the marker to set focal point)</Label>
-                    {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-                    <div 
-                      className="relative border rounded-lg overflow-hidden bg-muted select-none flex justify-center"
-                      style={{ maxHeight: '400px' }}
-                    >
+                <div className="space-y-4">
+                  {/* Side-by-side layout: Focal point selector + Live preview */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Left: Focal point selector */}
+                    <div className="space-y-1">
+                      <span className="text-xs text-muted-foreground">Drag to set focal point</span>
                       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-                      <div
-                        className="relative"
-                        onMouseMove={(e) => {
-                          if (e.buttons !== 1) return // Only when mouse button is pressed
-                          const img = e.currentTarget.querySelector('img')
-                          if (!img) return
-                          const rect = img.getBoundingClientRect()
-                          const x = ((e.clientX - rect.left) / rect.width) * 100
-                          const y = ((e.clientY - rect.top) / rect.height) * 100
-                          setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
-                        }}
-                        onMouseDown={(e) => {
-                          e.preventDefault()
-                          const img = e.currentTarget.querySelector('img')
-                          if (!img) return
-                          const rect = img.getBoundingClientRect()
-                          const x = ((e.clientX - rect.left) / rect.width) * 100
-                          const y = ((e.clientY - rect.top) / rect.height) * 100
-                          setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
-                        }}
+                      <div 
+                        className="relative border rounded-lg overflow-hidden bg-muted select-none"
+                        style={{ maxHeight: '320px' }}
                       >
-                        <img
-                          src={`/api/challenges/${challenge.id}/cover`}
-                          alt="Full cover"
-                          className="block max-w-full h-auto pointer-events-none select-none"
-                          style={{ maxHeight: '400px' }}
-                          draggable={false}
-                        />
-                        {/* Draggable focal point marker */}
-                        <div 
-                          className="absolute w-8 h-8 border-2 border-white rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
-                          style={{ 
-                            left: `${coverPosition.x}%`, 
-                            top: `${coverPosition.y}%`,
-                            backgroundColor: 'rgba(59, 130, 246, 0.7)'
+                        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+                        <div
+                          className="relative flex justify-center"
+                          onMouseMove={(e) => {
+                            if (e.buttons !== 1) return
+                            const img = e.currentTarget.querySelector('img')
+                            if (!img) return
+                            const rect = img.getBoundingClientRect()
+                            const x = ((e.clientX - rect.left) / rect.width) * 100
+                            const y = ((e.clientY - rect.top) / rect.height) * 100
+                            setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            const img = e.currentTarget.querySelector('img')
+                            if (!img) return
+                            const rect = img.getBoundingClientRect()
+                            const x = ((e.clientX - rect.left) / rect.width) * 100
+                            const y = ((e.clientY - rect.top) / rect.height) * 100
+                            setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
                           }}
                         >
-                          <div className="absolute inset-0 rounded-full border-2 border-blue-400" />
-                          <div className="absolute inset-2 rounded-full bg-white/50" />
+                          <img
+                            src={`/api/challenges/${challenge.id}/cover`}
+                            alt="Full cover"
+                            className="max-h-[320px] w-auto pointer-events-none select-none"
+                            draggable={false}
+                          />
+                          {/* Focal point marker */}
+                          <div 
+                            className="absolute w-6 h-6 border-2 border-white rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+                            style={{ 
+                              left: `${coverPosition.x}%`, 
+                              top: `${coverPosition.y}%`,
+                              backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                            }}
+                          >
+                            <div className="absolute inset-1 rounded-full bg-white/60" />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Live Preview - matches actual card dimensions */}
-                  <div className="space-y-2">
-                    <Label>Preview (as seen on challenge cards)</Label>
-                    <div className="flex justify-center">
-                      {/* Actual card: h-48 (192px), width ~411px in 3-col layout (max-w-7xl minus gaps) */}
-                      <div className="w-[411px] h-48 rounded-t-lg overflow-hidden border bg-muted">
-                        <img
-                          src={`/api/challenges/${challenge.id}/cover`}
-                          alt="Cover preview"
-                          className="w-full h-full object-cover"
-                          style={{ objectPosition: `${coverPosition.x}% ${coverPosition.y}%` }}
-                        />
+                    {/* Right: Live preview - vertically centered */}
+                    <div className="flex flex-col justify-center space-y-1">
+                      <span className="text-xs text-muted-foreground">Live preview</span>
+                      <div className="border rounded-lg overflow-hidden bg-muted">
+                        {/* Preview container matching card aspect ratio (411:192 ≈ 2.14:1) */}
+                        <div className="w-full aspect-[411/192]">
+                          <img
+                            src={`/api/challenges/${challenge.id}/cover`}
+                            alt="Cover preview"
+                            className="w-full h-full object-cover"
+                            style={{ objectPosition: `${coverPosition.x}% ${coverPosition.y}%` }}
+                          />
+                        </div>
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        Shows how the image appears on challenge cards
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground text-center">
-                      This preview shows how the image will appear on challenge cards
-                    </p>
                   </div>
 
-                  <div className="pt-4">
-                    <Button 
-                      onClick={async () => {
-                        setCoverLoading(true)
-                        try {
-                          await axios.put(`/api/admin/challenges/${challenge.id}/general`, {
-                            name: generalData.name || challenge.name,
-                            description: generalData.description || challenge.description,
-                            author: generalData.author || challenge.author,
-                            hidden: generalData.hidden,
-                            categoryId: generalData.categoryId || challenge.categoryId,
-                            difficultyId: generalData.difficultyId || challenge.difficultyId,
-                            coverPositionX: coverPosition.x,
-                            coverPositionY: coverPosition.y,
-                          })
-                          toast.success("Cover position saved successfully")
-                        } catch (error) {
-                          toast.error("Failed to save cover position")
-                          console.error(error)
-                        } finally {
-                          setCoverLoading(false)
-                        }
-                      }} 
-                      disabled={coverLoading} 
-                      className="w-full"
-                    >
-                      {coverLoading ? "Saving..." : "Save Cover Position"}
-                    </Button>
-                  </div>
-                </>
+                  <Button 
+                    onClick={async () => {
+                      setCoverLoading(true)
+                      try {
+                        await axios.put(`/api/admin/challenges/${challenge.id}/general`, {
+                          name: generalData.name || challenge.name,
+                          description: generalData.description || challenge.description,
+                          author: generalData.author || challenge.author,
+                          hidden: generalData.hidden,
+                          categoryId: generalData.categoryId || challenge.categoryId,
+                          difficultyId: generalData.difficultyId || challenge.difficultyId,
+                          coverPositionX: coverPosition.x,
+                          coverPositionY: coverPosition.y,
+                        })
+                        toast.success("Cover position saved successfully")
+                      } catch (error) {
+                        toast.error("Failed to save cover position")
+                        console.error(error)
+                      } finally {
+                        setCoverLoading(false)
+                      }
+                    }} 
+                    disabled={coverLoading} 
+                    className="w-full"
+                  >
+                    {coverLoading ? "Saving..." : "Save Cover Position"}
+                  </Button>
+                </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No cover image configured for this challenge.</p>
