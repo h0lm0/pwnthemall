@@ -9,5 +9,6 @@ description: |
   Can you find out the user's **real name** ?  
   __(flag is "flag")__  
 author: "swinowz"
+cover_img: the-track.png
 flags:
   - "flag"

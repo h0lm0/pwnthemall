@@ -5,6 +5,9 @@ interface ChallengeImageProps {
   readonly alt: string
   readonly className?: string
   readonly priority?: boolean
+  readonly positionX?: number  // 0-100, default 50 (center)
+  readonly positionY?: number  // 0-100, default 50 (center)
+  readonly zoom?: number       // 100-200, default 100 (no zoom)
 }
 
 /**
@@ -15,20 +18,36 @@ interface ChallengeImageProps {
  * - Graceful degradation if image fails to load
  * - Responsive with aspect-video ratio
  * - Loading skeleton during fetch
+ * - Configurable focal point via positionX/positionY
  */
-export default function ChallengeImage({ challengeId, alt, className = '', priority = false }: ChallengeImageProps) {
+export default function ChallengeImage({ 
+  challengeId, 
+  alt, 
+  className = '', 
+  priority = false,
+  positionX = 50,
+  positionY = 50,
+  zoom = 100
+}: ChallengeImageProps) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
 
-  // If image failed to load, don't render anything
+  // If image failed to load, show empty placeholder to maintain layout
   if (imageError) {
-    return null
+    return (
+      <div className={`relative w-full h-full overflow-hidden bg-muted ${className}`} />
+    )
   }
 
   const imageUrl = `/api/challenges/${challengeId}/cover`
+  
+  // Compute object-position from x/y percentages
+  const objectPosition = `${positionX}% ${positionY}%`
+  // Scale factor for zoom (100 = 100% = no zoom, 150 = 150% scale)
+  const scale = zoom / 100
 
   return (
-    <div className={`relative w-full aspect-video overflow-hidden bg-muted ${className}`}>
+    <div className={`relative w-full h-full overflow-hidden bg-muted ${className}`}>
       {imageLoading && (
         <div className="absolute inset-0 animate-pulse bg-muted/50" />
       )}
@@ -36,6 +55,7 @@ export default function ChallengeImage({ challengeId, alt, className = '', prior
         src={imageUrl}
         alt={alt}
         className="w-full h-full object-cover"
+        style={{ objectPosition, transform: `scale(${scale})` }}
         onLoad={() => setImageLoading(false)}
         onError={() => {
           setImageError(true)

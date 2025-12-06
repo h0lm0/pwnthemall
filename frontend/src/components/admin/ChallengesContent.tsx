@@ -1,5 +1,6 @@
 import Head from "next/head"
 import { useState, useMemo, useEffect } from "react"
+import { useLanguage } from "@/context/LanguageContext"
 import { Challenge } from "@/models/Challenge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,6 +23,7 @@ interface ChallengesContentProps {
 }
 
 export default function ChallengesContent({ challenges, onRefresh }: ChallengesContentProps) {
+  const { t } = useLanguage()
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -186,11 +188,11 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
   return (
     <>
       <Head>
-        <title>Challenge Management</title>
+        <title>{t('admin_challenges.challenge_management')}</title>
       </Head>
       <div className="bg-muted min-h-screen p-4">
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Challenge Management</h1>
+          <h1 className="text-3xl font-bold">{t('admin_challenges.challenge_management')}</h1>
           <div className="flex items-center gap-2">
             {/* Placeholder for future actions to mirror admin pages layout */}
           </div>
@@ -198,9 +200,9 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
 
         <Card>
           <CardHeader>
-            <CardTitle>All Challenges</CardTitle>
+            <CardTitle>{t('admin_challenges.all_challenges')}</CardTitle>
             <CardDescription>
-              Manage challenge configurations
+              {t('admin_challenges.manage_challenge_configurations')}
             </CardDescription>
             
             {/* Search and Filter Section */}
@@ -209,7 +211,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search challenges by name, category, or type..."
+                  placeholder={t('admin_challenges.search_challenges_placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -220,10 +222,10 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Select value={filterCategory} onValueChange={setFilterCategory}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Categories" />
+                    <SelectValue placeholder={t('admin_challenges.all_categories')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="all">{t('admin_challenges.all_categories')}</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
@@ -234,10 +236,10 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
 
                 <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Difficulties" />
+                    <SelectValue placeholder={t('admin_challenges.all_difficulties')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Difficulties</SelectItem>
+                    <SelectItem value="all">{t('admin_challenges.all_difficulties')}</SelectItem>
                     {difficulties.map((difficulty) => (
                       <SelectItem key={difficulty} value={difficulty}>
                         {difficulty}
@@ -248,12 +250,12 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
 
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
+                    <SelectValue placeholder={t('admin_challenges.all_status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="visible">Visible</SelectItem>
-                    <SelectItem value="hidden">Hidden</SelectItem>
+                    <SelectItem value="all">{t('admin_challenges.all_status')}</SelectItem>
+                    <SelectItem value="visible">{t('admin_challenges.visible')}</SelectItem>
+                    <SelectItem value="hidden">{t('admin_challenges.hidden')}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -263,17 +265,17 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                   setSortOrder(order as "asc" | "desc")
                 }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sort by" />
+                    <SelectValue placeholder={t('admin_challenges.sort_by')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-                    <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-                    <SelectItem value="category-asc">Category (A-Z)</SelectItem>
-                    <SelectItem value="category-desc">Category (Z-A)</SelectItem>
-                    <SelectItem value="difficulty-asc">Difficulty (A-Z)</SelectItem>
-                    <SelectItem value="difficulty-desc">Difficulty (Z-A)</SelectItem>
-                    <SelectItem value="points-asc">Points (Low to High)</SelectItem>
-                    <SelectItem value="points-desc">Points (High to Low)</SelectItem>
+                    <SelectItem value="name-asc">{t('admin_challenges.name_asc')}</SelectItem>
+                    <SelectItem value="name-desc">{t('admin_challenges.name_desc')}</SelectItem>
+                    <SelectItem value="category-asc">{t('admin_challenges.category_asc')}</SelectItem>
+                    <SelectItem value="category-desc">{t('admin_challenges.category_desc')}</SelectItem>
+                    <SelectItem value="difficulty-asc">{t('admin_challenges.difficulty_asc')}</SelectItem>
+                    <SelectItem value="difficulty-desc">{t('admin_challenges.difficulty_desc')}</SelectItem>
+                    <SelectItem value="points-asc">{t('admin_challenges.points_low_high')}</SelectItem>
+                    <SelectItem value="points-desc">{t('admin_challenges.points_high_low')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -290,7 +292,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                       className="h-auto p-0 font-semibold hover:bg-transparent"
                       onClick={() => handleSort("name")}
                     >
-                      Name
+                      {t('admin_challenges.name')}
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </th>
@@ -300,7 +302,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                       className="h-auto p-0 font-semibold hover:bg-transparent"
                       onClick={() => handleSort("category")}
                     >
-                      Category
+                      {t('admin_challenges.category')}
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </th>
@@ -310,7 +312,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                       className="h-auto p-0 font-semibold hover:bg-transparent"
                       onClick={() => handleSort("type")}
                     >
-                      Type
+                      {t('admin_challenges.type')}
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </th>
@@ -320,7 +322,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                       className="h-auto p-0 font-semibold hover:bg-transparent"
                       onClick={() => handleSort("difficulty")}
                     >
-                      Difficulty
+                      {t('admin_challenges.difficulty')}
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </th>
@@ -330,20 +332,20 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                       className="h-auto p-0 font-semibold hover:bg-transparent"
                       onClick={() => handleSort("points")}
                     >
-                      Points
+                      {t('admin_challenges.points')}
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </th>
-                  <th className="w-[120px] px-3 py-1.5 text-left font-medium align-middle">First Blood</th>
-                  <th className="w-[100px] px-3 py-1.5 text-left font-medium align-middle">Status</th>
-                  <th className="w-[100px] px-3 py-1.5 text-left font-medium align-middle">Actions</th>
+                  <th className="w-[120px] px-3 py-1.5 text-left font-medium align-middle">{t('admin_challenges.first_blood')}</th>
+                  <th className="w-[100px] px-3 py-1.5 text-left font-medium align-middle">{t('admin_challenges.status')}</th>
+                  <th className="w-[100px] px-3 py-1.5 text-left font-medium align-middle">{t('admin_challenges.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAndSortedChallenges.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-8 text-gray-500">
-                      No challenges found matching your search criteria.
+                      {t('admin_challenges.no_challenges_found')}
                     </td>
                   </tr>
                 ) : (
@@ -389,7 +391,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                       <td className="w-[120px] px-3 py-2 align-middle">
                         {challenge.id >= 0 ? (
                           <Badge variant={challenge.enableFirstBlood ? "default" : "secondary"}>
-                            {challenge.enableFirstBlood ? "Enabled" : "Disabled"}
+                            {challenge.enableFirstBlood ? t('admin_challenges.enabled') : t('admin_challenges.disabled')}
                           </Badge>
                         ) : (
                           <div className="h-[22px]">&nbsp;</div>
@@ -398,7 +400,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                       <td className="w-[100px] px-3 py-2 align-middle">
                         {challenge.id >= 0 ? (
                           <Badge className={getStatusColor(challenge.hidden ?? false)}>
-                            {challenge.hidden ? "Hidden" : "Visible"}
+                            {challenge.hidden ? t('admin_challenges.hidden') : t('admin_challenges.visible')}
                           </Badge>
                         ) : (
                           <div className="h-[22px]">&nbsp;</div>
@@ -427,7 +429,11 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 px-2">
               <div className="text-sm text-muted-foreground">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedChallenges.length)} of {filteredAndSortedChallenges.length}
+                {t('admin_challenges.showing_x_to_y_of_z', { 
+                  from: (currentPage - 1) * itemsPerPage + 1, 
+                  to: Math.min(currentPage * itemsPerPage, filteredAndSortedChallenges.length), 
+                  total: filteredAndSortedChallenges.length 
+                })}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -436,10 +442,10 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
-                  Previous
+                  {t('common.previous')}
                 </Button>
                 <div className="flex items-center gap-2 text-sm">
-                  Page {currentPage} of {totalPages}
+                  {t('admin_challenges.page_x_of_y', { current: currentPage, total: totalPages })}
                 </div>
                 <Button
                   variant="outline"
@@ -447,7 +453,7 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage >= totalPages}
                 >
-                  Next
+                  {t('common.next')}
                 </Button>
               </div>
             </div>
@@ -458,9 +464,9 @@ export default function ChallengesContent({ challenges, onRefresh }: ChallengesC
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Challenge Configuration</DialogTitle>
+              <DialogTitle>{t('admin_challenges.edit_challenge_configuration')}</DialogTitle>
               <DialogDescription>
-                Configure points, decay formula, first blood bonus, and hints for this challenge
+                {t('admin_challenges.configure_challenge_description')}
               </DialogDescription>
             </DialogHeader>
             {selectedChallenge && (

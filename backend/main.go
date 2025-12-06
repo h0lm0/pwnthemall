@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +18,14 @@ import (
 	"github.com/pwnthemall/pwnthemall/backend/pluginsystem"
 	"github.com/pwnthemall/pwnthemall/backend/routes"
 	"github.com/pwnthemall/pwnthemall/backend/utils"
+)
+
+// CLI flags for seeding operations
+var (
+	seedDemo      = flag.Bool("seed-demo", false, "Seed the database with demo teams, users, and solves")
+	cleanDemo     = flag.Bool("clean-demo", false, "Remove all demo data from the database")
+	seedTeams     = flag.Int("teams", 30, "Number of demo teams to create (default: 30)")
+	seedTimeRange = flag.Int("time-range", 20, "Time range in hours for spreading solve timestamps (default: 20)")
 )
 
 func generateRandomString(n int) (string, error) {
@@ -37,6 +46,31 @@ func initWebSocketHub() {
 }
 
 func main() {
+	flag.Parse()
+
+	// Handle CLI seeding commands (requires only DB connection)
+	if *seedDemo || *cleanDemo {
+		config.ConnectDB()
+
+		if *cleanDemo {
+			log.Println("Running: clean-demo")
+			if err := config.CleanDemoData(); err != nil {
+				log.Fatalf("Failed to clean demo data: %v", err)
+			}
+			log.Println("Demo data cleaned successfully")
+			os.Exit(0)
+		}
+
+		if *seedDemo {
+			log.Printf("Running: seed-demo (teams=%d, time-range=%dh)\n", *seedTeams, *seedTimeRange)
+			if err := config.SeedDemoData(*seedTeams, *seedTimeRange); err != nil {
+				log.Fatalf("Failed to seed demo data: %v", err)
+			}
+			log.Println("Demo data seeded successfully")
+			os.Exit(0)
+		}
+	}
+
 	config.ConnectDB()
 	config.ConnectMinio()
 	config.InitCasbin()

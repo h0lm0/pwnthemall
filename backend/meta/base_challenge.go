@@ -19,6 +19,7 @@ type BaseChallengeMetadata struct {
 	Attempts         int                 `yaml:"attempts,omitempty"`   // Max submission attempts (0 = unlimited)
 	DependsOn        string              `yaml:"depends_on,omitempty"` // Name of challenge that must be solved first
 	CoverImg         string              `yaml:"cover_img,omitempty"`  // Cover image filename relative to challenge folder
+	Emoji            string              `yaml:"emoji,omitempty"`      // Emoji to display when no cover image
 }
 
 type HintMetadata struct {

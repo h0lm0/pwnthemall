@@ -250,3 +250,174 @@ func GetUserByIP(c *gin.Context) {
 
 	utils.OKResponse(c, filteredUsers)
 }
+
+// GetIndividualLeaderboard returns individual user rankings based on points from solves they submitted
+// Each user's score is the sum of points from solves where they were the submitter
+func GetIndividualLeaderboard(c *gin.Context) {
+	// Query to aggregate scores by user
+	// We use the stored Points value in each Solve record (already includes decay and first blood bonuses)
+	type userScore struct {
+		UserID     uint
+		TotalScore int
+		SolveCount int64
+	}
+
+	var scores []userScore
+	if err := config.DB.Model(&models.Solve{}).
+		Select("user_id, COALESCE(SUM(points), 0) as total_score, COUNT(*) as solve_count").
+		Group("user_id").
+		Order("total_score DESC").
+		Scan(&scores).Error; err != nil {
+		utils.InternalServerError(c, "failed_to_fetch_individual_scores")
+		return
+	}
+
+	// Build leaderboard with user details
+	var leaderboard []dto.IndividualScore
+	for _, score := range scores {
+		var user models.User
+		if err := config.DB.Preload("Team").First(&user, score.UserID).Error; err != nil {
+			continue
+		}
+
+		teamName := ""
+		if user.Team != nil {
+			teamName = user.Team.Name
+		}
+
+		// Clear sensitive/unnecessary data from user
+		user.Password = ""
+		user.Email = ""
+		user.IPAddresses = nil
+		user.Submissions = nil
+		user.Notifications = nil
+
+		leaderboard = append(leaderboard, dto.IndividualScore{
+			User:       user,
+			TeamName:   teamName,
+			TotalScore: score.TotalScore,
+			SolveCount: int(score.SolveCount),
+		})
+	}
+
+	utils.OKResponse(c, leaderboard)
+}
+
+// individualTimelinePoint represents a point in the individual user timeline
+type individualTimelinePoint struct {
+	Time   string         `json:"time"`
+	Scores map[string]int `json:"scores"` // username -> score
+}
+
+// individualInfo holds user metadata for the timeline response
+type individualInfo struct {
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+	Color    string `json:"color"`
+}
+
+// individualTimelineResponse is the response for the individual timeline endpoint
+type individualTimelineResponse struct {
+	Users    []individualInfo          `json:"users"`
+	Timeline []individualTimelinePoint `json:"timeline"`
+}
+
+// GetIndividualTimeline returns solve activity timeline for top individual users
+func GetIndividualTimeline(c *gin.Context) {
+	// First, get top 10 users by total score
+	type userScore struct {
+		UserID     uint
+		TotalScore int
+	}
+
+	var topScores []userScore
+	if err := config.DB.Model(&models.Solve{}).
+		Select("user_id, COALESCE(SUM(points), 0) as total_score").
+		Group("user_id").
+		Order("total_score DESC").
+		Limit(10).
+		Scan(&topScores).Error; err != nil {
+		utils.InternalServerError(c, "failed_to_fetch_top_users")
+		return
+	}
+
+	if len(topScores) == 0 {
+		utils.OKResponse(c, individualTimelineResponse{
+			Users:    []individualInfo{},
+			Timeline: []individualTimelinePoint{},
+		})
+		return
+	}
+
+	// Get user IDs for the top users
+	userIDs := make([]uint, len(topScores))
+	for i, score := range topScores {
+		userIDs[i] = score.UserID
+	}
+
+	// Fetch user details
+	var users []models.User
+	if err := config.DB.Where("id IN ?", userIDs).Find(&users).Error; err != nil {
+		utils.InternalServerError(c, "failed_to_fetch_users")
+		return
+	}
+
+	// Create user map for quick lookup
+	userMap := make(map[uint]models.User)
+	for _, user := range users {
+		userMap[user.ID] = user
+	}
+
+	// Generate colors for users
+	colors := []string{
+		"#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
+		"#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1",
+	}
+
+	// Build users info in score order
+	usersInfo := make([]individualInfo, 0, len(topScores))
+	for i, score := range topScores {
+		if user, ok := userMap[score.UserID]; ok {
+			usersInfo = append(usersInfo, individualInfo{
+				ID:       user.ID,
+				Username: user.Username,
+				Color:    colors[i%len(colors)],
+			})
+		}
+	}
+
+	// Get all solves for the top users ordered by time
+	var allSolves []models.Solve
+	if err := config.DB.Where("user_id IN ?", userIDs).
+		Order("created_at ASC").
+		Find(&allSolves).Error; err != nil {
+		utils.InternalServerError(c, "failed_to_fetch_solves")
+		return
+	}
+
+	// Build timeline
+	timeline := []individualTimelinePoint{}
+	userScoresMap := make(map[uint]int)
+
+	for _, solve := range allSolves {
+		// Add points from this solve
+		userScoresMap[solve.UserID] += solve.Points
+
+		// Create timeline point with current scores for all tracked users
+		point := individualTimelinePoint{
+			Time:   solve.CreatedAt.Format("15:04"),
+			Scores: make(map[string]int),
+		}
+
+		for _, userInfo := range usersInfo {
+			point.Scores[userInfo.Username] = userScoresMap[userInfo.ID]
+		}
+
+		timeline = append(timeline, point)
+	}
+
+	utils.OKResponse(c, individualTimelineResponse{
+		Users:    usersInfo,
+		Timeline: timeline,
+	})
+}

@@ -115,7 +115,7 @@ function minio_sync() {
     echo "[+] Sync $folder → MinIO (bucket: $bucket) using $compose_file"
 
     docker compose -f "$compose_file" exec -T "$MINIO_CONTAINER" mc mb --ignore-existing "$MINIO_ALIAS/$bucket"
-    docker compose -f "$compose_file" exec -T "$MINIO_CONTAINER" mc mirror --overwrite --remove "$container_path" "$MINIO_ALIAS/$bucket"
+    docker compose -f "$compose_file" exec -T "$MINIO_CONTAINER" mc mirror --overwrite "$container_path" "$MINIO_ALIAS/$bucket"
 
     echo "[✓] Sync successful"
 }
@@ -464,7 +464,11 @@ function compose_down() {
     fi
 
     echo "[+] Stopping and removing containers using $compose_file"
-    docker compose -f "$compose_file" down -v
+    if [[ $env == "prod" ]]; then
+        docker compose -f "$compose_file" down
+    else 
+        docker compose -f "$compose_file" down -v
+    fi
     echo "[✓] Compose down completed"
 }
 
@@ -478,6 +482,95 @@ function remove_key() {
     rm -rf ./shared/*worker*
 }
 
+# Database seeding functions
+function db_seed_demo() {
+    local env="dev"
+    local teams=30
+    local time_range=20
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -e|--env)
+                env="$2"
+                shift 2
+                ;;
+            -t|--teams)
+                teams="$2"
+                shift 2
+                ;;
+            -r|--time-range)
+                time_range="$2"
+                shift 2
+                ;;
+            *)
+                echo "[✗] Unknown option: $1"
+                usage
+                ;;
+        esac
+    done
+
+    local compose_file="docker-compose.${env}.yml"
+    if [[ ! -f "$compose_file" ]]; then
+        echo "[✗] Compose file not found: $compose_file"
+        exit 1
+    fi
+
+    echo "[+] Seeding demo data with $teams teams over ${time_range}h using $compose_file"
+    echo ""
+
+    # In dev mode, air builds to ./tmp/main; in prod mode, binary is /app/pwnthemall
+    local binary_path="/app/pwnthemall"
+    if [[ "$env" == "dev" ]]; then
+        # Build the binary with seed flags directly using go run
+        docker compose -f "$compose_file" exec -T backend \
+            go run . --seed-demo --teams="$teams" --time-range="$time_range"
+    else
+        docker compose -f "$compose_file" exec -T backend \
+            "$binary_path" --seed-demo --teams="$teams" --time-range="$time_range"
+    fi
+
+    echo ""
+    echo "[✓] Demo data seeding complete"
+}
+
+function db_clean_demo() {
+    local env="dev"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -e|--env)
+                env="$2"
+                shift 2
+                ;;
+            *)
+                echo "[✗] Unknown option: $1"
+                usage
+                ;;
+        esac
+    done
+
+    local compose_file="docker-compose.${env}.yml"
+    if [[ ! -f "$compose_file" ]]; then
+        echo "[✗] Compose file not found: $compose_file"
+        exit 1
+    fi
+
+    echo "[+] Cleaning demo data using $compose_file"
+    echo ""
+
+    # In dev mode, use go run; in prod mode, use binary
+    if [[ "$env" == "dev" ]]; then
+        docker compose -f "$compose_file" exec -T backend \
+            go run . --clean-demo
+    else
+        docker compose -f "$compose_file" exec -T backend \
+            /app/pwnthemall --clean-demo
+    fi
+
+    echo ""
+    echo "[✓] Demo data cleanup complete"
+}
+
 function usage() {
     cat <<EOF
 
@@ -485,6 +578,8 @@ Usage:
   $0 minio sync [--env dev|prod|demo] <folder>
   $0 compose up [--build] [--env dev|prod|demo]
   $0 compose down [--env dev|prod|demo]
+  $0 db seed-demo [--env dev|prod|demo] [--teams N] [--time-range H]
+  $0 db clean-demo [--env dev|prod|demo]
   $0 plugins build
   $0 plugins clean
   $0 plugins list
@@ -497,6 +592,8 @@ Commands:
   minio sync       Synchronize a folder to MinIO bucket
   compose up       Start the application stack
   compose down     Stop the application stack
+  db seed-demo     Seed database with demo teams, users, and solves
+  db clean-demo    Remove all demo data from the database
   plugins build    Compile all plugins to binaries
   plugins clean    Remove compiled plugins and Docker image
   plugins list     List available plugins
@@ -505,11 +602,17 @@ Commands:
   keys remove      Remove SSH keys
   env randomize    Randomize sensitive values in .env
 
+Options (db seed-demo):
+  --teams N        Number of demo teams to create (default: 30)
+  --time-range H   Time range in hours for solve timestamps (default: 20)
+
 Examples:
   $0 plugins build
   $0 plugins status
   $0 compose up --build --env dev
   $0 minio sync --env prod ./minio/challenges
+  $0 db seed-demo --env dev --teams 30 --time-range 20
+  $0 db clean-demo --env dev
 
 EOF
     exit 1
@@ -603,6 +706,27 @@ case "${1:-}" in
                 ;;
             *)
                 usage
+                ;;
+        esac
+        ;;
+    db)
+        shift
+        case "${1:-}" in
+            seed-demo)
+                shift
+                db_seed_demo "$@"
+                ;;
+            clean-demo)
+                shift
+                db_clean_demo "$@"
+                ;;
+            *)
+                echo "[✗] Unknown db command: ${1:-}"
+                echo ""
+                echo "Available commands:"
+                echo "  seed-demo   - Seed demo teams, users, and solves"
+                echo "  clean-demo  - Remove all demo data"
+                exit 1
                 ;;
         esac
         ;;

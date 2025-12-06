@@ -563,6 +563,10 @@ func validateComposeInstancePreconditions(c *gin.Context, userID interface{}, ch
 	}
 
 	if user.Team == nil || user.TeamID == nil {
+		// Admins get a clearer message - they need to join a team for Docker instances
+		if user.Role == "admin" {
+			return nil, fmt.Errorf("admin_team_required_for_instances")
+		}
 		return nil, fmt.Errorf("team_required")
 	}
 
@@ -1128,25 +1132,10 @@ func StopDockerChallengeInstance(c *gin.Context) {
 		if err := config.DB.Delete(&instance).Error; err != nil {
 			debug.Log("Failed to delete instance from DB: %v", err)
 		}
+		// Broadcast after actual stop - same pattern as Compose challenges
+		broadcastInstanceStop(userID, &instance)
+		debug.Log("Docker instance stopped and broadcast sent: %s", instance.Container)
 	}()
-
-	if utils.WebSocketHub != nil {
-		var user models.User
-		if err := config.DB.Select("id, username, team_id").First(&user, userID).Error; err == nil && user.TeamID != nil {
-			event := dto.InstanceEvent{
-				Event:       "instance_update",
-				TeamID:      *user.TeamID,
-				UserID:      user.ID,
-				Username:    user.Username,
-				ChallengeID: instance.ChallengeID,
-				Status:      "stopped",
-				UpdatedAt:   time.Now().UTC().Unix(),
-			}
-			if payload, err := json.Marshal(event); err == nil {
-				utils.WebSocketHub.SendToTeamExcept(*user.TeamID, user.ID, payload)
-			}
-		}
-	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "instance_stopped",

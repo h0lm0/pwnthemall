@@ -169,6 +169,17 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	challenge.ChallengeCategoryID = *req.CategoryID
 	challenge.ChallengeDifficultyID = *req.DifficultyID
 
+	// Update cover position if provided
+	if req.CoverPositionX != nil {
+		challenge.CoverPositionX = *req.CoverPositionX
+	}
+	if req.CoverPositionY != nil {
+		challenge.CoverPositionY = *req.CoverPositionY
+	}
+	if req.CoverZoom != nil {
+		challenge.CoverZoom = *req.CoverZoom
+	}
+
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		utils.InternalServerError(c, "Failed to update challenge")
 		return

@@ -177,30 +177,23 @@ func getTopTeams(teams []models.Team, decayService *utils.DecayService, topN int
 	return topTeams
 }
 
-// timelinePoint represents a point in the team timeline
+// timelinePoint represents a point in the team timeline with dynamic team scores
 type timelinePoint struct {
-	Time      string `json:"time"`
-	Team1     int    `json:"team1"`
-	Team2     int    `json:"team2"`
-	Team3     int    `json:"team3"`
-	Team1Name string `json:"team1Name"`
-	Team2Name string `json:"team2Name"`
-	Team3Name string `json:"team3Name"`
+	Time   string         `json:"time"`
+	Scores map[string]int `json:"scores"` // teamName -> score
 }
 
-// getTeamNames extracts team names from top teams slice
-func getTeamNames(topTeams []models.Team) (string, string, string) {
-	var team1Name, team2Name, team3Name string
-	if len(topTeams) > 0 {
-		team1Name = topTeams[0].Name
-	}
-	if len(topTeams) > 1 {
-		team2Name = topTeams[1].Name
-	}
-	if len(topTeams) > 2 {
-		team3Name = topTeams[2].Name
-	}
-	return team1Name, team2Name, team3Name
+// teamInfo holds team metadata for the timeline response
+type teamInfo struct {
+	ID    uint   `json:"id"`
+	Name  string `json:"name"`
+	Color string `json:"color"`
+}
+
+// timelineResponse is the full response for the timeline endpoint
+type timelineResponse struct {
+	Teams    []teamInfo      `json:"teams"`
+	Timeline []timelinePoint `json:"timeline"`
 }
 
 // calculateSolvePointsForTimeline calculates points for a solve including position lookup
@@ -217,23 +210,15 @@ func calculateSolvePointsForTimeline(solve *models.Solve, challenge *models.Chal
 	return points
 }
 
-// buildTimelinePoint creates a timeline point with current scores
-func buildTimelinePoint(solve *models.Solve, topTeams []models.Team, teamScoresMap map[uint]int, team1Name, team2Name, team3Name string) timelinePoint {
+// buildTimelinePoint creates a timeline point with current scores for all teams
+func buildTimelinePoint(solve *models.Solve, allTeams []models.Team, teamScoresMap map[uint]int) timelinePoint {
 	point := timelinePoint{
-		Time:      solve.CreatedAt.Format("15:04"),
-		Team1Name: team1Name,
-		Team2Name: team2Name,
-		Team3Name: team3Name,
+		Time:   solve.CreatedAt.Format("15:04"),
+		Scores: make(map[string]int),
 	}
 
-	if len(topTeams) > 0 {
-		point.Team1 = teamScoresMap[topTeams[0].ID]
-	}
-	if len(topTeams) > 1 {
-		point.Team2 = teamScoresMap[topTeams[1].ID]
-	}
-	if len(topTeams) > 2 {
-		point.Team3 = teamScoresMap[topTeams[2].ID]
+	for _, team := range allTeams {
+		point.Scores[team.Name] = teamScoresMap[team.ID]
 	}
 
 	return point
@@ -331,7 +316,17 @@ func GetTeamScore(c *gin.Context) {
 		return
 	}
 
+	// Admin without team: return zero score (test mode)
 	if user.TeamID == nil {
+		if user.Role == "admin" {
+			utils.OKResponse(c, gin.H{
+				"totalScore":     0,
+				"availableScore": 0,
+				"spentOnHints":   0,
+				"testMode":       true,
+			})
+			return
+		}
 		utils.BadRequestError(c, "no_team")
 		return
 	}
@@ -358,7 +353,7 @@ func GetTeamScore(c *gin.Context) {
 	})
 }
 
-// GetTeamTimeline returns solve activity timeline for top teams (CTFd/TryHackMe style)
+// GetTeamTimeline returns solve activity timeline for all teams
 func GetTeamTimeline(c *gin.Context) {
 	var teams []models.Team
 	if err := config.DB.Preload("Users").Find(&teams).Error; err != nil {
@@ -367,16 +362,21 @@ func GetTeamTimeline(c *gin.Context) {
 	}
 
 	decayService := utils.NewDecay()
-	topTeams := getTopTeams(teams, decayService, 3)
 
-	if len(topTeams) == 0 {
-		utils.OKResponse(c, []interface{}{})
+	// Sort teams by score and limit to top 10 for cleaner chart
+	allTeams := getTopTeams(teams, decayService, 10)
+
+	if len(allTeams) == 0 {
+		utils.OKResponse(c, timelineResponse{
+			Teams:    []teamInfo{},
+			Timeline: []timelinePoint{},
+		})
 		return
 	}
 
-	// Get all solves for top teams ordered by time
-	teamIDs := make([]uint, len(topTeams))
-	for i, team := range topTeams {
+	// Get all solves for all teams ordered by time
+	teamIDs := make([]uint, len(allTeams))
+	for i, team := range allTeams {
 		teamIDs[i] = team.ID
 	}
 
@@ -388,21 +388,34 @@ func GetTeamTimeline(c *gin.Context) {
 		return
 	}
 
-	timeline := buildTimeline(allSolves, topTeams, decayService)
-
-	if len(timeline) == 0 {
-		utils.OKResponse(c, []interface{}{})
-		return
+	// Generate colors for teams
+	colors := []string{
+		"#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
+		"#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1",
+		"#14b8a6", "#f43f5e", "#a855f7", "#22c55e", "#eab308",
 	}
 
-	utils.OKResponse(c, timeline)
+	teamsInfo := make([]teamInfo, len(allTeams))
+	for i, team := range allTeams {
+		teamsInfo[i] = teamInfo{
+			ID:    team.ID,
+			Name:  team.Name,
+			Color: colors[i%len(colors)],
+		}
+	}
+
+	timeline := buildTimeline(allSolves, allTeams, decayService)
+
+	utils.OKResponse(c, timelineResponse{
+		Teams:    teamsInfo,
+		Timeline: timeline,
+	})
 }
 
 // buildTimeline constructs the timeline from solves
-func buildTimeline(allSolves []models.Solve, topTeams []models.Team, decayService *utils.DecayService) []timelinePoint {
+func buildTimeline(allSolves []models.Solve, allTeams []models.Team, decayService *utils.DecayService) []timelinePoint {
 	timeline := []timelinePoint{}
 	teamScoresMap := make(map[uint]int)
-	team1Name, team2Name, team3Name := getTeamNames(topTeams)
 
 	for _, solve := range allSolves {
 		var challenge models.Challenge
@@ -413,7 +426,7 @@ func buildTimeline(allSolves []models.Solve, topTeams []models.Team, decayServic
 		points := calculateSolvePointsForTimeline(&solve, &challenge, decayService)
 		teamScoresMap[solve.TeamID] += points
 
-		point := buildTimelinePoint(&solve, topTeams, teamScoresMap, team1Name, team2Name, team3Name)
+		point := buildTimelinePoint(&solve, allTeams, teamScoresMap)
 		timeline = append(timeline, point)
 	}
 

@@ -29,13 +29,13 @@
 
 ## 🚧 Work In Progress
 
-- Supporting multi workers
-- Supporting KVM workers
+- Multi Docker workers support
 
 
 ## 📚 Installation & Usage
 
 ![vhs tape run](docs/assets/run.gif)
+<!-- <img src="docs/assets/scoreboard.png" width=400 style="border-radius:25px">   -->
 
 Check out the official documentation:
 

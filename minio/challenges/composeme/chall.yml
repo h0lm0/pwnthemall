@@ -12,4 +12,5 @@ hidden: false
 flags: ["flag"]
 points: 500
 ports: [80,22]
+cover_img: tenor.gif
 connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]

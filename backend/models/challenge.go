@@ -38,4 +38,8 @@ type Challenge struct {
 	MaxAttempts           int                  `gorm:"default:0" json:"maxAttempts"` // 0 = unlimited attempts
 	DependsOn             string               `json:"dependsOn,omitempty"`          // Name of the challenge that must be solved first
 	CoverImg              string               `json:"coverImg,omitempty"`            // Cover image filename (e.g., "cover_resized.webp")
+	Emoji                 string               `json:"emoji,omitempty"`               // Emoji to display when no cover image
+	CoverPositionX        float64              `gorm:"default:50" json:"coverPositionX"` // X position for cover image (0-100, default 50 = center)
+	CoverPositionY        float64              `gorm:"default:50" json:"coverPositionY"` // Y position for cover image (0-100, default 50 = center)
+	CoverZoom             float64              `gorm:"default:100" json:"coverZoom"`     // Zoom level for cover image (100-200, default 100 = no zoom)
 }

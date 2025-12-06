@@ -10,96 +10,101 @@ All challenges must be placed in the following folder:
 minio/challenges/[challenge_name]
 ```
 
-Inside `[challenge_name]`, there **must** be a file called `chall.yml`. This file defines the challenge.  
+Inside `[challenge_name]`, there **must** be a file called `chall.yml`. This file defines the challenge.
 
 Examples of YAML files can be found in [docs/challenges/](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges)
 
 ### Types of challenges
 
-1. **Standard**  
-   - A flag to find based on a description.  
-   - Exemple : [docs/challenges/standard.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
-      ```yaml
-      name: "Demo 01"
-      description: |
-         Standard challenge example
+1. **Standard**
+   * A flag to find based on a description.
+   *   Exemple : [docs/challenges/standard.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
 
-         Make a team and enter the flag "flag" to solve it !
-      category: "pwn"
-      difficulty: "easy"
-      type: "standard"
-      decay: "Logarithmic - Medium"
-      author: "Kevin'MIT"
-      hidden: false
-      flags: ["flag"]
-      points: 123
-      ```
+       ```yaml
+       name: "Demo 01"
+       description: |
+          Standard challenge example
 
-2. **Docker**  
-   - A flag to find in a dedicated containerized environment.  
-   - Exemple : [docs/challenges/docker.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
-      ```yaml
-      name: "Demo 02 (Docker)"
-      description: |
-         Simple challenge using Docker container.
+          Make a team and enter the flag "flag" to solve it !
+       category: "pwn"
+       difficulty: "easy"
+       type: "standard"
+       decay: "Logarithmic - Medium"
+       author: "Kevin'MIT"
+       hidden: false
+       flags: ["flag"]
+       points: 123
+       ```
+2.  **Docker**
 
-         The flag is "flag"
-      category: web
-      difficulty: easy
-      type: docker
-      decay: "Logarithmic - Medium"
-      author: "Kevin'MITDocker"
-      flags: ["flag"]
-      hidden: false
-      points: 500
-      ports: [5001]
-      connection_info: ["http://$ip:[5001]"] 
-      ```
-   Ports that need to be mapped in `connection_info` must framed by `[` `]`
+    * A flag to find in a dedicated containerized environment.
+    *   Exemple : [docs/challenges/docker.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
 
-3. **Geo**  
-   - A location to pin on a world map based on clues in the description.  
-   - Exemple : [docs/challenges/geo.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
-      ```yaml
-      name: "Demo 03 (Geo)"
-      description: |
-         This challenge is a 'geo' challenge. The goal is to find a location on the earth's map.
+        ```yaml
+        name: "Demo 02 (Docker)"
+        description: |
+           Simple challenge using Docker container.
 
-         Place your pin at the correct location (Eiffel Tower)
-      category: misc
-      difficulty: easy
-      type: geo
-      decay: "Logarithmic - Medium"
-      author: "Kevin'MITGeo"
-      hidden: false
-      flags: []
-      points: 200
-      target_lat: 48.85837
-      target_lng: 2.294481
-      radius_km: 1.0
-      ```
+           The flag is "flag"
+        category: web
+        difficulty: easy
+        type: docker
+        decay: "Logarithmic - Medium"
+        author: "Kevin'MITDocker"
+        flags: ["flag"]
+        hidden: false
+        points: 500
+        ports: [5001]
+        connection_info: ["http://$ip:[5001]"] 
+        ```
 
-4. **Compose**
-   - A flag to find in an environment with multiple dedicated containers.  
-   - Exemple : [docs/challenges/compose.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
-      ```yaml
-      name: "Demo 04 (Compose)"
-      description: |
-         Compose challenge example
+    Ports that need to be mapped in `connection_info` must framed by `[` `]`
+3. **Geo**
+   * A location to pin on a world map based on clues in the description.
+   *   Exemple : [docs/challenges/geo.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
 
-         Enter the flag "flag" to solve it !
-      category: "pwn"
-      difficulty: "easy"
-      type: "compose"
-      decay: "Logarithmic - Medium"
-      author: "h0lm0"
-      hidden: false
-      flags: ["flag"]
-      points: 123
-      ports: [80,22]
-      connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
-      ```
-   Ports that need to be mapped in `connection_info` must framed by `[` `]`
+       ```yaml
+       name: "Demo 03 (Geo)"
+       description: |
+          This challenge is a 'geo' challenge. The goal is to find a location on the earth's map.
+
+          Place your pin at the correct location (Eiffel Tower)
+       category: misc
+       difficulty: easy
+       type: geo
+       decay: "Logarithmic - Medium"
+       author: "Kevin'MITGeo"
+       hidden: false
+       flags: []
+       points: 200
+       target_lat: 48.85837
+       target_lng: 2.294481
+       radius_km: 1.0
+       ```
+4.  **Compose**
+
+    * A flag to find in an environment with multiple dedicated containers.
+    *   Exemple : [docs/challenges/compose.chall.yml](https://github.com/h0lm0/pwnthemall/tree/main/docs/challenges/standard.chall.yml)
+
+        ```yaml
+        name: "Demo 04 (Compose)"
+        description: |
+           Compose challenge example
+
+           Enter the flag "flag" to solve it !
+        category: "pwn"
+        difficulty: "easy"
+        type: "compose"
+        decay: "Logarithmic - Medium"
+        author: "h0lm0"
+        hidden: false
+        flags: ["flag"]
+        points: 123
+        ports: [80,22]
+        connection_info: ["http://$ip:[80]", "ssh -p [22] guest@$ip"]
+        ```
+
+    Ports that need to be mapped in `connection_info` must framed by `[` `]`
 
 ## Cover images
 
@@ -124,23 +129,24 @@ points: 100
 
 ### Requirements
 
-- **Formats**: JPG, PNG, GIF, WebP
-- **Max file size**: 5MB ( can be configured )
-- **Max dimensions**: 8000x8000px ( can be configured )
-- **Recommended**: 800x450px (16:9)
+* **Formats**: JPG, PNG, GIF, WebP
+* **Max file size**: 5MB ( can be configured )
+* **Max dimensions**: 8000x8000px ( can be configured )
+* **Recommended**: 800x450px (16:9)
 
 ### Processing
 
 During challenge sync:
-- Image format and size validation
-- Automatic resize to 800x450px
-- Conversion to PNG format ( or stays as GIF )
-- Storage in MinIO
+
+* Image format and size validation
+* Automatic resize to 800x450px
+* Conversion to PNG format ( or stays as GIF )
+* Storage in MinIO
 
 ### Display
 
-- Cover images appear at the top of challenge cards
-- Challenges without `cover_img` display with a default placeholder
+* Cover images appear at the top of challenge cards
+* Challenges without `cover_img` display with a default placeholder
 
 ### Example structure
 
@@ -159,9 +165,9 @@ The `depends_on` field is **optional** and allows you to create challenge chains
 
 ### How it works
 
-- Challenges are **hidden** from teams until the dependency is solved
-- Once the required challenge is solved, the dependent challenge appears in the list
-- Admins can always see and access all challenges regardless of dependencies
+* Challenges are **hidden** from teams until the dependency is solved
+* Once the required challenge is solved, the dependent challenge appears in the list
+* Admins can always see and access all challenges regardless of dependencies
 
 ### Usage
 
@@ -209,29 +215,30 @@ The `decay` field is **optional** and controls how challenge points decrease as 
 
 ### Available decay formulas
 
-- **No Decay** - Points remain constant regardless of solves
-- **Logarithmic - Ultra Slow** - Very minimal decay (step: 10, min: 10 pts)
-- **Logarithmic - Very Slow** - Slow decay (step: 25, min: 25 pts)
-- **Logarithmic - Slow** - Moderately slow decay (step: 50, min: 100 pts)
-- **Logarithmic - Medium** - Balanced decay (step: 75, min: 75 pts)
-- **Logarithmic - Fast** - Aggressive decay (step: 100, min: 50 pts)
+* **No Decay** - Points remain constant regardless of solves
+* **Logarithmic - Ultra Slow** - Very minimal decay (step: 10, min: 10 pts)
+* **Logarithmic - Very Slow** - Slow decay (step: 25, min: 25 pts)
+* **Logarithmic - Slow** - Moderately slow decay (step: 50, min: 100 pts)
+* **Logarithmic - Medium** - Balanced decay (step: 75, min: 75 pts)
+* **Logarithmic - Fast** - Aggressive decay (step: 100, min: 50 pts)
 
 ### How it works
 
 Logarithmic decay uses the formula: `points = basePoints - (step × log₂(solveNumber))`
 
-- The **first solve** always receives full points (no decay)
-- Points decay quickly for early solves, then slow down
-- Points never go below the specified minimum
+* The **first solve** always receives full points (no decay)
+* Points decay quickly for early solves, then slow down
+* Points never go below the specified minimum
 
 Example with 500 base points and "Logarithmic - Medium" (step: 75, min: 75):
-- 1st solve: 500 pts
-- 2nd solve: 425 pts (500 - 75×1)
-- 3rd solve: 381 pts (500 - 75×1.58)
-- 5th solve: 326 pts (500 - 75×2.32)
-- 10th solve: 251 pts (500 - 75×3.32)
-- 20th solve: 176 pts (500 - 75×4.32)
-- 50th+ solve: 75 pts (minimum)
+
+* 1st solve: 500 pts
+* 2nd solve: 425 pts (500 - 75×1)
+* 3rd solve: 381 pts (500 - 75×1.58)
+* 5th solve: 326 pts (500 - 75×2.32)
+* 10th solve: 251 pts (500 - 75×3.32)
+* 20th solve: 176 pts (500 - 75×4.32)
+* 50th+ solve: 75 pts (minimum)
 
 ### Usage
 
@@ -243,12 +250,14 @@ decay: "Logarithmic - Medium"
 # No need to specify the decay field, or:
 decay: "No Decay"
 ```
+
 ### FirstBlood bonuses
 
 FirstBlood bonuses are **permanent** and decay does not apply:
-- Base challenge points: subject to decay
-- FirstBlood bonus: fixed, never changes
-- Total score = Current Points + FirstBlood Bonus
+
+* Base challenge points: subject to decay
+* FirstBlood bonus: fixed, never changes
+* Total score = Current Points + FirstBlood Bonus
 
 ## Challenge files
 
@@ -293,16 +302,18 @@ files: [readme.txt, static/hint.jpg, tools/decrypt.py]
 ### Files validation
 
 When syncing challenges, the system checks:
-- **File existence**: All referenced files must exist in MinIO
-- **File size**: Max 50MB per file
-- **Total size**: Max 200MB for all files combined
+
+* **File existence**: All referenced files must exist in MinIO
+* **File size**: Max 50MB per file
+* **Total size**: Max 200MB for all files combined
 
 ### How users see files
 
 Files appear at the top of the challenge description page with:
-- File icons based on type (code, archive, text, etc.)
-- File size display
-- One-click download
+
+* File icons based on type (code, archive, text, etc.)
+* File size display
+* One-click download
 
 ### Challenge structure example
 
@@ -323,4 +334,4 @@ Challenge synchronization is handled via the `pta-cli.sh` script. Once your YAML
 bash pta-cli.sh minio sync [--env dev|prod|demo] challenges
 ```
 
-![sync-vhs](../assets/minio-sync.gif)
+![sync-vhs](.gitbook/assets/minio-sync.gif)

@@ -1,7 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"time"
@@ -10,6 +12,15 @@ import (
 	"github.com/pwnthemall/pwnthemall/backend/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+)
+
+// Constants for demo data queries
+const (
+	queryDemoTeamPattern = "Demo Team %"
+	queryNameLike        = "name LIKE ?"
+	queryTeamIDIn        = "team_id IN ?"
+	queryDemoUserPattern = "demo-user-%"
 )
 
 // getEnvWithDefault returns the environment variable value or a default if not set
@@ -404,4 +415,242 @@ func SeedDatabase() {
 	seedDecayFormulas()
 	seedDefaultUsers()
 
+}
+
+// SeedDemoData creates demo teams, users, and solves with timestamps spread over a time range
+// This is useful for testing the scoreboard timeline without using Playwright tests
+func SeedDemoData(teamCount int, timeRangeHours int) error {
+	log.Printf("Seeding: Demo data with %d teams over %d hours...\n", teamCount, timeRangeHours)
+
+	// Check if challenges exist
+	var challengeCount int64
+	if err := DB.Model(&models.Challenge{}).Where("hidden = ?", false).Count(&challengeCount).Error; err != nil {
+		return fmt.Errorf("failed to count challenges: %w", err)
+	}
+	if challengeCount == 0 {
+		return fmt.Errorf("no challenges found - please sync challenges from MinIO first")
+	}
+	log.Printf("Found %d challenges to use for demo data\n", challengeCount)
+
+	// Get all visible challenges
+	var challenges []models.Challenge
+	if err := DB.Preload("DecayFormula").Preload("Flags").Where("hidden = ?", false).Find(&challenges).Error; err != nil {
+		return fmt.Errorf("failed to fetch challenges: %w", err)
+	}
+
+	// Check for existing demo data
+	var existingDemoTeams int64
+	if err := DB.Model(&models.Team{}).Where(queryNameLike, queryDemoTeamPattern).Count(&existingDemoTeams).Error; err != nil {
+		return fmt.Errorf("failed to check existing demo teams: %w", err)
+	}
+	if existingDemoTeams > 0 {
+		log.Printf("Found %d existing demo teams - skipping creation (use clean-demo first)\n", existingDemoTeams)
+		return nil
+	}
+
+	// Calculate time range
+	now := time.Now()
+	startTime := now.Add(-time.Duration(timeRangeHours) * time.Hour)
+	timeRange := now.Sub(startTime)
+
+	// Create teams and users
+	var createdTeams []models.Team
+	demoPassword := "demo123"
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(demoPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash demo password: %w", err)
+	}
+
+	for i := 1; i <= teamCount; i++ {
+		// Create user first
+		user := models.User{
+			Username: fmt.Sprintf("demo-user-%d", i),
+			Email:    fmt.Sprintf("demo%d@demo.local", i),
+			Password: string(hashedPassword),
+			Role:     "member",
+		}
+		if err := DB.Create(&user).Error; err != nil {
+			log.Printf("Failed to create demo user %d: %v\n", i, err)
+			continue
+		}
+
+		// Create team
+		team := models.Team{
+			Name:      fmt.Sprintf("Demo Team %d", i),
+			Password:  string(hashedPassword),
+			CreatorID: user.ID,
+		}
+		if err := DB.Create(&team).Error; err != nil {
+			log.Printf("Failed to create demo team %d: %v\n", i, err)
+			continue
+		}
+
+		// Assign user to team
+		user.TeamID = &team.ID
+		if err := DB.Save(&user).Error; err != nil {
+			log.Printf("Failed to assign user to team %d: %v\n", i, err)
+			continue
+		}
+
+		createdTeams = append(createdTeams, team)
+		log.Printf("Created Demo Team %d with user demo-user-%d\n", i, i)
+	}
+
+	// Create solves with spread timestamps
+	totalSolves := 0
+	challengeFirstBlood := make(map[uint]int) // Track first blood position per challenge
+
+	for _, team := range createdTeams {
+		// Each team solves 1-5 random challenges
+		solvesCount := 1 + (int(team.ID) % 5) // Deterministic but varied: 1-5 solves
+
+		// Get team's user
+		var user models.User
+		if err := DB.Where("team_id = ?", team.ID).First(&user).Error; err != nil {
+			log.Printf("Failed to find user for team %d: %v\n", team.ID, err)
+			continue
+		}
+
+		// Shuffle challenges for this team (using team ID as seed for determinism)
+		teamChallenges := make([]models.Challenge, len(challenges))
+		copy(teamChallenges, challenges)
+		shuffleChallenges(teamChallenges, int64(team.ID))
+
+		for j := 0; j < solvesCount && j < len(teamChallenges); j++ {
+			challenge := teamChallenges[j]
+
+			// Check if team already solved this challenge 
+			var existingSolve models.Solve
+			result := DB.Session(&gorm.Session{Logger: DB.Logger.LogMode(logger.Silent)}).
+				Where("team_id = ? AND challenge_id = ?", team.ID, challenge.ID).First(&existingSolve)
+			if result.Error == nil {
+				continue // Already solved
+			}
+
+			// Generate random timestamp within the time range
+			randomOffset := time.Duration(rand.Int63n(int64(timeRange)))
+			solveTime := startTime.Add(randomOffset)
+
+			// Get solve position for this challenge
+			position := challengeFirstBlood[challenge.ID]
+			challengeFirstBlood[challenge.ID]++
+
+			// Calculate points based on position
+			basePoints := challenge.Points
+			if challenge.DecayFormula != nil && challenge.DecayFormula.Type == "logarithmic" {
+				// Simple decay calculation
+				if position > 0 {
+					decayFactor := 1.0 - (float64(position) * float64(challenge.DecayFormula.Step) / 1000.0)
+					if decayFactor < float64(challenge.DecayFormula.MinPoints)/float64(basePoints) {
+						decayFactor = float64(challenge.DecayFormula.MinPoints) / float64(basePoints)
+					}
+					basePoints = int(float64(basePoints) * decayFactor)
+				}
+			}
+
+			// Add first blood bonus if applicable
+			if challenge.EnableFirstBlood && position < len(challenge.FirstBloodBonuses) {
+				basePoints += int(challenge.FirstBloodBonuses[position])
+			}
+
+			// Create solve entry
+			solve := models.Solve{
+				TeamID:      team.ID,
+				ChallengeID: challenge.ID,
+				UserID:      user.ID,
+				Points:      basePoints,
+				SolvedBy:    user.Username,
+			}
+
+			// Set CreatedAt manually for the spread effect
+			if err := DB.Create(&solve).Error; err != nil {
+				log.Printf("Failed to create solve for team %d, challenge %d: %v\n", team.ID, challenge.ID, err)
+				continue
+			}
+
+			// Update the timestamp directly (GORM auto-sets CreatedAt)
+			if err := DB.Model(&solve).Update("created_at", solveTime).Error; err != nil {
+				log.Printf("Failed to update solve timestamp: %v\n", err)
+			}
+
+			// Create first blood entry if applicable
+			if challenge.EnableFirstBlood && position < len(challenge.FirstBloodBonuses) {
+				badge := "trophy"
+				if position < len(challenge.FirstBloodBadges) {
+					badge = challenge.FirstBloodBadges[position]
+				}
+				firstBlood := models.FirstBlood{
+					ChallengeID: challenge.ID,
+					TeamID:      team.ID,
+					UserID:      user.ID,
+					Bonuses:     []int64{challenge.FirstBloodBonuses[position]},
+					Badges:      []string{badge},
+				}
+				DB.Create(&firstBlood)
+			}
+
+			totalSolves++
+		}
+	}
+
+	log.Printf("Seeding: Demo data complete - created %d teams and %d solves\n", len(createdTeams), totalSolves)
+	log.Printf("Solve timestamps spread from %s to %s\n", startTime.Format(time.RFC3339), now.Format(time.RFC3339))
+	return nil
+}
+
+// CleanDemoData removes all demo teams, users, and their associated data
+func CleanDemoData() error {
+	log.Println("Cleaning: Demo data...")
+
+	// Get demo team IDs
+	var demoTeams []models.Team
+	if err := DB.Where(queryNameLike, queryDemoTeamPattern).Find(&demoTeams).Error; err != nil {
+		return fmt.Errorf("failed to find demo teams: %w", err)
+	}
+
+	if len(demoTeams) == 0 {
+		log.Println("No demo teams found to clean")
+		return nil
+	}
+
+	teamIDs := make([]uint, len(demoTeams))
+	for i, team := range demoTeams {
+		teamIDs[i] = team.ID
+	}
+
+	// Delete solves for demo teams
+	if err := DB.Where(queryTeamIDIn, teamIDs).Delete(&models.Solve{}).Error; err != nil {
+		log.Printf("Failed to delete demo solves: %v\n", err)
+	}
+
+	// Delete first bloods for demo teams
+	if err := DB.Where(queryTeamIDIn, teamIDs).Delete(&models.FirstBlood{}).Error; err != nil {
+		log.Printf("Failed to delete demo first bloods: %v\n", err)
+	}
+
+	// Delete hint purchases for demo teams
+	if err := DB.Where(queryTeamIDIn, teamIDs).Delete(&models.HintPurchase{}).Error; err != nil {
+		log.Printf("Failed to delete demo hint purchases: %v\n", err)
+	}
+
+	// Delete demo users
+	if err := DB.Where("username LIKE ?", queryDemoUserPattern).Delete(&models.User{}).Error; err != nil {
+		log.Printf("Failed to delete demo users: %v\n", err)
+	}
+
+	// Delete demo teams
+	if err := DB.Where(queryNameLike, queryDemoTeamPattern).Delete(&models.Team{}).Error; err != nil {
+		return fmt.Errorf("failed to delete demo teams: %w", err)
+	}
+
+	log.Printf("Cleaning: Removed %d demo teams and associated data\n", len(demoTeams))
+	return nil
+}
+
+func shuffleChallenges(challenges []models.Challenge, seed int64) {
+	r := rand.New(rand.NewSource(seed))
+	for i := len(challenges) - 1; i > 0; i-- {
+		j := r.Intn(i + 1)
+		challenges[i], challenges[j] = challenges[j], challenges[i]
+	}
 }

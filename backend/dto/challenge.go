@@ -31,12 +31,15 @@ type ChallengeAdminUpdateRequest struct {
 
 // ChallengeGeneralUpdateRequest represents general challenge info update
 type ChallengeGeneralUpdateRequest struct {
-	Name         string `json:"name" binding:"required"`
-	Description  string `json:"description" binding:"required"`
-	Author       string `json:"author"`
-	Hidden       *bool  `json:"hidden"`
-	CategoryID   *uint  `json:"categoryId"`
-	DifficultyID *uint  `json:"difficultyId"`
+	Name           string `json:"name" binding:"required"`
+	Description    string `json:"description" binding:"required"`
+	Author         string `json:"author"`
+	Hidden         *bool  `json:"hidden"`
+	CategoryID     *uint  `json:"categoryId"`
+	DifficultyID   *uint  `json:"difficultyId"`
+	CoverPositionX *float64 `json:"coverPositionX"`
+	CoverPositionY *float64 `json:"coverPositionY"`
+	CoverZoom      *float64 `json:"coverZoom"`
 }
 
 // HintRequest represents hint creation/update request

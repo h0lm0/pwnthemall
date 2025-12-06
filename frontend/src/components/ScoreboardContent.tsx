@@ -11,7 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useUser } from '@/context/UserContext';
 import { IndividualLeaderboardEntry, TeamLeaderboardEntry } from '@/models/Leaderboard';
 import { cn } from '@/lib/utils';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 
 export default function ScoreboardContent() {
   const { t } = useLanguage();
@@ -24,28 +24,56 @@ export default function ScoreboardContent() {
   const [activeTab, setActiveTab] = useState('individual');
   const [individualPage, setIndividualPage] = useState(1);
   const [teamPage, setTeamPage] = useState(1);
-  const [timelineData, setTimelineData] = useState<any[]>([]);
+  const [timelineData, setTimelineData] = useState<{ teams?: any[], users?: any[], timeline: any[] } | null>(null);
   const [chartLoading, setChartLoading] = useState(true);
+  const [hiddenEntities, setHiddenEntities] = useState<Set<string>>(new Set());
+  const [hoveredEntity, setHoveredEntity] = useState<string | null>(null);
   const itemsPerPage = 25;
+
+  // Toggle entity visibility in chart
+  const toggleEntityVisibility = (entityName: string) => {
+    setHiddenEntities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(entityName)) {
+        newSet.delete(entityName);
+      } else {
+        newSet.add(entityName);
+      }
+      return newSet;
+    });
+  };
+
+  // Reset hidden entities when tab changes
+  useEffect(() => {
+    setHiddenEntities(new Set());
+    setHoveredEntity(null);
+  }, [activeTab]);
 
   useEffect(() => {
     fetchLeaderboards();
-    fetchTimelineData();
   }, []);
 
-  const fetchTimelineData = async () => {
+  // Fetch timeline data when active tab changes
+  useEffect(() => {
+    fetchTimelineData(activeTab);
+  }, [activeTab]);
+
+  const fetchTimelineData = async (tab: string) => {
     setChartLoading(true);
     try {
-      // Fetch solve timeline from backend - we'll need to create this endpoint
-      const response = await axios.get('/api/teams/timeline');
-      const data = response.data || [];
-      
-      // Group solves by date and accumulate for top teams
-      setTimelineData(data);
+      // Fetch appropriate timeline based on active tab
+      const endpoint = tab === 'individual' ? '/api/users/timeline' : '/api/teams/timeline';
+      const response = await axios.get(endpoint);
+      const data = response.data;
+      // Format: { teams/users: [...], timeline: [...] }
+      if (data && (data.teams || data.users) && data.timeline) {
+        setTimelineData(data);
+      } else {
+        setTimelineData(null);
+      }
     } catch (error) {
       console.error('Failed to fetch timeline data:', error);
-      // For now, generate mock data based on current leaderboard
-      setTimelineData([]);
+      setTimelineData(null);
     } finally {
       setChartLoading(false);
     }
@@ -54,10 +82,16 @@ export default function ScoreboardContent() {
   const fetchLeaderboards = async () => {
     setLoading(true);
     try {
-      // Fetch team leaderboard - this is the correct endpoint
-      const teamsResponse = await axios.get('/api/teams/leaderboard');
-      const teamsData = teamsResponse.data || [];
+      // Fetch both leaderboards in parallel
+      const [teamsResponse, individualResponse] = await Promise.all([
+        axios.get('/api/teams/leaderboard'),
+        axios.get('/api/users/leaderboard')
+      ]);
       
+      const teamsData = teamsResponse.data || [];
+      const individualData = individualResponse.data || [];
+      
+      // Map team leaderboard data
       const teams = teamsData.map((t: any, index: number) => ({
         rank: index + 1,
         id: t.team?.id || t.id,
@@ -67,36 +101,16 @@ export default function ScoreboardContent() {
         memberCount: t.team?.users?.length || 0
       }));
 
-      // For individual leaderboard, we need to calculate from team data
-      // Since solves belong to teams, we extract individual contributions
-      const individualMap = new Map<number, IndividualLeaderboardEntry>();
-      
-      teamsData.forEach((teamScore: any) => {
-        const team = teamScore.team;
-        if (team && team.users) {
-          team.users.forEach((u: any) => {
-            if (!individualMap.has(u.id)) {
-              individualMap.set(u.id, {
-                rank: 0,
-                id: u.id,
-                username: u.username,
-                points: teamScore.totalScore || 0, // Team's total score
-                solves: teamScore.solveCount || 0, // Team's solve count
-                teamId: team.id,
-                teamName: team.name
-              });
-            }
-          });
-        }
-      });
-
-      const users = Array.from(individualMap.values())
-        .sort((a, b) => b.points - a.points);
-      
-      // Recalculate ranks after sorting
-      users.forEach((u, index) => {
-        u.rank = index + 1;
-      });
+      // Map individual leaderboard data from the new API
+      const users = individualData.map((entry: any, index: number) => ({
+        rank: index + 1,
+        id: entry.user?.id || entry.id,
+        username: entry.user?.username || entry.username,
+        points: entry.totalScore || entry.points || 0,
+        solves: entry.solveCount || entry.solves || 0,
+        teamId: entry.user?.teamId || entry.teamId,
+        teamName: entry.teamName || ''
+      }));
 
       setIndividualData(users);
       setTeamData(teams);
@@ -239,7 +253,10 @@ export default function ScoreboardContent() {
               {t('scoreboard.solve_activity') || 'Solve activity over time'}
             </CardTitle>
             <CardDescription>
-              {t('scoreboard.solve_activity_description') || 'Track how teams progress through challenges'}
+              {activeTab === 'individual' 
+                ? (t('scoreboard.solve_activity_description_individual') || 'Track how top players progress through challenges')
+                : (t('scoreboard.solve_activity_description') || 'Track how teams progress through challenges')
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -247,72 +264,102 @@ export default function ScoreboardContent() {
               <div className="flex items-center justify-center h-[300px]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 dark:border-cyan-400"></div>
               </div>
-            ) : timelineData.length === 0 ? (
+            ) : !timelineData || timelineData.timeline.length === 0 ? (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                 {t('scoreboard.no_solve_data') || 'No solve data available yet'}
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={timelineData}>
-                  <defs>
-                    <linearGradient id="colorTeam1" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorTeam2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorTeam3" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="time" 
-                    className="text-xs"
-                    tick={{ fill: 'currentColor' }}
-                  />
-                  <YAxis 
-                    className="text-xs"
-                    tick={{ fill: 'currentColor' }}
-                    label={{ value: t('scoreboard.points') || 'Points', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--popover))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '0.5rem'
-                    }}
-                  />
-                  <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="team1" 
-                    stroke="#3b82f6" 
-                    fillOpacity={1}
-                    fill="url(#colorTeam1)" 
-                    name={timelineData[0]?.team1Name || 'Team 1'}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="team2" 
-                    stroke="#10b981" 
-                    fillOpacity={1}
-                    fill="url(#colorTeam2)"
-                    name={timelineData[0]?.team2Name || 'Team 2'}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="team3" 
-                    stroke="#f59e0b" 
-                    fillOpacity={1}
-                    fill="url(#colorTeam3)"
-                    name={timelineData[0]?.team3Name || 'Team 3'}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={timelineData.timeline.map(point => ({
+                    time: point.time,
+                    ...point.scores
+                  }))}>
+                    <defs>
+                      {/* Handle both teams (for team view) and users (for individual view) */}
+                      {(timelineData.teams || timelineData.users || []).map((entity: any, index: number) => (
+                        <linearGradient key={entity.id} id={`colorEntity${index}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={entity.color} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={entity.color} stopOpacity={0}/>
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="time" 
+                      className="text-xs"
+                      tick={{ fill: 'currentColor' }}
+                    />
+                    <YAxis 
+                      className="text-xs"
+                      tick={{ fill: 'currentColor' }}
+                      label={{ value: t('scoreboard.points') || 'Points', angle: -90, position: 'insideLeft' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--popover))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '0.5rem'
+                      }}
+                    />
+                    {/* Render areas for either teams or users - only show non-hidden entities */}
+                    {(timelineData.teams || timelineData.users || [])
+                      .filter((entity: any) => {
+                        const entityName = entity.name || entity.username;
+                        // If hovering, only show the hovered entity
+                        if (hoveredEntity) {
+                          return entityName === hoveredEntity;
+                        }
+                        // Otherwise respect the hidden state
+                        return !hiddenEntities.has(entityName);
+                      })
+                      .map((entity: any, index: number) => (
+                        <Area 
+                          key={entity.id}
+                          type="monotone" 
+                          dataKey={entity.name || entity.username}
+                          stroke={entity.color}
+                          fillOpacity={1}
+                          fill={`url(#colorEntity${index})`}
+                          name={entity.name || entity.username}
+                        />
+                      ))}
+                  </AreaChart>
+                </ResponsiveContainer>
+                {/* Custom clickable legend */}
+                <div className="flex flex-wrap justify-center gap-3 mt-4">
+                  {(timelineData.teams || timelineData.users || []).map((entity: any) => {
+                    const entityName = entity.name || entity.username;
+                    const isHidden = hiddenEntities.has(entityName);
+                    const isHovered = hoveredEntity === entityName;
+                    return (
+                      <button
+                        key={entity.id}
+                        onClick={() => toggleEntityVisibility(entityName)}
+                        onMouseEnter={() => setHoveredEntity(entityName)}
+                        onMouseLeave={() => setHoveredEntity(null)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                          "border hover:scale-105",
+                          isHovered
+                            ? "ring-2 ring-offset-2 ring-offset-background scale-110"
+                            : "",
+                          isHidden 
+                            ? "opacity-40 bg-muted text-muted-foreground border-muted-foreground/30 line-through" 
+                            : "bg-background border-border"
+                        )}
+                        style={isHovered ? { ['--tw-ring-color' as any]: entity.color } : {}}
+                      >
+                        <span 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: isHidden ? '#888' : entity.color }}
+                        />
+                        {entityName}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

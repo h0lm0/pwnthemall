@@ -11,14 +11,10 @@ type DashboardStats struct {
 
 // ChallengeStats represents challenge-related statistics
 type ChallengeStats struct {
-	Total      int64            `json:"total"`
-	Hidden     int64            `json:"hidden"`
-	Intro      int64            `json:"intro"`
-	Easy       int64            `json:"easy"`
-	Medium     int64            `json:"medium"`
-	Hard       int64            `json:"hard"`
-	Insane     int64            `json:"insane"`
-	Categories map[string]int64 `json:"categories"`
+	Total        int64            `json:"total"`
+	Hidden       int64            `json:"hidden"`
+	Difficulties map[string]int64 `json:"difficulties"`
+	Categories   map[string]int64 `json:"categories"`
 }
 
 // UserStats represents user-related statistics
