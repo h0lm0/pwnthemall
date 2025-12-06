@@ -115,7 +115,6 @@ function minio_sync() {
     echo "[+] Sync $folder → MinIO (bucket: $bucket) using $compose_file"
 
     docker compose -f "$compose_file" exec -T "$MINIO_CONTAINER" mc mb --ignore-existing "$MINIO_ALIAS/$bucket"
-    # Note: --remove flag removed to preserve processed files (e.g., cover_resized.png)
     docker compose -f "$compose_file" exec -T "$MINIO_CONTAINER" mc mirror --overwrite "$container_path" "$MINIO_ALIAS/$bucket"
 
     echo "[✓] Sync successful"
@@ -465,7 +464,11 @@ function compose_down() {
     fi
 
     echo "[+] Stopping and removing containers using $compose_file"
-    docker compose -f "$compose_file" down -v
+    if [[ $env == "prod" ]]; then
+        docker compose -f "$compose_file" down
+    else 
+        docker compose -f "$compose_file" down -v
+    fi
     echo "[✓] Compose down completed"
 }
 

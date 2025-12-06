@@ -22,7 +22,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.94
 	github.com/pwnthemall/pwnthemall/backend/shared v0.0.0-00010101000000-000000000000
 	github.com/vishvananda/netlink v1.3.1
-	golang.org/x/image v0.18.0
+	golang.org/x/image v0.23.0
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/gorm v1.31.1
 )
