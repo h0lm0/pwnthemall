@@ -374,6 +374,11 @@ func validateSubmissionPreconditions(c *gin.Context, user *models.User, challeng
 		return false
 	}
 
+	if !CheckChallengeDependancies(user, challenge) {
+		utils.NotFoundError(c, errChallengeNotFound)
+		return false
+	}
+
 	return true
 }
 

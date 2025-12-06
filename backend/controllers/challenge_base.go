@@ -139,6 +139,24 @@ func buildChallengeWithSolved(challenge models.Challenge, solvedChallengeIds []u
 	return item
 }
 
+func CheckChallengeDependancies(user *models.User, challenge models.Challenge) bool {
+	solvedNamesMap := make(map[string]bool)
+	var solvedChallenges []models.Challenge
+	config.DB.Table("challenges").
+		Joins("JOIN solves ON solves.challenge_id = challenges.id").
+		Where("solves.team_id = ?", user.Team.ID).
+		Select("challenges.name").
+		Find(&solvedChallenges)
+	for _, ch := range solvedChallenges {
+		solvedNamesMap[ch.Name] = true
+	}
+
+	if challenge.DependsOn != "" && !solvedNamesMap[challenge.DependsOn] {
+		return false
+	}
+	return true
+}
+
 // GetChallenges returns all visible challenges
 func GetChallenges(c *gin.Context) {
 	userI, _ := c.Get("user")
@@ -159,27 +177,16 @@ func GetChallenges(c *gin.Context) {
 		utils.OKResponse(c, challenges)
 		return
 	}
-	solvedNamesMap := make(map[string]bool)
-	var solvedChallenges []models.Challenge
-	config.DB.Table("challenges").
-		Joins("JOIN solves ON solves.challenge_id = challenges.id").
-		Where("solves.team_id = ?", user.Team.ID).
-		Select("challenges.name").
-		Find(&solvedChallenges)
-	for _, ch := range solvedChallenges {
-		solvedNamesMap[ch.Name] = true
-	}
 
 	filtered := make([]models.Challenge, 0, len(challenges))
 	decayService := utils.NewDecay()
 
 	for i := range challenges {
-		chall := challenges[i]
-		if chall.DependsOn != "" && !solvedNamesMap[chall.DependsOn] {
+		if !CheckChallengeDependancies(user, challenges[i]) {
 			continue
 		}
-		chall.CurrentPoints = decayService.CalculateCurrentPoints(&chall)
-		filtered = append(filtered, chall)
+		challenges[i].CurrentPoints = decayService.CalculateCurrentPoints(&challenges[i])
+		filtered = append(filtered, challenges[i])
 	}
 
 	utils.OKResponse(c, filtered)
@@ -203,17 +210,7 @@ func GetChallenge(c *gin.Context) {
 		return
 	}
 
-	solvedNamesMap := make(map[string]bool)
-	var solvedChallenges []models.Challenge
-	config.DB.Table("challenges").
-		Joins("JOIN solves ON solves.challenge_id = challenges.id").
-		Where("solves.team_id = ?", user.Team.ID).
-		Select("challenges.name").
-		Find(&solvedChallenges)
-	for _, ch := range solvedChallenges {
-		solvedNamesMap[ch.Name] = true
-	}
-	if challenge.DependsOn != "" && !solvedNamesMap[challenge.DependsOn] {
+	if !CheckChallengeDependancies(user, challenge) {
 		utils.NotFoundError(c, "challenge_not_found")
 		return
 	}
