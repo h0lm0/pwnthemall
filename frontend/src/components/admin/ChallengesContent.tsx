@@ -1,6 +1,6 @@
 import Head from "next/head"
 import { useState, useMemo, useEffect } from "react"
-import { useTranslation } from "react-i18next"
+import { useLanguage } from "@/context/LanguageContext"
 import { Challenge } from "@/models/Challenge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,7 +23,7 @@ interface ChallengesContentProps {
 }
 
 export default function ChallengesContent({ challenges, onRefresh }: ChallengesContentProps) {
-  const { t } = useTranslation()
+  const { t } = useLanguage()
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
