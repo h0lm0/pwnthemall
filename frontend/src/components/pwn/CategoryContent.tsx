@@ -419,6 +419,7 @@ const CategoryContent = ({ cat, challenges = [], onChallengeUpdate, ctfStatus, c
                     className="h-full w-full object-cover rounded-t-lg"
                     positionX={challenge.coverPositionX}
                     positionY={challenge.coverPositionY}
+                    zoom={challenge.coverZoom}
                   />
                 ) : (
                   <div className="h-full w-full rounded-t-lg flex items-center justify-center bg-muted/50">

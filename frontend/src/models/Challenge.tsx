@@ -55,6 +55,7 @@ export interface Challenge {
   emoji?: string
   coverPositionX?: number  // 0-100, supports decimals
   coverPositionY?: number  // 0-100, supports decimals
+  coverZoom?: number       // 100-200, default 100 (no zoom)
 }
 
 export interface FirstBlood {

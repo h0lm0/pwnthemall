@@ -176,6 +176,9 @@ func UpdateChallengeGeneralAdmin(c *gin.Context) {
 	if req.CoverPositionY != nil {
 		challenge.CoverPositionY = *req.CoverPositionY
 	}
+	if req.CoverZoom != nil {
+		challenge.CoverZoom = *req.CoverZoom
+	}
 
 	if err := config.DB.Save(&challenge).Error; err != nil {
 		utils.InternalServerError(c, "Failed to update challenge")

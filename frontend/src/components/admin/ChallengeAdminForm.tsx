@@ -116,6 +116,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     x: challenge.coverPositionX ?? 50,
     y: challenge.coverPositionY ?? 50,
   })
+  const [coverZoom, setCoverZoom] = useState(challenge.coverZoom ?? 100)
   const [coverLoading, setCoverLoading] = useState(false)
   const [newHint, setNewHint] = useState({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null as string | null })
   const [editingHints, setEditingHints] = useState<{[key: number]: {title: string, content: string, cost: number, isActive: boolean, autoActiveAt: string | null}}>({})
@@ -556,13 +557,27 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                             src={`/api/challenges/${challenge.id}/cover`}
                             alt="Cover preview"
                             className="w-full h-full object-cover"
-                            style={{ objectPosition: `${coverPosition.x}% ${coverPosition.y}%` }}
+                            style={{ 
+                              objectPosition: `${coverPosition.x}% ${coverPosition.y}%`,
+                              transform: `scale(${coverZoom / 100})`
+                            }}
                           />
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Shows how the image appears on challenge cards
-                      </p>
+                      {/* Zoom slider */}
+                      <div className="flex items-center gap-2 pt-2">
+                        <span className="text-xs text-muted-foreground w-10">Zoom</span>
+                        <input
+                          type="range"
+                          min="100"
+                          max="200"
+                          step="5"
+                          value={coverZoom}
+                          onChange={(e) => setCoverZoom(Number(e.target.value))}
+                          className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                        />
+                        <span className="text-xs text-muted-foreground w-10 text-right">{coverZoom}%</span>
+                      </div>
                     </div>
                   </div>
 
@@ -579,6 +594,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                           difficultyId: generalData.difficultyId || challenge.difficultyId,
                           coverPositionX: coverPosition.x,
                           coverPositionY: coverPosition.y,
+                          coverZoom: coverZoom,
                         })
                         toast.success("Cover position saved successfully")
                       } catch (error) {

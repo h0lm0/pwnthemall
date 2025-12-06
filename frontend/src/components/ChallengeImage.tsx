@@ -7,6 +7,7 @@ interface ChallengeImageProps {
   readonly priority?: boolean
   readonly positionX?: number  // 0-100, default 50 (center)
   readonly positionY?: number  // 0-100, default 50 (center)
+  readonly zoom?: number       // 100-200, default 100 (no zoom)
 }
 
 /**
@@ -25,7 +26,8 @@ export default function ChallengeImage({
   className = '', 
   priority = false,
   positionX = 50,
-  positionY = 50
+  positionY = 50,
+  zoom = 100
 }: ChallengeImageProps) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
@@ -41,6 +43,8 @@ export default function ChallengeImage({
   
   // Compute object-position from x/y percentages
   const objectPosition = `${positionX}% ${positionY}%`
+  // Scale factor for zoom (100 = 100% = no zoom, 150 = 150% scale)
+  const scale = zoom / 100
 
   return (
     <div className={`relative w-full h-full overflow-hidden bg-muted ${className}`}>
@@ -51,7 +55,7 @@ export default function ChallengeImage({
         src={imageUrl}
         alt={alt}
         className="w-full h-full object-cover"
-        style={{ objectPosition }}
+        style={{ objectPosition, transform: `scale(${scale})` }}
         onLoad={() => setImageLoading(false)}
         onError={() => {
           setImageError(true)

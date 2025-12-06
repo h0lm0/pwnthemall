@@ -39,6 +39,7 @@ type ChallengeGeneralUpdateRequest struct {
 	DifficultyID   *uint  `json:"difficultyId"`
 	CoverPositionX *float64 `json:"coverPositionX"`
 	CoverPositionY *float64 `json:"coverPositionY"`
+	CoverZoom      *float64 `json:"coverZoom"`
 }
 
 // HintRequest represents hint creation/update request
