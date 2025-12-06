@@ -34,8 +34,8 @@
 
 ## 📚 Installation & Usage
 
-<!-- ![vhs tape run](docs/assets/run.gif) -->
-<img src="docs/assets/scoreboard.png" width=400 style="border-radius:25px">  
+![vhs tape run](docs/assets/run.gif)
+<!-- <img src="docs/assets/scoreboard.png" width=400 style="border-radius:25px">   -->
 
 Check out the official documentation:
 
