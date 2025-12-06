@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useLanguage } from "@/context/LanguageContext"
 import { Challenge, ChallengeCategory, ChallengeDifficulty } from "@/models"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -48,6 +49,7 @@ interface FirstBloodBonus {
 }
 
 export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdminFormProps) {
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(false)
   const [generalLoading, setGeneralLoading] = useState(false)
 
@@ -112,6 +114,12 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
     categoryId: challenge.categoryId || 1,
     difficultyId: challenge.difficultyId || 1,
   })
+  const [coverPosition, setCoverPosition] = useState({
+    x: challenge.coverPositionX ?? 50,
+    y: challenge.coverPositionY ?? 50,
+  })
+  const [coverZoom, setCoverZoom] = useState(challenge.coverZoom ?? 100)
+  const [coverLoading, setCoverLoading] = useState(false)
   const [newHint, setNewHint] = useState({ title: "", content: "", cost: 0, isActive: true, autoActiveAt: null as string | null })
   const [editingHints, setEditingHints] = useState<{[key: number]: {title: string, content: string, cost: number, isActive: boolean, autoActiveAt: string | null}}>({})
 
@@ -373,24 +381,26 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
   return (
     <div className="space-y-6">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="points">Points & Decay</TabsTrigger>
-          <TabsTrigger value="firstblood">First Blood</TabsTrigger>
-          <TabsTrigger value="hints">Hints</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="general">{t('challenge_form.tab_general')}</TabsTrigger>
+          <TabsTrigger value="cover">{t('challenge_form.tab_cover')}</TabsTrigger>
+          <TabsTrigger value="points">{t('challenge_form.tab_points')}</TabsTrigger>
+          <TabsTrigger value="firstblood">{t('challenge_form.tab_firstblood')}</TabsTrigger>
+          <TabsTrigger value="hints">{t('challenge_form.tab_hints')}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
-          <Card>
+        <TabsContent value="general" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <Card>
             <CardHeader>
-              <CardTitle>General Information</CardTitle>
+              <CardTitle>{t('challenge_form.general_info')}</CardTitle>
               <CardDescription>
-                Edit the basic information for this challenge
+                {t('challenge_form.general_info_desc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="name">Challenge Name</Label>
+                <Label htmlFor="name">{t('challenge_form.challenge_name')}</Label>
                 <Input
                   id="name"
                   value={generalData.name}
@@ -400,13 +410,13 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('challenge_form.description')}</Label>
                 <Textarea
                   id="description"
                   value={generalData.description}
                   onChange={(e) => setGeneralData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter challenge description"
-                  rows={4}
+                  rows={6}
                 />
               </div>
 
@@ -421,13 +431,13 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
 
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">{t('challenge_form.category')}</Label>
                 <Select
                   value={generalData.categoryId?.toString() || ""}
                   onValueChange={(value) => setGeneralData(prev => ({ ...prev, categoryId: Number.parseInt(value) }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder={t('challenge_form.select_category')} />
                   </SelectTrigger>
                   <SelectContent>
                     {challengeCategories.map((category) => (
@@ -440,13 +450,13 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
 
               <div>
-                <Label htmlFor="difficulty">Difficulty</Label>
+                <Label htmlFor="difficulty">{t('challenge_form.difficulty')}</Label>
                 <Select
                   value={generalData.difficultyId?.toString() || ""}
                   onValueChange={(value) => setGeneralData(prev => ({ ...prev, difficultyId: Number.parseInt(value) }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a difficulty" />
+                    <SelectValue placeholder={t('challenge_form.select_difficulty')} />
                   </SelectTrigger>
                   <SelectContent>
                     {challengeDifficulties.map((difficulty) => (
@@ -459,7 +469,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="hidden">Hidden</Label>
+                <Label htmlFor="hidden">{t('challenge_form.hidden')}</Label>
                 <Switch
                   id="hidden"
                   checked={generalData.hidden}
@@ -469,24 +479,165 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
 
               <div className="pt-4">
                 <Button onClick={handleGeneralSubmit} disabled={generalLoading} className="w-full">
-                  {generalLoading ? "Saving..." : "Save General Information"}
+                  {generalLoading ? t('challenge_form.saving') : t('challenge_form.save_general')}
                 </Button>
               </div>
             </CardContent>
           </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="points" className="space-y-4">
-          <Card>
+        <TabsContent value="cover" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <Card>
             <CardHeader>
-              <CardTitle>Points Configuration</CardTitle>
+              <CardTitle>{t('challenge_form.cover_position')}</CardTitle>
               <CardDescription>
-                Set the base points and decay formula for this challenge
+                {t('challenge_form.cover_position_desc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {challenge.coverImg ? (
+                <div className="space-y-4">
+                  {/* Side-by-side layout: Focal point selector + Live preview */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Left: Focal point selector */}
+                    <div className="space-y-1">
+                      <span className="text-xs text-muted-foreground">{t('challenge_form.drag_focal_point')}</span>
+                      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+                      <div 
+                        className="relative border rounded-lg overflow-hidden bg-muted select-none"
+                        style={{ maxHeight: '320px' }}
+                      >
+                        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+                        <div
+                          className="relative flex justify-center"
+                          onMouseMove={(e) => {
+                            if (e.buttons !== 1) return
+                            const img = e.currentTarget.querySelector('img')
+                            if (!img) return
+                            const rect = img.getBoundingClientRect()
+                            const x = ((e.clientX - rect.left) / rect.width) * 100
+                            const y = ((e.clientY - rect.top) / rect.height) * 100
+                            setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            const img = e.currentTarget.querySelector('img')
+                            if (!img) return
+                            const rect = img.getBoundingClientRect()
+                            const x = ((e.clientX - rect.left) / rect.width) * 100
+                            const y = ((e.clientY - rect.top) / rect.height) * 100
+                            setCoverPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
+                          }}
+                        >
+                          <img
+                            src={`/api/challenges/${challenge.id}/cover`}
+                            alt="Full cover"
+                            className="max-h-[320px] w-auto pointer-events-none select-none"
+                            draggable={false}
+                          />
+                          {/* Focal point marker */}
+                          <div 
+                            className="absolute w-6 h-6 border-2 border-white rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing"
+                            style={{ 
+                              left: `${coverPosition.x}%`, 
+                              top: `${coverPosition.y}%`,
+                              backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                            }}
+                          >
+                            <div className="absolute inset-1 rounded-full bg-white/60" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Live preview - vertically centered */}
+                    <div className="flex flex-col justify-center space-y-1">
+                      <span className="text-xs text-muted-foreground">{t('challenge_form.live_preview')}</span>
+                      <div className="border rounded-lg overflow-hidden bg-muted">
+                        {/* Preview container matching card aspect ratio (411:192 ≈ 2.14:1) */}
+                        <div className="w-full aspect-[411/192]">
+                          <img
+                            src={`/api/challenges/${challenge.id}/cover`}
+                            alt={t('challenge_form.cover_preview_alt')}
+                            className="w-full h-full object-cover"
+                            style={{ 
+                              objectPosition: `${coverPosition.x}% ${coverPosition.y}%`,
+                              transform: `scale(${coverZoom / 100})`
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {/* Zoom slider */}
+                      <div className="flex items-center gap-2 pt-2">
+                        <span className="text-xs text-muted-foreground w-10">{t('challenge_form.zoom')}</span>
+                        <input
+                          type="range"
+                          min="100"
+                          max="200"
+                          step="5"
+                          value={coverZoom}
+                          onChange={(e) => setCoverZoom(Number(e.target.value))}
+                          className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                        />
+                        <span className="text-xs text-muted-foreground w-10 text-right">{coverZoom}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={async () => {
+                      setCoverLoading(true)
+                      try {
+                        await axios.put(`/api/admin/challenges/${challenge.id}/general`, {
+                          name: generalData.name || challenge.name,
+                          description: generalData.description || challenge.description,
+                          author: generalData.author || challenge.author,
+                          hidden: generalData.hidden,
+                          categoryId: generalData.categoryId || challenge.categoryId,
+                          difficultyId: generalData.difficultyId || challenge.difficultyId,
+                          coverPositionX: coverPosition.x,
+                          coverPositionY: coverPosition.y,
+                          coverZoom: coverZoom,
+                        })
+                        toast.success(t('challenge_form.cover_saved'))
+                      } catch (error) {
+                        toast.error(t('challenge_form.cover_save_error'))
+                        console.error(error)
+                      } finally {
+                        setCoverLoading(false)
+                      }
+                    }} 
+                    disabled={coverLoading} 
+                    className="w-full"
+                  >
+                    {coverLoading ? t('challenge_form.saving') : t('challenge_form.save_cover')}
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>{t('challenge_form.no_cover')}</p>
+                  <p className="text-sm mt-2">{t('challenge_form.upload_cover_hint')}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="points" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <Card>
+            <CardHeader>
+              <CardTitle>{t('challenge_form.points_config')}</CardTitle>
+              <CardDescription>
+                {t('challenge_form.points_config_desc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="points">Base Points</Label>
+                <Label htmlFor="points">{t('challenge_form.base_points')}</Label>
                 <Input
                   id="points"
                   type="number"
@@ -497,13 +648,13 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
 
               <div>
-                <Label htmlFor="decayFormula">Decay Formula</Label>
+                <Label htmlFor="decayFormula">{t('challenge_form.decay_formula')}</Label>
                 <Select
                   value={formData.decayFormulaId?.toString() || "none"}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, decayFormulaId: value === "none" ? null : Number.parseInt(value) }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a decay formula" />
+                    <SelectValue placeholder={t('challenge_form.select_decay')} />
                   </SelectTrigger>
                   <SelectContent>
                     {decayFormulas.map((formula) => (
@@ -519,20 +670,22 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               </div>
             </CardContent>
           </Card>
+          </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose}>
-              Cancel
+              {t('challenge_form.cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Saving..." : "Save Configuration"}
+              {loading ? t('challenge_form.saving') : t('challenge_form.save_config')}
             </Button>
           </div>
         </TabsContent>
 
-        <TabsContent value="firstblood" className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
-            <Label htmlFor="enableFirstBlood">Enable First Blood System</Label>
+        <TabsContent value="firstblood" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <div className="flex items-center justify-between mb-4">
+            <Label htmlFor="enableFirstBlood">{t('challenge_form.enable_firstblood')}</Label>
             <Switch
               id="enableFirstBlood"
               checked={formData.enableFirstBlood}
@@ -546,25 +699,27 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               onChange={setFirstBloodBonuses}
             />
           )}
+          </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose}>
-              Cancel
+              {t('challenge_form.cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Saving..." : "Save Configuration"}
+              {loading ? t('challenge_form.saving') : t('challenge_form.save_config')}
             </Button>
           </div>
         </TabsContent>
 
-        <TabsContent value="hints" className="space-y-4">
-          <Card>
+        <TabsContent value="hints" className="min-h-[700px] max-h-[700px] flex flex-col">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Challenge Hints</CardTitle>
+                  <CardTitle>{t('challenge_form.hints_title')}</CardTitle>
                   <CardDescription>
-                    Manage hints for this challenge
+                    {t('challenge_form.hints_desc')}
                   </CardDescription>
                 </div>
                 <Button
@@ -573,7 +728,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                   onClick={async () => {
                     try {
                       await axios.post('/api/admin/challenges/hints/activate-scheduled')
-                      toast.success('Hint activation check completed')
+                      toast.success(t('challenge_form.hints_activated'))
                       // Refresh the challenge data to show updated hint statuses
                       const response = await axios.get(`/api/admin/challenges/${challenge.id}`)
                       const updatedChallenge = response.data.challenge
@@ -585,36 +740,36 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                       }
                     } catch (error) {
                       console.error('Error activating scheduled hints:', error);
-                      toast.error('Failed to activate scheduled hints')
+                      toast.error(t('challenge_form.hints_activate_error'))
                     }
                   }}
                 >
-                  Activate all Hints
+                  {t('challenge_form.activate_hints')}
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="hintTitle">Hint Title</Label>
+                  <Label htmlFor="hintTitle">{t('challenge_form.hint_title')}</Label>
                   <Input
                     id="hintTitle"
                     value={newHint.title}
                     onChange={(e) => setNewHint(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Enter hint title..."
+                    placeholder={t('challenge_form.hint_title_placeholder')}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="hintContent">Hint Content</Label>
+                  <Label htmlFor="hintContent">{t('challenge_form.hint_content')}</Label>
                   <Textarea
                     id="hintContent"
                     value={newHint.content}
                     onChange={(e) => setNewHint(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Enter hint content..."
+                    placeholder={t('challenge_form.hint_content_placeholder')}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="hintCost">Cost (points)</Label>
+                  <Label htmlFor="hintCost">{t('challenge_form.hint_cost')}</Label>
                   <Input
                     id="hintCost"
                     type="number"
@@ -631,32 +786,32 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                     checked={newHint.isActive}
                     onCheckedChange={(checked) => setNewHint(prev => ({ ...prev, isActive: checked }))}
                   />
-                  <Label htmlFor="newHintActive">Active</Label>
+                  <Label htmlFor="newHintActive">{t('challenge_form.hint_active')}</Label>
                 </div>
                 
                 <div>
-                  <Label htmlFor="newHintAutoActive">Auto-activation date/time (optional)</Label>
+                  <Label htmlFor="newHintAutoActive">{t('challenge_form.hint_auto_activate')}</Label>
                   <Input
                     id="newHintAutoActive"
                     type="datetime-local"
                     value={newHint.autoActiveAt || ""}
                     onChange={(e) => setNewHint(prev => ({ ...prev, autoActiveAt: e.target.value || null }))}
-                    placeholder="Set auto-activation time"
+                    placeholder={t('challenge_form.hint_auto_activate_placeholder')}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Leave empty to disable auto-activation. The hint will become visible at this exact time.
+                    {t('challenge_form.hint_auto_activate_help')}
                   </p>
                 </div>
                 
                 <Button onClick={handleAddHint} className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Hint
+                  {t('challenge_form.add_hint')}
                 </Button>
               </div>
 
               {formData.hints.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-medium">Existing Hints</h4>
+                  <h4 className="font-medium">{t('challenge_form.existing_hints')}</h4>
                   {formData.hints.map((hint) => (
                     <div key={hint.id} className="p-3 border rounded-lg space-y-3 bg-background/50 hover:bg-background/80 transition-colors">
                       {editingHints[hint.id] ? (
@@ -664,7 +819,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                         <>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <Label htmlFor={`hint-title-${hint.id}`}>Title</Label>
+                              <Label htmlFor={`hint-title-${hint.id}`}>{t('challenge_form.hint_title')}</Label>
                               <Input
                                 id={`hint-title-${hint.id}`}
                                 value={editingHints[hint.id].title}
@@ -675,11 +830,11 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                     title: e.target.value
                                   }
                                 }))}
-                                placeholder="Hint title"
+                                placeholder={t('challenge_form.hint_title_placeholder')}
                               />
                             </div>
                             <div>
-                              <Label htmlFor={`hint-cost-${hint.id}`}>Cost (points)</Label>
+                              <Label htmlFor={`hint-cost-${hint.id}`}>{t('challenge_form.hint_cost')}</Label>
                               <Input
                                 id={`hint-cost-${hint.id}`}
                                 type="number"
@@ -696,7 +851,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                             </div>
                           </div>
                           <div>
-                            <Label htmlFor={`hint-content-${hint.id}`}>Content</Label>
+                            <Label htmlFor={`hint-content-${hint.id}`}>{t('challenge_form.hint_content')}</Label>
                             <Textarea
                               id={`hint-content-${hint.id}`}
                               value={editingHints[hint.id].content}
@@ -727,11 +882,11 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                   }
                                 }))}
                               />
-                              <Label htmlFor={`hint-active-${hint.id}`}>Active</Label>
+                              <Label htmlFor={`hint-active-${hint.id}`}>{t('challenge_form.hint_active')}</Label>
                             </div>
                             
                             <div>
-                              <Label htmlFor={`hint-auto-active-${hint.id}`}>Auto-activation date/time (optional)</Label>
+                              <Label htmlFor={`hint-auto-active-${hint.id}`}>{t('challenge_form.hint_auto_activate')}</Label>
                               <Input
                                 id={`hint-auto-active-${hint.id}`}
                                 type="datetime-local"
@@ -743,10 +898,10 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                     autoActiveAt: e.target.value || null
                                   }
                                 }))}
-                                placeholder="Set auto-activation time"
+                                placeholder={t('challenge_form.hint_auto_activate_placeholder')}
                               />
                               <p className="text-xs text-muted-foreground mt-1">
-                                Leave empty to disable auto-activation. The hint will become visible at this exact time.
+                                {t('challenge_form.hint_auto_activate_help')}
                               </p>
                             </div>
                           </div>
@@ -761,7 +916,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                   handleSaveHint(hint.id, updatedHint);
                                 }}
                               >
-                                Save
+                                {t('challenge_form.save')}
                               </Button>
                               <Button
                                 variant="ghost"
@@ -771,7 +926,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                   return rest;
                                 })}
                               >
-                                Cancel
+                                {t('challenge_form.cancel')}
                               </Button>
                             </div>
                             <Button
@@ -786,19 +941,19 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                       ) : (
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h5 className="font-medium text-sm">{hint.title || "Hint"}</h5>
+                              <h5 className="font-medium text-sm">{hint.title || t('challenge_form.hint')}</h5>
                               <p className="text-sm text-muted-foreground mt-1">{hint.content}</p>
-                              <p className="text-xs text-muted-foreground mt-1">Cost: {hint.cost} points</p>
+                              <p className="text-xs text-muted-foreground mt-1">{t('challenge_form.cost')}: {hint.cost} {t('challenge_form.points')}</p>
                               <p className="text-xs text-muted-foreground mt-1">
-                                Status: {(hint as Hint).isActive ? (
-                                  <span className="text-green-600">Active</span>
+                                {t('challenge_form.status')}: {(hint as Hint).isActive ? (
+                                  <span className="text-green-600">{t('challenge_form.active')}</span>
                                 ) : (
-                                  <span className="text-red-600">Inactive</span>
+                                  <span className="text-red-600">{t('challenge_form.inactive')}</span>
                                 )}
                               </p>
                               {(hint as Hint).autoActiveAt && (
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Auto-activation: {new Date((hint as Hint).autoActiveAt!).toLocaleString()}
+                                  {t('challenge_form.auto_activation')}: {new Date((hint as Hint).autoActiveAt!).toLocaleString()}
                                 </p>
                               )}
                             </div>
@@ -818,7 +973,7 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
                                 }))}
                               >
                                 <Edit className="h-4 w-4 mr-2" />
-                                Edit
+                                {t('challenge_form.edit')}
                               </Button>
                               <Button
                                 variant="ghost"
@@ -836,13 +991,14 @@ export default function ChallengeAdminForm({ challenge, onClose }: ChallengeAdmi
               )}
             </CardContent>
           </Card>
+          </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose}>
-              Cancel
+              {t('challenge_form.cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Saving..." : "Save Configuration"}
+              {loading ? t('challenge_form.saving') : t('challenge_form.save_config')}
             </Button>
           </div>
         </TabsContent>
